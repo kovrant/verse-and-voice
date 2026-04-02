@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
+import { COUNTRIES } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,10 +26,13 @@ export default function NewStudentPage() {
   const [form, setForm] = useState({
     name: "",
     guardian_name: "",
+    country: "",
     started_at: new Date().toISOString().split("T")[0],
     fee: "",
-    fee_currency: "PKR",
-    para_number: "",
+    fee_currency: "GBP",
+    is_qaida: true,
+    desc_completed: "0",
+    asc_completed: "0",
     memorizing: "",
     class_time: "",
   })
@@ -40,12 +44,16 @@ export default function NewStudentPage() {
     const { error } = await supabase.from("students").insert({
       name: form.name,
       guardian_name: form.guardian_name,
+      country: form.country || null,
       started_at: form.started_at,
       fee: parseFloat(form.fee),
       fee_currency: form.fee_currency,
-      para_number: form.para_number ? parseInt(form.para_number) : null,
+      is_qaida: form.is_qaida,
+      desc_completed: parseInt(form.desc_completed) || 0,
+      asc_completed: parseInt(form.asc_completed) || 0,
       memorizing: form.memorizing || null,
       class_time: form.class_time || null,
+      status: "Reading",
     })
 
     if (error) {
@@ -74,7 +82,6 @@ export default function NewStudentPage() {
       </div>
 
       <Card className="relative overflow-hidden">
-        {/* Decorative header */}
         <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
 
         <CardHeader className="pt-8">
@@ -91,7 +98,7 @@ export default function NewStudentPage() {
 
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Personal Info Section */}
+            {/* Personal Details */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
@@ -105,7 +112,7 @@ export default function NewStudentPage() {
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="e.g. Ahmed Khan"
+                    placeholder="e.g. Ahmed"
                   />
                 </div>
                 <div className="space-y-2">
@@ -115,13 +122,31 @@ export default function NewStudentPage() {
                     required
                     value={form.guardian_name}
                     onChange={(e) => setForm({ ...form, guardian_name: e.target.value })}
-                    placeholder="e.g. Muhammad Khan"
+                    placeholder="e.g. Ayesha"
                   />
+                </div>
+              </div>
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Select
+                    value={form.country}
+                    onValueChange={(val) => setForm({ ...form, country: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
 
-            {/* Schedule Section */}
+            {/* Schedule & Fees */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
@@ -129,7 +154,7 @@ export default function NewStudentPage() {
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="started_at">Start Date *</Label>
+                  <Label htmlFor="started_at">Admission Date *</Label>
                   <Input
                     id="started_at"
                     type="date"
@@ -159,7 +184,7 @@ export default function NewStudentPage() {
                     step="any"
                     value={form.fee}
                     onChange={(e) => setForm({ ...form, fee: e.target.value })}
-                    placeholder="e.g. 5000"
+                    placeholder="e.g. 35"
                   />
                 </div>
                 <div className="space-y-2">
@@ -172,34 +197,83 @@ export default function NewStudentPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="PKR">PKR (Rs)</SelectItem>
-                      <SelectItem value="USD">USD ($)</SelectItem>
                       <SelectItem value="GBP">GBP (£)</SelectItem>
+                      <SelectItem value="USD">USD ($)</SelectItem>
+                      <SelectItem value="PKR">PKR (Rs)</SelectItem>
                       <SelectItem value="SAR">SAR (﷼)</SelectItem>
+                      <SelectItem value="BHD">BHD (BD)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
             </div>
 
-            {/* Quran Progress Section */}
+            {/* Quran Progress */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
                 Quran Progress
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="para">Para Number (1-30)</Label>
-                <Input
-                  id="para"
-                  type="number"
-                  min="1"
-                  max="30"
-                  value={form.para_number}
-                  onChange={(e) => setForm({ ...form, para_number: e.target.value })}
-                  placeholder="e.g. 15"
-                />
+
+              {/* Qaida / Quran toggle */}
+              <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, is_qaida: true, desc_completed: "0", asc_completed: "0" })}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    form.is_qaida
+                      ? "bg-amber-500/15 text-amber-400 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Norani Qaida
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, is_qaida: false })}
+                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    !form.is_qaida
+                      ? "bg-emerald-500/15 text-emerald-400 shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Reading Quran
+                </button>
               </div>
+
+              {form.is_qaida ? (
+                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+                  <p className="text-sm text-amber-300 font-medium">Student is learning the basics</p>
+                  <p className="text-xs text-muted-foreground mt-1">Norani Qaida must be completed before starting Quran reading.</p>
+                </div>
+              ) : (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="desc_completed">Paras from End (30→)</Label>
+                    <Input
+                      id="desc_completed"
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={form.desc_completed}
+                      onChange={(e) => setForm({ ...form, desc_completed: e.target.value })}
+                      placeholder="e.g. 5"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="asc_completed">Currently on Para</Label>
+                    <Input
+                      id="asc_completed"
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={form.asc_completed}
+                      onChange={(e) => setForm({ ...form, asc_completed: e.target.value })}
+                      placeholder="e.g. 19"
+                    />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="memorizing">Currently Memorizing</Label>

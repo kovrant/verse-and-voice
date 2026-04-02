@@ -6,6 +6,8 @@ import { CURRENCY_SYMBOLS } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Pagination } from "@/components/ui/pagination"
+import { SortableHeader, sortData, toggleSort, type SortDirection } from "@/components/ui/sortable-header"
 import {
   Select,
   SelectContent,
@@ -32,8 +34,17 @@ interface FeeRecord {
     name: string
     fee: number
     fee_currency: string
-    is_active: boolean
+    status: string
   }
+}
+
+// Helper to get a nested sort value
+function getFeeValue(fee: FeeRecord, key: string): any {
+  if (key === "student_name") return fee.students?.name
+  if (key === "fee_amount") return fee.students?.fee
+  if (key === "is_paid") return fee.is_paid ? 1 : 0
+  if (key === "paid_at") return fee.paid_at || ""
+  return (fee as any)[key]
 }
 
 export default function FeesPage() {
@@ -42,6 +53,10 @@ export default function FeesPage() {
   const [year, setYear] = useState(now.getFullYear())
   const [fees, setFees] = useState<FeeRecord[]>([])
   const [loading, setLoading] = useState(true)
+  const [sortKey, setSortKey] = useState<string | null>(null)
+  const [sortDir, setSortDir] = useState<SortDirection>(null)
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
 
   useEffect(() => {
     loadFees()
@@ -53,7 +68,7 @@ export default function FeesPage() {
     const { data: students } = await supabase
       .from("students")
       .select("id")
-      .eq("is_active", true)
+      .eq("status", "Reading")
 
     if (students && students.length > 0) {
       const records = students.map((s) => ({
@@ -69,17 +84,18 @@ export default function FeesPage() {
 
     const { data } = await supabase
       .from("fee_payments")
-      .select("*, students(name, fee, fee_currency, is_active)")
+      .select("*, students(name, fee, fee_currency, status)")
       .eq("month", month)
       .eq("year", year)
       .order("created_at")
 
     const activeFees = (data || []).filter(
-      (f: any) => f.students?.is_active
+      (f: any) => f.students?.status === "Reading"
     ) as FeeRecord[]
 
     setFees(activeFees)
     setLoading(false)
+    setPage(1)
   }
 
   async function toggleFee(fee: FeeRecord) {
@@ -93,6 +109,32 @@ export default function FeesPage() {
       .eq("id", fee.id)
 
     loadFees()
+  }
+
+  // Custom sort for nested fields
+  const sorted = sortKey && sortDir
+    ? [...fees].sort((a, b) => {
+        const aVal = getFeeValue(a, sortKey)
+        const bVal = getFeeValue(b, sortKey)
+        if (aVal == null && bVal == null) return 0
+        if (aVal == null) return sortDir === "asc" ? -1 : 1
+        if (bVal == null) return sortDir === "asc" ? 1 : -1
+        if (typeof aVal === "number" && typeof bVal === "number") {
+          return sortDir === "asc" ? aVal - bVal : bVal - aVal
+        }
+        const cmp = String(aVal).localeCompare(String(bVal))
+        return sortDir === "asc" ? cmp : -cmp
+      })
+    : fees
+
+  const totalPages = Math.ceil(sorted.length / pageSize)
+  const paginated = sorted.slice((page - 1) * pageSize, page * pageSize)
+
+  function handleSort(key: string) {
+    const result = toggleSort(sortKey, sortDir, key)
+    setSortKey(result.direction ? result.key : null)
+    setSortDir(result.direction)
+    setPage(1)
   }
 
   const paidCount = fees.filter((f) => f.is_paid).length
@@ -117,7 +159,6 @@ export default function FeesPage() {
         <p className="text-muted-foreground mt-1">Track and manage monthly fee payments</p>
       </div>
 
-      {/* Month/Year Selector */}
       <div className="flex gap-3">
         <Select value={month.toString()} onValueChange={(v) => setMonth(parseInt(v))}>
           <SelectTrigger className="w-[180px]">
@@ -176,7 +217,6 @@ export default function FeesPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-emerald-400">
-              <span className="text-lg font-medium text-muted-foreground">PKR </span>
               {totalCollected.toLocaleString()}
             </p>
           </CardContent>
@@ -194,7 +234,6 @@ export default function FeesPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-amber-400">
-              <span className="text-lg font-medium text-muted-foreground">PKR </span>
               {totalPending.toLocaleString()}
             </p>
           </CardContent>
@@ -226,15 +265,23 @@ export default function FeesPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Student</th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Fee Amount</th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Paid Date</th>
+                  <th className="px-5 py-4 text-left">
+                    <SortableHeader label="Student" sortKey="student_name" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                  </th>
+                  <th className="px-5 py-4 text-left">
+                    <SortableHeader label="Fee Amount" sortKey="fee_amount" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                  </th>
+                  <th className="px-5 py-4 text-left">
+                    <SortableHeader label="Status" sortKey="is_paid" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                  </th>
+                  <th className="px-5 py-4 text-left">
+                    <SortableHeader label="Paid Date" sortKey="paid_at" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                  </th>
                   <th className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {fees.map((fee) => (
+                {paginated.map((fee) => (
                   <tr key={fee.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
@@ -288,6 +335,18 @@ export default function FeesPage() {
               </tbody>
             </table>
           </div>
+          {sorted.length > pageSize && (
+            <div className="px-5 pb-4 border-t border-border/50">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={sorted.length}
+                pageSize={pageSize}
+                onPageChange={setPage}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(1) }}
+              />
+            </div>
+          )}
         </Card>
       )}
     </div>

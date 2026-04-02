@@ -51,7 +51,7 @@ export default function Dashboard() {
       { data: fees },
     ] = await Promise.all([
       supabase.from("students").select("*", { count: "exact", head: true }),
-      supabase.from("students").select("*", { count: "exact", head: true }).eq("is_active", true),
+      supabase.from("students").select("*", { count: "exact", head: true }).eq("status", "Reading"),
       supabase.from("students").select("*").order("created_at", { ascending: false }).limit(5),
       supabase.from("fee_payments").select("*, students(name, fee, fee_currency)").eq("month", month).eq("year", year),
     ])
@@ -133,7 +133,6 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8 animate-fade-in-up">
-      {/* Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
           <span className="text-gradient-gold">Dashboard</span>

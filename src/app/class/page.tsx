@@ -5,7 +5,15 @@ import { supabase } from "@/lib/supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
-import { BookOpen, Clock, User, Users, Sparkles, CalendarDays } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { QuranProgress } from "@/components/quran-progress"
+import { Clock, User, Users, Sparkles, CalendarDays } from "lucide-react"
 import { differenceInDays } from "date-fns"
 
 interface Student {
@@ -13,7 +21,9 @@ interface Student {
   name: string
   guardian_name: string
   started_at: string
-  para_number: number | null
+  is_qaida: boolean
+  desc_completed: number
+  asc_completed: number
   memorizing: string | null
   class_time: string | null
 }
@@ -30,11 +40,16 @@ export default function ClassPage() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, para_number, memorizing, class_time")
-      .eq("is_active", true)
+      .select("id, name, guardian_name, started_at, is_qaida, desc_completed, asc_completed, memorizing, class_time")
+      .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
     setLoading(false)
+  }
+
+  function handleSelect(studentId: string) {
+    const student = students.find((s) => s.id === studentId) || null
+    setSelected(student)
   }
 
   if (loading) {
@@ -44,11 +59,8 @@ export default function ClassPage() {
           <div className="h-8 w-40 shimmer rounded-lg" />
           <div className="h-5 w-64 shimmer rounded-lg" />
         </div>
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-20 shimmer rounded-2xl" />
-          ))}
-        </div>
+        <div className="h-11 w-80 shimmer rounded-xl" />
+        <div className="h-80 shimmer rounded-2xl max-w-2xl mx-auto" />
       </div>
     )
   }
@@ -59,7 +71,7 @@ export default function ClassPage() {
         <h1 className="text-3xl font-bold tracking-tight">
           <span className="text-gradient-gold">Class Session</span>
         </h1>
-        <p className="text-muted-foreground mt-1">Select a student to view their class card</p>
+        <p className="text-muted-foreground mt-1">Select a student to begin the session</p>
       </div>
 
       {students.length === 0 ? (
@@ -74,38 +86,33 @@ export default function ClassPage() {
         </Card>
       ) : (
         <>
-          {/* Student selector grid */}
-          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-            {students.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSelected(s)}
-                className={`group rounded-2xl border p-4 text-left transition-all ${
-                  selected?.id === s.id
-                    ? "border-emerald-500/50 bg-emerald-500/10 glow-sm-emerald"
-                    : "border-border/50 bg-card hover:border-border hover:bg-secondary/50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 ${
-                    selected?.id === s.id
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-secondary text-muted-foreground group-hover:text-foreground"
-                  }`}>
-                    {s.name.charAt(0)}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm truncate">{s.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{s.class_time || "No time set"}</p>
-                  </div>
-                </div>
-              </button>
-            ))}
-          </div>
+          {/* Student dropdown */}
+          <Select
+            value={selected?.id || ""}
+            onValueChange={handleSelect}
+          >
+            <SelectTrigger className="w-full max-w-md">
+              <SelectValue placeholder="Choose a student..." />
+            </SelectTrigger>
+            <SelectContent>
+              {students.map((s) => (
+                <SelectItem key={s.id} value={s.id}>
+                  <span className="flex items-center gap-2">
+                    <span className="font-medium">{s.name}</span>
+                    {s.class_time && (
+                      <span className="text-muted-foreground text-xs">
+                        &middot; {s.class_time}
+                      </span>
+                    )}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Class Card */}
           {selected && (
-            <Card className="relative overflow-hidden max-w-2xl mx-auto glow-emerald">
+            <Card className="relative overflow-hidden max-w-2xl mx-auto glow-emerald animate-fade-in-up">
               {/* Decorative top bar */}
               <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-500" />
 
@@ -131,7 +138,7 @@ export default function ClassPage() {
               </CardHeader>
 
               <CardContent className="space-y-5 pb-6">
-                {/* Class Time - Large and prominent */}
+                {/* Class Time */}
                 <div className="flex items-center gap-4 p-5 rounded-2xl bg-secondary/50 border border-border/50">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-500/10">
                     <Clock className="h-6 w-6 text-amber-400" />
@@ -142,27 +149,13 @@ export default function ClassPage() {
                   </div>
                 </div>
 
-                {/* Para Progress */}
-                <div className="p-5 rounded-2xl bg-secondary/50 border border-border/50 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-5 w-5 text-emerald-400" />
-                      <span className="font-semibold text-sm">Quran Progress</span>
-                    </div>
-                    <span className="text-lg font-bold">
-                      {selected.para_number ? (
-                        <span>
-                          Para <span className="text-emerald-400">{selected.para_number}</span> of 30
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Not set</span>
-                      )}
-                    </span>
-                  </div>
-                  {selected.para_number && (
-                    <Progress value={(selected.para_number / 30) * 100} />
-                  )}
-                </div>
+                {/* Quran Progress */}
+                <QuranProgress
+                  isQaida={selected.is_qaida}
+                  descCompleted={selected.desc_completed}
+                  ascCompleted={selected.asc_completed}
+                  variant="full"
+                />
 
                 {/* Currently Memorizing */}
                 {selected.memorizing && (
