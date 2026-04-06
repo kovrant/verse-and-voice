@@ -342,7 +342,7 @@ export default function MemorizationPage() {
         </div>
       )}
 
-      {/* Catalog grouped by category */}
+      {/* Catalog grid */}
       {Object.keys(grouped).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -357,103 +357,104 @@ export default function MemorizationPage() {
         Object.entries(grouped).map(([category, catItems]) => {
           const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.General
           return (
-            <Card key={category} className="overflow-hidden">
-              <CardHeader className="pb-3">
-                <div className="flex items-center gap-2">
-                  <Badge className={`${colors.bg} ${colors.text} border-0`}>{category}</Badge>
-                  <span className="text-sm text-muted-foreground">{catItems.length} items</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-1.5">
-                  {catItems.map(item => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 rounded-xl border border-border/50 px-4 py-3 hover:bg-secondary/30 transition-colors group"
-                    >
-                      {/* Thumbnail or icon */}
+            <div key={category} className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Badge className={`${colors.bg} ${colors.text} border-0`}>{category}</Badge>
+                <span className="text-sm text-muted-foreground">{catItems.length} items</span>
+              </div>
+              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {catItems.map(item => (
+                  <div
+                    key={item.id}
+                    className="relative rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border transition-all group"
+                  >
+                    {/* Image area */}
+                    {item.image_url ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewUrl(item.image_url)}
+                        className="w-full aspect-[3/2] overflow-hidden bg-secondary"
+                      >
+                        <img
+                          src={item.image_url}
+                          alt={item.title}
+                          className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                        />
+                      </button>
+                    ) : (
+                      <div className={`w-full aspect-[3/2] flex items-center justify-center ${colors.bg}`}>
+                        <BookMarked className={`h-10 w-10 ${colors.text} opacity-40`} />
+                      </div>
+                    )}
+
+                    {/* Content */}
+                    <div className="p-3.5 space-y-2">
+                      <p className="text-sm font-semibold truncate">{item.title}</p>
+                      <div className="flex items-center justify-between">
+                        {(item.assignment_count || 0) > 0 ? (
+                          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <Users className="h-3 w-3" />
+                            {item.assignment_count} student{(item.assignment_count || 0) > 1 ? "s" : ""}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground/40">No assignments</span>
+                        )}
+                        <Badge className={`${colors.bg} ${colors.text} border-0 text-[10px] py-0`}>{category}</Badge>
+                      </div>
+                    </div>
+
+                    {/* Hover actions overlay */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       {item.image_url ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewUrl(item.image_url)}
-                          className="flex-shrink-0 hover:opacity-80 transition-opacity"
-                        >
-                          <img
-                            src={item.image_url}
-                            alt={item.title}
-                            className="h-10 w-10 rounded-lg object-cover border border-border/50"
-                          />
-                        </button>
-                      ) : (
-                        <BookMarked className={`h-4 w-4 ${colors.text} flex-shrink-0`} />
-                      )}
-
-                      <span className="flex-1 text-sm font-medium">{item.title}</span>
-
-                      {(item.assignment_count || 0) > 0 && (
-                        <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <Users className="h-3 w-3" />
-                          {item.assignment_count}
-                        </span>
-                      )}
-
-                      {/* Image actions */}
-                      {item.image_url ? (
-                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                        <>
+                          <button
+                            type="button"
                             onClick={() => setPreviewUrl(item.image_url)}
-                            className="h-7 text-muted-foreground hover:text-foreground"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
                             title="View image"
                           >
-                            <Eye className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <Eye className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
-                            className="h-7 text-muted-foreground hover:text-foreground"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
                             title="Change image"
                           >
-                            <ImagePlus className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
+                            <ImagePlus className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
                             onClick={() => removeImage(item.id)}
-                            className="h-7 text-muted-foreground hover:text-red-400"
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
                             title="Remove image"
                           >
-                            <X className="h-3 w-3" />
-                          </Button>
-                        </div>
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </>
                       ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          type="button"
                           onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
-                          className="h-7 text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="flex h-7 items-center gap-1 px-2 rounded-lg bg-black/60 text-white text-xs hover:bg-black/80 backdrop-blur-sm"
                           title="Add image"
                         >
-                          <ImagePlus className="h-3 w-3 mr-1" />
-                          Image
-                        </Button>
+                          <ImagePlus className="h-3.5 w-3.5" />
+                        </button>
                       )}
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        type="button"
                         onClick={() => deleteItem(item.id)}
-                        className="h-7 text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                        title="Delete"
                       >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
           )
         })
       )}
