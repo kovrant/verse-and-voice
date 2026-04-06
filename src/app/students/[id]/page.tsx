@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS, COUNTRIES, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
+import { useExchangeRates } from "@/lib/exchange-rates"
+import { FeeDisplay } from "@/components/fee-display"
 import { Pagination } from "@/components/ui/pagination"
 import { SortableHeader, toggleSort, type SortDirection } from "@/components/ui/sortable-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,6 +86,7 @@ export default function StudentDetailPage() {
   const [feeSortDir, setFeeSortDir] = useState<SortDirection>(null)
   const [feePage, setFeePage] = useState(1)
   const feePageSize = 12
+  const { rates } = useExchangeRates()
   const [memItems, setMemItems] = useState<StudentMemItem[]>([])
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
   const [assignOpen, setAssignOpen] = useState(false)
@@ -217,15 +220,16 @@ export default function StudentDetailPage() {
 
   async function toggleFee(fee: FeePayment) {
     const newPaid = !fee.is_paid
+    const paidAt = newPaid ? new Date().toISOString() : null
+
+    setFees(prev => prev.map(f =>
+      f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f
+    ))
+
     await supabase
       .from("fee_payments")
-      .update({
-        is_paid: newPaid,
-        paid_at: newPaid ? new Date().toISOString() : null,
-      })
+      .update({ is_paid: newPaid, paid_at: paidAt })
       .eq("id", fee.id)
-
-    await loadFees()
   }
 
   async function saveEdit() {
@@ -471,8 +475,7 @@ export default function StudentDetailPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-emerald-400">{cs}{student.fee.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground mt-1">{student.fee_currency}</p>
+            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="lg" />
           </CardContent>
         </Card>
 

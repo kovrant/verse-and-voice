@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS } from "@/lib/utils"
+import { useExchangeRates, convertToPKR, formatPKR } from "@/lib/exchange-rates"
+import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -57,6 +59,7 @@ export default function FeesPage() {
   const [sortDir, setSortDir] = useState<SortDirection>(null)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { rates } = useExchangeRates()
 
   useEffect(() => {
     loadFees()
@@ -100,15 +103,17 @@ export default function FeesPage() {
 
   async function toggleFee(fee: FeeRecord) {
     const newPaid = !fee.is_paid
+    const paidAt = newPaid ? new Date().toISOString() : null
+
+    // Optimistic update — only update the changed row
+    setFees(prev => prev.map(f =>
+      f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f
+    ))
+
     await supabase
       .from("fee_payments")
-      .update({
-        is_paid: newPaid,
-        paid_at: newPaid ? new Date().toISOString() : null,
-      })
+      .update({ is_paid: newPaid, paid_at: paidAt })
       .eq("id", fee.id)
-
-    loadFees()
   }
 
   // Custom sort for nested fields
@@ -138,12 +143,31 @@ export default function FeesPage() {
   }
 
   const paidCount = fees.filter((f) => f.is_paid).length
-  const totalCollected = fees
+
+  // Convert all fees to PKR for totals
+  function toPKR(fee: number, currency: string): number {
+    const pkr = convertToPKR(fee, currency, rates)
+    return pkr !== null ? pkr : fee // If PKR already or no rates, use raw amount
+  }
+
+  const totalCollectedPKR = fees
     .filter((f) => f.is_paid)
-    .reduce((sum, f) => sum + (f.students?.fee || 0), 0)
-  const totalPending = fees
+    .reduce((sum, f) => sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+  const totalPendingPKR = fees
     .filter((f) => !f.is_paid)
-    .reduce((sum, f) => sum + (f.students?.fee || 0), 0)
+    .reduce((sum, f) => sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+
+  // Per-currency breakdown for collected
+  function currencyBreakdown(items: FeeRecord[]) {
+    const map: Record<string, number> = {}
+    items.forEach(f => {
+      const c = f.students?.fee_currency || "PKR"
+      map[c] = (map[c] || 0) + (f.students?.fee || 0)
+    })
+    return map
+  }
+  const collectedByCurrency = currencyBreakdown(fees.filter(f => f.is_paid))
+  const pendingByCurrency = currencyBreakdown(fees.filter(f => !f.is_paid))
 
   const years = []
   for (let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++) {
@@ -217,8 +241,15 @@ export default function FeesPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-emerald-400">
-              {totalCollected.toLocaleString()}
+              Rs{totalCollectedPKR.toLocaleString()}
             </p>
+            <div className="flex flex-wrap gap-x-2 mt-1">
+              {Object.entries(collectedByCurrency).map(([c, amt]) => (
+                <span key={c} className="text-[11px] text-muted-foreground">
+                  {CURRENCY_SYMBOLS[c]}{amt.toLocaleString()}
+                </span>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -234,8 +265,15 @@ export default function FeesPage() {
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-amber-400">
-              {totalPending.toLocaleString()}
+              Rs{totalPendingPKR.toLocaleString()}
             </p>
+            <div className="flex flex-wrap gap-x-2 mt-1">
+              {Object.entries(pendingByCurrency).map(([c, amt]) => (
+                <span key={c} className="text-[11px] text-muted-foreground">
+                  {CURRENCY_SYMBOLS[c]}{amt.toLocaleString()}
+                </span>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -296,10 +334,11 @@ export default function FeesPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className="text-sm font-semibold text-emerald-400">
-                        {CURRENCY_SYMBOLS[fee.students?.fee_currency || "PKR"]}
-                        {(fee.students?.fee || 0).toLocaleString()}
-                      </span>
+                      <FeeDisplay
+                        amount={fee.students?.fee || 0}
+                        currency={fee.students?.fee_currency || "PKR"}
+                        rates={rates}
+                      />
                     </td>
                     <td className="px-5 py-4">
                       <Badge variant={fee.is_paid ? "success" : "warning"}>

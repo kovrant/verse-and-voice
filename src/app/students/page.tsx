@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
+import { useExchangeRates } from "@/lib/exchange-rates"
+import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -87,6 +89,7 @@ export default function StudentsPage() {
   const [sortDir, setSortDir] = useState<SortDirection>(() => loadSort().dir)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
+  const { rates } = useExchangeRates()
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(loadColumns)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -382,9 +385,7 @@ export default function StudentsPage() {
                       )}
                       {isVisible("fee") && (
                         <td className="px-5 py-4">
-                          <span className="text-sm font-semibold text-emerald-400">
-                            {CURRENCY_SYMBOLS[student.fee_currency]}{student.fee.toLocaleString()}
-                          </span>
+                          <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
                         </td>
                       )}
                       {isVisible("class_time") && (

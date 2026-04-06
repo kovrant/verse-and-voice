@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS } from "@/lib/utils"
+import { useExchangeRates, convertToPKR } from "@/lib/exchange-rates"
+import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -30,10 +32,10 @@ export default function Dashboard() {
   const [totalStudents, setTotalStudents] = useState(0)
   const [activeStudents, setActiveStudents] = useState(0)
   const [recentStudents, setRecentStudents] = useState<Student[]>([])
-  const [feesCollected, setFeesCollected] = useState(0)
-  const [feesPending, setFeesPending] = useState(0)
+  const [paidFees, setPaidFees] = useState<FeePayment[]>([])
   const [unpaidFees, setUnpaidFees] = useState<FeePayment[]>([])
   const [loading, setLoading] = useState(true)
+  const { rates } = useExchangeRates()
 
   useEffect(() => {
     loadDashboard()
@@ -60,13 +62,10 @@ export default function Dashboard() {
     setActiveStudents(active || 0)
     setRecentStudents(recent || [])
 
-    const paidFees = (fees || []).filter((f: any) => f.is_paid)
+    const paid = (fees || []).filter((f: any) => f.is_paid)
     const unpaid = (fees || []).filter((f: any) => !f.is_paid)
-    const collected = paidFees.reduce((sum: number, f: any) => sum + (f.students?.fee || 0), 0)
-    const pending = unpaid.reduce((sum: number, f: any) => sum + (f.students?.fee || 0), 0)
 
-    setFeesCollected(collected)
-    setFeesPending(pending)
+    setPaidFees(paid as any)
     setUnpaidFees(unpaid as any)
     setLoading(false)
   }
@@ -94,6 +93,27 @@ export default function Dashboard() {
   const now = new Date()
   const currentMonth = format(now, "MMMM yyyy")
 
+  function toPKR(fee: number, currency: string): number {
+    const pkr = convertToPKR(fee, currency, rates)
+    return pkr !== null ? pkr : fee
+  }
+
+  const feesCollected = paidFees.reduce((sum, f: any) =>
+    sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+  const feesPending = unpaidFees.reduce((sum, f: any) =>
+    sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+
+  function currencyBreakdown(items: FeePayment[]) {
+    const map: Record<string, number> = {}
+    items.forEach((f: any) => {
+      const c = f.students?.fee_currency || "PKR"
+      map[c] = (map[c] || 0) + (f.students?.fee || 0)
+    })
+    return map
+  }
+  const collectedByCurrency = currencyBreakdown(paidFees)
+  const pendingByCurrency = currencyBreakdown(unpaidFees)
+
   const statCards = [
     {
       label: "Active Students",
@@ -114,20 +134,22 @@ export default function Dashboard() {
     {
       label: "Collected This Month",
       value: `${feesCollected.toLocaleString()}`,
-      prefix: "PKR ",
+      prefix: "Rs",
       icon: TrendingUp,
       color: "from-emerald-500 to-green-600",
       iconBg: "bg-emerald-500/15",
       iconColor: "text-emerald-400",
+      breakdown: collectedByCurrency,
     },
     {
       label: "Pending This Month",
       value: `${feesPending.toLocaleString()}`,
-      prefix: "PKR ",
+      prefix: "Rs",
       icon: AlertCircle,
       color: "from-amber-500 to-orange-600",
       iconBg: "bg-amber-500/15",
       iconColor: "text-amber-400",
+      breakdown: pendingByCurrency,
     },
   ]
 
@@ -160,6 +182,15 @@ export default function Dashboard() {
                 {stat.prefix && <span className="text-lg font-medium text-muted-foreground">{stat.prefix}</span>}
                 {stat.value}
               </div>
+              {(stat as any).breakdown && Object.keys((stat as any).breakdown).length > 0 && (
+                <div className="flex flex-wrap gap-x-2 mt-1">
+                  {Object.entries((stat as any).breakdown as Record<string, number>).map(([c, amt]) => (
+                    <span key={c} className="text-[11px] text-muted-foreground">
+                      {CURRENCY_SYMBOLS[c]}{(amt as number).toLocaleString()}
+                    </span>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}
@@ -210,9 +241,7 @@ export default function Dashboard() {
                         <p className="text-xs text-muted-foreground">{s.guardian_name}</p>
                       </div>
                     </div>
-                    <span className="text-sm font-semibold text-emerald-400">
-                      {CURRENCY_SYMBOLS[s.fee_currency]}{s.fee.toLocaleString()}
-                    </span>
+                    <FeeDisplay amount={s.fee} currency={s.fee_currency} rates={rates} />
                   </Link>
                 ))}
               </div>
@@ -255,10 +284,11 @@ export default function Dashboard() {
                       <p className="font-medium text-sm">{(f.students as any)?.name}</p>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm font-semibold">
-                        {CURRENCY_SYMBOLS[(f.students as any)?.fee_currency || "PKR"]}
-                        {((f.students as any)?.fee || 0).toLocaleString()}
-                      </span>
+                      <FeeDisplay
+                        amount={(f.students as any)?.fee || 0}
+                        currency={(f.students as any)?.fee_currency || "PKR"}
+                        rates={rates}
+                      />
                       <Badge variant="warning">Unpaid</Badge>
                     </div>
                   </div>
