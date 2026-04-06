@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -13,12 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Trash2, BookMarked, Users, Search } from "lucide-react"
+import { Plus, Trash2, BookMarked, Users, Search, ImagePlus, X, Eye } from "lucide-react"
 
 interface CatalogItem {
   id: string
   title: string
   category: string
+  image_url: string | null
   created_at: string
   assignment_count?: number
 }
@@ -37,16 +38,20 @@ export default function MemorizationPage() {
   const [loading, setLoading] = useState(true)
   const [newTitle, setNewTitle] = useState("")
   const [newCategory, setNewCategory] = useState("General")
+  const [newImage, setNewImage] = useState<File | null>(null)
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const editFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     loadItems()
   }, [])
 
   async function loadItems() {
-    // Get catalog items with count of student assignments
     const { data: catalog } = await supabase
       .from("memorization_catalog")
       .select("*")
@@ -54,7 +59,6 @@ export default function MemorizationPage() {
       .order("title")
 
     if (catalog) {
-      // Get assignment counts
       const { data: counts } = await supabase
         .from("student_memorization")
         .select("catalog_id")
@@ -73,12 +77,46 @@ export default function MemorizationPage() {
     setLoading(false)
   }
 
+  async function uploadImage(file: File): Promise<string | null> {
+    const ext = file.name.split(".").pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+
+    const { error } = await supabase.storage
+      .from("memorization-images")
+      .upload(fileName, file, { cacheControl: "3600", upsert: false })
+
+    if (error) {
+      console.error("Upload error:", error)
+      return null
+    }
+
+    const { data } = supabase.storage
+      .from("memorization-images")
+      .getPublicUrl(fileName)
+
+    return data.publicUrl
+  }
+
+  async function deleteImage(imageUrl: string) {
+    const path = imageUrl.split("/memorization-images/").pop()
+    if (path) {
+      await supabase.storage.from("memorization-images").remove([path])
+    }
+  }
+
   async function addItem() {
     if (!newTitle.trim()) return
     setAdding(true)
+
+    let imageUrl: string | null = null
+    if (newImage) {
+      imageUrl = await uploadImage(newImage)
+    }
+
     const { error } = await supabase.from("memorization_catalog").insert({
       title: newTitle.trim(),
       category: newCategory,
+      image_url: imageUrl,
     })
     if (error) {
       if (error.code === "23505") {
@@ -90,17 +128,54 @@ export default function MemorizationPage() {
       return
     }
     setNewTitle("")
+    setNewImage(null)
     setAdding(false)
     await loadItems()
   }
 
   async function deleteItem(id: string) {
     const item = items.find(i => i.id === id)
-    if (item && (item.assignment_count || 0) > 0) {
+    if (!item) return
+    if ((item.assignment_count || 0) > 0) {
       if (!confirm(`"${item.title}" is assigned to ${item.assignment_count} student(s). Delete anyway?`)) return
+    }
+    if (item.image_url) {
+      await deleteImage(item.image_url)
     }
     await supabase.from("memorization_catalog").delete().eq("id", id)
     await loadItems()
+  }
+
+  async function handleEditImage(itemId: string, file: File) {
+    setUploadingFor(itemId)
+    const item = items.find(i => i.id === itemId)
+
+    // Delete old image if exists
+    if (item?.image_url) {
+      await deleteImage(item.image_url)
+    }
+
+    const imageUrl = await uploadImage(file)
+    if (imageUrl) {
+      await supabase
+        .from("memorization_catalog")
+        .update({ image_url: imageUrl })
+        .eq("id", itemId)
+    }
+    setUploadingFor(null)
+    await loadItems()
+  }
+
+  async function removeImage(itemId: string) {
+    const item = items.find(i => i.id === itemId)
+    if (item?.image_url) {
+      await deleteImage(item.image_url)
+      await supabase
+        .from("memorization_catalog")
+        .update({ image_url: null })
+        .eq("id", itemId)
+      await loadItems()
+    }
   }
 
   const filtered = items.filter(item => {
@@ -109,7 +184,6 @@ export default function MemorizationPage() {
     return matchesCat && matchesSearch
   })
 
-  // Group by category
   const grouped: Record<string, CatalogItem[]> = {}
   filtered.forEach(item => {
     if (!grouped[item.category]) grouped[item.category] = []
@@ -144,13 +218,13 @@ export default function MemorizationPage() {
 
       {/* Add new item */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="pt-6 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
             <Input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g. Surah Baqarah, Dua for Rain..."
-              onKeyDown={(e) => e.key === "Enter" && addItem()}
+              onKeyDown={(e) => e.key === "Enter" && !newImage && addItem()}
               className="flex-1"
             />
             <Select value={newCategory} onValueChange={setNewCategory}>
@@ -163,11 +237,42 @@ export default function MemorizationPage() {
                 ))}
               </SelectContent>
             </Select>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) setNewImage(file)
+              }}
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="gap-1.5"
+            >
+              <ImagePlus className="h-4 w-4" />
+              {newImage ? "Change" : "Image"}
+            </Button>
             <Button onClick={addItem} disabled={adding || !newTitle.trim()}>
               <Plus className="h-4 w-4 mr-1" />
               Add
             </Button>
           </div>
+          {newImage && (
+            <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-3">
+              <img
+                src={URL.createObjectURL(newImage)}
+                alt="Preview"
+                className="h-12 w-12 rounded-lg object-cover"
+              />
+              <span className="text-sm text-muted-foreground flex-1 truncate">{newImage.name}</span>
+              <Button variant="ghost" size="sm" onClick={() => setNewImage(null)} className="h-7">
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -200,6 +305,43 @@ export default function MemorizationPage() {
         </div>
       </div>
 
+      {/* Hidden file input for editing existing items */}
+      <input
+        ref={editFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file && uploadingFor) {
+            handleEditImage(uploadingFor, file)
+          }
+          if (editFileRef.current) editFileRef.current.value = ""
+        }}
+      />
+
+      {/* Image preview modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-3xl max-h-[85vh] p-2">
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="max-w-full max-h-[80vh] rounded-2xl object-contain"
+            />
+            <button
+              onClick={() => setPreviewUrl(null)}
+              className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border text-foreground hover:bg-secondary"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Catalog grouped by category */}
       {Object.keys(grouped).length === 0 ? (
         <Card>
@@ -229,14 +371,76 @@ export default function MemorizationPage() {
                       key={item.id}
                       className="flex items-center gap-3 rounded-xl border border-border/50 px-4 py-3 hover:bg-secondary/30 transition-colors group"
                     >
-                      <BookMarked className={`h-4 w-4 ${colors.text} flex-shrink-0`} />
+                      {/* Thumbnail or icon */}
+                      {item.image_url ? (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewUrl(item.image_url)}
+                          className="flex-shrink-0 hover:opacity-80 transition-opacity"
+                        >
+                          <img
+                            src={item.image_url}
+                            alt={item.title}
+                            className="h-10 w-10 rounded-lg object-cover border border-border/50"
+                          />
+                        </button>
+                      ) : (
+                        <BookMarked className={`h-4 w-4 ${colors.text} flex-shrink-0`} />
+                      )}
+
                       <span className="flex-1 text-sm font-medium">{item.title}</span>
+
                       {(item.assignment_count || 0) > 0 && (
                         <span className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Users className="h-3 w-3" />
                           {item.assignment_count}
                         </span>
                       )}
+
+                      {/* Image actions */}
+                      {item.image_url ? (
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setPreviewUrl(item.image_url)}
+                            className="h-7 text-muted-foreground hover:text-foreground"
+                            title="View image"
+                          >
+                            <Eye className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
+                            className="h-7 text-muted-foreground hover:text-foreground"
+                            title="Change image"
+                          >
+                            <ImagePlus className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeImage(item.id)}
+                            className="h-7 text-muted-foreground hover:text-red-400"
+                            title="Remove image"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
+                          className="h-7 text-xs text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Add image"
+                        >
+                          <ImagePlus className="h-3 w-3 mr-1" />
+                          Image
+                        </Button>
+                      )}
+
                       <Button
                         variant="ghost"
                         size="sm"

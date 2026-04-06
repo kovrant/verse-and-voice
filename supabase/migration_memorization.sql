@@ -26,12 +26,17 @@ CREATE TABLE IF NOT EXISTS student_memorization (
 -- RLS
 ALTER TABLE memorization_catalog ENABLE ROW LEVEL SECURITY;
 ALTER TABLE student_memorization ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all on memorization_catalog" ON memorization_catalog;
+DROP POLICY IF EXISTS "Allow all on student_memorization" ON student_memorization;
 CREATE POLICY "Allow all on memorization_catalog" ON memorization_catalog FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on student_memorization" ON student_memorization FOR ALL USING (true) WITH CHECK (true);
 
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_student_mem_student ON student_memorization(student_id);
 CREATE INDEX IF NOT EXISTS idx_student_mem_catalog ON student_memorization(catalog_id);
+
+-- Add image_url to catalog
+ALTER TABLE memorization_catalog ADD COLUMN IF NOT EXISTS image_url text;
 
 -- Drop old column
 ALTER TABLE students DROP COLUMN IF EXISTS memorizing;

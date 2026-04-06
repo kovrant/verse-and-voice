@@ -39,8 +39,16 @@ CREATE TABLE memorization_catalog (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL UNIQUE,
   category text NOT NULL DEFAULT 'General' CHECK (category IN ('Surah', 'Dua', 'Namaz', 'General')),
+  image_url text,
   created_at timestamptz DEFAULT now()
 );
+
+-- Storage bucket for memorization images (run separately if needed)
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('memorization-images', 'memorization-images', true)
+-- ON CONFLICT DO NOTHING;
+-- CREATE POLICY "Allow public read on memorization-images" ON storage.objects FOR SELECT USING (bucket_id = 'memorization-images');
+-- CREATE POLICY "Allow all upload on memorization-images" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'memorization-images');
+-- CREATE POLICY "Allow all delete on memorization-images" ON storage.objects FOR DELETE USING (bucket_id = 'memorization-images');
 
 -- Student memorization assignments (many-to-many)
 CREATE TABLE student_memorization (

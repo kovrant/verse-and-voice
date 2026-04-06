@@ -54,6 +54,7 @@ interface CatalogItem {
   id: string
   title: string
   category: string
+  image_url: string | null
 }
 
 interface StudentMemItem {
@@ -165,7 +166,7 @@ export default function StudentDetailPage() {
   async function loadMemItems() {
     const { data } = await supabase
       .from("student_memorization")
-      .select("*, memorization_catalog(id, title, category)")
+      .select("*, memorization_catalog(id, title, category, image_url)")
       .eq("student_id", params.id)
       .order("created_at", { ascending: false })
     setMemItems((data as any) || [])
@@ -606,7 +607,10 @@ export default function StudentDetailPage() {
               </p>
               <div className="space-y-1.5">
                 {memItems.filter(m => m.status === "memorizing").map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
+                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
+                    {item.memorization_catalog?.image_url && (
+                      <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
+                    )}
                     <span className="flex-1 text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</span>
                     <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">{item.memorization_catalog?.category}</Badge>
                     <Button
@@ -641,7 +645,10 @@ export default function StudentDetailPage() {
               </p>
               <div className="space-y-1.5">
                 {memItems.filter(m => m.status === "memorized").map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 rounded-xl border border-border/50 bg-secondary/30 px-4 py-2.5 group">
+                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 px-4 py-2.5 group">
+                    {item.memorization_catalog?.image_url && (
+                      <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
+                    )}
                     <span className="flex-1 text-sm text-muted-foreground">{item.memorization_catalog?.title}</span>
                     {item.last_revised_at && (
                       <span className="text-[10px] text-muted-foreground/60">

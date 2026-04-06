@@ -31,7 +31,7 @@ interface MemItem {
   id: string
   status: "memorizing" | "memorized"
   last_revised_at: string | null
-  memorization_catalog: { id: string; title: string; category: string }
+  memorization_catalog: { id: string; title: string; category: string; image_url: string | null }
 }
 
 export default function ClassPage() {
@@ -62,7 +62,7 @@ export default function ClassPage() {
     if (student) {
       const { data } = await supabase
         .from("student_memorization")
-        .select("id, status, last_revised_at, memorization_catalog(id, title, category)")
+        .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
         .eq("student_id", student.id)
         .order("created_at", { ascending: false })
       setMemItems((data as any) || [])
@@ -93,7 +93,7 @@ export default function ClassPage() {
     if (selected) {
       const { data } = await supabase
         .from("student_memorization")
-        .select("id, status, last_revised_at, memorization_catalog(id, title, category)")
+        .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
         .eq("student_id", selected.id)
         .order("created_at", { ascending: false })
       setMemItems((data as any) || [])
@@ -239,7 +239,10 @@ export default function ClassPage() {
                           Currently Memorizing
                         </p>
                         {memorizing.map((item) => (
-                          <div key={item.id} className="rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                          <div key={item.id} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+                            {item.memorization_catalog?.image_url && (
+                              <img src={item.memorization_catalog.image_url} alt="" className="h-10 w-10 rounded-lg object-cover flex-shrink-0" />
+                            )}
                             <p className="text-base font-semibold text-amber-300">{item.memorization_catalog?.title}</p>
                           </div>
                         ))}
@@ -279,7 +282,12 @@ export default function ClassPage() {
                                 Revision Pick
                               </p>
                             </div>
-                            <p className="text-xl font-bold text-amber-300">{revisionPick.memorization_catalog?.title}</p>
+                            <div className="flex items-center gap-4">
+                              {revisionPick.memorization_catalog?.image_url && (
+                                <img src={revisionPick.memorization_catalog.image_url} alt="" className="h-16 w-16 rounded-xl object-cover flex-shrink-0 border border-amber-500/20" />
+                              )}
+                              <p className="text-xl font-bold text-amber-300">{revisionPick.memorization_catalog?.title}</p>
+                            </div>
                             {revisionPick.last_revised_at && (
                               <p className="text-xs text-muted-foreground">
                                 Last revised: {format(new Date(revisionPick.last_revised_at), "MMM d, yyyy")}
