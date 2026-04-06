@@ -12,6 +12,8 @@ import {
   Menu,
   X,
   Moon,
+  Upload,
+  BookOpenCheck,
 } from "lucide-react"
 import { useState, memo } from "react"
 
@@ -21,6 +23,8 @@ const navItems = [
   { href: "/class", label: "Class Session", icon: BookOpen },
   { href: "/memorization", label: "Memorization", icon: BookMarked },
   { href: "/fees", label: "Fee Management", icon: CreditCard },
+  { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
+  { href: "/media", label: "Media Library", icon: Upload },
 ]
 
 export const Sidebar = memo(function Sidebar() {

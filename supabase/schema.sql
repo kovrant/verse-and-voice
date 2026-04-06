@@ -61,6 +61,18 @@ CREATE TABLE student_memorization (
   UNIQUE (student_id, catalog_id)
 );
 
+-- Central media library (polymorphic uploads)
+CREATE TABLE media_library (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  type text NOT NULL CHECK (type IN ('quran', 'memorization', 'general')),
+  category text NOT NULL DEFAULT 'general',
+  file_url text NOT NULL,
+  file_type text NOT NULL CHECK (file_type IN ('pdf', 'image', 'audio', 'video')),
+  meta jsonb DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+
 -- RLS policies (allow all — private local tool, no auth)
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fee_payments ENABLE ROW LEVEL SECURITY;
@@ -70,6 +82,8 @@ CREATE POLICY "Allow all on students" ON students FOR ALL USING (true) WITH CHEC
 CREATE POLICY "Allow all on fee_payments" ON fee_payments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on memorization_catalog" ON memorization_catalog FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on student_memorization" ON student_memorization FOR ALL USING (true) WITH CHECK (true);
+ALTER TABLE media_library ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on media_library" ON media_library FOR ALL USING (true) WITH CHECK (true);
 
 -- Indexes
 CREATE INDEX idx_fee_payments_student_id ON fee_payments(student_id);
@@ -77,6 +91,8 @@ CREATE INDEX idx_fee_payments_month_year ON fee_payments(month, year);
 CREATE INDEX idx_students_status ON students(status);
 CREATE INDEX idx_student_mem_student ON student_memorization(student_id);
 CREATE INDEX idx_student_mem_catalog ON student_memorization(catalog_id);
+CREATE INDEX idx_media_type ON media_library(type);
+CREATE INDEX idx_media_type_category ON media_library(type, category);
 
 -- Seed: Students
 INSERT INTO students (name, guardian_name, country, started_at, status, ended_at, fee, fee_currency, is_qaida, desc_completed, asc_completed) VALUES
