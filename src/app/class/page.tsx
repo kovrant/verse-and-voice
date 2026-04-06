@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { QuranProgress } from "@/components/quran-progress"
+import { QuranProgress, type QuranRound } from "@/components/quran-progress"
 import { Clock, User, Users, Sparkles, CalendarDays, BookMarked, Check, RotateCcw, Shuffle } from "lucide-react"
 import { differenceInDays, format, differenceInCalendarDays } from "date-fns"
 
@@ -21,9 +21,6 @@ interface Student {
   name: string
   guardian_name: string
   started_at: string
-  is_qaida: boolean
-  desc_completed: number
-  asc_completed: number
   class_time: string | null
 }
 
@@ -37,6 +34,7 @@ interface MemItem {
 export default function ClassPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [selected, setSelected] = useState<Student | null>(null)
+  const [rounds, setRounds] = useState<QuranRound[]>([])
   const [memItems, setMemItems] = useState<MemItem[]>([])
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,7 +46,7 @@ export default function ClassPage() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, is_qaida, desc_completed, asc_completed, class_time")
+      .select("id, name, guardian_name, started_at, class_time")
       .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
@@ -60,14 +58,23 @@ export default function ClassPage() {
     setSelected(student)
     setRevisionPick(null)
     if (student) {
-      const { data } = await supabase
-        .from("student_memorization")
-        .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
-        .eq("student_id", student.id)
-        .order("created_at", { ascending: false })
-      setMemItems((data as any) || [])
+      const [memResult, roundsResult] = await Promise.all([
+        supabase
+          .from("student_memorization")
+          .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
+          .eq("student_id", student.id)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("quran_rounds")
+          .select("*")
+          .eq("student_id", student.id)
+          .order("round_number", { ascending: true }),
+      ])
+      setMemItems((memResult.data as any) || [])
+      setRounds(roundsResult.data || [])
     } else {
       setMemItems([])
+      setRounds([])
     }
   }
 
@@ -75,7 +82,6 @@ export default function ClassPage() {
     const memorized = memItems.filter(m => m.status === "memorized")
     if (memorized.length === 0) return
 
-    // Pick the one least recently revised
     const sorted = [...memorized].sort((a, b) => {
       const aTime = a.last_revised_at ? new Date(a.last_revised_at).getTime() : 0
       const bTime = b.last_revised_at ? new Date(b.last_revised_at).getTime() : 0
@@ -200,12 +206,7 @@ export default function ClassPage() {
                   </div>
 
                   {/* Quran Progress */}
-                  <QuranProgress
-                    isQaida={selected.is_qaida}
-                    descCompleted={selected.desc_completed}
-                    ascCompleted={selected.asc_completed}
-                    variant="full"
-                  />
+                  <QuranProgress rounds={rounds} variant="full" />
 
                   {/* Days since start */}
                   <div className="flex items-center justify-center gap-2 pt-3 border-t border-border/50">
@@ -231,7 +232,6 @@ export default function ClassPage() {
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    {/* Currently memorizing */}
                     {memorizing.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -249,7 +249,6 @@ export default function ClassPage() {
                       </div>
                     )}
 
-                    {/* Already memorized */}
                     {memorized.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -271,7 +270,6 @@ export default function ClassPage() {
                       </div>
                     )}
 
-                    {/* Weekly revision picker */}
                     {memorized.length > 0 && (
                       <div className="pt-3 border-t border-border/50">
                         {revisionPick ? (

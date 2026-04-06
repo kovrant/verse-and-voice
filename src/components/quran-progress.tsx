@@ -2,22 +2,63 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, BookMarked } from "lucide-react"
+import { BookOpen, BookMarked, Trophy } from "lucide-react"
+import { format } from "date-fns"
+
+export interface QuranRound {
+  id: string
+  student_id: string
+  type: "qaida" | "quran"
+  round_number: number
+  started_at: string
+  completed_at: string | null
+  desc_completed: number
+  asc_completed: number
+}
 
 interface QuranProgressProps {
-  isQaida: boolean
-  descCompleted: number
-  ascCompleted: number
+  rounds: QuranRound[]
   variant?: "compact" | "card" | "full"
 }
 
 /**
+ * Get the active (in-progress) round — the latest one without completed_at.
+ */
+export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
+  return rounds.find(r => !r.completed_at) || null
+}
+
+/**
+ * Get completed rounds sorted by round_number.
+ */
+export function getCompletedRounds(rounds: QuranRound[]): QuranRound[] {
+  return rounds.filter(r => r.completed_at).sort((a, b) => a.round_number - b.round_number)
+}
+
+/**
+ * Determine what stage the student is at based on rounds.
+ */
+export function getStudentStage(rounds: QuranRound[]): {
+  isQaida: boolean
+  activeRound: QuranRound | null
+  completedQuranCount: number
+  completedQaidaCount: number
+} {
+  const active = getActiveRound(rounds)
+  const completedQuran = rounds.filter(r => r.type === "quran" && r.completed_at)
+  const completedQaida = rounds.filter(r => r.type === "qaida" && r.completed_at)
+  const isQaida = active?.type === "qaida"
+
+  return {
+    isQaida,
+    activeRound: active,
+    completedQuranCount: completedQuran.length,
+    completedQaidaCount: completedQaida.length,
+  }
+}
+
+/**
  * Compute current para and total from desc/asc progress.
- * - desc_completed: paras done from 30 going down (30, 29, 28...)
- * - asc_completed: the para number they are currently ON (e.g. 21 means reading para 21, completed 1-20)
- *   - 0 means not started ascending yet
- * - completed = desc + (asc > 0 ? asc - 1 : 0)
- * - current para = asc (the one they're reading now)
  */
 function computeProgress(desc: number, asc: number) {
   const completedFromAsc = asc > 0 ? asc - 1 : 0
@@ -32,11 +73,17 @@ function computeProgress(desc: number, asc: number) {
   return { currentPara, total, isCompleted }
 }
 
-export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = "compact" }: QuranProgressProps) {
-  const { currentPara, total, isCompleted } = computeProgress(descCompleted, ascCompleted)
+export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProps) {
+  const { isQaida, activeRound, completedQuranCount } = getStudentStage(rounds)
+  const desc = activeRound?.desc_completed || 0
+  const asc = activeRound?.asc_completed || 0
+  const { currentPara, total, isCompleted } = computeProgress(desc, asc)
   const progress = (total / 30) * 100
 
   if (variant === "compact") {
+    if (rounds.length === 0) {
+      return <span className="text-muted-foreground/40">--</span>
+    }
     if (isQaida) {
       return (
         <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/5 gap-1">
@@ -45,25 +92,46 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
         </Badge>
       )
     }
-    if (total === 0) {
-      return <span className="text-muted-foreground/40">--</span>
-    }
-    if (isCompleted) {
+    if (!activeRound && completedQuranCount > 0) {
       return (
         <Badge variant="success" className="gap-1">
-          <BookOpen className="h-3 w-3" />
-          Completed
+          <Trophy className="h-3 w-3" />
+          {completedQuranCount}x Completed
         </Badge>
+      )
+    }
+    if (activeRound && total === 0) {
+      return (
+        <span className="text-muted-foreground text-sm">
+          Quran R{activeRound.round_number}
+          {completedQuranCount > 0 && <span className="text-emerald-400/60 ml-1">({completedQuranCount}x done)</span>}
+        </span>
       )
     }
     return (
       <span className="text-amber-400 font-medium text-sm">
-        Para {currentPara} <span className="text-muted-foreground font-normal text-xs">({total}/30)</span>
+        {currentPara ? `Para ${currentPara}` : `${total}/30`}
+        {activeRound && activeRound.round_number > 1 && (
+          <span className="text-muted-foreground font-normal text-xs ml-1">R{activeRound.round_number}</span>
+        )}
+        <span className="text-muted-foreground font-normal text-xs ml-1">({total}/30)</span>
       </span>
     )
   }
 
   if (variant === "full") {
+    if (rounds.length === 0) {
+      return (
+        <div className="p-5 rounded-2xl bg-secondary/50 border border-border/50 space-y-3">
+          <div className="flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
+            <span className="font-semibold text-sm">Quran Progress</span>
+          </div>
+          <p className="text-sm text-muted-foreground">No rounds started yet.</p>
+        </div>
+      )
+    }
+
     if (isQaida) {
       return (
         <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
@@ -73,12 +141,14 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
               <span className="font-semibold text-sm">Learning Stage</span>
             </div>
             <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 text-sm px-3 py-1">
-              Norani Qaida
+              Norani Qaida {activeRound && activeRound.round_number > 1 ? `(Round ${activeRound.round_number})` : ""}
             </Badge>
           </div>
           <p className="text-xs text-muted-foreground">
             Student is learning the basics through Norani Qaida before starting Quran reading.
           </p>
+          {/* Show completed rounds if any */}
+          <RoundHistory rounds={rounds} />
         </div>
       )
     }
@@ -88,10 +158,20 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-emerald-400" />
-            <span className="font-semibold text-sm">Quran Progress</span>
+            <span className="font-semibold text-sm">
+              Quran Progress
+              {activeRound && activeRound.round_number > 1 && (
+                <span className="text-muted-foreground font-normal ml-1">(Round {activeRound.round_number})</span>
+              )}
+            </span>
           </div>
           <div className="text-right">
-            {isCompleted ? (
+            {!activeRound && completedQuranCount > 0 ? (
+              <Badge variant="success" className="text-sm px-3 py-1">
+                <Trophy className="h-3.5 w-3.5 mr-1" />
+                {completedQuranCount}x Completed
+              </Badge>
+            ) : isCompleted ? (
               <Badge variant="success" className="text-sm px-3 py-1">Completed All 30</Badge>
             ) : currentPara ? (
               <span className="text-lg font-bold">
@@ -103,23 +183,38 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
             )}
           </div>
         </div>
-        <Progress value={progress} />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <div className="flex gap-3">
-            {descCompleted > 0 && (
-              <span>From end: <span className="text-foreground font-semibold">{descCompleted}</span> paras</span>
-            )}
-            {ascCompleted > 0 && (
-              <span>From start: <span className="text-foreground font-semibold">{ascCompleted}</span> paras</span>
-            )}
-          </div>
-          <span>{Math.round(progress)}%</span>
-        </div>
+        {activeRound && (
+          <>
+            <Progress value={progress} />
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <div className="flex gap-3">
+                {desc > 0 && (
+                  <span>From end: <span className="text-foreground font-semibold">{desc}</span> paras</span>
+                )}
+                {asc > 0 && (
+                  <span>From start: <span className="text-foreground font-semibold">{asc}</span> paras</span>
+                )}
+              </div>
+              <span>{Math.round(progress)}%</span>
+            </div>
+          </>
+        )}
+        {/* Show completed rounds */}
+        <RoundHistory rounds={rounds} />
       </div>
     )
   }
 
   // "card" variant — for the info cards grid
+  if (rounds.length === 0) {
+    return (
+      <>
+        <p className="text-2xl font-bold">--</p>
+        <p className="text-xs text-muted-foreground mt-1">Not started</p>
+      </>
+    )
+  }
+
   if (isQaida) {
     return (
       <>
@@ -129,11 +224,11 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
     )
   }
 
-  if (isCompleted) {
+  if (!activeRound && completedQuranCount > 0) {
     return (
       <>
-        <p className="text-2xl font-bold text-emerald-400">30/30</p>
-        <p className="text-xs text-muted-foreground mt-1">Completed</p>
+        <p className="text-2xl font-bold text-emerald-400">{completedQuranCount}x</p>
+        <p className="text-xs text-muted-foreground mt-1">Quran Completed</p>
       </>
     )
   }
@@ -141,8 +236,8 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
   if (total === 0) {
     return (
       <>
-        <p className="text-2xl font-bold">--</p>
-        <p className="text-xs text-muted-foreground mt-1">Not started</p>
+        <p className="text-2xl font-bold">R{activeRound?.round_number || 1}</p>
+        <p className="text-xs text-muted-foreground mt-1">Starting</p>
       </>
     )
   }
@@ -155,7 +250,31 @@ export function QuranProgress({ isQaida, descCompleted, ascCompleted, variant = 
       <div className="mt-2">
         <Progress value={progress} />
       </div>
-      <p className="text-xs text-muted-foreground mt-1">{total}/30 completed</p>
+      <p className="text-xs text-muted-foreground mt-1">
+        {total}/30
+        {activeRound && activeRound.round_number > 1 && ` · R${activeRound.round_number}`}
+      </p>
     </>
+  )
+}
+
+function RoundHistory({ rounds }: { rounds: QuranRound[] }) {
+  const completed = getCompletedRounds(rounds)
+  if (completed.length === 0) return null
+
+  return (
+    <div className="pt-2 border-t border-border/30 space-y-1.5">
+      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">History</p>
+      {completed.map(r => (
+        <div key={r.id} className="flex items-center gap-2 text-xs">
+          <Badge variant="outline" className="border-emerald-500/20 text-emerald-400 bg-emerald-500/5 text-[10px] py-0 px-1.5">
+            {r.type === "qaida" ? "Qaida" : `Quran R${r.round_number}`}
+          </Badge>
+          <span className="text-muted-foreground">
+            {format(new Date(r.started_at), "MMM yyyy")} → {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "..."}
+          </span>
+        </div>
+      ))}
+    </div>
   )
 }

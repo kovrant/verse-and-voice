@@ -61,6 +61,20 @@ CREATE TABLE student_memorization (
   UNIQUE (student_id, catalog_id)
 );
 
+-- Quran reading rounds (track multiple completions)
+CREATE TABLE quran_rounds (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  type text NOT NULL CHECK (type IN ('qaida', 'quran')),
+  round_number integer NOT NULL DEFAULT 1,
+  started_at date NOT NULL,
+  completed_at date,
+  desc_completed integer NOT NULL DEFAULT 0 CHECK (desc_completed >= 0 AND desc_completed <= 30),
+  asc_completed integer NOT NULL DEFAULT 0 CHECK (asc_completed >= 0 AND asc_completed <= 30),
+  created_at timestamptz DEFAULT now(),
+  UNIQUE (student_id, type, round_number)
+);
+
 -- Central media library (polymorphic uploads)
 CREATE TABLE media_library (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -82,6 +96,8 @@ CREATE POLICY "Allow all on students" ON students FOR ALL USING (true) WITH CHEC
 CREATE POLICY "Allow all on fee_payments" ON fee_payments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on memorization_catalog" ON memorization_catalog FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all on student_memorization" ON student_memorization FOR ALL USING (true) WITH CHECK (true);
+ALTER TABLE quran_rounds ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on quran_rounds" ON quran_rounds FOR ALL USING (true) WITH CHECK (true);
 ALTER TABLE media_library ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on media_library" ON media_library FOR ALL USING (true) WITH CHECK (true);
 
@@ -91,6 +107,8 @@ CREATE INDEX idx_fee_payments_month_year ON fee_payments(month, year);
 CREATE INDEX idx_students_status ON students(status);
 CREATE INDEX idx_student_mem_student ON student_memorization(student_id);
 CREATE INDEX idx_student_mem_catalog ON student_memorization(catalog_id);
+CREATE INDEX idx_quran_rounds_student ON quran_rounds(student_id);
+CREATE INDEX idx_quran_rounds_student_type ON quran_rounds(student_id, type);
 CREATE INDEX idx_media_type ON media_library(type);
 CREATE INDEX idx_media_type_category ON media_library(type, category);
 

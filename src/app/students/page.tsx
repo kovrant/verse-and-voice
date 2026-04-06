@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/ui/pagination"
 import { SortableHeader, sortData, toggleSort, type SortDirection } from "@/components/ui/sortable-header"
-import { QuranProgress } from "@/components/quran-progress"
+import { QuranProgress, type QuranRound } from "@/components/quran-progress"
 import { Plus, Search, Users, ArrowRight, MapPin, Settings2, Eye, EyeOff } from "lucide-react"
 import { format } from "date-fns"
 
@@ -93,6 +93,7 @@ export default function StudentsPage() {
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(loadColumns)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
+  const [roundsMap, setRoundsMap] = useState<Record<string, QuranRound[]>>({})
 
   useEffect(() => {
     loadStudents()
@@ -110,11 +111,19 @@ export default function StudentsPage() {
   }, [])
 
   async function loadStudents() {
-    const { data } = await supabase
-      .from("students")
-      .select("*")
-      .order("created_at", { ascending: false })
-    setStudents(data || [])
+    const [studentsRes, roundsRes] = await Promise.all([
+      supabase.from("students").select("*").order("created_at", { ascending: false }),
+      supabase.from("quran_rounds").select("*").order("round_number", { ascending: true }),
+    ])
+    setStudents(studentsRes.data || [])
+
+    // Group rounds by student_id
+    const map: Record<string, QuranRound[]> = {}
+    ;(roundsRes.data || []).forEach((r: QuranRound) => {
+      if (!map[r.student_id]) map[r.student_id] = []
+      map[r.student_id].push(r)
+    })
+    setRoundsMap(map)
     setLoading(false)
   }
 
@@ -396,9 +405,7 @@ export default function StudentsPage() {
                       {isVisible("quran_progress") && (
                         <td className="px-5 py-4">
                           <QuranProgress
-                            isQaida={student.is_qaida}
-                            descCompleted={student.desc_completed}
-                            ascCompleted={student.asc_completed}
+                            rounds={roundsMap[student.id] || []}
                             variant="compact"
                           />
                         </td>

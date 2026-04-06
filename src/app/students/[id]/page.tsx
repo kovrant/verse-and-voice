@@ -31,8 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
-import { QuranProgress } from "@/components/quran-progress"
-import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked } from "lucide-react"
+import { QuranProgress, type QuranRound, getActiveRound, getStudentStage } from "@/components/quran-progress"
+import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play } from "lucide-react"
 import { format, differenceInDays } from "date-fns"
 
 interface Student {
@@ -45,9 +45,6 @@ interface Student {
   status: StudentStatus
   fee: number
   fee_currency: string
-  is_qaida: boolean
-  desc_completed: number
-  asc_completed: number
   class_time: string | null
   created_at: string
 }
@@ -79,6 +76,7 @@ export default function StudentDetailPage() {
   const params = useParams()
   const router = useRouter()
   const [student, setStudent] = useState<Student | null>(null)
+  const [rounds, setRounds] = useState<QuranRound[]>([])
   const [fees, setFees] = useState<FeePayment[]>([])
   const [loading, setLoading] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
@@ -90,16 +88,33 @@ export default function StudentDetailPage() {
   const [memItems, setMemItems] = useState<StudentMemItem[]>([])
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
   const [assignOpen, setAssignOpen] = useState(false)
+
+  // Edit form (non-quran fields)
   const [editForm, setEditForm] = useState({
     fee: "",
     fee_currency: "GBP",
-    is_qaida: true,
-    desc_completed: "0",
-    asc_completed: "0",
     class_time: "",
     country: "",
     status: "Reading" as StudentStatus,
     ended_at: "",
+  })
+
+  const [activeTab, setActiveTab] = useState<"journey" | "memorization" | "fees">("journey")
+
+  // Round editing
+  const [roundEditOpen, setRoundEditOpen] = useState(false)
+  const [roundForm, setRoundForm] = useState({
+    desc_completed: "0",
+    asc_completed: "0",
+  })
+  const [newRoundOpen, setNewRoundOpen] = useState(false)
+  const [newRoundForm, setNewRoundForm] = useState({
+    type: "quran" as "qaida" | "quran",
+    started_at: new Date().toISOString().split("T")[0],
+    completed_at: "",
+    desc_completed: "0",
+    asc_completed: "0",
+    is_completed: false,
   })
 
   const loadStudent = useCallback(async () => {
@@ -118,9 +133,6 @@ export default function StudentDetailPage() {
     setEditForm({
       fee: data.fee.toString(),
       fee_currency: data.fee_currency,
-      is_qaida: data.is_qaida ?? true,
-      desc_completed: (data.desc_completed ?? 0).toString(),
-      asc_completed: (data.asc_completed ?? 0).toString(),
       class_time: data.class_time || "",
       country: data.country || "",
       status: data.status || "Reading",
@@ -128,9 +140,18 @@ export default function StudentDetailPage() {
     })
 
     await ensureFeeRecords(data)
-    await Promise.all([loadFees(), loadMemItems(), loadCatalog()])
+    await Promise.all([loadRounds(), loadFees(), loadMemItems(), loadCatalog()])
     setLoading(false)
   }, [params.id, router])
+
+  async function loadRounds() {
+    const { data } = await supabase
+      .from("quran_rounds")
+      .select("*")
+      .eq("student_id", params.id)
+      .order("round_number", { ascending: true })
+    setRounds(data || [])
+  }
 
   async function ensureFeeRecords(s: Student) {
     const startDate = new Date(s.started_at)
@@ -238,9 +259,6 @@ export default function StudentDetailPage() {
       .update({
         fee: parseFloat(editForm.fee),
         fee_currency: editForm.fee_currency,
-        is_qaida: editForm.is_qaida,
-        desc_completed: parseInt(editForm.desc_completed) || 0,
-        asc_completed: parseInt(editForm.asc_completed) || 0,
         class_time: editForm.class_time || null,
         country: editForm.country || null,
         status: editForm.status,
@@ -250,6 +268,78 @@ export default function StudentDetailPage() {
 
     setEditOpen(false)
     loadStudent()
+  }
+
+  // Round management
+  async function completeActiveRound() {
+    const active = getActiveRound(rounds)
+    if (!active) return
+    if (!confirm(`Mark this ${active.type === "qaida" ? "Qaida" : "Quran"} round as completed?`)) return
+
+    await supabase
+      .from("quran_rounds")
+      .update({ completed_at: new Date().toISOString().split("T")[0] })
+      .eq("id", active.id)
+    await loadRounds()
+  }
+
+  async function saveRoundProgress() {
+    const active = getActiveRound(rounds)
+    if (!active) return
+
+    await supabase
+      .from("quran_rounds")
+      .update({
+        desc_completed: parseInt(roundForm.desc_completed) || 0,
+        asc_completed: parseInt(roundForm.asc_completed) || 0,
+      })
+      .eq("id", active.id)
+
+    setRoundEditOpen(false)
+    await loadRounds()
+  }
+
+  async function startNewRound() {
+    // Determine round number
+    const existingOfType = rounds.filter(r => r.type === newRoundForm.type)
+    const nextNum = existingOfType.length > 0
+      ? Math.max(...existingOfType.map(r => r.round_number)) + 1
+      : 1
+
+    const desc = newRoundForm.is_completed ? 30 : (parseInt(newRoundForm.desc_completed) || 0)
+    const asc = newRoundForm.is_completed ? 30 : (parseInt(newRoundForm.asc_completed) || 0)
+
+    const { error } = await supabase.from("quran_rounds").insert({
+      student_id: params.id,
+      type: newRoundForm.type,
+      round_number: nextNum,
+      started_at: newRoundForm.started_at,
+      completed_at: newRoundForm.is_completed ? (newRoundForm.completed_at || new Date().toISOString().split("T")[0]) : null,
+      desc_completed: desc,
+      asc_completed: asc,
+    })
+
+    if (error) {
+      alert("Error: " + error.message)
+      return
+    }
+
+    setNewRoundOpen(false)
+    setNewRoundForm({
+      type: "quran",
+      started_at: new Date().toISOString().split("T")[0],
+      completed_at: "",
+      desc_completed: "0",
+      asc_completed: "0",
+      is_completed: false,
+    })
+    await loadRounds()
+  }
+
+  async function deleteRound(roundId: string) {
+    if (!confirm("Delete this round? This cannot be undone.")) return
+    await supabase.from("quran_rounds").delete().eq("id", roundId)
+    await loadRounds()
   }
 
   useEffect(() => {
@@ -277,41 +367,48 @@ export default function StudentDetailPage() {
   }
 
   const daysSinceStart = differenceInDays(new Date(), new Date(student.started_at))
-  const cs = CURRENCY_SYMBOLS[student.fee_currency]
-  const completedFromAsc = student.asc_completed > 0 ? student.asc_completed - 1 : 0
-  const paraProgress = ((student.desc_completed + completedFromAsc) / 30) * 100
   const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+  const activeRound = getActiveRound(rounds)
+  const { completedQuranCount } = getStudentStage(rounds)
+  const paidCount = fees.filter(f => f.is_paid).length
+  const unpaidCount = fees.filter(f => !f.is_paid).length
+  const memorizingCount = memItems.filter(m => m.status === "memorizing").length
+  const memorizedCount = memItems.filter(m => m.status === "memorized").length
+
+  const TABS = [
+    { id: "journey" as const, label: "Quran Journey", icon: BookOpen },
+    { id: "memorization" as const, label: "Memorization", icon: BookMarked, count: memorizingCount + memorizedCount },
+    { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
+  ]
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
-      {/* Header */}
-      <div className="flex items-start gap-4">
+    <div className="animate-fade-in-up">
+      {/* Compact Header */}
+      <div className="flex items-center gap-3 mb-5">
         <Link href="/students">
-          <Button variant="outline" size="icon" className="rounded-xl mt-1">
-            <ArrowLeft className="h-5 w-5" />
+          <Button variant="outline" size="icon" className="rounded-xl h-9 w-9">
+            <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 text-xl font-bold">
-              {student.name.charAt(0)}
-            </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight">{student.name}</h1>
-                <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
-              </div>
-              <p className="text-muted-foreground text-sm">
-                Guardian: {student.guardian_name}
-                {student.country && <span> &middot; {student.country}</span>}
-              </p>
-            </div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 text-lg font-bold flex-shrink-0">
+          {student.name.charAt(0)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight truncate">{student.name}</h1>
+            <Badge variant={statusCfg.variant} className="flex-shrink-0">{statusCfg.label}</Badge>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <span>{student.guardian_name}</span>
+            {student.country && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{student.country}</span>}
+            <span>{daysSinceStart} days enrolled</span>
+            {student.ended_at && <span>Ended {format(new Date(student.ended_at), "MMM yyyy")}</span>}
           </div>
         </div>
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
-              <Pencil className="h-4 w-4 mr-2" />
+              <Pencil className="h-3.5 w-3.5 mr-1.5" />
               Edit
             </Button>
           </DialogTrigger>
@@ -324,39 +421,25 @@ export default function StudentDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Country</Label>
-                  <Select
-                    value={editForm.country}
-                    onValueChange={(val) => setEditForm({ ...editForm, country: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
-                      ))}
-                    </SelectContent>
+                  <Select value={editForm.country} onValueChange={(val) => setEditForm({ ...editForm, country: val })}>
+                    <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
+                    <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Class Time</Label>
+                  <TimePicker value={editForm.class_time} onChange={(val) => setEditForm({ ...editForm, class_time: val })} placeholder="Select class time" />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Monthly Fee</Label>
-                  <Input
-                    type="number"
-                    value={editForm.fee}
-                    onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
-                  />
+                  <Input type="number" value={editForm.fee} onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })} />
                 </div>
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Select
-                    value={editForm.fee_currency}
-                    onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={editForm.fee_currency} onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="GBP">GBP (£)</SelectItem>
                       <SelectItem value="USD">USD ($)</SelectItem>
@@ -367,76 +450,11 @@ export default function StudentDetailPage() {
                   </Select>
                 </div>
               </div>
-              {/* Qaida / Quran toggle */}
-              <div className="space-y-3">
-                <Label>Learning Stage</Label>
-                <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditForm({ ...editForm, is_qaida: true, desc_completed: "0", asc_completed: "0" })}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                      editForm.is_qaida
-                        ? "bg-amber-500/15 text-amber-400"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Norani Qaida
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditForm({ ...editForm, is_qaida: false })}
-                    className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                      !editForm.is_qaida
-                        ? "bg-emerald-500/15 text-emerald-400"
-                        : "text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    Reading Quran
-                  </button>
-                </div>
-              </div>
-              {!editForm.is_qaida && (
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Paras from End (30→)</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="30"
-                      value={editForm.desc_completed}
-                      onChange={(e) => setEditForm({ ...editForm, desc_completed: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Currently on Para</Label>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="30"
-                      value={editForm.asc_completed}
-                      onChange={(e) => setEditForm({ ...editForm, asc_completed: e.target.value })}
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Class Time</Label>
-                <TimePicker
-                  value={editForm.class_time}
-                  onChange={(val) => setEditForm({ ...editForm, class_time: val })}
-                  placeholder="Select class time"
-                />
-              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select
-                    value={editForm.status}
-                    onValueChange={(val) => setEditForm({ ...editForm, status: val as StudentStatus })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
+                  <Select value={editForm.status} onValueChange={(val) => setEditForm({ ...editForm, status: val as StudentStatus })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Reading">Reading</SelectItem>
                       <SelectItem value="Completed">Completed</SelectItem>
@@ -447,11 +465,7 @@ export default function StudentDetailPage() {
                 {editForm.status !== "Reading" && (
                   <div className="space-y-2">
                     <Label>End Date</Label>
-                    <Input
-                      type="date"
-                      value={editForm.ended_at}
-                      onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
-                    />
+                    <Input type="date" value={editForm.ended_at} onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })} />
                   </div>
                 )}
               </div>
@@ -464,256 +478,326 @@ export default function StudentDetailPage() {
         </Dialog>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4 text-emerald-400" />
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Monthly Fee</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="lg" />
-          </CardContent>
-        </Card>
-
-        <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-amber-400" />
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Quran</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <QuranProgress
-              isQaida={student.is_qaida}
-              descCompleted={student.desc_completed}
-              ascCompleted={student.asc_completed}
-              variant="card"
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-blue-400" />
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Class Time</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{student.class_time || "--"}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-pink-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-purple-400" />
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enrolled</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{daysSinceStart}<span className="text-sm font-normal text-muted-foreground ml-1">days</span></p>
-            <p className="text-xs text-muted-foreground mt-1">Since {format(new Date(student.started_at), "MMM d, yyyy")}</p>
-          </CardContent>
-        </Card>
+      {/* Quick Stats Bar */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
+          <CreditCard className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+          <div className="min-w-0">
+            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="sm" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
+          <BookOpen className="h-4 w-4 text-amber-400 flex-shrink-0" />
+          <QuranProgress rounds={rounds} variant="compact" />
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
+          <Clock className="h-4 w-4 text-blue-400 flex-shrink-0" />
+          <span className="text-sm font-semibold">{student.class_time || "No time set"}</span>
+        </div>
+        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
+          <CalendarDays className="h-4 w-4 text-purple-400 flex-shrink-0" />
+          <span className="text-sm"><span className="font-semibold">{daysSinceStart}</span> <span className="text-muted-foreground">days</span></span>
+        </div>
       </div>
 
-      {/* Extra Details Row */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        {student.country && (
-          <Card className="group relative overflow-hidden hover:border-border">
-            <CardContent className="pt-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10 flex-shrink-0">
-                <MapPin className="h-5 w-5 text-blue-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Country</p>
-                <p className="font-semibold">{student.country}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-        {student.ended_at && (
-          <Card className="group relative overflow-hidden hover:border-border">
-            <CardContent className="pt-5 flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 flex-shrink-0">
-                <CalendarDays className="h-5 w-5 text-amber-400" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">End Date</p>
-                <p className="font-semibold">{format(new Date(student.ended_at), "MMM d, yyyy")}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 mb-4">
+        {TABS.map(tab => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              activeTab === tab.id
+                ? "bg-emerald-500/15 text-emerald-400"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            <span className="hidden sm:inline">{tab.label}</span>
+            {tab.count != null && tab.count > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                activeTab === tab.id ? "bg-emerald-500/20 text-emerald-400" : "bg-secondary text-muted-foreground"
+              }`}>{tab.count}</span>
+            )}
+          </button>
+        ))}
       </div>
 
-      {/* Memorization Tracking */}
-      <Card className="relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BookMarked className="h-4 w-4 text-amber-400" />
-              <CardTitle>Memorization</CardTitle>
+      {/* Tab Content */}
+      {activeTab === "journey" && (
+        <div className="space-y-4 animate-fade-in-up">
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 justify-end">
+            {activeRound && (
+              <>
+                <Button variant="outline" size="sm" onClick={() => { setRoundForm({ desc_completed: (activeRound.desc_completed || 0).toString(), asc_completed: (activeRound.asc_completed || 0).toString() }); setRoundEditOpen(true) }}>
+                  <Pencil className="h-3.5 w-3.5 mr-1" />
+                  Update Progress
+                </Button>
+                <Button variant="outline" size="sm" onClick={completeActiveRound} className="text-emerald-400 hover:text-emerald-300">
+                  <Check className="h-3.5 w-3.5 mr-1" />
+                  Complete
+                </Button>
+              </>
+            )}
+            <Button size="sm" onClick={() => setNewRoundOpen(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
+              Add Round
+            </Button>
+          </div>
+
+          {/* Current progress */}
+          <QuranProgress rounds={rounds} variant="full" />
+
+          {/* Rounds list */}
+          {rounds.length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">All Rounds</p>
+              {[...rounds].reverse().map(r => {
+                const isActive = !r.completed_at
+                const desc = r.desc_completed
+                const asc = r.asc_completed
+                const completedFromAsc = asc > 0 ? asc - 1 : 0
+                const total = r.type === "quran" ? desc + completedFromAsc : 0
+                const prog = (total / 30) * 100
+
+                return (
+                  <div key={r.id} className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 group ${isActive ? "border-emerald-500/30 bg-emerald-500/5" : "border-border/50 bg-secondary/20"}`}>
+                    <div className={`flex h-7 w-7 items-center justify-center rounded-lg flex-shrink-0 ${isActive ? "bg-emerald-500/15" : "bg-secondary"}`}>
+                      {r.type === "qaida" ? <BookMarked className={`h-3.5 w-3.5 ${isActive ? "text-amber-400" : "text-muted-foreground"}`} /> : r.completed_at ? <Trophy className="h-3.5 w-3.5 text-emerald-400" /> : <BookOpen className={`h-3.5 w-3.5 ${isActive ? "text-emerald-400" : "text-muted-foreground"}`} />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{r.type === "qaida" ? "Norani Qaida" : `Quran R${r.round_number}`}</span>
+                        {isActive && <Badge className="bg-emerald-500/15 text-emerald-400 border-0 text-[10px] py-0">Active</Badge>}
+                        <span className="text-[11px] text-muted-foreground">
+                          {format(new Date(r.started_at), "MMM yyyy")} → {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "now"}
+                        </span>
+                        {r.type === "quran" && <span className={`text-[11px] ${isActive ? "text-amber-400" : "text-emerald-400"}`}>{total}/30</span>}
+                      </div>
+                    </div>
+                    {r.type === "quran" && <div className="w-16"><Progress value={prog} /></div>}
+                    <Button variant="ghost" size="sm" onClick={() => deleteRound(r.id)} className="h-6 w-6 p-0 text-muted-foreground/40 hover:text-red-400 opacity-0 group-hover:opacity-100 flex-shrink-0">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )
+              })}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setAssignOpen(!assignOpen); if (!assignOpen) loadCatalog() }}
-            >
-              <Plus className="h-4 w-4 mr-1" />
+          )}
+
+          {rounds.length === 0 && (
+            <div className="text-center py-8">
+              <BookOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No rounds yet. Click &ldquo;Add Round&rdquo; to start tracking.</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "memorization" && (
+        <div className="space-y-4 animate-fade-in-up">
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={() => { setAssignOpen(!assignOpen); if (!assignOpen) loadCatalog() }}>
+              <Plus className="h-3.5 w-3.5 mr-1" />
               Assign
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Assign from catalog */}
+
           {assignOpen && (
             <div className="rounded-xl border border-border/50 bg-secondary/20 p-4 space-y-3">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assign from Catalog</p>
               <div className="flex flex-wrap gap-2">
-                {catalog
-                  .filter(c => !memItems.some(m => m.catalog_id === c.id))
-                  .map(item => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => assignItem(item.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {item.title}
-                      <span className="text-muted-foreground/40">({item.category})</span>
-                    </button>
-                  ))}
+                {catalog.filter(c => !memItems.some(m => m.catalog_id === c.id)).map(item => (
+                  <button key={item.id} type="button" onClick={() => assignItem(item.id)} className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all">
+                    <Plus className="h-3 w-3" />{item.title}<span className="text-muted-foreground/40">({item.category})</span>
+                  </button>
+                ))}
                 {catalog.filter(c => !memItems.some(m => m.catalog_id === c.id)).length === 0 && (
-                  <p className="text-xs text-muted-foreground">All catalog items are already assigned.</p>
+                  <p className="text-xs text-muted-foreground">All items assigned.</p>
                 )}
               </div>
             </div>
           )}
 
-          {/* Currently memorizing */}
           {memItems.filter(m => m.status === "memorizing").length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" />
-                Currently Memorizing
+                <Sparkles className="h-3 w-3" />Currently Memorizing
               </p>
-              <div className="space-y-1.5">
-                {memItems.filter(m => m.status === "memorizing").map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
-                    {item.memorization_catalog?.image_url && (
-                      <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
-                    )}
-                    <span className="flex-1 text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</span>
-                    <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">{item.memorization_catalog?.category}</Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMemStatus(item)}
-                      className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Check className="h-3 w-3 mr-1" />
-                      Done
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unassignItem(item.id)}
-                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              {memItems.filter(m => m.status === "memorizing").map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
+                  {item.memorization_catalog?.image_url && <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />}
+                  <span className="flex-1 text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</span>
+                  <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">{item.memorization_catalog?.category}</Badge>
+                  <Button variant="ghost" size="sm" onClick={() => toggleMemStatus(item)} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"><Check className="h-3 w-3 mr-1" />Done</Button>
+                  <Button variant="ghost" size="sm" onClick={() => unassignItem(item.id)} className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></Button>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* Already memorized */}
           {memItems.filter(m => m.status === "memorized").length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Check className="h-3 w-3" />
-                Memorized ({memItems.filter(m => m.status === "memorized").length})
+                <Check className="h-3 w-3" />Memorized ({memorizedCount})
               </p>
-              <div className="space-y-1.5">
-                {memItems.filter(m => m.status === "memorized").map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 px-4 py-2.5 group">
-                    {item.memorization_catalog?.image_url && (
-                      <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
-                    )}
-                    <span className="flex-1 text-sm text-muted-foreground">{item.memorization_catalog?.title}</span>
-                    {item.last_revised_at && (
-                      <span className="text-[10px] text-muted-foreground/60">
-                        Revised {format(new Date(item.last_revised_at), "MMM d")}
-                      </span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => markRevised(item.id)}
-                      title="Mark as revised today"
-                      className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <RotateCcw className="h-3 w-3 mr-1" />
-                      Revised
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMemStatus(item)}
-                      className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      Undo
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unassignItem(item.id)}
-                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+              {memItems.filter(m => m.status === "memorized").map((item) => (
+                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 group">
+                  {item.memorization_catalog?.image_url && <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />}
+                  <span className="flex-1 text-sm text-muted-foreground">{item.memorization_catalog?.title}</span>
+                  {item.last_revised_at && <span className="text-[10px] text-muted-foreground/60">Revised {format(new Date(item.last_revised_at), "MMM d")}</span>}
+                  <Button variant="ghost" size="sm" onClick={() => markRevised(item.id)} className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"><RotateCcw className="h-3 w-3 mr-1" />Revised</Button>
+                  <Button variant="ghost" size="sm" onClick={() => toggleMemStatus(item)} className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">Undo</Button>
+                  <Button variant="ghost" size="sm" onClick={() => unassignItem(item.id)} className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></Button>
+                </div>
+              ))}
             </div>
           )}
 
           {memItems.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No memorization items assigned. Click &ldquo;Assign&rdquo; to add from the catalog.
-            </p>
+            <div className="text-center py-8">
+              <BookMarked className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No memorization items assigned.</p>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
 
-      {/* Fee Payment History */}
-      <FeeHistoryTable
-        fees={fees}
-        sortKey={feeSortKey}
-        sortDir={feeSortDir}
-        page={feePage}
-        pageSize={feePageSize}
-        onSort={(key) => {
-          const result = toggleSort(feeSortKey, feeSortDir, key)
-          setFeeSortKey(result.direction ? result.key : null)
-          setFeeSortDir(result.direction)
-          setFeePage(1)
-        }}
-        onPageChange={setFeePage}
-        onToggleFee={toggleFee}
-      />
+      {activeTab === "fees" && (
+        <div className="animate-fade-in-up">
+          {/* Fee summary */}
+          <div className="flex items-center gap-4 mb-4 text-sm">
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-muted-foreground">Paid</span>
+              <span className="font-semibold">{paidCount}</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-amber-400" />
+              <span className="text-muted-foreground">Unpaid</span>
+              <span className="font-semibold">{unpaidCount}</span>
+            </span>
+            <span className="text-muted-foreground/40">|</span>
+            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="sm" />
+            <span className="text-muted-foreground text-xs">/ month</span>
+          </div>
+          <FeeHistoryTable
+            fees={fees}
+            sortKey={feeSortKey}
+            sortDir={feeSortDir}
+            page={feePage}
+            pageSize={feePageSize}
+            onSort={(key) => {
+              const result = toggleSort(feeSortKey, feeSortDir, key)
+              setFeeSortKey(result.direction ? result.key : null)
+              setFeeSortDir(result.direction)
+              setFeePage(1)
+            }}
+            onPageChange={setFeePage}
+            onToggleFee={toggleFee}
+          />
+        </div>
+      )}
+
+      {/* Update Progress Dialog */}
+      <Dialog open={roundEditOpen} onOpenChange={setRoundEditOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Update Progress</DialogTitle>
+            <DialogDescription>{activeRound?.type === "qaida" ? "Norani Qaida" : `Quran Round ${activeRound?.round_number || 1}`}</DialogDescription>
+          </DialogHeader>
+          {activeRound?.type === "quran" ? (
+            <div className="space-y-4 pt-2">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Paras from End (30→)</Label>
+                  <Input type="number" min="0" max="30" value={roundForm.desc_completed} onChange={(e) => setRoundForm({ ...roundForm, desc_completed: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Currently on Para</Label>
+                  <Input type="number" min="0" max="30" value={roundForm.asc_completed} onChange={(e) => setRoundForm({ ...roundForm, asc_completed: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Button onClick={saveRoundProgress}>Save</Button>
+                <Button variant="outline" onClick={() => setRoundEditOpen(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4 pt-2">
+              <p className="text-sm text-muted-foreground">Qaida has no para progress. Use &ldquo;Complete&rdquo; to finish this round.</p>
+              <Button variant="outline" onClick={() => setRoundEditOpen(false)}>Close</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Round Dialog */}
+      <Dialog open={newRoundOpen} onOpenChange={setNewRoundOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Round</DialogTitle>
+            <DialogDescription>Add a new or past completed round</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
+              <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, type: "qaida" })} className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "qaida" ? "bg-amber-500/15 text-amber-400" : "text-muted-foreground hover:text-foreground"}`}>Norani Qaida</button>
+              <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, type: "quran" })} className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "quran" ? "bg-emerald-500/15 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}>Quran Reading</button>
+            </div>
+
+            <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, is_completed: !newRoundForm.is_completed })} className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all">
+              <div className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${newRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}>
+                <div className="h-4 w-4 rounded-full bg-white shadow-sm mt-0.5" style={{ transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
+              </div>
+              <div>
+                <p className="text-sm font-medium">Already completed</p>
+                <p className="text-xs text-muted-foreground">Toggle on for a past round</p>
+              </div>
+            </button>
+
+            <div className={`grid gap-4 ${newRoundForm.is_completed ? "sm:grid-cols-2" : ""}`}>
+              <div className="space-y-2">
+                <Label>Start Date</Label>
+                <Input type="date" value={newRoundForm.started_at} onChange={(e) => setNewRoundForm({ ...newRoundForm, started_at: e.target.value })} />
+              </div>
+              {newRoundForm.is_completed && (
+                <div className="space-y-2">
+                  <Label>Completed Date</Label>
+                  <Input type="date" value={newRoundForm.completed_at} onChange={(e) => setNewRoundForm({ ...newRoundForm, completed_at: e.target.value })} />
+                </div>
+              )}
+            </div>
+
+            {!newRoundForm.is_completed && newRoundForm.type === "quran" && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Paras from End (30→)</Label>
+                  <Input type="number" min="0" max="30" value={newRoundForm.desc_completed} onChange={(e) => setNewRoundForm({ ...newRoundForm, desc_completed: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Currently on Para</Label>
+                  <Input type="number" min="0" max="30" value={newRoundForm.asc_completed} onChange={(e) => setNewRoundForm({ ...newRoundForm, asc_completed: e.target.value })} />
+                </div>
+              </div>
+            )}
+
+            {newRoundForm.is_completed && (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
+                <p className="text-xs text-emerald-400">{newRoundForm.type === "quran" ? "Saved as fully completed (30/30)." : "Saved as completed Qaida round."}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3 pt-1">
+              <Button onClick={startNewRound}>
+                {newRoundForm.is_completed ? <><Trophy className="h-3.5 w-3.5 mr-1" />Add Completed Round</> : <><Play className="h-3.5 w-3.5 mr-1" />Start Round</>}
+              </Button>
+              <Button variant="outline" onClick={() => setNewRoundOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

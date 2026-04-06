@@ -29,35 +29,47 @@ export default function NewStudentPage() {
     started_at: new Date().toISOString().split("T")[0],
     fee: "",
     fee_currency: "GBP",
-    is_qaida: true,
+    class_time: "",
+    // Initial round
+    round_type: "qaida" as "qaida" | "quran",
     desc_completed: "0",
     asc_completed: "0",
-    class_time: "",
   })
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
 
-    const { error } = await supabase.from("students").insert({
+    // Insert student
+    const { data: student, error } = await supabase.from("students").insert({
       name: form.name,
       guardian_name: form.guardian_name,
       country: form.country || null,
       started_at: form.started_at,
       fee: parseFloat(form.fee),
       fee_currency: form.fee_currency,
-      is_qaida: form.is_qaida,
-      desc_completed: parseInt(form.desc_completed) || 0,
-      asc_completed: parseInt(form.asc_completed) || 0,
+      is_qaida: form.round_type === "qaida",
+      desc_completed: form.round_type === "quran" ? parseInt(form.desc_completed) || 0 : 0,
+      asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
       class_time: form.class_time || null,
       status: "Reading",
-    })
+    }).select("id").single()
 
-    if (error) {
-      alert("Error saving student: " + error.message)
+    if (error || !student) {
+      alert("Error saving student: " + (error?.message || "Unknown error"))
       setSaving(false)
       return
     }
+
+    // Create first round
+    await supabase.from("quran_rounds").insert({
+      student_id: student.id,
+      type: form.round_type,
+      round_number: 1,
+      started_at: form.started_at,
+      desc_completed: form.round_type === "quran" ? parseInt(form.desc_completed) || 0 : 0,
+      asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
+    })
 
     router.push("/students")
   }
@@ -205,20 +217,19 @@ export default function NewStudentPage() {
               </div>
             </div>
 
-            {/* Quran Progress */}
+            {/* Starting Round */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
-                Quran Progress
+                Starting Stage
               </div>
 
-              {/* Qaida / Quran toggle */}
               <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, is_qaida: true, desc_completed: "0", asc_completed: "0" })}
+                  onClick={() => setForm({ ...form, round_type: "qaida", desc_completed: "0", asc_completed: "0" })}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    form.is_qaida
+                    form.round_type === "qaida"
                       ? "bg-amber-500/15 text-amber-400 shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -227,9 +238,9 @@ export default function NewStudentPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, is_qaida: false })}
+                  onClick={() => setForm({ ...form, round_type: "quran" })}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                    !form.is_qaida
+                    form.round_type === "quran"
                       ? "bg-emerald-500/15 text-emerald-400 shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
@@ -238,7 +249,7 @@ export default function NewStudentPage() {
                 </button>
               </div>
 
-              {form.is_qaida ? (
+              {form.round_type === "qaida" ? (
                 <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
                   <p className="text-sm text-amber-300 font-medium">Student is learning the basics</p>
                   <p className="text-xs text-muted-foreground mt-1">Norani Qaida must be completed before starting Quran reading.</p>
@@ -271,7 +282,6 @@ export default function NewStudentPage() {
                   </div>
                 </div>
               )}
-
             </div>
 
             {/* Actions */}
