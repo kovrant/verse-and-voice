@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import {
@@ -31,7 +30,7 @@ import {
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
 import { QuranProgress } from "@/components/quran-progress"
-import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin } from "lucide-react"
+import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked } from "lucide-react"
 import { format, differenceInDays } from "date-fns"
 
 interface Student {
@@ -47,9 +46,22 @@ interface Student {
   is_qaida: boolean
   desc_completed: number
   asc_completed: number
-  memorizing: string | null
   class_time: string | null
   created_at: string
+}
+
+interface CatalogItem {
+  id: string
+  title: string
+  category: string
+}
+
+interface StudentMemItem {
+  id: string
+  catalog_id: string
+  status: "memorizing" | "memorized"
+  last_revised_at: string | null
+  memorization_catalog: CatalogItem
 }
 
 interface FeePayment {
@@ -71,13 +83,15 @@ export default function StudentDetailPage() {
   const [feeSortDir, setFeeSortDir] = useState<SortDirection>(null)
   const [feePage, setFeePage] = useState(1)
   const feePageSize = 12
+  const [memItems, setMemItems] = useState<StudentMemItem[]>([])
+  const [catalog, setCatalog] = useState<CatalogItem[]>([])
+  const [assignOpen, setAssignOpen] = useState(false)
   const [editForm, setEditForm] = useState({
     fee: "",
     fee_currency: "GBP",
     is_qaida: true,
     desc_completed: "0",
     asc_completed: "0",
-    memorizing: "",
     class_time: "",
     country: "",
     status: "Reading" as StudentStatus,
@@ -103,7 +117,6 @@ export default function StudentDetailPage() {
       is_qaida: data.is_qaida ?? true,
       desc_completed: (data.desc_completed ?? 0).toString(),
       asc_completed: (data.asc_completed ?? 0).toString(),
-      memorizing: data.memorizing || "",
       class_time: data.class_time || "",
       country: data.country || "",
       status: data.status || "Reading",
@@ -111,7 +124,7 @@ export default function StudentDetailPage() {
     })
 
     await ensureFeeRecords(data)
-    await loadFees()
+    await Promise.all([loadFees(), loadMemItems(), loadCatalog()])
     setLoading(false)
   }, [params.id, router])
 
@@ -149,6 +162,58 @@ export default function StudentDetailPage() {
     setFees(data || [])
   }
 
+  async function loadMemItems() {
+    const { data } = await supabase
+      .from("student_memorization")
+      .select("*, memorization_catalog(id, title, category)")
+      .eq("student_id", params.id)
+      .order("created_at", { ascending: false })
+    setMemItems((data as any) || [])
+  }
+
+  async function loadCatalog() {
+    const { data } = await supabase
+      .from("memorization_catalog")
+      .select("*")
+      .order("category")
+      .order("title")
+    setCatalog(data || [])
+  }
+
+  async function assignItem(catalogId: string) {
+    await supabase.from("student_memorization").upsert({
+      student_id: params.id,
+      catalog_id: catalogId,
+      status: "memorizing",
+    }, { onConflict: "student_id,catalog_id" })
+    await loadMemItems()
+  }
+
+  async function unassignItem(id: string) {
+    await supabase.from("student_memorization").delete().eq("id", id)
+    await loadMemItems()
+  }
+
+  async function toggleMemStatus(item: StudentMemItem) {
+    const newStatus = item.status === "memorizing" ? "memorized" : "memorizing"
+    await supabase
+      .from("student_memorization")
+      .update({
+        status: newStatus,
+        last_revised_at: newStatus === "memorized" ? new Date().toISOString() : null,
+      })
+      .eq("id", item.id)
+    await loadMemItems()
+  }
+
+  async function markRevised(id: string) {
+    await supabase
+      .from("student_memorization")
+      .update({ last_revised_at: new Date().toISOString() })
+      .eq("id", id)
+    await loadMemItems()
+  }
+
   async function toggleFee(fee: FeePayment) {
     const newPaid = !fee.is_paid
     await supabase
@@ -171,7 +236,6 @@ export default function StudentDetailPage() {
         is_qaida: editForm.is_qaida,
         desc_completed: parseInt(editForm.desc_completed) || 0,
         asc_completed: parseInt(editForm.asc_completed) || 0,
-        memorizing: editForm.memorizing || null,
         class_time: editForm.class_time || null,
         country: editForm.country || null,
         status: editForm.status,
@@ -351,13 +415,6 @@ export default function StudentDetailPage() {
                 </div>
               )}
               <div className="space-y-2">
-                <Label>Currently Memorizing</Label>
-                <Textarea
-                  value={editForm.memorizing}
-                  onChange={(e) => setEditForm({ ...editForm, memorizing: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
                 <Label>Class Time</Label>
                 <TimePicker
                   value={editForm.class_time}
@@ -494,21 +551,142 @@ export default function StudentDetailPage() {
         )}
       </div>
 
-      {/* Currently Memorizing */}
-      {student.memorizing && (
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
-          <CardHeader className="pb-2">
+      {/* Memorization Tracking */}
+      <Card className="relative overflow-hidden">
+        <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
+        <CardHeader>
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-amber-400" />
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Currently Memorizing</CardTitle>
+              <BookMarked className="h-4 w-4 text-amber-400" />
+              <CardTitle>Memorization</CardTitle>
             </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold text-amber-300">{student.memorizing}</p>
-          </CardContent>
-        </Card>
-      )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setAssignOpen(!assignOpen); if (!assignOpen) loadCatalog() }}
+            >
+              <Plus className="h-4 w-4 mr-1" />
+              Assign
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Assign from catalog */}
+          {assignOpen && (
+            <div className="rounded-xl border border-border/50 bg-secondary/20 p-4 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assign from Catalog</p>
+              <div className="flex flex-wrap gap-2">
+                {catalog
+                  .filter(c => !memItems.some(m => m.catalog_id === c.id))
+                  .map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => assignItem(item.id)}
+                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all"
+                    >
+                      <Plus className="h-3 w-3" />
+                      {item.title}
+                      <span className="text-muted-foreground/40">({item.category})</span>
+                    </button>
+                  ))}
+                {catalog.filter(c => !memItems.some(m => m.catalog_id === c.id)).length === 0 && (
+                  <p className="text-xs text-muted-foreground">All catalog items are already assigned.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Currently memorizing */}
+          {memItems.filter(m => m.status === "memorizing").length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3" />
+                Currently Memorizing
+              </p>
+              <div className="space-y-1.5">
+                {memItems.filter(m => m.status === "memorizing").map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
+                    <span className="flex-1 text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</span>
+                    <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">{item.memorization_catalog?.category}</Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleMemStatus(item)}
+                      className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Done
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unassignItem(item.id)}
+                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Already memorized */}
+          {memItems.filter(m => m.status === "memorized").length > 0 && (
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Check className="h-3 w-3" />
+                Memorized ({memItems.filter(m => m.status === "memorized").length})
+              </p>
+              <div className="space-y-1.5">
+                {memItems.filter(m => m.status === "memorized").map((item) => (
+                  <div key={item.id} className="flex items-center gap-2 rounded-xl border border-border/50 bg-secondary/30 px-4 py-2.5 group">
+                    <span className="flex-1 text-sm text-muted-foreground">{item.memorization_catalog?.title}</span>
+                    {item.last_revised_at && (
+                      <span className="text-[10px] text-muted-foreground/60">
+                        Revised {format(new Date(item.last_revised_at), "MMM d")}
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markRevised(item.id)}
+                      title="Mark as revised today"
+                      className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Revised
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleMemStatus(item)}
+                      className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      Undo
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unassignItem(item.id)}
+                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {memItems.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              No memorization items assigned. Click &ldquo;Assign&rdquo; to add from the catalog.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Fee Payment History */}
       <FeeHistoryTable

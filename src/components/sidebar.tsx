@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
+  BookMarked,
   CreditCard,
   Menu,
   X,
@@ -18,6 +19,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/students", label: "Students", icon: Users },
   { href: "/class", label: "Class Session", icon: BookOpen },
+  { href: "/memorization", label: "Memorization", icon: BookMarked },
   { href: "/fees", label: "Fee Management", icon: CreditCard },
 ]
 

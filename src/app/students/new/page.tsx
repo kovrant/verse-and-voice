@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import {
   Select,
   SelectContent,
@@ -33,7 +32,6 @@ export default function NewStudentPage() {
     is_qaida: true,
     desc_completed: "0",
     asc_completed: "0",
-    memorizing: "",
     class_time: "",
   })
 
@@ -51,7 +49,6 @@ export default function NewStudentPage() {
       is_qaida: form.is_qaida,
       desc_completed: parseInt(form.desc_completed) || 0,
       asc_completed: parseInt(form.asc_completed) || 0,
-      memorizing: form.memorizing || null,
       class_time: form.class_time || null,
       status: "Reading",
     })
@@ -275,16 +272,6 @@ export default function NewStudentPage() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label htmlFor="memorizing">Currently Memorizing</Label>
-                <Textarea
-                  id="memorizing"
-                  value={form.memorizing}
-                  onChange={(e) => setForm({ ...form, memorizing: e.target.value })}
-                  placeholder="e.g. Surah Al-Baqarah Ayat 50-60"
-                  rows={3}
-                />
-              </div>
             </div>
 
             {/* Actions */}
