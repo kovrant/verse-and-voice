@@ -40,7 +40,7 @@ const MEDIA_TYPES = [
   { value: "general", label: "General", icon: "📁" },
 ]
 
-const CATEGORIES: Record<string, string[]> = {
+const DEFAULT_CATEGORIES: Record<string, string[]> = {
   quran: ["Para"],
   memorization: ["Surah", "Dua", "Namaz", "General"],
   general: ["Document", "Resource", "Other"],
@@ -68,6 +68,19 @@ export default function MediaPage() {
   const [paraNumber, setParaNumber] = useState("")
   const [file, setFile] = useState<File | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Custom categories added by the user
+  const [customCategories, setCustomCategories] = useState<Record<string, string[]>>({})
+  const [newCategoryInput, setNewCategoryInput] = useState("")
+  const [addingCategory, setAddingCategory] = useState(false)
+
+  // Merged categories: defaults + custom + categories from existing items
+  function getCategories(mediaType: string): string[] {
+    const defaults = DEFAULT_CATEGORIES[mediaType] || []
+    const custom = customCategories[mediaType] || []
+    const fromItems = Array.from(new Set(items.filter(i => i.type === mediaType).map(i => i.category)))
+    return Array.from(new Set([...defaults, ...custom, ...fromItems]))
+  }
 
   // Bulk upload
   const [bulkUploading, setBulkUploading] = useState(false)
@@ -440,7 +453,7 @@ export default function MediaPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Type *</Label>
-                <Select value={type} onValueChange={(v) => { setType(v); setCategory(CATEGORIES[v]?.[0] || "general") }}>
+                <Select value={type} onValueChange={(v) => { setType(v); setCategory(getCategories(v)[0] || "general"); setAddingCategory(false); setNewCategoryInput("") }}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -455,16 +468,73 @@ export default function MediaPage() {
               </div>
               <div className="space-y-2">
                 <Label>Category *</Label>
-                <Select value={category} onValueChange={setCategory}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(CATEGORIES[type] || []).map(c => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {addingCategory ? (
+                  <div className="flex gap-2">
+                    <Input
+                      value={newCategoryInput}
+                      onChange={(e) => setNewCategoryInput(e.target.value)}
+                      placeholder="New category name"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && newCategoryInput.trim()) {
+                          const name = newCategoryInput.trim()
+                          setCustomCategories(prev => ({
+                            ...prev,
+                            [type]: [...(prev[type] || []), name],
+                          }))
+                          setCategory(name)
+                          setNewCategoryInput("")
+                          setAddingCategory(false)
+                        }
+                        if (e.key === "Escape") {
+                          setAddingCategory(false)
+                          setNewCategoryInput("")
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      className="shrink-0"
+                      disabled={!newCategoryInput.trim()}
+                      onClick={() => {
+                        const name = newCategoryInput.trim()
+                        if (!name) return
+                        setCustomCategories(prev => ({
+                          ...prev,
+                          [type]: [...(prev[type] || []), name],
+                        }))
+                        setCategory(name)
+                        setNewCategoryInput("")
+                        setAddingCategory(false)
+                      }}
+                    >
+                      Add
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setAddingCategory(false); setNewCategoryInput("") }}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Select value={category} onValueChange={(v) => {
+                    if (v === "__add_new__") {
+                      setAddingCategory(true)
+                    } else {
+                      setCategory(v)
+                    }
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getCategories(type).map(c => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                      <SelectItem value="__add_new__" className="text-emerald-400">
+                        + Add New Category
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
@@ -629,18 +699,19 @@ export default function MediaPage() {
                         />
                       </div>
                     ) : (
-                      <div className="aspect-[4/3] overflow-hidden bg-neutral-100 relative">
-                        {/* Fallback shown while PDF loads */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-                          <FileText className="h-8 w-8 text-emerald-600/30" />
-                          <span className="text-[10px] text-neutral-400">Loading...</span>
-                        </div>
-                        <embed
-                          src={`${item.file_url}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`}
-                          type="application/pdf"
-                          className="pointer-events-none origin-top-left absolute inset-0"
-                          style={{ width: "400%", height: "400%", transform: "scale(0.25)" }}
-                        />
+                      <div className="aspect-[4/3] overflow-hidden bg-secondary/80 relative flex items-center justify-center">
+                        {/* Decorative background */}
+                        <div className="absolute inset-0 islamic-pattern opacity-30" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/60" />
+                        {/* Para number or file icon */}
+                        {item.meta?.para_number ? (
+                          <div className="relative flex flex-col items-center gap-1">
+                            <span className="text-3xl font-bold text-emerald-400/30">{item.meta.para_number}</span>
+                            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">Para</span>
+                          </div>
+                        ) : (
+                          <FileText className="h-10 w-10 text-muted-foreground/20 relative" />
+                        )}
                         <div className="absolute bottom-1 right-1 z-10">
                           <span className="px-1.5 py-0.5 rounded bg-black/50 text-[9px] font-medium text-white backdrop-blur-sm uppercase">PDF</span>
                         </div>

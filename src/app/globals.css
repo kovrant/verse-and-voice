@@ -49,35 +49,37 @@
     -moz-appearance: textfield;
   }
 
-  /* Smooth scrollbar for dark theme */
+  /* Refined scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 5px;
+    height: 5px;
   }
   ::-webkit-scrollbar-track {
-    background: hsl(222 40% 8%);
+    background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(222 25% 25%);
-    border-radius: 3px;
+    background: hsl(222 25% 22%);
+    border-radius: 99px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(222 25% 35%);
+    background: hsl(222 25% 30%);
   }
 }
 
 @layer utilities {
-  /* Islamic geometric pattern as repeating SVG background */
+  /* Islamic geometric pattern */
   .islamic-pattern {
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M30 0L60 30L30 60L0 30z M30 8L52 30L30 52L8 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M30 0L60 30L30 60L0 30z M30 8L52 30L30 52L8 30z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
   }
 
   .islamic-pattern-gold {
-    background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a843' fill-opacity='0.08'%3E%3Cpath d='M40 0l20 20-20 20L20 20zM0 40l20 20-20 20L-20 60zM80 40l20 20-20 20L60 60zM40 80l20-20 20 20-20 20z'/%3E%3Cpath d='M40 10l10 10-10 10-10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    background-image:
+      url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23d4a843' fill-opacity='0.04'%3E%3Cpath d='M40 0l20 20-20 20L20 20zM0 40l20 20-20 20L-20 60zM80 40l20 20-20 20L60 60zM40 80l20-20 20 20-20 20z'/%3E%3Cpath d='M40 10l10 10-10 10-10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4a843' stroke-opacity='0.03' stroke-width='0.5'%3E%3Ccircle cx='60' cy='60' r='40'/%3E%3Ccircle cx='60' cy='60' r='25'/%3E%3Cpath d='M60 20L60 100M20 60L100 60M31.7 31.7L88.3 88.3M88.3 31.7L31.7 88.3'/%3E%3C/g%3E%3C/svg%3E");
   }
 
   .islamic-star {
-    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4a843' stroke-opacity='0.1' stroke-width='0.5'%3E%3Cpolygon points='50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35'/%3E%3Ccircle cx='50' cy='50' r='30'/%3E%3Ccircle cx='50' cy='50' r='20'/%3E%3C/g%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' stroke='%23d4a843' stroke-opacity='0.08' stroke-width='0.5'%3E%3Cpolygon points='50,5 61,35 95,35 68,57 79,91 50,70 21,91 32,57 5,35 39,35'/%3E%3Ccircle cx='50' cy='50' r='30'/%3E%3Ccircle cx='50' cy='50' r='20'/%3E%3C/g%3E%3C/svg%3E");
   }
 
   /* Gradient text */
@@ -92,21 +94,84 @@
   /* Glass morphism card */
   .glass {
     background: hsl(222 40% 11% / 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
 
   /* Glow effects */
   .glow-emerald {
-    box-shadow: 0 0 20px hsl(160 60% 45% / 0.15), 0 0 40px hsl(160 60% 45% / 0.05);
+    box-shadow: 0 0 20px hsl(160 60% 45% / 0.12), 0 0 40px hsl(160 60% 45% / 0.04);
   }
 
   .glow-gold {
-    box-shadow: 0 0 20px hsl(42 85% 55% / 0.15), 0 0 40px hsl(42 85% 55% / 0.05);
+    box-shadow: 0 0 20px hsl(42 85% 55% / 0.12), 0 0 40px hsl(42 85% 55% / 0.04);
   }
 
   .glow-sm-emerald {
-    box-shadow: 0 0 10px hsl(160 60% 45% / 0.1);
+    box-shadow: 0 0 10px hsl(160 60% 45% / 0.08);
+  }
+
+  /* Premium card shadow — inset highlight + layered depth */
+  .card-premium {
+    background: linear-gradient(
+      180deg,
+      hsl(222 40% 13%) 0%,
+      hsl(222 40% 11%) 100%
+    );
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.03),
+      0 0 0 1px rgba(255, 255, 255, 0.04),
+      0 2px 4px rgba(0, 0, 0, 0.3),
+      0 8px 24px -4px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Hover glow border effect */
+  .card-hover-glow {
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .card-hover-glow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      135deg,
+      hsl(160 60% 45% / 0.35),
+      hsl(42 85% 55% / 0.15),
+      transparent 50%,
+      hsl(160 60% 45% / 0.15)
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .card-hover-glow:hover::before {
+    opacity: 1;
+  }
+  .card-hover-glow:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 1px 0 0 rgba(255, 255, 255, 0.04),
+      0 0 0 1px rgba(255, 255, 255, 0.06),
+      0 4px 8px rgba(0, 0, 0, 0.3),
+      0 12px 32px -4px rgba(0, 0, 0, 0.3);
+  }
+
+  /* Stat card colored gradients */
+  .stat-card-emerald {
+    background: linear-gradient(135deg, hsl(160 40% 12%) 0%, hsl(222 40% 11%) 60%);
+  }
+  .stat-card-amber {
+    background: linear-gradient(135deg, hsl(42 40% 12%) 0%, hsl(222 40% 11%) 60%);
+  }
+  .stat-card-blue {
+    background: linear-gradient(135deg, hsl(210 40% 12%) 0%, hsl(222 40% 11%) 60%);
   }
 
   /* Animated gradient border */
@@ -119,12 +184,26 @@
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: linear-gradient(135deg, hsl(160 60% 45% / 0.4), hsl(42 85% 55% / 0.4), hsl(160 60% 45% / 0.4));
+    background: linear-gradient(135deg, hsl(160 60% 45% / 0.3), hsl(42 85% 55% / 0.3), hsl(160 60% 45% / 0.3));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+  }
+
+  /* Ornamental divider */
+  .ornament-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .ornament-divider::before,
+  .ornament-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, hsl(42 85% 55% / 0.25), transparent);
   }
 
   /* Shimmer loading animation */
@@ -158,7 +237,7 @@
 @keyframes fade-in-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -167,7 +246,7 @@
 }
 
 .animate-fade-in-up {
-  animation: fade-in-up 0.4s ease-out;
+  animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-float {

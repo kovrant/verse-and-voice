@@ -47,6 +47,9 @@ const config = {
           foreground: "hsl(var(--gold-foreground))",
         },
       },
+      fontFamily: {
+        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

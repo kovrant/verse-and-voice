@@ -167,8 +167,8 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="group relative overflow-hidden hover:border-border">
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-[0.03] group-hover:opacity-[0.06] transition-opacity`} />
+          <Card key={i} className="group relative overflow-hidden opacity-0 animate-fade-in-up [animation-fill-mode:forwards]" style={{ animationDelay: `${i * 80}ms` }}>
+            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-[0.04] group-hover:opacity-[0.08] transition-opacity duration-300`} />
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.label}
@@ -178,8 +178,8 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold tracking-tight">
-                {stat.prefix && <span className="text-lg font-medium text-muted-foreground">{stat.prefix}</span>}
+              <div className="text-3xl font-bold tracking-tight tabular-nums">
+                {stat.prefix && <span className="text-lg font-medium text-muted-foreground mr-2">{stat.prefix}</span>}
                 {stat.value}
               </div>
               {(stat as any).breakdown && Object.keys((stat as any).breakdown).length > 0 && (

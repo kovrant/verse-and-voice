@@ -20,6 +20,9 @@ interface CatalogItem {
   title: string
   category: string
   image_url: string | null
+  file_url?: string | null
+  file_type?: string | null
+  source?: "catalog" | "media"
   created_at: string
   assignment_count?: number
 }
@@ -52,28 +55,55 @@ export default function MemorizationPage() {
   }, [])
 
   async function loadItems() {
+    // Load from memorization_catalog
     const { data: catalog } = await supabase
       .from("memorization_catalog")
       .select("*")
       .order("category")
       .order("title")
 
-    if (catalog) {
-      const { data: counts } = await supabase
-        .from("student_memorization")
-        .select("catalog_id")
+    // Load memorization items from media_library
+    const { data: mediaItems } = await supabase
+      .from("media_library")
+      .select("*")
+      .eq("type", "memorization")
+      .order("category")
+      .order("title")
 
-      const countMap: Record<string, number> = {}
-      ;(counts || []).forEach((c: any) => {
-        countMap[c.catalog_id] = (countMap[c.catalog_id] || 0) + 1
-      })
+    // Load assignment counts
+    const { data: counts } = await supabase
+      .from("student_memorization")
+      .select("catalog_id")
 
-      setItems(catalog.map(item => ({
-        ...item,
-        assignment_count: countMap[item.id] || 0,
-      })))
-    }
+    const countMap: Record<string, number> = {}
+    ;(counts || []).forEach((c: any) => {
+      countMap[c.catalog_id] = (countMap[c.catalog_id] || 0) + 1
+    })
 
+    // Map catalog items
+    const catalogItems: CatalogItem[] = (catalog || []).map(item => ({
+      ...item,
+      source: "catalog" as const,
+      assignment_count: countMap[item.id] || 0,
+    }))
+
+    // Map media library items (avoid duplicates by title+category)
+    const existingKeys = new Set(catalogItems.map(i => `${i.title.toLowerCase()}|${i.category.toLowerCase()}`))
+    const mediaAsCatalog: CatalogItem[] = (mediaItems || [])
+      .filter(m => !existingKeys.has(`${m.title.toLowerCase()}|${m.category.toLowerCase()}`))
+      .map(m => ({
+        id: m.id,
+        title: m.title,
+        category: m.category,
+        image_url: m.file_type === "image" ? m.file_url : null,
+        file_url: m.file_url,
+        file_type: m.file_type,
+        source: "media" as const,
+        created_at: m.created_at,
+        assignment_count: countMap[m.id] || 0,
+      }))
+
+    setItems([...catalogItems, ...mediaAsCatalog])
     setLoading(false)
   }
 
@@ -320,24 +350,45 @@ export default function MemorizationPage() {
         }}
       />
 
-      {/* Image preview modal */}
+      {/* Preview modal (images and PDFs) */}
       {previewUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={() => setPreviewUrl(null)}
         >
-          <div className="relative max-w-3xl max-h-[85vh] p-2">
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="max-w-full max-h-[80vh] rounded-2xl object-contain"
-            />
-            <button
-              onClick={() => setPreviewUrl(null)}
-              className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border text-foreground hover:bg-secondary"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          <div className="relative max-w-4xl w-full max-h-[85vh] p-2 m-4" onClick={(e) => e.stopPropagation()}>
+            {previewUrl.toLowerCase().endsWith(".pdf") || previewUrl.includes("/pdf") ? (
+              <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-2xl">
+                <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+                  <span className="text-sm font-medium">PDF Preview</span>
+                  <button
+                    onClick={() => setPreviewUrl(null)}
+                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <iframe
+                  src={previewUrl}
+                  className="w-full rounded-b-2xl"
+                  style={{ height: "75vh" }}
+                />
+              </div>
+            ) : (
+              <>
+                <img
+                  src={previewUrl}
+                  alt="Preview"
+                  className="max-w-full max-h-[80vh] rounded-2xl object-contain mx-auto"
+                />
+                <button
+                  onClick={() => setPreviewUrl(null)}
+                  className="absolute top-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border text-foreground hover:bg-secondary"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -363,12 +414,14 @@ export default function MemorizationPage() {
                 <span className="text-sm text-muted-foreground">{catItems.length} items</span>
               </div>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {catItems.map(item => (
+                {catItems.map(item => {
+                  const isMedia = item.source === "media"
+                  return (
                   <div
                     key={item.id}
                     className="relative rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border transition-all group"
                   >
-                    {/* Image area */}
+                    {/* Image/Preview area */}
                     {item.image_url ? (
                       <button
                         type="button"
@@ -381,9 +434,30 @@ export default function MemorizationPage() {
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </button>
+                    ) : isMedia && item.file_type === "pdf" ? (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewUrl(item.file_url || null)}
+                        className="w-full aspect-[3/2] overflow-hidden bg-secondary/80 relative flex items-center justify-center"
+                      >
+                        <div className="absolute inset-0 islamic-pattern opacity-30" />
+                        <div className="relative flex flex-col items-center gap-1">
+                          <BookMarked className={`h-8 w-8 ${colors.text} opacity-40`} />
+                          <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">PDF</span>
+                        </div>
+                      </button>
                     ) : (
                       <div className={`w-full aspect-[3/2] flex items-center justify-center ${colors.bg}`}>
                         <BookMarked className={`h-10 w-10 ${colors.text} opacity-40`} />
+                      </div>
+                    )}
+
+                    {/* Media library badge */}
+                    {isMedia && (
+                      <div className="absolute top-2 left-2">
+                        <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-[9px] font-medium text-blue-400 backdrop-blur-sm">
+                          Media Library
+                        </span>
                       </div>
                     )}
 
@@ -405,54 +479,68 @@ export default function MemorizationPage() {
 
                     {/* Hover actions overlay */}
                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {item.image_url ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setPreviewUrl(item.image_url)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                            title="View image"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                            title="Change image"
-                          >
-                            <ImagePlus className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => removeImage(item.id)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
-                            title="Remove image"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </>
-                      ) : (
+                      {isMedia ? (
                         <button
                           type="button"
-                          onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
-                          className="flex h-7 items-center gap-1 px-2 rounded-lg bg-black/60 text-white text-xs hover:bg-black/80 backdrop-blur-sm"
-                          title="Add image"
+                          onClick={() => setPreviewUrl(item.file_url || item.image_url)}
+                          className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
+                          title="View"
                         >
-                          <ImagePlus className="h-3.5 w-3.5" />
+                          <Eye className="h-3.5 w-3.5" />
                         </button>
+                      ) : (
+                        <>
+                          {item.image_url ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setPreviewUrl(item.image_url)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
+                                title="View image"
+                              >
+                                <Eye className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
+                                title="Change image"
+                              >
+                                <ImagePlus className="h-3.5 w-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeImage(item.id)}
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                                title="Remove image"
+                              >
+                                <X className="h-3.5 w-3.5" />
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => { setUploadingFor(item.id); editFileRef.current?.click() }}
+                              className="flex h-7 items-center gap-1 px-2 rounded-lg bg-black/60 text-white text-xs hover:bg-black/80 backdrop-blur-sm"
+                              title="Add image"
+                            >
+                              <ImagePlus className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => deleteItem(item.id)}
+                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                            title="Delete"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => deleteItem(item.id)}
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
-                        title="Delete"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )
