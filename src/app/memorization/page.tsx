@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Plus, Trash2, BookMarked, Users, Search, ImagePlus, X, Eye } from "lucide-react"
+import { toast } from "sonner"
 
 interface CatalogItem {
   id: string
@@ -150,30 +151,30 @@ export default function MemorizationPage() {
     })
     if (error) {
       if (error.code === "23505") {
-        alert("This item already exists in the catalog.")
+        toast.error("This item already exists in the catalog.")
       } else {
-        alert("Error: " + error.message)
+        toast.error(error.message)
       }
       setAdding(false)
       return
     }
+    const addedTitle = newTitle.trim()
     setNewTitle("")
     setNewImage(null)
     setAdding(false)
     await loadItems()
+    toast.success(`"${addedTitle}" added to catalog`)
   }
 
   async function deleteItem(id: string) {
     const item = items.find(i => i.id === id)
     if (!item) return
-    if ((item.assignment_count || 0) > 0) {
-      if (!confirm(`"${item.title}" is assigned to ${item.assignment_count} student(s). Delete anyway?`)) return
-    }
     if (item.image_url) {
       await deleteImage(item.image_url)
     }
     await supabase.from("memorization_catalog").delete().eq("id", id)
     await loadItems()
+    toast.success(`"${item.title}" deleted`)
   }
 
   async function handleEditImage(itemId: string, file: File) {

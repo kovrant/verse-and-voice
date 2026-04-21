@@ -46,6 +46,42 @@ const config = {
           DEFAULT: "hsl(var(--gold))",
           foreground: "hsl(var(--gold-foreground))",
         },
+
+        /* ── Themed color scale overrides ──
+         * These override Tailwind's built-in color names so that ALL existing
+         * class references (e.g. bg-emerald-500/10, text-amber-400, from-teal-600)
+         * automatically follow the current theme without any class name changes.
+         */
+        emerald: {
+          300: "hsl(var(--c-p-300) / <alpha-value>)",
+          400: "hsl(var(--c-p-400) / <alpha-value>)",
+          500: "hsl(var(--c-p-500) / <alpha-value>)",
+          600: "hsl(var(--c-p-600) / <alpha-value>)",
+          900: "hsl(var(--c-p-900) / <alpha-value>)",
+        },
+        teal: {
+          300: "hsl(var(--c-s-300) / <alpha-value>)",
+          400: "hsl(var(--c-s-400) / <alpha-value>)",
+          500: "hsl(var(--c-s-500) / <alpha-value>)",
+          600: "hsl(var(--c-s-600) / <alpha-value>)",
+          900: "hsl(var(--c-s-900) / <alpha-value>)",
+        },
+        amber: {
+          300: "hsl(var(--c-a-300) / <alpha-value>)",
+          400: "hsl(var(--c-a-400) / <alpha-value>)",
+          500: "hsl(var(--c-a-500) / <alpha-value>)",
+          600: "hsl(var(--c-a-600) / <alpha-value>)",
+        },
+        yellow: {
+          300: "hsl(var(--c-y-300) / <alpha-value>)",
+          400: "hsl(var(--c-y-400) / <alpha-value>)",
+        },
+        green: {
+          600: "hsl(var(--c-g-600) / <alpha-value>)",
+        },
+        orange: {
+          600: "hsl(var(--c-o-600) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],

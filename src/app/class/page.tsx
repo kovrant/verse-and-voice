@@ -20,6 +20,7 @@ import {
   Play, History, BookOpen, Trash2,
 } from "lucide-react"
 import { differenceInDays, format, formatDistanceToNow } from "date-fns"
+import { toast } from "sonner"
 
 interface Student {
   id: string
@@ -148,10 +149,11 @@ export default function ClassPage() {
     const { error } = await supabase.from("class_sessions").delete().eq("id", sessionToDelete.id)
     setDeleting(false)
     if (error) {
-      alert(`Failed to delete session: ${error.message}`)
+      toast.error(`Failed to delete session: ${error.message}`)
       return
     }
     setSessions((prev) => prev.filter((s) => s.id !== sessionToDelete.id))
+    toast.success("Session deleted")
     setSessionToDelete(null)
   }
 
@@ -171,11 +173,12 @@ export default function ClassPage() {
 
     if (error) {
       console.error("Failed to save class session:", error)
-      alert(`Failed to save session: ${error.message}`)
+      toast.error(`Failed to save session: ${error.message}`)
       return
     }
 
     setMode("landing")
+    toast.success("Class session saved")
 
     // Reload sessions
     if (selected) {

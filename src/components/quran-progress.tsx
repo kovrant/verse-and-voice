@@ -144,7 +144,7 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
             <BookOpen className="h-5 w-5 text-muted-foreground" />
             <span className="font-semibold text-sm">Quran Progress</span>
           </div>
-          <p className="text-sm text-muted-foreground">No rounds started yet.</p>
+          <p className="text-sm text-muted-foreground">No rounds started yet. Add a round to begin tracking.</p>
         </div>
       )
     }

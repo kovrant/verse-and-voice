@@ -9,7 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-[0_0_0_1px_rgba(16,185,129,0.3),0_1px_2px_rgba(0,0,0,0.3),0_0_12px_rgba(16,185,129,0.1)] hover:shadow-[0_0_0_1px_rgba(16,185,129,0.4),0_1px_2px_rgba(0,0,0,0.3),0_0_20px_rgba(16,185,129,0.2)] hover:from-emerald-400 hover:to-emerald-500",
+          "bg-gradient-to-b from-emerald-500 to-emerald-600 text-white shadow-btn-primary hover:shadow-btn-primary-hover hover:from-emerald-400 hover:to-emerald-500",
         destructive:
           "bg-destructive/90 text-destructive-foreground hover:bg-destructive shadow-md",
         outline:
@@ -21,7 +21,7 @@ const buttonVariants = cva(
         link:
           "text-emerald-400 underline-offset-4 hover:underline",
         gold:
-          "bg-gradient-to-b from-amber-500 to-amber-600 text-white shadow-[0_0_0_1px_rgba(217,168,67,0.3),0_1px_2px_rgba(0,0,0,0.3),0_0_12px_rgba(217,168,67,0.1)] hover:shadow-[0_0_0_1px_rgba(217,168,67,0.4),0_1px_2px_rgba(0,0,0,0.3),0_0_20px_rgba(217,168,67,0.2)] hover:from-amber-400 hover:to-amber-500",
+          "bg-gradient-to-b from-amber-500 to-amber-600 text-white shadow-btn-accent hover:shadow-btn-accent-hover hover:from-amber-400 hover:to-amber-500",
       },
       size: {
         default: "h-11 px-5 py-2",

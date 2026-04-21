@@ -18,6 +18,7 @@ import {
 import { TimePicker } from "@/components/ui/time-picker"
 import { ArrowLeft, UserPlus, Sparkles } from "lucide-react"
 import Link from "next/link"
+import { toast } from "sonner"
 
 export default function NewStudentPage() {
   const router = useRouter()
@@ -56,7 +57,7 @@ export default function NewStudentPage() {
     }).select("id").single()
 
     if (error || !student) {
-      alert("Error saving student: " + (error?.message || "Unknown error"))
+      toast.error("Error saving student: " + (error?.message || "Unknown error"))
       setSaving(false)
       return
     }
@@ -76,17 +77,26 @@ export default function NewStudentPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex items-center gap-4">
-        <Link href="/students">
-          <Button variant="outline" size="icon" className="rounded-xl">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-gradient-gold">Add Student</span>
-          </h1>
-          <p className="text-muted-foreground mt-1">Register a new student to the academy</p>
+      <div>
+        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+          <Link href="/" className="hover:text-foreground transition-colors">Dashboard</Link>
+          <span className="text-muted-foreground/40">/</span>
+          <Link href="/students" className="hover:text-foreground transition-colors">Students</Link>
+          <span className="text-muted-foreground/40">/</span>
+          <span className="text-foreground font-medium">New</span>
+        </nav>
+        <div className="flex items-center gap-4">
+          <Link href="/students">
+            <Button variant="outline" size="icon" className="rounded-xl">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              <span className="text-gradient-gold">Add Student</span>
+            </h1>
+            <p className="text-muted-foreground mt-1">Register a new student to the academy</p>
+          </div>
         </div>
       </div>
 

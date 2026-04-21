@@ -183,7 +183,7 @@ export default function FeesPage() {
         <p className="text-muted-foreground mt-1">Track and manage monthly fee payments</p>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Select value={month.toString()} onValueChange={(v) => setMonth(parseInt(v))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue />
@@ -208,6 +208,27 @@ export default function FeesPage() {
             ))}
           </SelectContent>
         </Select>
+        <Button
+          variant={month === now.getMonth() + 1 && year === now.getFullYear() ? "default" : "outline"}
+          size="sm"
+          onClick={() => { setMonth(now.getMonth() + 1); setYear(now.getFullYear()) }}
+        >
+          This Month
+        </Button>
+        <Button
+          variant={(() => {
+            const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+            return month === prev.getMonth() + 1 && year === prev.getFullYear()
+          })() ? "default" : "outline"}
+          size="sm"
+          onClick={() => {
+            const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+            setMonth(prev.getMonth() + 1)
+            setYear(prev.getFullYear())
+          }}
+        >
+          Last Month
+        </Button>
       </div>
 
       {/* Summary Cards */}
@@ -298,24 +319,78 @@ export default function FeesPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
+        <>
+        {/* Mobile Card View */}
+        <div className="space-y-3 lg:hidden">
+          {paginated.map((fee) => (
+            <Card key={fee.id} className="overflow-hidden">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 ${
+                      fee.is_paid
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-amber-500/10 text-amber-400"
+                    }`}>
+                      {fee.students?.name?.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{fee.students?.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <FeeDisplay
+                          amount={fee.students?.fee || 0}
+                          currency={fee.students?.fee_currency || "PKR"}
+                          rates={rates}
+                        />
+                        <Badge variant={fee.is_paid ? "success" : "warning"}>
+                          {fee.is_paid ? "Paid" : "Unpaid"}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant={fee.is_paid ? "outline" : "default"}
+                    onClick={() => toggleFee(fee)}
+                    className="flex-shrink-0"
+                  >
+                    {fee.is_paid ? (
+                      <>
+                        <X className="h-3 w-3 mr-1" />
+                        Unpaid
+                      </>
+                    ) : (
+                      <>
+                        <Check className="h-3 w-3 mr-1" />
+                        Mark Paid
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <Card className="hidden lg:block overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border/50">
-                  <th className="px-5 py-4 text-left">
+                  <th scope="col" className="px-5 py-4 text-left">
                     <SortableHeader label="Student" sortKey="student_name" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4 text-left">
+                  <th scope="col" className="px-5 py-4 text-left">
                     <SortableHeader label="Fee Amount" sortKey="fee_amount" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4 text-left">
+                  <th scope="col" className="px-5 py-4 text-left">
                     <SortableHeader label="Status" sortKey="is_paid" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4 text-left">
+                  <th scope="col" className="px-5 py-4 text-left">
                     <SortableHeader label="Paid Date" sortKey="paid_at" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+                  <th scope="col" className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -374,19 +449,21 @@ export default function FeesPage() {
               </tbody>
             </table>
           </div>
-          {sorted.length > pageSize && (
-            <div className="px-5 pb-4 border-t border-border/50">
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={sorted.length}
-                pageSize={pageSize}
-                onPageChange={setPage}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(1) }}
-              />
-            </div>
-          )}
         </Card>
+
+        {sorted.length > pageSize && (
+          <div className="mt-4">
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={sorted.length}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={(s) => { setPageSize(s); setPage(1) }}
+            />
+          </div>
+        )}
+        </>
       )}
     </div>
   )

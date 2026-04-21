@@ -315,123 +315,170 @@ export default function StudentsPage() {
           </CardContent>
         </Card>
       ) : (
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border/50">
-                  <th className="px-5 py-4 text-left">
-                    <SortableHeader label="Student" sortKey="name" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                  </th>
-                  {isVisible("country") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Country" sortKey="country" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  {isVisible("started_at") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Admission" sortKey="started_at" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  {isVisible("fee") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Fee" sortKey="fee" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  {isVisible("class_time") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Class Time" sortKey="class_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  {isVisible("quran_progress") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Quran" sortKey="asc_completed" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  {isVisible("status") && (
-                    <th className="px-5 py-4 text-left">
-                      <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
-                    </th>
-                  )}
-                  <th className="px-5 py-4"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginated.map((student) => {
-                  const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
-                  return (
-                    <tr
-                      key={student.id}
-                      className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group"
-                    >
-                      <td className="px-5 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold flex-shrink-0">
-                            {student.name.charAt(0)}
+        <>
+          {/* Mobile card view */}
+          <div className="space-y-3 lg:hidden">
+            {paginated.map((student) => {
+              const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+              return (
+                <Link key={student.id} href={`/students/${student.id}`}>
+                  <Card className="group hover:border-border transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold flex-shrink-0">
+                          {student.name.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="font-semibold text-sm truncate">{student.name}</p>
+                            <Badge variant={statusCfg.variant} className="flex-shrink-0">{statusCfg.label}</Badge>
                           </div>
-                          <div>
-                            <p className="font-medium text-sm">{student.name}</p>
-                            <p className="text-xs text-muted-foreground">{student.guardian_name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">{student.guardian_name}</p>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
+                            {student.class_time && (
+                              <span className="flex items-center gap-1">
+                                <span className="text-muted-foreground/40">&middot;</span>
+                                {student.class_time}
+                              </span>
+                            )}
+                            {student.country && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {student.country}
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </td>
-                      {isVisible("country") && (
-                        <td className="px-5 py-4 text-sm text-muted-foreground">
-                          {student.country ? (
-                            <span className="flex items-center gap-1.5">
-                              <MapPin className="h-3 w-3" />
-                              {student.country}
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground/40">--</span>
-                          )}
-                        </td>
-                      )}
-                      {isVisible("started_at") && (
-                        <td className="px-5 py-4 text-sm text-muted-foreground">
-                          {format(new Date(student.started_at), "MMM d, yyyy")}
-                        </td>
-                      )}
-                      {isVisible("fee") && (
-                        <td className="px-5 py-4">
-                          <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
-                        </td>
-                      )}
-                      {isVisible("class_time") && (
-                        <td className="px-5 py-4 text-sm text-muted-foreground">
-                          {student.class_time || <span className="text-muted-foreground/40">--</span>}
-                        </td>
-                      )}
-                      {isVisible("quran_progress") && (
-                        <td className="px-5 py-4">
-                          <QuranProgress
-                            rounds={roundsMap[student.id] || []}
-                            variant="compact"
-                          />
-                        </td>
-                      )}
-                      {isVisible("status") && (
-                        <td className="px-5 py-4">
-                          <Badge variant={statusCfg.variant}>
-                            {statusCfg.label}
-                          </Badge>
-                        </td>
-                      )}
-                      <td className="px-5 py-4">
-                        <Link href={`/students/${student.id}`}>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ArrowRight className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+                        <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-foreground transition-colors flex-shrink-0 mt-1" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              )
+            })}
           </div>
+
+          {/* Desktop table view */}
+          <Card className="overflow-hidden hidden lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border/50">
+                    <th scope="col" className="px-5 py-4 text-left">
+                      <SortableHeader label="Student" sortKey="name" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                    </th>
+                    {isVisible("country") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Country" sortKey="country" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    {isVisible("started_at") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Admission" sortKey="started_at" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    {isVisible("fee") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Fee" sortKey="fee" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    {isVisible("class_time") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Class Time" sortKey="class_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    {isVisible("quran_progress") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Quran" sortKey="asc_completed" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    {isVisible("status") && (
+                      <th scope="col" className="px-5 py-4 text-left">
+                        <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      </th>
+                    )}
+                    <th scope="col" className="px-5 py-4"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginated.map((student) => {
+                    const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+                    return (
+                      <tr
+                        key={student.id}
+                        className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group"
+                      >
+                        <td className="px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold flex-shrink-0">
+                              {student.name.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="font-medium text-sm">{student.name}</p>
+                              <p className="text-xs text-muted-foreground">{student.guardian_name}</p>
+                            </div>
+                          </div>
+                        </td>
+                        {isVisible("country") && (
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {student.country ? (
+                              <span className="flex items-center gap-1.5">
+                                <MapPin className="h-3 w-3" />
+                                {student.country}
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground/40">--</span>
+                            )}
+                          </td>
+                        )}
+                        {isVisible("started_at") && (
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {format(new Date(student.started_at), "MMM d, yyyy")}
+                          </td>
+                        )}
+                        {isVisible("fee") && (
+                          <td className="px-5 py-4">
+                            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
+                          </td>
+                        )}
+                        {isVisible("class_time") && (
+                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                            {student.class_time || <span className="text-muted-foreground/40">--</span>}
+                          </td>
+                        )}
+                        {isVisible("quran_progress") && (
+                          <td className="px-5 py-4">
+                            <QuranProgress
+                              rounds={roundsMap[student.id] || []}
+                              variant="compact"
+                            />
+                          </td>
+                        )}
+                        {isVisible("status") && (
+                          <td className="px-5 py-4">
+                            <Badge variant={statusCfg.variant}>
+                              {statusCfg.label}
+                            </Badge>
+                          </td>
+                        )}
+                        <td className="px-5 py-4">
+                          <Link href={`/students/${student.id}`}>
+                            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ArrowRight className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
           {sorted.length > pageSize && (
-            <div className="px-5 pb-4 border-t border-border/50">
+            <div className="mt-4">
               <Pagination
                 currentPage={page}
                 totalPages={totalPages}
@@ -442,7 +489,7 @@ export default function StudentsPage() {
               />
             </div>
           )}
-        </Card>
+        </>
       )}
     </div>
   )

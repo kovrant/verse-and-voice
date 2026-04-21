@@ -34,6 +34,7 @@ import { TimePicker } from "@/components/ui/time-picker"
 import { QuranProgress, type QuranRound, getActiveRound, getStudentStage, getChronologicalRoundNumber } from "@/components/quran-progress"
 import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play } from "lucide-react"
 import { format, differenceInDays } from "date-fns"
+import { toast } from "sonner"
 
 interface Student {
   id: string
@@ -282,13 +283,12 @@ export default function StudentDetailPage() {
   async function completeActiveRound() {
     const active = getActiveRound(rounds)
     if (!active) return
-    if (!confirm(`Mark this ${active.type === "qaida" ? "Qaida" : "Quran"} round as completed?`)) return
-
     await supabase
       .from("quran_rounds")
       .update({ completed_at: new Date().toISOString().split("T")[0] })
       .eq("id", active.id)
     await loadRounds()
+    toast.success("Round marked as completed")
   }
 
   async function saveRoundProgress() {
@@ -328,7 +328,7 @@ export default function StudentDetailPage() {
     })
 
     if (error) {
-      alert("Error: " + error.message)
+      toast.error(error.message)
       return
     }
 
@@ -372,7 +372,7 @@ export default function StudentDetailPage() {
       .eq("id", editingRound.id)
 
     if (error) {
-      alert("Error: " + error.message)
+      toast.error(error.message)
       return
     }
 
@@ -381,9 +381,9 @@ export default function StudentDetailPage() {
   }
 
   async function deleteRound(roundId: string) {
-    if (!confirm("Delete this round? This cannot be undone.")) return
     await supabase.from("quran_rounds").delete().eq("id", roundId)
     await loadRounds()
+    toast.success("Round deleted")
   }
 
   useEffect(() => {
@@ -427,6 +427,13 @@ export default function StudentDetailPage() {
 
   return (
     <div className="animate-fade-in-up">
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+        <Link href="/" className="hover:text-foreground transition-colors">Dashboard</Link>
+        <span className="text-muted-foreground/40">/</span>
+        <Link href="/students" className="hover:text-foreground transition-colors">Students</Link>
+        <span className="text-muted-foreground/40">/</span>
+        <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
+      </nav>
       {/* Compact Header */}
       <div className="flex items-center gap-3 mb-5">
         <Link href="/students">
@@ -645,10 +652,15 @@ export default function StudentDetailPage() {
           )}
 
           {rounds.length === 0 && (
-            <div className="text-center py-8">
-              <BookOpen className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No rounds yet. Click &ldquo;Add Round&rdquo; to start tracking.</p>
-            </div>
+            <Card>
+              <CardContent className="py-12 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                  <BookOpen className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium mb-1">No rounds yet</p>
+                <p className="text-sm text-muted-foreground">Click &ldquo;Add Round&rdquo; to start tracking progress</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
@@ -714,10 +726,15 @@ export default function StudentDetailPage() {
           )}
 
           {memItems.length === 0 && (
-            <div className="text-center py-8">
-              <BookMarked className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground">No memorization items assigned.</p>
-            </div>
+            <Card>
+              <CardContent className="py-12 text-center">
+                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
+                  <BookMarked className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="font-medium mb-1">No memorization items</p>
+                <p className="text-sm text-muted-foreground">Click &ldquo;Assign&rdquo; to add items for this student</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
@@ -992,16 +1009,16 @@ function FeeHistoryTable({
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th className="px-5 py-3 text-left">
+                    <th scope="col" className="px-5 py-3 text-left">
                       <SortableHeader label="Month" sortKey="month_year" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
                     </th>
-                    <th className="px-5 py-3 text-left">
+                    <th scope="col" className="px-5 py-3 text-left">
                       <SortableHeader label="Status" sortKey="is_paid" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
                     </th>
-                    <th className="px-5 py-3 text-left">
+                    <th scope="col" className="px-5 py-3 text-left">
                       <SortableHeader label="Paid Date" sortKey="paid_at" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
                     </th>
-                    <th className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+                    <th scope="col" className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
                   </tr>
                 </thead>
                 <tbody>

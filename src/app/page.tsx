@@ -9,7 +9,7 @@ import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Users, CreditCard, AlertCircle, UserPlus, ArrowRight, TrendingUp } from "lucide-react"
+import { Users, CreditCard, AlertCircle, UserPlus, ArrowRight, TrendingUp, BookOpen, Upload, BookMarked, Sparkles, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
 
 interface Student {
@@ -163,6 +163,62 @@ export default function Dashboard() {
           Welcome to Quran Academy &middot; {currentMonth}
         </p>
       </div>
+
+      {/* Onboarding — shown when no students exist */}
+      {totalStudents === 0 && (
+        <Card className="relative overflow-hidden">
+          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-500" />
+          <div className="absolute inset-0 islamic-pattern opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card" />
+          <CardContent className="relative pt-8 pb-6">
+            <div className="text-center mb-6">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
+                <Sparkles className="h-7 w-7 text-white" />
+              </div>
+              <h2 className="text-xl font-bold">Welcome to Quran Academy</h2>
+              <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">
+              <Link href="/students/new">
+                <div className="group flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 flex-shrink-0">
+                    <UserPlus className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">Add Students</p>
+                    <p className="text-[11px] text-muted-foreground">Register your first student</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-emerald-400/50 group-hover:text-emerald-400 transition-colors flex-shrink-0" />
+                </div>
+              </Link>
+              <Link href="/media">
+                <div className="group flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 flex-shrink-0">
+                    <Upload className="h-5 w-5 text-amber-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">Upload Quran</p>
+                    <p className="text-[11px] text-muted-foreground">Add Quran para PDFs</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-amber-400/50 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+                </div>
+              </Link>
+              <Link href="/memorization">
+                <div className="group flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 flex-shrink-0">
+                    <BookMarked className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold">Set Up Catalog</p>
+                    <p className="text-[11px] text-muted-foreground">Add surahs & duas</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-blue-400/50 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+                </div>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

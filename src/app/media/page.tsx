@@ -22,6 +22,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog"
 import { Upload, Trash2, FileText, Image as ImageIcon, Search, Eye, X, HardDrive, BookOpen, Sparkles, FolderOpen } from "lucide-react"
+import { toast } from "sonner"
 
 interface MediaItem {
   id: string
@@ -154,7 +155,7 @@ export default function MediaPage() {
       .upload(fileName, file, { cacheControl: "3600" })
 
     if (uploadError) {
-      alert("Upload failed: " + uploadError.message)
+      toast.error("Upload failed: " + uploadError.message)
       setUploading(false)
       return
     }
@@ -176,7 +177,7 @@ export default function MediaPage() {
     })
 
     if (dbError) {
-      alert("Error saving: " + dbError.message)
+      toast.error("Error saving: " + dbError.message)
       setUploading(false)
       return
     }
@@ -203,7 +204,7 @@ export default function MediaPage() {
   async function handleBulkUpload(files: FileList) {
     const pdfFiles = Array.from(files).filter(f => f.type === "application/pdf" || f.name.endsWith(".pdf"))
     if (pdfFiles.length === 0) {
-      alert("No PDF files found in selection.")
+      toast.error("No PDF files found in selection.")
       return
     }
 
@@ -256,15 +257,15 @@ export default function MediaPage() {
     setBulkUploading(false)
 
     if (failed.length > 0) {
-      alert(`Uploaded ${sorted.length - failed.length}/${sorted.length} files.\n\nFailed:\n${failed.join("\n")}`)
+      toast.warning(`Uploaded ${sorted.length - failed.length}/${sorted.length} files. ${failed.length} failed.`)
+    } else {
+      toast.success(`All ${sorted.length} files uploaded successfully.`)
     }
 
     await loadItems()
   }
 
   async function deleteItem(item: MediaItem) {
-    if (!confirm(`Delete "${item.title}"?`)) return
-
     // Delete from storage
     const path = item.file_url.split("/media/").pop()
     if (path) {
@@ -273,6 +274,7 @@ export default function MediaPage() {
 
     await supabase.from("media_library").delete().eq("id", item.id)
     setPreviewItem(null)
+    toast.success(`"${item.title}" deleted`)
     await loadItems()
   }
 

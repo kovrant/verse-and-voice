@@ -5,7 +5,6 @@ import { supabase } from "@/lib/supabase"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { BookOpen, Search, X, ChevronLeft, ChevronRight, FileText } from "lucide-react"
 
 interface QuranPara {
@@ -222,11 +221,10 @@ export default function QuranPage() {
                 </p>
               </div>
 
-              {/* Hover indicator */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-500/10 rounded-2xl">
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-0 text-xs">
-                  Open
-                </Badge>
+              {/* Hover glow ring — keeps content visible */}
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-emerald-500/30" />
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                <span className="text-[8px] font-semibold text-emerald-400 uppercase tracking-wider">Open</span>
               </div>
             </button>
           ))}
