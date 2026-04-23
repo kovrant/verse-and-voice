@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import * as Popover from "@radix-ui/react-popover"
 import { Plus, Trash2, BookMarked, Users, Search, ImagePlus, X, Eye } from "lucide-react"
 import { toast } from "sonner"
 
@@ -48,6 +49,8 @@ export default function MemorizationPage() {
   const [filterCat, setFilterCat] = useState("All")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadingFor, setUploadingFor] = useState<string | null>(null)
+  const [itemToDelete, setItemToDelete] = useState<CatalogItem | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
 
@@ -166,15 +169,18 @@ export default function MemorizationPage() {
     toast.success(`"${addedTitle}" added to catalog`)
   }
 
-  async function deleteItem(id: string) {
-    const item = items.find(i => i.id === id)
-    if (!item) return
-    if (item.image_url) {
-      await deleteImage(item.image_url)
+  async function confirmDeleteItem() {
+    if (!itemToDelete) return
+    setDeleting(true)
+    if (itemToDelete.image_url) {
+      await deleteImage(itemToDelete.image_url)
     }
-    await supabase.from("memorization_catalog").delete().eq("id", id)
+    await supabase.from("memorization_catalog").delete().eq("id", itemToDelete.id)
+    const title = itemToDelete.title
+    setItemToDelete(null)
+    setDeleting(false)
     await loadItems()
-    toast.success(`"${item.title}" deleted`)
+    toast.success(`"${title}" deleted`)
   }
 
   async function handleEditImage(itemId: string, file: File) {
@@ -528,14 +534,55 @@ export default function MemorizationPage() {
                               <ImagePlus className="h-3.5 w-3.5" />
                             </button>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => deleteItem(item.id)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
-                            title="Delete"
+                          <Popover.Root
+                            open={itemToDelete?.id === item.id}
+                            onOpenChange={(open) => setItemToDelete(open ? item : null)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                            <Popover.Trigger asChild>
+                              <button
+                                type="button"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </Popover.Trigger>
+                            <Popover.Portal>
+                              <Popover.Content
+                                side="top"
+                                align="end"
+                                sideOffset={8}
+                                className="z-50 rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl p-3 shadow-2xl shadow-black/50 w-56 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+                              >
+                                <p className="text-xs text-foreground font-medium mb-1">Delete &quot;{item.title}&quot;?</p>
+                                {(item.assignment_count ?? 0) > 0 && (
+                                  <p className="text-[10px] text-amber-400 mb-2">
+                                    Assigned to {item.assignment_count} student{item.assignment_count !== 1 ? "s" : ""}
+                                  </p>
+                                )}
+                                <div className="flex gap-2 mt-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 flex-1 text-xs"
+                                    onClick={() => setItemToDelete(null)}
+                                    disabled={deleting}
+                                  >
+                                    No
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-7 flex-1 text-xs bg-red-600 hover:bg-red-500 text-white"
+                                    onClick={confirmDeleteItem}
+                                    disabled={deleting}
+                                  >
+                                    {deleting ? "..." : "Yes"}
+                                  </Button>
+                                </div>
+                                <Popover.Arrow className="fill-card" />
+                              </Popover.Content>
+                            </Popover.Portal>
+                          </Popover.Root>
                         </>
                       )}
                     </div>
