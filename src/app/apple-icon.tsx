@@ -11,7 +11,7 @@ export default function AppleIcon() {
           width: 180,
           height: 180,
           borderRadius: 36,
-          background: "linear-gradient(135deg, #10b981, #0d9488)",
+          background: "linear-gradient(135deg, #0F766E, #0B5E58)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",

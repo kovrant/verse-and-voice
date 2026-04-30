@@ -6,20 +6,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import * as Popover from "@radix-ui/react-popover"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { QuranProgress, getActiveRound, type QuranRound } from "@/components/quran-progress"
+import { getActiveRound, getCompletedRounds, getChronologicalRoundNumber, type QuranRound } from "@/components/quran-progress"
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import {
   Clock, User, Users, Sparkles, CalendarDays, BookMarked,
-  Play, History, BookOpen, Trash2,
+  Play, BookOpen, Search, ChevronDown, ChevronLeft, UserPlus,
 } from "lucide-react"
-import { differenceInDays, format, formatDistanceToNow } from "date-fns"
+import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { differenceInDays, format } from "date-fns"
 import { toast } from "sonner"
 
 interface Student {
@@ -68,8 +63,8 @@ export default function ClassPage() {
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
-  const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const [search, setSearch] = useState("")
+  const [quickPickOpen, setQuickPickOpen] = useState(false)
 
   useEffect(() => {
     loadStudents()
@@ -142,21 +137,6 @@ export default function ClassPage() {
     setMode("live")
   }
 
-  // Delete a session
-  async function confirmDeleteSession() {
-    if (!sessionToDelete) return
-    setDeleting(true)
-    const { error } = await supabase.from("class_sessions").delete().eq("id", sessionToDelete.id)
-    setDeleting(false)
-    if (error) {
-      toast.error(`Failed to delete session: ${error.message}`)
-      return
-    }
-    setSessions((prev) => prev.filter((s) => s.id !== sessionToDelete.id))
-    toast.success("Session deleted")
-    setSessionToDelete(null)
-  }
-
   // End class — save session and return to landing
   async function handleEndSession(data: SessionEndData) {
     const { error } = await supabase.from("class_sessions").insert({
@@ -222,256 +202,392 @@ export default function ClassPage() {
     )
   }
 
+  // Parse "10:15 PM PKT" / "5:30 AM PKT" → minutes since midnight.
+  // Returns null for missing/unparseable times.
+  function classTimeToMinutes(timeStr: string | null): number | null {
+    if (!timeStr) return null
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+    if (!match) return null
+    let hours = parseInt(match[1], 10)
+    const minutes = parseInt(match[2], 10)
+    const period = match[3].toUpperCase()
+    if (period === "PM" && hours !== 12) hours += 12
+    if (period === "AM" && hours === 12) hours = 0
+    return hours * 60 + minutes
+  }
+
+  // Sort by class time ascending. AM slots before 6:00 are treated as next-day
+  // (added to a 24h window) so they fall after late-evening PM slots.
+  // Students without a class_time sink to the bottom, then alphabetical.
+  const sortedStudents = [...students].sort((a, b) => {
+    const aMin = classTimeToMinutes(a.class_time)
+    const bMin = classTimeToMinutes(b.class_time)
+    if (aMin == null && bMin == null) return a.name.localeCompare(b.name)
+    if (aMin == null) return 1
+    if (bMin == null) return -1
+    const aAdj = aMin < 360 ? aMin + 1440 : aMin
+    const bAdj = bMin < 360 ? bMin + 1440 : bMin
+    return aAdj - bAdj
+  })
+
+  const filteredStudents = sortedStudents.filter((s) =>
+    s.name.toLowerCase().includes(search.toLowerCase())
+  )
+  const showQuickPick = students.length > 20
+
   // Landing page
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-gradient-gold">Class Session</span>
+      <div className="mb-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-primary">
+          Class Session
         </h1>
-        <p className="text-muted-foreground mt-1">Select a student and start a live class</p>
+        <p className="text-sm mt-1.5" style={{ color: "#5B8E87" }}>
+          Select a student and start a live class
+        </p>
       </div>
 
       {students.length === 0 ? (
-        <Card>
+        <Card className="border-dashed">
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <Users className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary/60">
+              <Users className="h-9 w-9 text-primary" />
             </div>
-            <p className="text-lg font-medium mb-1">No active students</p>
-            <p className="text-sm text-muted-foreground">Add students to use the class session</p>
+            <p className="text-lg font-semibold mb-1">No students yet</p>
+            <p className="text-sm text-muted-foreground mb-5">
+              Add your first student to start a class session
+            </p>
+            <Link href="/students/new">
+              <Button>
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Student
+              </Button>
+            </Link>
           </CardContent>
         </Card>
-      ) : (
+      ) : selected ? (
         <>
-          <Select
-            value={selected?.id || ""}
-            onValueChange={handleSelect}
-          >
-            <SelectTrigger className="w-full max-w-md">
-              <SelectValue placeholder="Choose a student..." />
-            </SelectTrigger>
-            <SelectContent>
-              {students.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  <span className="flex items-center gap-2">
-                    <span className="font-medium">{s.name}</span>
-                    {s.class_time && (
-                      <span className="text-muted-foreground text-xs">
-                        &middot; {s.class_time}
-                      </span>
-                    )}
-                  </span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
+          {/* Change-student ghost button */}
+          <div>
+            <button
+              type="button"
+              onClick={() => handleSelect("")}
+              className="inline-flex items-center gap-1 rounded-[10px] px-3.5 py-2 text-sm font-medium text-[#5B8E87] hover:text-primary hover:bg-[#F5EFE3] transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Change student
+            </button>
+          </div>
           {selected && (
-            <div className="max-w-2xl mx-auto space-y-5 animate-fade-in-up">
-              {/* Main Class Card */}
-              <Card className="relative overflow-hidden glow-emerald">
-                <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-500" />
+            <div className="max-w-[640px] mx-auto animate-fade-in-up">
+              {/* Main Class Card — single clean white surface */}
+              <div
+                className="bg-white rounded-[20px] border border-[#E5DCC8] p-8"
+                style={{ boxShadow: "0 4px 20px rgba(15, 118, 110, 0.06)" }}
+              >
+                {/* SECTION 1 — HEADER */}
+                <div className="flex items-center gap-4">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#A7D7C5] text-primary text-[28px] font-bold flex-shrink-0">
+                    {selected.name.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="font-heading font-semibold text-[28px] leading-tight text-[#1F2937]">
+                        {selected.name}
+                      </h2>
+                      <span
+                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-primary"
+                        style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        Active
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1 text-sm font-medium" style={{ color: "#5B8E87" }}>
+                      <User className="h-3.5 w-3.5" />
+                      <span>{selected.guardian_name}</span>
+                    </div>
+                  </div>
+                </div>
 
-                <CardHeader className="relative overflow-hidden pb-4 pt-6">
-                  <div className="absolute inset-0 islamic-pattern opacity-50" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/20 to-card" />
-                  <div className="relative flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-xl font-bold shadow-lg">
-                        {selected.name.charAt(0)}
+                <div className="my-6 h-px bg-[#F0E8D5]" />
+
+                {/* SECTION 2 — TODAY'S SESSION */}
+                <div className="flex flex-wrap gap-x-12 gap-y-5">
+                  <div className="flex items-start gap-2.5">
+                    <Clock className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p
+                        className="text-[11px] font-semibold uppercase"
+                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                      >
+                        Class Time
+                      </p>
+                      <p className="text-xl font-bold text-[#1F2937] mt-0.5">
+                        {selected.class_time || "Not set"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2.5">
+                    <BookOpen className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p
+                        className="text-[11px] font-semibold uppercase"
+                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                      >
+                        Currently On
+                      </p>
+                      <p className="text-xl font-bold text-primary mt-0.5">
+                        {activeRound ? `Para ${currentPara}` : "Not started"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="h-8" />
+
+                {/* SECTION 3 — PROGRESS */}
+                {(() => {
+                  const desc = activeRound?.desc_completed || 0
+                  const asc = activeRound?.asc_completed || 0
+                  const total = desc + (asc > 0 ? asc - 1 : 0)
+                  const percent = Math.min(100, Math.round((total / 30) * 100))
+                  const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 0
+
+                  return (
+                    <div>
+                      <div className="flex items-center justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-2">
+                          <BookOpen className="h-4 w-4 text-[#1F2937]" />
+                          <span className="text-base font-semibold text-[#1F2937]">Quran Progress</span>
+                          {activeRound && roundNum > 0 && (
+                            <span className="text-sm" style={{ color: "#5B8E87" }}>
+                              (Round {roundNum})
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-base font-bold tabular-nums">
+                          <span className="text-primary">{currentPara || total}</span>
+                          <span style={{ color: "#5B8E87" }}> / 30</span>
+                        </div>
                       </div>
-                      <div>
-                        <CardTitle className="text-2xl">{selected.name}</CardTitle>
-                        <div className="flex items-center gap-2 mt-1 text-muted-foreground text-sm">
-                          <User className="h-3.5 w-3.5" />
-                          <span>{selected.guardian_name}</span>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#F0E8D5" }}>
+                        <div
+                          className="h-full rounded-full bg-primary transition-all"
+                          style={{ width: `${percent}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-2 text-xs" style={{ color: "#5B8E87" }}>
+                        <span>From start: {asc > 0 ? asc : total} paras</span>
+                        <span className="text-primary font-semibold">{percent}% complete</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+
+                <div className="h-7" />
+
+                {/* SECTION 4 — HISTORY (timeline) */}
+                {(() => {
+                  const completed = getCompletedRounds(rounds)
+                  if (completed.length === 0) return null
+                  return (
+                    <div>
+                      <p
+                        className="text-[11px] font-semibold uppercase mb-4"
+                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                      >
+                        History
+                      </p>
+                      <div className="relative pl-3">
+                        <div className="absolute left-[5px] top-2 bottom-2 w-px bg-[#E5DCC8]" />
+                        <div className="space-y-3">
+                          {completed.map((r) => {
+                            const stage =
+                              r.type === "qaida"
+                                ? "Qaida"
+                                : `Quran R${getChronologicalRoundNumber(rounds, r)}`
+                            const range = `${format(new Date(r.started_at), "MMM yyyy")} → ${
+                              r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "…"
+                            }`
+                            return (
+                              <div key={r.id} className="relative flex items-center gap-4">
+                                <span
+                                  className="absolute -left-[7px] top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-white"
+                                />
+                                <span
+                                  className="ml-3 inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-primary"
+                                  style={{ width: 80, backgroundColor: "rgba(167, 215, 197, 0.5)" }}
+                                >
+                                  {stage}
+                                </span>
+                                <span className="text-sm" style={{ color: "#5B8E87" }}>
+                                  {range}
+                                </span>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     </div>
-                    <Badge variant="success" className="text-sm px-3 py-1.5">Active</Badge>
-                  </div>
-                </CardHeader>
+                  )
+                })()}
 
-                <CardContent className="space-y-5 pb-6">
-                  {/* Class Time & Current Para */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-secondary/50 border border-border/50">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-                        <Clock className="h-5 w-5 text-amber-400" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Class Time</p>
-                        <p className="text-lg font-bold text-amber-300">{selected.class_time || "Not set"}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3 p-4 rounded-2xl bg-secondary/50 border border-border/50">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-                        <BookOpen className="h-5 w-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Currently On</p>
-                        <p className="text-lg font-bold text-emerald-300">
-                          {activeRound ? `Para ${currentPara}` : "Not started"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                <div className="h-8" />
 
-                  {/* Quran Progress */}
-                  <QuranProgress rounds={rounds} variant="full" />
+                {/* SECTION 5 — START CLASS BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleStartClass}
+                  className="w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary hover:bg-[#0B5E58] text-white text-[17px] font-bold transition-all hover:-translate-y-px"
+                  style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.25)" }}
+                >
+                  <Play className="h-5 w-5 fill-current" />
+                  Start Class
+                </button>
 
-                  {/* Start Class Button */}
-                  <Button
-                    size="lg"
-                    className="w-full h-14 text-lg font-bold bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/20 transition-all hover:shadow-emerald-500/30"
-                    onClick={handleStartClass}
+                {/* View full profile link */}
+                <div className="mt-4 mb-2 flex justify-center">
+                  <Link
+                    href={`/students/${selected.id}`}
+                    className="text-[13px] font-medium transition-colors"
+                    style={{ color: "#5B8E87" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#0F766E")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "#5B8E87")}
                   >
-                    <Play className="h-5 w-5 mr-2 fill-current" />
-                    Start Class
-                  </Button>
+                    View full student profile →
+                  </Link>
+                </div>
 
-                  {/* Days since start */}
-                  <div className="flex items-center justify-center gap-2 pt-3 border-t border-border/50">
-                    <CalendarDays className="h-4 w-4 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-bold text-foreground">
-                        {differenceInDays(new Date(), new Date(selected.started_at))}
-                      </span>{" "}
-                      days since enrollment
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* SECTION 6 — FOOTER META */}
+                <div className="pt-4 border-t border-[#F0E8D5] flex items-center justify-center gap-2">
+                  <CalendarDays className="h-3.5 w-3.5" style={{ color: "#5B8E87" }} />
+                  <p className="text-[13px] font-medium" style={{ color: "#5B8E87" }}>
+                    <span className="font-bold text-[#1F2937]">
+                      {differenceInDays(new Date(), new Date(selected.started_at)).toLocaleString()}
+                    </span>{" "}
+                    days since enrollment
+                  </p>
+                </div>
+              </div>
 
-              {/* Memorization Preview */}
-              {memItems.length > 0 && (
-                <Card className="relative overflow-hidden">
-                  <div className="absolute top-0 inset-x-0 h-0.5 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500" />
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <BookMarked className="h-4 w-4 text-amber-400" />
-                      <CardTitle className="text-base">Memorization</CardTitle>
-                      <Badge variant="outline" className="text-xs ml-auto">
-                        {memItems.filter(m => m.status === "memorizing").length} learning &middot; {memItems.filter(m => m.status === "memorized").length} done
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-1.5">
-                      {memItems.filter(m => m.status === "memorizing").map((item) => (
-                        <Badge key={item.id} variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/5 text-xs">
-                          <Sparkles className="h-2.5 w-2.5 mr-1" />
-                          {item.memorization_catalog?.title}
-                        </Badge>
-                      ))}
-                      {memItems.filter(m => m.status === "memorized").map((item) => (
-                        <Badge key={item.id} variant="outline" className="border-border/50 text-muted-foreground text-xs">
-                          {item.memorization_catalog?.title}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
-              {/* Recent Sessions */}
-              {sessions.length > 0 && (
-                <Card>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-2">
-                      <History className="h-4 w-4 text-muted-foreground" />
-                      <CardTitle className="text-base">Recent Sessions</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {sessions.map((session) => (
-                        <div key={session.id} className="flex items-center gap-3 p-3 rounded-xl bg-secondary/30 border border-border/30">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 flex-shrink-0">
-                            <Clock className="h-4 w-4 text-emerald-400" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <p className="text-sm font-medium">
-                                {format(new Date(session.started_at), "MMM d, yyyy")}
-                              </p>
-                              <Badge variant="outline" className="text-[10px] py-0 px-1.5">
-                                {Math.floor(session.duration_seconds / 60)}m
-                              </Badge>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                              {session.paras_covered?.length > 0 && (
-                                <span>Paras: {session.paras_covered.join(", ")}</span>
-                              )}
-                              {session.memorization_revised?.length > 0 && (
-                                <>
-                                  <span>&middot;</span>
-                                  <span>{session.memorization_revised.length} revised</span>
-                                </>
-                              )}
-                            </div>
-                            {session.notes && (
-                              <p className="text-xs text-muted-foreground/70 mt-1 truncate">{session.notes}</p>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground/50 flex-shrink-0">
-                            {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
-                          </span>
-                          <Popover.Root
-                            open={sessionToDelete?.id === session.id}
-                            onOpenChange={(open) => setSessionToDelete(open ? session : null)}
-                          >
-                            <Popover.Trigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 flex-shrink-0 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
-                                title="Delete session"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </Button>
-                            </Popover.Trigger>
-                            <Popover.Portal>
-                              <Popover.Content
-                                side="top"
-                                align="end"
-                                sideOffset={8}
-                                className="z-50 rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl p-3 shadow-2xl shadow-black/50 w-52 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-                              >
-                                <p className="text-xs text-foreground font-medium mb-2.5">Delete this session?</p>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 flex-1 text-xs"
-                                    onClick={() => setSessionToDelete(null)}
-                                    disabled={deleting}
-                                  >
-                                    No
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    className="h-7 flex-1 text-xs bg-red-600 hover:bg-red-500 text-white"
-                                    onClick={confirmDeleteSession}
-                                    disabled={deleting}
-                                  >
-                                    {deleting ? "..." : "Yes"}
-                                  </Button>
-                                </div>
-                                <Popover.Arrow className="fill-card" />
-                              </Popover.Content>
-                            </Popover.Portal>
-                          </Popover.Root>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
           )}
         </>
+      ) : (
+        <div className="space-y-5">
+          {/* Quick-select combobox — only shown for large rosters */}
+          {showQuickPick && (
+            <Popover.Root open={quickPickOpen} onOpenChange={setQuickPickOpen}>
+              <Popover.Trigger asChild>
+                <button
+                  type="button"
+                  className="w-full flex items-center justify-between gap-2 rounded-xl border border-[#D4C8AE] bg-card px-4 py-3.5 min-h-[52px] text-left transition-all hover:border-primary/60 focus:outline-none focus:border-primary focus:border-2 focus:px-[15px] focus:py-[13px] data-[state=open]:border-primary data-[state=open]:border-2 data-[state=open]:px-[15px] data-[state=open]:py-[13px]"
+                  style={{ boxShadow: "0 1px 3px rgba(31, 41, 55, 0.06)" }}
+                >
+                  <span className="text-sm text-muted-foreground">Quick select — type a name…</span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-primary transition-transform ${quickPickOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+              </Popover.Trigger>
+              <Popover.Portal>
+                <Popover.Content
+                  side="bottom"
+                  align="start"
+                  sideOffset={6}
+                  className="z-50 w-[var(--radix-popover-trigger-width)] rounded-xl border border-border bg-card shadow-lg overflow-hidden"
+                >
+                  <div className="p-2 border-b border-border">
+                    <Input
+                      autoFocus
+                      placeholder="Type to filter…"
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="max-h-[320px] overflow-y-auto py-1">
+                    {filteredStudents.length === 0 ? (
+                      <p className="px-4 py-6 text-center text-sm text-muted-foreground">No matches</p>
+                    ) : (
+                      filteredStudents.map((s) => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            handleSelect(s.id)
+                            setQuickPickOpen(false)
+                            setSearch("")
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-secondary/30 transition-colors group"
+                        >
+                          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-secondary/50 text-primary text-sm font-bold">
+                            {s.name.charAt(0)}
+                          </span>
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-medium truncate">{s.name}</span>
+                            {s.class_time && (
+                              <span className="block text-xs text-muted-foreground">{s.class_time}</span>
+                            )}
+                          </span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </Popover.Content>
+              </Popover.Portal>
+            </Popover.Root>
+          )}
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-primary pointer-events-none" />
+            <Input
+              placeholder="Search students by name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-11 h-12 bg-card border-border focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20"
+            />
+          </div>
+
+          {/* Student card grid */}
+          {filteredStudents.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="py-12 text-center">
+                <p className="text-muted-foreground">No students match "{search}"</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+              {filteredStudents.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => handleSelect(s.id)}
+                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_4px_16px_rgba(15,118,110,0.12)] focus-visible:border-primary"
+                >
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary/60 text-primary text-xl font-bold">
+                    {s.name.charAt(0).toUpperCase()}
+                  </span>
+                  {s.class_time && (
+                    <span
+                      aria-hidden
+                      className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500"
+                      title={`Class at ${s.class_time}`}
+                    />
+                  )}
+                  <span className="w-full">
+                    <span className="block text-sm font-semibold truncate">{s.name}</span>
+                    <span className="block text-xs text-muted-foreground mt-0.5 truncate">
+                      {s.class_time ? s.class_time : "No class time set"}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       )}
 
     </div>

@@ -120,16 +120,16 @@ export default function Dashboard() {
       value: activeStudents,
       icon: Users,
       color: "from-emerald-500 to-teal-600",
-      iconBg: "bg-emerald-500/15",
-      iconColor: "text-emerald-400",
+      iconBg: "bg-secondary/50",
+      iconColor: "text-primary",
     },
     {
       label: "Total Students",
       value: totalStudents,
       icon: UserPlus,
       color: "from-blue-500 to-indigo-600",
-      iconBg: "bg-blue-500/15",
-      iconColor: "text-blue-400",
+      iconBg: "bg-secondary/50",
+      iconColor: "text-primary",
     },
     {
       label: "Collected This Month",
@@ -137,8 +137,8 @@ export default function Dashboard() {
       prefix: "Rs",
       icon: TrendingUp,
       color: "from-emerald-500 to-green-600",
-      iconBg: "bg-emerald-500/15",
-      iconColor: "text-emerald-400",
+      iconBg: "bg-secondary/50",
+      iconColor: "text-primary",
       breakdown: collectedByCurrency,
     },
     {
@@ -147,8 +147,8 @@ export default function Dashboard() {
       prefix: "Rs",
       icon: AlertCircle,
       color: "from-amber-500 to-orange-600",
-      iconBg: "bg-amber-500/15",
-      iconColor: "text-amber-400",
+      iconBg: "bg-amber-300/60",
+      iconColor: "text-amber-600",
       breakdown: pendingByCurrency,
     },
   ]
@@ -156,8 +156,8 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-gradient-gold">Dashboard</span>
+        <h1 className="text-3xl font-semibold tracking-tight text-primary">
+          Dashboard
         </h1>
         <p className="text-muted-foreground mt-1">
           Welcome to Quran Academy &middot; {currentMonth}
@@ -234,7 +234,7 @@ export default function Dashboard() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold tracking-tight tabular-nums">
+              <div className="stat-number text-3xl tracking-tight tabular-nums text-foreground">
                 {stat.prefix && <span className="text-lg font-medium text-muted-foreground mr-2">{stat.prefix}</span>}
                 {stat.value}
               </div>
@@ -289,7 +289,7 @@ export default function Dashboard() {
                     className="group flex items-center justify-between rounded-xl border border-border/50 p-3.5 hover:bg-secondary/50 hover:border-border transition-all"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/40 text-primary text-sm font-bold">
                         {s.name.charAt(0)}
                       </div>
                       <div>
@@ -334,7 +334,7 @@ export default function Dashboard() {
                     className="flex items-center justify-between rounded-xl border border-border/50 p-3.5"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-400 text-sm font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-300/60 text-amber-600 text-sm font-bold">
                         {(f.students as any)?.name?.charAt(0)}
                       </div>
                       <p className="font-medium text-sm">{(f.students as any)?.name}</p>

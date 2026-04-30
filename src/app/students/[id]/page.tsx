@@ -32,8 +32,9 @@ import {
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
 import { QuranProgress, type QuranRound, getActiveRound, getStudentStage, getChronologicalRoundNumber } from "@/components/quran-progress"
-import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play } from "lucide-react"
-import { format, differenceInDays } from "date-fns"
+import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play, History } from "lucide-react"
+import { format, differenceInDays, formatDistanceToNow } from "date-fns"
+import * as Popover from "@radix-ui/react-popover"
 import { toast } from "sonner"
 
 interface Student {
@@ -73,6 +74,18 @@ interface FeePayment {
   paid_at: string | null
 }
 
+interface ClassSession {
+  id: string
+  started_at: string
+  ended_at: string
+  duration_seconds: number
+  starting_para: number | null
+  ending_para: number | null
+  paras_covered: number[]
+  memorization_revised: string[]
+  notes: string | null
+}
+
 export default function StudentDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -89,6 +102,11 @@ export default function StudentDetailPage() {
   const [memItems, setMemItems] = useState<StudentMemItem[]>([])
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
   const [assignOpen, setAssignOpen] = useState(false)
+  const [sessions, setSessions] = useState<ClassSession[]>([])
+  const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
+  const [deletingSession, setDeletingSession] = useState(false)
+  const [sessionPage, setSessionPage] = useState(1)
+  const SESSION_PAGE_SIZE = 10
 
   // Edit form (non-quran fields)
   const [editForm, setEditForm] = useState({
@@ -100,7 +118,7 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
-  const [activeTab, setActiveTab] = useState<"journey" | "memorization" | "fees">("journey")
+  const [activeTab, setActiveTab] = useState<"journey" | "sessions" | "memorization" | "fees">("journey")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -149,7 +167,7 @@ export default function StudentDetailPage() {
     })
 
     await ensureFeeRecords(data)
-    await Promise.all([loadRounds(), loadFees(), loadMemItems(), loadCatalog()])
+    await Promise.all([loadRounds(), loadFees(), loadMemItems(), loadCatalog(), loadSessions()])
     setLoading(false)
   }, [params.id, router])
 
@@ -160,6 +178,35 @@ export default function StudentDetailPage() {
       .eq("student_id", params.id)
       .order("started_at", { ascending: true })
     setRounds(data || [])
+  }
+
+  async function loadSessions() {
+    const { data } = await supabase
+      .from("class_sessions")
+      .select("*")
+      .eq("student_id", params.id)
+      .order("started_at", { ascending: false })
+    setSessions(data || [])
+  }
+
+  async function deleteSession() {
+    if (!sessionToDelete) return
+    setDeletingSession(true)
+    const { error } = await supabase.from("class_sessions").delete().eq("id", sessionToDelete.id)
+    setDeletingSession(false)
+    if (error) {
+      toast.error(`Failed to delete session: ${error.message}`)
+      return
+    }
+    const remaining = sessions.filter((s) => s.id !== sessionToDelete.id)
+    setSessions(remaining)
+    // If the current page would be empty after this delete, jump back one page
+    const newTotalPages = Math.max(1, Math.ceil(remaining.length / SESSION_PAGE_SIZE))
+    if (sessionPage > newTotalPages) {
+      setSessionPage(newTotalPages)
+    }
+    toast.success("Session deleted")
+    setSessionToDelete(null)
   }
 
   async function ensureFeeRecords(s: Student) {
@@ -390,6 +437,11 @@ export default function StudentDetailPage() {
     loadStudent()
   }, [loadStudent])
 
+  // Reset Sessions pagination when entering the tab
+  useEffect(() => {
+    if (activeTab === "sessions") setSessionPage(1)
+  }, [activeTab])
+
   if (loading || !student) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
@@ -421,6 +473,7 @@ export default function StudentDetailPage() {
 
   const TABS = [
     { id: "journey" as const, label: "Quran Journey", icon: BookOpen },
+    { id: "sessions" as const, label: "Sessions", icon: History, count: sessions.length },
     { id: "memorization" as const, label: "Memorization", icon: BookMarked, count: memorizingCount + memorizedCount },
     { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
   ]
@@ -664,6 +717,162 @@ export default function StudentDetailPage() {
           )}
         </div>
       )}
+
+      {activeTab === "sessions" && (() => {
+        const totalSessions = sessions.length
+        const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
+        const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
+        const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
+        const handlePageChange = (page: number) => {
+          setSessionPage(page)
+          if (typeof window !== "undefined") {
+            requestAnimationFrame(() => {
+              document.getElementById("sessions-list-top")?.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              })
+            })
+          }
+        }
+        return (
+        <div className="animate-fade-in-up">
+          {totalSessions === 0 ? (
+            <div className="py-16 text-center bg-white rounded-[16px] border border-[#E5DCC8]">
+              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
+                <Clock className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-base font-semibold text-[#1F2937] mb-1">No sessions yet</p>
+              <p className="text-sm" style={{ color: "#5B8E87" }}>
+                Sessions will appear here after the first class
+              </p>
+            </div>
+          ) : (
+            <div id="sessions-list-top">
+            <div
+              className="bg-white rounded-[16px] border border-[#E5DCC8] px-5 py-1"
+              style={{ boxShadow: "0 4px 20px rgba(15, 118, 110, 0.06)" }}
+            >
+              {/* Sort indicator */}
+              <div className="flex items-center justify-end px-2 py-2 border-b border-[#F0E8D5]">
+                <span className="text-[13px] font-medium" style={{ color: "#5B8E87" }}>
+                  Sort: Newest first ↓
+                </span>
+              </div>
+
+              <div className="max-h-[600px] overflow-y-auto main-scroll -mr-2 pr-2">
+                {paginatedSessions.map((session, i) => (
+                  <div
+                    key={session.id}
+                    className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-[#F5EFE3] ${
+                      i < paginatedSessions.length - 1 ? "border-b border-[#F0E8D5]" : ""
+                    }`}
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/50 flex-shrink-0">
+                      <Clock className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold text-[#1F2937]">
+                          {format(new Date(session.started_at), "MMM d, yyyy")}
+                        </p>
+                        <span
+                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-[#E5DCC8] bg-white"
+                          style={{ color: "#5B8E87" }}
+                        >
+                          {Math.floor(session.duration_seconds / 60)}m
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[13px] mt-0.5" style={{ color: "#5B8E87" }}>
+                        {session.paras_covered?.length > 0 && (
+                          <span>Paras: {session.paras_covered.join(", ")}</span>
+                        )}
+                        {session.memorization_revised?.length > 0 && (
+                          <>
+                            <span>&middot;</span>
+                            <span>{session.memorization_revised.length} revised</span>
+                          </>
+                        )}
+                      </div>
+                      {session.notes && (
+                        <p className="text-xs mt-1 truncate" style={{ color: "#8B9A95" }}>
+                          {session.notes}
+                        </p>
+                      )}
+                    </div>
+                    <span className="text-[11px] flex-shrink-0" style={{ color: "#8B9A95" }}>
+                      {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
+                    </span>
+                    <Popover.Root
+                      open={sessionToDelete?.id === session.id}
+                      onOpenChange={(open) => setSessionToDelete(open ? session : null)}
+                    >
+                      <Popover.Trigger asChild>
+                        <button
+                          type="button"
+                          title="Delete session"
+                          className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors"
+                          style={{ color: "#8B9A95" }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseEnter={(e) => (e.currentTarget.style.color = "#C97B5C")}
+                          onMouseLeave={(e) => (e.currentTarget.style.color = "#8B9A95")}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </Popover.Trigger>
+                      <Popover.Portal>
+                        <Popover.Content
+                          side="top"
+                          align="end"
+                          sideOffset={8}
+                          className="z-50 rounded-xl border border-[#E5DCC8] bg-white p-3 shadow-lg w-52"
+                        >
+                          <p className="text-xs font-medium mb-2.5 text-[#1F2937]">Delete this session?</p>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 flex-1 text-xs"
+                              onClick={() => setSessionToDelete(null)}
+                              disabled={deletingSession}
+                            >
+                              No
+                            </Button>
+                            <button
+                              type="button"
+                              className="h-7 flex-1 text-xs rounded-md font-semibold text-white transition-colors disabled:opacity-60"
+                              style={{ backgroundColor: "#C97B5C" }}
+                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#B86A4D")}
+                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#C97B5C")}
+                              onClick={deleteSession}
+                              disabled={deletingSession}
+                            >
+                              {deletingSession ? "..." : "Yes"}
+                            </button>
+                          </div>
+                          <Popover.Arrow className="fill-white" />
+                        </Popover.Content>
+                      </Popover.Portal>
+                    </Popover.Root>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Pagination — only when more than one page */}
+            {totalSessions > SESSION_PAGE_SIZE && (
+              <Pagination
+                currentPage={sessionPage}
+                totalPages={totalSessionPages}
+                totalItems={totalSessions}
+                pageSize={SESSION_PAGE_SIZE}
+                onPageChange={handlePageChange}
+              />
+            )}
+            </div>
+          )}
+        </div>
+        )
+      })()}
 
       {activeTab === "memorization" && (
         <div className="space-y-4 animate-fade-in-up">

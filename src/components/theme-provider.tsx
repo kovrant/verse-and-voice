@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import { themes, type ThemeKey } from "@/lib/themes"
+import { themes, DEFAULT_THEME, type ThemeKey } from "@/lib/themes"
 
 const STORAGE_KEY = "quran-academy-theme"
 
@@ -11,29 +11,28 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "emerald",
+  theme: DEFAULT_THEME,
   setTheme: () => {},
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeKey>("emerald")
+  const [theme, setThemeState] = useState<ThemeKey>(DEFAULT_THEME)
   const [mounted, setMounted] = useState(false)
 
   const applyTheme = useCallback((key: ThemeKey) => {
-    const themeColors = themes[key]?.colors
-    if (!themeColors) return
+    const config = themes[key]
+    if (!config) return
     const root = document.documentElement
-    for (const [prop, value] of Object.entries(themeColors)) {
+    for (const [prop, value] of Object.entries(config.colors)) {
       root.style.setProperty(prop, value)
     }
   }, [])
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as ThemeKey | null
-    if (saved && themes[saved]) {
-      setThemeState(saved)
-      applyTheme(saved)
-    }
+    const initial = saved && themes[saved] ? saved : DEFAULT_THEME
+    setThemeState(initial)
+    applyTheme(initial)
     setMounted(true)
   }, [applyTheme])
 
@@ -43,10 +42,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyTheme(key)
   }
 
-  // Prevent flash of default theme before hydration
-  if (!mounted) {
-    return <>{children}</>
-  }
+  if (!mounted) return <>{children}</>
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

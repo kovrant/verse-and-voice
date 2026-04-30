@@ -17,7 +17,8 @@ import {
   PanelLeftOpen,
 } from "lucide-react"
 import { useState, useEffect, memo, createContext, useContext } from "react"
-import { ThemePicker } from "@/components/theme-picker"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
 
@@ -53,6 +54,7 @@ export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
+  const { visible, setVisible } = useSidebarVisibility()
 
   useEffect(() => {
     try {
@@ -88,18 +90,34 @@ export const Sidebar = memo(function Sidebar() {
         />
       )}
 
+      {/* Floating restore button — visible only when sidebar is hidden (e.g. live class) */}
+      {!visible && (
+        <button
+          type="button"
+          onClick={() => setVisible(true)}
+          aria-label="Show sidebar"
+          className="fixed top-4 left-4 z-50 hidden lg:flex items-center justify-center p-2.5 bg-card border border-[#E5DCC8] rounded-lg shadow-md hover:bg-[#F5EFE3] transition-colors"
+        >
+          <PanelLeftOpen className="h-5 w-5 text-primary" />
+        </button>
+      )}
+
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.04] bg-card",
+          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-white/[0.04] bg-card overflow-hidden",
           // Smooth transition
-          "transition-[width] duration-300 ease-in-out",
-          // Desktop: static positioning, variable width
+          "transition-all duration-300 ease-in-out",
+          // Desktop: static positioning, variable width — visibility takes precedence over collapsed
           "lg:static lg:z-auto lg:translate-x-0 lg:flex-shrink-0",
-          collapsed ? "lg:w-[72px]" : "lg:w-72",
+          !visible
+            ? "lg:w-0 lg:opacity-0 lg:pointer-events-none"
+            : collapsed
+              ? "lg:w-[72px] lg:opacity-100"
+              : "lg:w-72 lg:opacity-100",
           // Mobile: always w-72, slide in/out
           "w-72",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen && visible ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
         style={{ contain: "layout style paint" }}
       >
@@ -130,7 +148,7 @@ export const Sidebar = memo(function Sidebar() {
               "min-w-0 transition-all duration-300",
               collapsed ? "lg:hidden" : "block"
             )}>
-              <h1 className="text-xl font-semibold tracking-tight text-gradient-gold whitespace-nowrap">
+              <h1 className="font-brand text-xl font-semibold tracking-tight text-primary whitespace-nowrap">
                 Quran Academy
               </h1>
               <p className="text-[11px] text-muted-foreground/60 tracking-wider uppercase mt-0.5 whitespace-nowrap">Student Management</p>
@@ -170,11 +188,13 @@ export const Sidebar = memo(function Sidebar() {
                 )}>
                   {collapsed ? (
                     <div className="hidden lg:flex justify-center">
-                      <div className="h-px w-6 bg-border/50 my-1" />
+                      <div className="h-px w-6 bg-amber-500/40 my-1" />
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="h-px w-full bg-amber-500/40 mb-2" />
+                  )}
                   <p className={cn(
-                    "text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/40 whitespace-nowrap",
+                    "text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 whitespace-nowrap",
                     collapsed && "lg:hidden"
                   )}>
                     {section.label}
@@ -201,13 +221,13 @@ export const Sidebar = memo(function Sidebar() {
                           : "gap-3 px-4 py-2.5",
                         // Colors
                         isActive
-                          ? "bg-emerald-500/10 text-emerald-400 shadow-nav-active"
-                          : "text-muted-foreground hover:bg-white/[0.03] hover:text-foreground"
+                          ? "bg-secondary/50 text-primary shadow-nav-active"
+                          : "text-muted-foreground hover:bg-secondary/20 hover:text-foreground"
                       )}
                     >
                       <item.icon className={cn(
                         "h-[18px] w-[18px] transition-colors flex-shrink-0",
-                        isActive ? "text-emerald-400" : "text-muted-foreground/60 group-hover:text-foreground"
+                        isActive ? "text-primary" : "text-muted-foreground/60 group-hover:text-foreground"
                       )} />
                       {/* Label — hidden when collapsed on desktop */}
                       <span className={cn(
@@ -217,7 +237,7 @@ export const Sidebar = memo(function Sidebar() {
                       {/* Active dot */}
                       {isActive && isExpanded && (
                         <div className={cn(
-                          "ml-auto h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-dot-glow",
+                          "ml-auto h-1.5 w-1.5 rounded-full bg-primary shadow-dot-glow",
                           collapsed && "lg:hidden"
                         )} />
                       )}
@@ -229,9 +249,9 @@ export const Sidebar = memo(function Sidebar() {
           ))}
         </nav>
 
-        {/* Theme Picker — hidden when collapsed */}
+        {/* Theme toggle — hidden when collapsed */}
         <div className={cn(collapsed && "lg:hidden")}>
-          <ThemePicker />
+          <ThemeToggle />
         </div>
 
         {/* Clock — hidden when collapsed */}

@@ -84,12 +84,25 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-inter)", "Inter", "system-ui", "sans-serif"],
+        sans: ["var(--font-nunito)", "Nunito", "system-ui", "sans-serif"],
+        display: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
+        heading: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
+        brand: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
+        arabic: ["var(--font-amiri-quran)", "Amiri Quran", "Amiri", "serif"],
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "var(--radius-card)",       /* 16px — cards */
+        md: "var(--radius-button)",     /* 12px — buttons */
+        sm: "var(--radius-input)",      /* 10px — inputs */
+        xl: "calc(var(--radius-card) + 4px)",
+        "2xl": "calc(var(--radius-card) + 8px)",
+        button: "var(--radius-button)",
+        card: "var(--radius-card)",
+        input: "var(--radius-input)",
+      },
+      boxShadow: {
+        soft: "0 4px 12px rgba(61, 64, 91, 0.08)",
+        "soft-lg": "0 8px 24px rgba(61, 64, 91, 0.10)",
       },
       keyframes: {
         "accordion-down": {

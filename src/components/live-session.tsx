@@ -9,6 +9,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from "@/components/ui/dialog"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import {
   ChevronLeft, ChevronRight, Clock, X, PanelLeftClose, PanelLeftOpen,
   BookMarked, Sparkles, Check, RotateCcw, Shuffle, ArrowUpRight,
@@ -84,6 +85,13 @@ export default function LiveSession({
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
+
+  // Hide the app sidebar for the duration of the live session; restore on unmount.
+  useEffect(() => {
+    setAppSidebarVisible(false)
+    return () => setAppSidebarVisible(true)
+  }, [setAppSidebarVisible])
 
   // Timer
   useEffect(() => {
@@ -199,17 +207,17 @@ export default function LiveSession({
   return (
     <div ref={containerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/50 bg-card/95 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#E5DCC8] bg-white">
         <div className="flex items-center gap-4">
           {/* Student name */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white text-sm font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
               {student.name.charAt(0)}
             </div>
-            <span className="font-semibold text-sm">{student.name}</span>
+            <span className="font-semibold text-sm text-[#1F2937]">{student.name}</span>
           </div>
 
-          <div className="h-5 w-px bg-border/50" />
+          <div className="h-5 w-px bg-[#E5DCC8]" />
 
           {/* Para info */}
           <div className="flex items-center gap-2">
@@ -222,9 +230,9 @@ export default function LiveSession({
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[80px] text-center">
-              Para <span className="text-emerald-400">{currentParaNumber}</span>
-              <span className="text-muted-foreground text-xs ml-1">/ 30</span>
+            <span className="text-sm font-medium min-w-[80px] text-center text-[#1F2937]">
+              Para <span className="text-primary font-bold">{currentParaNumber}</span>
+              <span className="text-[#5B8E87] text-xs ml-1">/ 30</span>
             </span>
             <Button
               variant="ghost"
@@ -239,10 +247,10 @@ export default function LiveSession({
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Timer */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-secondary/80 border border-border/50">
-            <Clock className="h-3.5 w-3.5 text-amber-400" />
-            <span className="text-sm font-mono font-semibold text-amber-300">{formatTimer(elapsed)}</span>
+          {/* Timer — white pill, deep ink digits */}
+          <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-white border border-[#E5DCC8]">
+            <Clock className="h-3.5 w-3.5 text-primary" />
+            <span className="text-sm font-bold text-[#1F2937] tabular-nums">{formatTimer(elapsed)}</span>
           </div>
 
           {/* Sidebar toggle */}
@@ -272,129 +280,192 @@ export default function LiveSession({
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         {sidebarOpen && (
-          <div className="w-80 border-r border-border/50 bg-card/50 overflow-y-auto flex-shrink-0">
-            <div className="p-4 space-y-4">
+          <div className="w-80 border-r border-[#E5DCC8] bg-white overflow-y-auto flex-shrink-0">
+            <div className="p-5 space-y-5">
               {/* Quick Actions */}
               {canAdvance && (
-                <div className="space-y-2">
-                  <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Quick Actions</p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10"
-                    onClick={advancePara}
+                <div className="space-y-2.5">
+                  <p
+                    className="text-[11px] font-semibold uppercase"
+                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
                   >
-                    <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
+                    Quick Actions
+                  </p>
+                  <button
+                    type="button"
+                    onClick={advancePara}
+                    className="group w-full flex items-center justify-center gap-2 rounded-[10px] px-[14px] py-2.5 bg-white border border-primary text-primary text-sm font-semibold transition-colors hover:bg-primary hover:text-white"
+                  >
+                    <ArrowUpRight className="h-4 w-4 transition-colors" />
                     Advance to Para {currentParaNumber + 1}
-                  </Button>
+                  </button>
                 </div>
               )}
 
-              {/* Current progress */}
+              {/* Current progress — inline, no panel */}
               {activeRound && (
-                <div className="rounded-xl bg-secondary/50 border border-border/50 p-3 space-y-1">
-                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Current Progress</p>
-                  <p className="text-sm">
-                    Student is on Para <span className="text-emerald-400 font-bold">{activeRound.asc_completed || 1}</span>
-                  </p>
-                  {activeRound.desc_completed > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      From end: {activeRound.desc_completed} paras
+                <>
+                  {canAdvance && <div className="h-px bg-[#F0E8D5]" />}
+                  <div className="space-y-1">
+                    <p
+                      className="text-[11px] font-semibold uppercase"
+                      style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                    >
+                      Current Progress
                     </p>
-                  )}
-                </div>
+                    <p className="text-sm text-[#1F2937]">
+                      Student is on Para{" "}
+                      <span className="text-primary font-bold">{activeRound.asc_completed || 1}</span>
+                    </p>
+                    {activeRound.desc_completed > 0 && (
+                      <p className="text-xs" style={{ color: "#5B8E87" }}>
+                        From end: {activeRound.desc_completed} paras
+                      </p>
+                    )}
+                  </div>
+                </>
               )}
 
               {/* Memorization */}
               {memItems.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5">
-                    <BookMarked className="h-3.5 w-3.5 text-amber-400" />
-                    <p className="text-xs font-semibold uppercase tracking-wider">Memorization</p>
-                  </div>
-
-                  {memorizing.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1">
-                        <Sparkles className="h-2.5 w-2.5" />
-                        Currently Memorizing
+                <>
+                  <div className="h-px bg-[#F0E8D5]" />
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-1.5">
+                      <BookMarked className="h-3.5 w-3.5 text-primary" />
+                      <p
+                        className="text-[11px] font-semibold uppercase"
+                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                      >
+                        Memorization
                       </p>
-                      {memorizing.map((item) => (
-                        <div key={item.id} className="flex items-center gap-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2">
-                          {item.memorization_catalog?.image_url && (
-                            <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />
-                          )}
-                          <p className="text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</p>
-                        </div>
-                      ))}
                     </div>
-                  )}
 
-                  {memorized.length > 0 && (
-                    <div className="space-y-1.5">
-                      <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                        <Check className="h-2.5 w-2.5" />
-                        Memorized ({memorized.length})
-                      </p>
-                      <div className="flex flex-wrap gap-1.5">
-                        {memorized.map((item) => (
-                          <Badge key={item.id} variant="outline" className="border-border/50 text-muted-foreground text-[10px] py-0.5 px-2">
-                            {item.memorization_catalog?.title}
-                          </Badge>
+                    {memorizing.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p
+                          className="text-[10px] font-semibold uppercase flex items-center gap-1"
+                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        >
+                          <Sparkles className="h-2.5 w-2.5 text-primary" />
+                          Currently Memorizing
+                        </p>
+                        {memorizing.map((item) => (
+                          <div
+                            key={item.id}
+                            className="flex items-center gap-2 rounded-[10px] border border-[#E5DCC8] bg-white px-3 py-2.5"
+                          >
+                            {item.memorization_catalog?.image_url && (
+                              <img
+                                src={item.memorization_catalog.image_url}
+                                alt=""
+                                className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                              />
+                            )}
+                            <p className="text-sm font-medium text-[#1F2937]">
+                              {item.memorization_catalog?.title}
+                            </p>
+                          </div>
                         ))}
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Revision Picker */}
-                  {memorized.length > 0 && (
-                    <div className="pt-2 border-t border-border/30">
-                      {revisionPick ? (
-                        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-2">
-                          <div className="flex items-center gap-1.5">
-                            <RotateCcw className="h-3 w-3 text-amber-400" />
-                            <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider">Revision Pick</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {revisionPick.memorization_catalog?.image_url && (
-                              <img src={revisionPick.memorization_catalog.image_url} alt="" className="h-10 w-10 rounded-lg object-cover flex-shrink-0" />
-                            )}
-                            <p className="text-base font-bold text-amber-300">{revisionPick.memorization_catalog?.title}</p>
-                          </div>
-                          {revisionPick.last_revised_at && (
-                            <p className="text-[10px] text-muted-foreground">
-                              Last: {format(new Date(revisionPick.last_revised_at), "MMM d")}
-                              {" "}({differenceInCalendarDays(new Date(), new Date(revisionPick.last_revised_at))}d ago)
-                            </p>
-                          )}
-                          <div className="flex gap-1.5">
-                            <Button size="sm" className="h-7 text-xs" onClick={() => markRevised(revisionPick.id)}>
-                              <Check className="h-3 w-3 mr-1" />
-                              Revised
-                            </Button>
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={pickRevision}>
-                              <Shuffle className="h-3 w-3 mr-1" />
-                              Another
-                            </Button>
-                          </div>
+                    {memorized.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p
+                          className="text-[10px] font-semibold uppercase flex items-center gap-1"
+                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        >
+                          <Check className="h-2.5 w-2.5 text-primary" />
+                          Memorized ({memorized.length})
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {memorized.map((item) => (
+                            <span
+                              key={item.id}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border border-[#E5DCC8] bg-white"
+                              style={{ color: "#5B8E87" }}
+                            >
+                              {item.memorization_catalog?.title}
+                            </span>
+                          ))}
                         </div>
-                      ) : (
-                        <Button variant="outline" size="sm" onClick={pickRevision} className="w-full text-xs">
-                          <Shuffle className="h-3 w-3 mr-1.5" />
-                          Pick Revision
-                        </Button>
-                      )}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    )}
+
+                    {/* Revision Picker */}
+                    {memorized.length > 0 && (
+                      <div className="pt-1">
+                        {revisionPick ? (
+                          <div className="rounded-[10px] border border-[#E5DCC8] bg-white p-3 space-y-2">
+                            <div className="flex items-center gap-1.5">
+                              <RotateCcw className="h-3 w-3 text-primary" />
+                              <p
+                                className="text-[10px] font-semibold uppercase"
+                                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                              >
+                                Revision Pick
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {revisionPick.memorization_catalog?.image_url && (
+                                <img
+                                  src={revisionPick.memorization_catalog.image_url}
+                                  alt=""
+                                  className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
+                                />
+                              )}
+                              <p className="text-base font-bold text-[#1F2937]">
+                                {revisionPick.memorization_catalog?.title}
+                              </p>
+                            </div>
+                            {revisionPick.last_revised_at && (
+                              <p className="text-[10px]" style={{ color: "#5B8E87" }}>
+                                Last: {format(new Date(revisionPick.last_revised_at), "MMM d")}
+                                {" "}({differenceInCalendarDays(new Date(), new Date(revisionPick.last_revised_at))}d ago)
+                              </p>
+                            )}
+                            <div className="flex gap-1.5">
+                              <Button size="sm" className="h-7 text-xs" onClick={() => markRevised(revisionPick.id)}>
+                                <Check className="h-3 w-3 mr-1" />
+                                Revised
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={pickRevision}>
+                                <Shuffle className="h-3 w-3 mr-1" />
+                                Another
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Button variant="outline" size="sm" onClick={pickRevision} className="w-full text-xs">
+                            <Shuffle className="h-3 w-3 mr-1.5" />
+                            Pick Revision
+                          </Button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
 
-              {/* Session stats */}
-              <div className="rounded-xl bg-secondary/50 border border-border/50 p-3 space-y-1.5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">This Session</p>
-                <div className="text-xs space-y-0.5 text-muted-foreground">
-                  <p>Paras viewed: <span className="text-foreground">{parasViewed.size}</span></p>
-                  <p>Revisions done: <span className="text-foreground">{revisionsThisSession.length}</span></p>
+              {/* This Session — inline, no panel */}
+              <div className="h-px bg-[#F0E8D5]" />
+              <div className="space-y-1.5">
+                <p
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                >
+                  This Session
+                </p>
+                <div className="text-sm space-y-0.5">
+                  <p style={{ color: "#5B8E87" }}>
+                    Paras viewed:{" "}
+                    <span className="font-bold text-[#1F2937] tabular-nums">{parasViewed.size}</span>
+                  </p>
+                  <p style={{ color: "#5B8E87" }}>
+                    Revisions done:{" "}
+                    <span className="font-bold text-[#1F2937] tabular-nums">{revisionsThisSession.length}</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -437,58 +508,107 @@ export default function LiveSession({
 
       {/* End Class Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>End Class Session</DialogTitle>
-            <DialogDescription>Review the session summary and add any notes.</DialogDescription>
+        <DialogContent
+          className="max-w-md bg-white border border-[#E5DCC8] rounded-[20px] p-8"
+          style={{ boxShadow: "0 20px 60px rgba(15, 118, 110, 0.15)" }}
+        >
+          <DialogHeader className="space-y-1.5">
+            <DialogTitle className="text-[22px] font-bold text-[#1F2937]">
+              End Class Session
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium" style={{ color: "#5B8E87" }}>
+              Review the session summary and add any notes.
+            </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3">
-            {/* Duration */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/50">
-              <span className="text-sm text-muted-foreground">Duration</span>
-              <span className="text-sm font-bold text-amber-300">{formatDuration(elapsed)}</span>
-            </div>
-
-            {/* Paras */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-secondary/50 border border-border/50">
-              <span className="text-sm text-muted-foreground">Paras Covered</span>
-              <span className="text-sm font-medium">
-                {Array.from(parasViewed).sort((a, b) => a - b).join(", ")}
-              </span>
+          <div className="space-y-5">
+            {/* Stats — clean two-column, no fills */}
+            <div className="grid grid-cols-2 gap-6 py-5 border-y border-[#F0E8D5]">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Clock className="h-4 w-4" style={{ color: "#5B8E87" }} />
+                  <span
+                    className="text-[11px] font-semibold uppercase"
+                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                  >
+                    Duration
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-[#1F2937] tabular-nums">
+                  {formatDuration(elapsed)}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <BookOpen className="h-4 w-4" style={{ color: "#5B8E87" }} />
+                  <span
+                    className="text-[11px] font-semibold uppercase"
+                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                  >
+                    Paras Covered
+                  </span>
+                </div>
+                <div className="text-2xl font-bold text-primary tabular-nums">
+                  {Array.from(parasViewed).sort((a, b) => a - b).join(", ")}
+                </div>
+              </div>
             </div>
 
             {/* Revisions */}
             {revisionsThisSession.length > 0 && (
-              <div className="p-3 rounded-xl bg-secondary/50 border border-border/50 space-y-1">
-                <span className="text-sm text-muted-foreground">Memorization Revised</span>
-                <div className="flex flex-wrap gap-1">
+              <div className="space-y-2">
+                <span
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                >
+                  Memorization Revised
+                </span>
+                <div className="flex flex-wrap gap-1.5">
                   {revisionsThisSession.map((title, i) => (
-                    <Badge key={i} variant="outline" className="text-xs">{title}</Badge>
+                    <span
+                      key={i}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-primary"
+                      style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
+                    >
+                      {title}
+                    </span>
                   ))}
                 </div>
               </div>
             )}
 
             {/* Notes */}
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Notes (optional)</label>
+            <div className="space-y-2">
+              <label className="text-[13px] font-semibold text-[#1F2937]">
+                Notes (optional)
+              </label>
               <Textarea
                 placeholder="How did the session go? Any observations..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                rows={3}
+                className="min-h-[110px] px-4 py-3.5 text-[15px] font-medium leading-relaxed resize-y"
               />
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEndDialog(false)}>
+          <DialogFooter className="gap-3 mt-2">
+            <button
+              type="button"
+              onClick={() => setShowEndDialog(false)}
+              className="px-5 py-3 rounded-[10px] text-[15px] font-semibold transition-colors hover:bg-[#F5EFE3]"
+              style={{ color: "#5B8E87" }}
+            >
               Continue Class
-            </Button>
-            <Button onClick={handleEndClass} disabled={saving}>
+            </button>
+            <button
+              type="button"
+              onClick={handleEndClass}
+              disabled={saving}
+              className="px-6 py-3 rounded-[10px] bg-primary hover:bg-[#0B5E58] text-white text-[15px] font-bold transition-colors disabled:opacity-60"
+              style={{ boxShadow: "0 2px 8px rgba(15, 118, 110, 0.2)" }}
+            >
               {saving ? "Saving..." : "Save & End"}
-            </Button>
+            </button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

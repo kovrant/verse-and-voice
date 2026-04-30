@@ -23,6 +23,13 @@ import {
 } from "@/components/ui/dialog"
 import { Upload, Trash2, FileText, Image as ImageIcon, Search, Eye, X, HardDrive, BookOpen, Sparkles, FolderOpen } from "lucide-react"
 import { toast } from "sonner"
+import dynamic from "next/dynamic"
+
+// react-pdf is client-only (uses worker + canvas) — avoid SSR
+const PdfThumbnail = dynamic(
+  () => import("@/components/pdf-thumbnail").then(m => m.PdfThumbnail),
+  { ssr: false }
+)
 
 interface MediaItem {
   id: string
@@ -702,18 +709,33 @@ export default function MediaPage() {
                       </div>
                     ) : (
                       <div className="aspect-[4/3] overflow-hidden bg-secondary/80 relative flex items-center justify-center">
-                        {/* Decorative background */}
-                        <div className="absolute inset-0 islamic-pattern opacity-30" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/60" />
-                        {/* Para number or file icon */}
-                        {item.meta?.para_number ? (
-                          <div className="relative flex flex-col items-center gap-1">
-                            <span className="text-3xl font-bold text-emerald-400/30">{item.meta.para_number}</span>
-                            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">Para</span>
+                        <PdfThumbnail
+                          fileUrl={item.file_url}
+                          width={320}
+                          fallback={
+                            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
+                              <div className="absolute inset-0 islamic-pattern opacity-30" />
+                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/60" />
+                              {item.meta?.para_number ? (
+                                <div className="relative flex flex-col items-center gap-1">
+                                  <span className="text-3xl font-bold text-primary/30">{item.meta.para_number}</span>
+                                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">Para</span>
+                                </div>
+                              ) : (
+                                <FileText className="h-10 w-10 text-muted-foreground/20 relative" />
+                              )}
+                            </div>
+                          }
+                        />
+                        {/* Para badge (top-left, overlays the rendered PDF) */}
+                        {item.meta?.para_number && (
+                          <div className="absolute top-1.5 left-1.5 z-10">
+                            <span className="px-1.5 py-0.5 rounded bg-primary/85 text-[9px] font-semibold text-primary-foreground backdrop-blur-sm uppercase tracking-wider">
+                              Para {item.meta.para_number}
+                            </span>
                           </div>
-                        ) : (
-                          <FileText className="h-10 w-10 text-muted-foreground/20 relative" />
                         )}
+                        {/* PDF tag (bottom-right) */}
                         <div className="absolute bottom-1 right-1 z-10">
                           <span className="px-1.5 py-0.5 rounded bg-black/50 text-[9px] font-medium text-white backdrop-blur-sm uppercase">PDF</span>
                         </div>
