@@ -1,21 +1,21 @@
 import type { Metadata } from "next"
-import { Reem_Kufi, Nunito, Amiri } from "next/font/google"
+import { Fredoka, Baloo_2, Amiri } from "next/font/google"
 import "./globals.css"
 import { Sidebar } from "@/components/sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
 import { Toaster } from "sonner"
 
-const reemKufi = Reem_Kufi({
-  subsets: ["latin", "arabic"],
-  variable: "--font-reem-kufi",
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  variable: "--font-fredoka",
   weight: ["400", "500", "600", "700"],
   display: "swap",
 })
 
-const nunito = Nunito({
+const baloo = Baloo_2({
   subsets: ["latin"],
-  variable: "--font-nunito",
+  variable: "--font-baloo",
   weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 })
@@ -47,7 +47,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${reemKufi.variable} ${nunito.variable} ${amiri.variable} ${nunito.className}`}>
+      <body className={`${fredoka.variable} ${baloo.variable} ${amiri.variable} ${baloo.className}`}>
         <ThemeProvider>
         <SidebarVisibilityProvider>
         <div className="flex h-screen overflow-hidden bg-background">

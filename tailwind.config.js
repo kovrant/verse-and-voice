@@ -84,10 +84,10 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-nunito)", "Nunito", "system-ui", "sans-serif"],
-        display: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
-        heading: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
-        brand: ["var(--font-reem-kufi)", "Reem Kufi", "system-ui", "sans-serif"],
+        sans: ["var(--font-baloo)", "Baloo 2", "system-ui", "sans-serif"],
+        display: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
+        heading: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
+        brand: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
         arabic: ["var(--font-amiri-quran)", "Amiri Quran", "Amiri", "serif"],
       },
       borderRadius: {
