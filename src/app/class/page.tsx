@@ -10,7 +10,7 @@ import { getActiveRound, getCompletedRounds, getChronologicalRoundNumber, type Q
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import {
   Clock, User, Users, Sparkles, CalendarDays, BookMarked,
-  Play, BookOpen, Search, ChevronDown, ChevronLeft, UserPlus,
+  Play, BookOpen, Search, ChevronDown, ChevronLeft, UserPlus, Check,
 } from "lucide-react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
@@ -390,40 +390,163 @@ export default function ClassPage() {
                 {/* SECTION 4 — HISTORY (timeline) */}
                 {(() => {
                   const completed = getCompletedRounds(rounds)
-                  if (completed.length === 0) return null
+                  const active = getActiveRound(rounds)
+                  if (completed.length === 0 && !active) return null
+
+                  // Build timeline entries: completed rounds first (chronological), then active at the bottom
+                  type Entry = {
+                    key: string
+                    stage: string
+                    type: "qaida" | "quran"
+                    startedAt: Date
+                    endedAt: Date | null
+                    isCurrent: boolean
+                  }
+                  const entries: Entry[] = completed.map((r) => ({
+                    key: r.id,
+                    stage:
+                      r.type === "qaida"
+                        ? "Qaida"
+                        : `Quran R${getChronologicalRoundNumber(rounds, r)}`,
+                    type: r.type,
+                    startedAt: new Date(r.started_at),
+                    endedAt: r.completed_at ? new Date(r.completed_at) : null,
+                    isCurrent: false,
+                  }))
+                  if (active) {
+                    entries.push({
+                      key: active.id,
+                      stage:
+                        active.type === "qaida"
+                          ? "Qaida"
+                          : `Quran R${getChronologicalRoundNumber(rounds, active)}`,
+                      type: active.type,
+                      startedAt: new Date(active.started_at),
+                      endedAt: null,
+                      isCurrent: true,
+                    })
+                  }
+
+                  // Format a duration as "Xyr Ymo" / "Ymo" / "Xd"
+                  const fmtDuration = (start: Date, end: Date) => {
+                    const days = Math.max(0, differenceInDays(end, start))
+                    if (days < 31) return `${days}d`
+                    const months = Math.round(days / 30.44)
+                    if (months < 12) return `${months}mo`
+                    const years = Math.floor(months / 12)
+                    const remMonths = months % 12
+                    return remMonths === 0 ? `${years}yr` : `${years}yr ${remMonths}mo`
+                  }
+
+                  // Total journey: earliest start → now
+                  const earliest = entries.reduce(
+                    (min, e) => (e.startedAt < min ? e.startedAt : min),
+                    entries[0].startedAt,
+                  )
+                  const journey = fmtDuration(earliest, new Date())
+
                   return (
                     <div>
-                      <p
-                        className="text-[11px] font-semibold uppercase mb-4"
-                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
-                      >
-                        History
-                      </p>
-                      <div className="relative pl-3">
-                        <div className="absolute left-[5px] top-2 bottom-2 w-px bg-[#E5DCC8]" />
-                        <div className="space-y-3">
-                          {completed.map((r) => {
-                            const stage =
-                              r.type === "qaida"
-                                ? "Qaida"
-                                : `Quran R${getChronologicalRoundNumber(rounds, r)}`
-                            const range = `${format(new Date(r.started_at), "MMM yyyy")} → ${
-                              r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "…"
+                      <div className="flex items-end justify-between mb-4">
+                        <p
+                          className="text-[11px] font-semibold uppercase"
+                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        >
+                          History
+                        </p>
+                        <p className="text-[11px] font-semibold" style={{ color: "#5B8E87" }}>
+                          <span className="font-bold text-primary">{journey}</span> of journey
+                        </p>
+                      </div>
+                      <div className="relative pl-1">
+                        {/* Connecting gradient line */}
+                        <div
+                          className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full"
+                          style={{
+                            background:
+                              "linear-gradient(to bottom, rgba(15,118,110,0.55), rgba(15,118,110,0.18))",
+                          }}
+                        />
+                        <div className="space-y-2">
+                          {entries.map((e) => {
+                            const Icon = e.type === "qaida" ? BookMarked : BookOpen
+                            const range = `${format(e.startedAt, "MMM yyyy")} → ${
+                              e.isCurrent
+                                ? "Now"
+                                : e.endedAt
+                                  ? format(e.endedAt, "MMM yyyy")
+                                  : "…"
                             }`
+                            const duration = fmtDuration(e.startedAt, e.endedAt ?? new Date())
                             return (
-                              <div key={r.id} className="relative flex items-center gap-4">
+                              <div
+                                key={e.key}
+                                className="relative flex items-center gap-3 rounded-[12px] py-2 pl-10 pr-3 transition-all hover:-translate-y-px"
+                                style={{
+                                  backgroundColor: e.isCurrent
+                                    ? "rgba(167, 215, 197, 0.28)"
+                                    : "rgba(245, 240, 228, 0.55)",
+                                  boxShadow: e.isCurrent
+                                    ? "0 1px 0 rgba(15,118,110,0.10) inset"
+                                    : undefined,
+                                }}
+                              >
+                                {/* Dot with icon — pulses on the active round */}
                                 <span
-                                  className="absolute -left-[7px] top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-white"
-                                />
-                                <span
-                                  className="ml-3 inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-primary"
-                                  style={{ width: 80, backgroundColor: "rgba(167, 215, 197, 0.5)" }}
+                                  className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-[#FAF6EE] ${
+                                    e.isCurrent ? "bg-primary" : "bg-white border border-primary/40"
+                                  }`}
                                 >
-                                  {stage}
+                                  {e.isCurrent ? (
+                                    <span className="absolute inset-0 rounded-full bg-primary/60 animate-ping" />
+                                  ) : null}
+                                  <Icon
+                                    className="h-[10px] w-[10px] relative"
+                                    style={{ color: e.isCurrent ? "#FFFFFF" : "#0F766E" }}
+                                  />
                                 </span>
-                                <span className="text-sm" style={{ color: "#5B8E87" }}>
-                                  {range}
+
+                                <span
+                                  className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary shrink-0"
+                                  style={{
+                                    width: 78,
+                                    backgroundColor: e.isCurrent
+                                      ? "rgba(15, 118, 110, 0.14)"
+                                      : "rgba(167, 215, 197, 0.55)",
+                                  }}
+                                >
+                                  {e.stage}
                                 </span>
+
+                                <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                                  <span
+                                    className="text-[13px] font-medium truncate"
+                                    style={{ color: "#1F2937" }}
+                                  >
+                                    {range}
+                                  </span>
+                                  <span
+                                    className="text-[11px] font-semibold tabular-nums shrink-0"
+                                    style={{ color: "#5B8E87" }}
+                                  >
+                                    {duration}
+                                  </span>
+                                </div>
+
+                                {!e.isCurrent && (
+                                  <span
+                                    className="shrink-0 h-4 w-4 rounded-full bg-primary/15 flex items-center justify-center"
+                                    title="Completed"
+                                  >
+                                    <Check className="h-2.5 w-2.5 text-primary" strokeWidth={3} />
+                                  </span>
+                                )}
+                                {e.isCurrent && (
+                                  <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                                    <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                    Now
+                                  </span>
+                                )}
                               </div>
                             )
                           })}
