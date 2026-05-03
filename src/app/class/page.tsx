@@ -63,6 +63,7 @@ export default function ClassPage() {
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
+  const [starting, setStarting] = useState(false)
   const [search, setSearch] = useState("")
   const [quickPickOpen, setQuickPickOpen] = useState(false)
 
@@ -132,9 +133,15 @@ export default function ClassPage() {
   const activeRound = getActiveRound(rounds)
   const currentPara = activeRound?.asc_completed || 1
 
-  // Start class
+  // Start class — button morphs to Bismillah, then swaps to live screen
   function handleStartClass() {
-    setMode("live")
+    if (starting) return
+    setStarting(true)
+    // Hold the Bismillah on the button briefly, then transition.
+    setTimeout(() => {
+      setMode("live")
+      setStarting(false)
+    }, 1100)
   }
 
   // End class — save session and return to landing
@@ -562,11 +569,78 @@ export default function ClassPage() {
                 <button
                   type="button"
                   onClick={handleStartClass}
-                  className="w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary hover:bg-[#0B5E58] text-white text-[17px] font-bold transition-all hover:-translate-y-px"
-                  style={{ boxShadow: "0 4px 12px rgba(15, 118, 110, 0.25)" }}
+                  disabled={starting}
+                  aria-live="polite"
+                  className={`relative w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary text-white text-[17px] font-bold overflow-hidden transition-all ${
+                    starting ? "cursor-default" : "hover:bg-[#0B5E58] hover:-translate-y-px"
+                  }`}
+                  style={{
+                    boxShadow: starting
+                      ? "0 6px 20px rgba(15, 118, 110, 0.35), 0 0 0 4px rgba(212, 165, 116, 0.18)"
+                      : "0 4px 12px rgba(15, 118, 110, 0.25)",
+                  }}
                 >
-                  <Play className="h-5 w-5 fill-current" />
-                  Start Class
+                  {/* Default content — fades out when starting */}
+                  <span
+                    className={`flex items-center gap-3 transition-all duration-200 ${
+                      starting ? "opacity-0 scale-75" : "opacity-100 scale-100"
+                    }`}
+                  >
+                    <Play className="h-5 w-5 fill-current" />
+                    Start Class
+                  </span>
+
+                  {/* Book + sparkles overlay — appears when starting */}
+                  {starting && (
+                    <span
+                      aria-hidden="true"
+                      className="absolute inset-0 flex items-center justify-center"
+                    >
+                      {/* The book — pops in with a slight bounce */}
+                      <BookOpen
+                        className="h-7 w-7 book-open-anim"
+                        style={{ color: "#FFFFFF" }}
+                        strokeWidth={2.25}
+                      />
+                      {/* Sparkles — twinkle around the book at staggered times */}
+                      <Sparkles
+                        className="absolute h-3 w-3 sparkle-twinkle"
+                        style={{
+                          top: "22%",
+                          left: "calc(50% - 36px)",
+                          color: "#E8D4B0",
+                          animationDelay: "120ms",
+                        }}
+                      />
+                      <Sparkles
+                        className="absolute h-3.5 w-3.5 sparkle-twinkle"
+                        style={{
+                          top: "16%",
+                          left: "calc(50% + 22px)",
+                          color: "#FFE8B8",
+                          animationDelay: "260ms",
+                        }}
+                      />
+                      <Sparkles
+                        className="absolute h-2.5 w-2.5 sparkle-twinkle"
+                        style={{
+                          bottom: "20%",
+                          left: "calc(50% + 30px)",
+                          color: "#E8D4B0",
+                          animationDelay: "440ms",
+                        }}
+                      />
+                      <Sparkles
+                        className="absolute h-3 w-3 sparkle-twinkle"
+                        style={{
+                          bottom: "22%",
+                          left: "calc(50% - 30px)",
+                          color: "#FFE8B8",
+                          animationDelay: "600ms",
+                        }}
+                      />
+                    </span>
+                  )}
                 </button>
 
                 {/* View full profile link */}
