@@ -15,6 +15,7 @@ import {
   BookOpenCheck,
   PanelLeftClose,
   PanelLeftOpen,
+  LogOut,
 } from "lucide-react"
 import { useState, useEffect, memo, createContext, useContext } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -62,6 +63,8 @@ export const Sidebar = memo(function Sidebar() {
       if (saved === "true") setCollapsed(true)
     } catch {}
   }, [])
+
+  if (pathname === "/login") return null
 
   function toggleCollapsed() {
     const next = !collapsed
@@ -258,6 +261,21 @@ export const Sidebar = memo(function Sidebar() {
         <div className={cn(collapsed && "lg:hidden")}>
           <SidebarClock />
         </div>
+
+        {/* Sign out */}
+        <form action="/auth/signout" method="post" className={cn("border-t border-white/[0.04]", collapsed && "lg:flex lg:justify-center")}>
+          <button
+            type="submit"
+            title="Sign out"
+            className={cn(
+              "flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-white/[0.03] transition-all",
+              collapsed ? "lg:justify-center lg:w-12 lg:px-0 lg:py-2.5 w-full px-6 py-3" : "w-full px-6 py-3"
+            )}
+          >
+            <LogOut className="h-[18px] w-[18px] flex-shrink-0" />
+            <span className={cn("whitespace-nowrap", collapsed ? "lg:hidden" : "block")}>Sign out</span>
+          </button>
+        </form>
 
         {/* Collapse toggle — desktop only */}
         <div className="hidden lg:block border-t border-white/[0.04]">
