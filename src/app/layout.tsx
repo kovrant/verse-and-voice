@@ -1,4 +1,4 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Fredoka, Baloo_2, Amiri } from "next/font/google"
 import "./globals.css"
 import { Sidebar } from "@/components/sidebar"
@@ -32,12 +32,15 @@ export const metadata: Metadata = {
   title: "Quran Academy",
   description: "A friendly Quran learning space for kids",
   manifest: "/manifest.json",
-  themeColor: "#FAF6EE",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Quran Academy",
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: "#FAF6EE",
 }
 
 export default function RootLayout({
