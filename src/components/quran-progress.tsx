@@ -3,7 +3,6 @@
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { BookOpen, BookMarked, Trophy } from "lucide-react"
-import { format } from "date-fns"
 
 export interface QuranRound {
   id: string
@@ -137,87 +136,160 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
   }
 
   if (variant === "full") {
+    // Shared card chrome — clean white card on parchment, sage accents
+    const cardStyle: React.CSSProperties = {
+      boxShadow: "0 4px 16px rgba(15, 118, 110, 0.06)",
+    }
+
     if (rounds.length === 0) {
       return (
-        <div className="p-5 rounded-2xl bg-secondary/50 border border-border/50 space-y-3">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-muted-foreground" />
-            <span className="font-semibold text-sm">Quran Progress</span>
+        <div
+          className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6 flex items-center gap-4"
+          style={cardStyle}
+        >
+          <span
+            className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
+            style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
+          >
+            <BookOpen className="h-5 w-5 text-primary" strokeWidth={2.25} />
+          </span>
+          <div className="min-w-0">
+            <p
+              className="text-[11px] font-semibold uppercase"
+              style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+            >
+              Quran Progress
+            </p>
+            <p className="text-sm" style={{ color: "#5B8E87" }}>
+              No rounds started yet. Add a round to begin tracking.
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">No rounds started yet. Add a round to begin tracking.</p>
         </div>
       )
     }
 
     if (isQaida) {
       return (
-        <div className="p-5 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BookMarked className="h-5 w-5 text-amber-400" />
-              <span className="font-semibold text-sm">Learning Stage</span>
+        <div
+          className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6"
+          style={cardStyle}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <span
+                className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
+                style={{ backgroundColor: "rgba(232, 212, 176, 0.55)" }}
+              >
+                <BookMarked
+                  className="h-5 w-5"
+                  style={{ color: "#A87142" }}
+                  strokeWidth={2.25}
+                />
+              </span>
+              <div className="min-w-0">
+                <p
+                  className="text-[11px] font-semibold uppercase"
+                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                >
+                  Learning Stage
+                </p>
+                <h3 className="text-base font-bold text-[#1F2937] truncate">
+                  Norani Qaida
+                  {activeRound && activeRoundNum > 1 ? (
+                    <span className="font-medium" style={{ color: "#5B8E87" }}>
+                      {" "}· Round {activeRoundNum}
+                    </span>
+                  ) : null}
+                </h3>
+              </div>
             </div>
-            <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/10 text-sm px-3 py-1">
-              Norani Qaida {activeRound && activeRoundNum > 1 ? `(Round ${activeRoundNum})` : ""}
-            </Badge>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-[13px] mt-3" style={{ color: "#5B8E87" }}>
             Student is learning the basics through Norani Qaida before starting Quran reading.
           </p>
-          {/* Show completed rounds if any */}
-          <RoundHistory rounds={rounds} />
         </div>
       )
     }
 
+    const headerLabel =
+      activeRound && activeRoundNum > 1 ? `Round ${activeRoundNum}` : "Current Round"
+
     return (
-      <div className="p-5 rounded-2xl bg-secondary/50 border border-border/50 space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-5 w-5 text-emerald-400" />
-            <span className="font-semibold text-sm">
-              Quran Progress
-              {activeRound && activeRoundNum > 1 && (
-                <span className="text-muted-foreground font-normal ml-1">(Round {activeRoundNum})</span>
-              )}
+      <div
+        className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6"
+        style={cardStyle}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <span
+              className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
+              style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
+            >
+              <BookOpen className="h-5 w-5 text-primary" strokeWidth={2.25} />
             </span>
+            <div className="min-w-0">
+              <p
+                className="text-[11px] font-semibold uppercase"
+                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+              >
+                Quran Progress
+              </p>
+              <h3 className="text-base font-bold text-[#1F2937] truncate">{headerLabel}</h3>
+            </div>
           </div>
-          <div className="text-right">
+          <div className="text-right shrink-0">
             {!activeRound && completedQuranCount > 0 ? (
               <Badge variant="success" className="text-sm px-3 py-1">
                 <Trophy className="h-3.5 w-3.5 mr-1" />
                 {completedQuranCount}x Completed
               </Badge>
             ) : isCompleted ? (
-              <Badge variant="success" className="text-sm px-3 py-1">Completed All 30</Badge>
+              <Badge variant="success" className="text-sm px-3 py-1">
+                Completed All 30
+              </Badge>
             ) : currentPara ? (
-              <span className="text-lg font-bold">
-                Para <span className="text-emerald-400">{currentPara}</span>
-                <span className="text-sm text-muted-foreground font-normal ml-1.5">({total}/30)</span>
-              </span>
+              <div className="leading-tight">
+                <span className="text-2xl font-extrabold text-primary tabular-nums">
+                  Para {currentPara}
+                </span>
+                <span
+                  className="text-sm font-semibold tabular-nums ml-1.5"
+                  style={{ color: "#8B9A95" }}
+                >
+                  / 30
+                </span>
+              </div>
             ) : (
-              <span className="text-muted-foreground">Not started</span>
+              <span className="text-sm" style={{ color: "#5B8E87" }}>
+                Not started
+              </span>
             )}
           </div>
         </div>
         {activeRound && (
-          <>
+          <div className="mt-4">
             <Progress value={progress} />
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <div className="flex gap-3">
+            <div className="flex items-center justify-between text-xs mt-2.5">
+              <div className="flex gap-4" style={{ color: "#5B8E87" }}>
                 {desc > 0 && (
-                  <span>From end: <span className="text-foreground font-semibold">{desc}</span> paras</span>
+                  <span>
+                    From end:{" "}
+                    <span className="font-bold text-[#1F2937] tabular-nums">{desc}</span> paras
+                  </span>
                 )}
                 {asc > 0 && (
-                  <span>From start: <span className="text-foreground font-semibold">{asc}</span> paras</span>
+                  <span>
+                    From start:{" "}
+                    <span className="font-bold text-[#1F2937] tabular-nums">{asc}</span> paras
+                  </span>
                 )}
               </div>
-              <span>{Math.round(progress)}%</span>
+              <span className="font-bold text-primary tabular-nums">
+                {Math.round(progress)}%
+              </span>
             </div>
-          </>
+          </div>
         )}
-        {/* Show completed rounds */}
-        <RoundHistory rounds={rounds} />
       </div>
     )
   }
@@ -275,23 +347,3 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
   )
 }
 
-function RoundHistory({ rounds }: { rounds: QuranRound[] }) {
-  const completed = getCompletedRounds(rounds)
-  if (completed.length === 0) return null
-
-  return (
-    <div className="pt-2 border-t border-border/30 space-y-1.5">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">History</p>
-      {completed.map(r => (
-        <div key={r.id} className="flex items-center gap-2 text-xs">
-          <Badge variant="outline" className="border-emerald-500/20 text-emerald-400 bg-emerald-500/5 text-[10px] py-0 px-1.5">
-            {r.type === "qaida" ? "Qaida" : `Quran R${getChronologicalRoundNumber(rounds, r)}`}
-          </Badge>
-          <span className="text-muted-foreground">
-            {format(new Date(r.started_at), "MMM yyyy")} → {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "..."}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}

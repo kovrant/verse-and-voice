@@ -656,8 +656,14 @@ export default function StudentDetailPage() {
 
           {/* Rounds list */}
           {rounds.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">All Rounds</p>
+            <div className="space-y-3">
+              <p
+                className="text-[11px] font-semibold uppercase"
+                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+              >
+                All Rounds
+              </p>
+              <div className="space-y-2">
               {(() => {
                 // Active rounds first, then by started_at descending
                 const sorted = [...rounds].sort((a, b) => {
@@ -674,33 +680,104 @@ export default function StudentDetailPage() {
                 const total = r.type === "quran" ? desc + completedFromAsc : 0
                 const prog = (total / 30) * 100
                 const chronologicalNum = getChronologicalRoundNumber(rounds, r)
+                const Icon =
+                  r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
 
                 return (
-                  <div key={r.id} className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 group ${isActive ? "border-emerald-500/30 bg-emerald-500/5" : "border-border/50 bg-secondary/20"}`}>
-                    <div className={`flex h-7 w-7 items-center justify-center rounded-lg flex-shrink-0 ${isActive ? "bg-emerald-500/15" : "bg-secondary"}`}>
-                      {r.type === "qaida" ? <BookMarked className={`h-3.5 w-3.5 ${isActive ? "text-amber-400" : "text-muted-foreground"}`} /> : r.completed_at ? <Trophy className="h-3.5 w-3.5 text-emerald-400" /> : <BookOpen className={`h-3.5 w-3.5 ${isActive ? "text-emerald-400" : "text-muted-foreground"}`} />}
-                    </div>
+                  <div
+                    key={r.id}
+                    className="group flex items-center gap-3 rounded-[14px] border bg-white px-4 py-3 transition-all hover:-translate-y-px"
+                    style={{
+                      borderColor: isActive ? "rgba(15, 118, 110, 0.30)" : "#E5DCC8",
+                      boxShadow: isActive
+                        ? "0 4px 16px rgba(15, 118, 110, 0.10)"
+                        : "0 1px 0 rgba(15, 118, 110, 0.04)",
+                    }}
+                  >
+                    <span
+                      className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
+                      style={{
+                        backgroundColor:
+                          r.type === "qaida"
+                            ? "rgba(232, 212, 176, 0.55)"
+                            : isActive
+                              ? "rgba(15, 118, 110, 0.12)"
+                              : "rgba(167, 215, 197, 0.45)",
+                      }}
+                    >
+                      <Icon
+                        className="h-[16px] w-[16px]"
+                        style={{
+                          color:
+                            r.type === "qaida"
+                              ? "#A87142"
+                              : "#0F766E",
+                        }}
+                        strokeWidth={2.25}
+                      />
+                    </span>
+
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium">{r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}</span>
-                        {isActive && <Badge className="bg-emerald-500/15 text-emerald-400 border-0 text-[10px] py-0">Active</Badge>}
-                        <span className="text-[11px] text-muted-foreground">
-                          {format(new Date(r.started_at), "MMM yyyy")} → {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "now"}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[14px] font-bold text-[#1F2937]">
+                          {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
                         </span>
-                        {r.type === "quran" && <span className={`text-[11px] ${isActive ? "text-amber-400" : "text-emerald-400"}`}>{total}/30</span>}
+                        {isActive && (
+                          <span
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary"
+                            style={{ backgroundColor: "rgba(15, 118, 110, 0.12)" }}
+                          >
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                            Active
+                          </span>
+                        )}
+                        {r.type === "quran" && (
+                          <span
+                            className="text-[11px] font-semibold tabular-nums"
+                            style={{ color: isActive ? "#0F766E" : "#5B8E87" }}
+                          >
+                            {total}/30
+                          </span>
+                        )}
                       </div>
+                      <p
+                        className="text-[12px] mt-0.5"
+                        style={{ color: "#5B8E87" }}
+                      >
+                        {format(new Date(r.started_at), "MMM yyyy")} →{" "}
+                        {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "Now"}
+                      </p>
                     </div>
-                    {r.type === "quran" && <div className="w-16"><Progress value={prog} /></div>}
-                    <Button variant="ghost" size="sm" onClick={() => openEditRound(r)} className="h-6 w-6 p-0 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 flex-shrink-0">
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => deleteRound(r.id)} className="h-6 w-6 p-0 text-muted-foreground/40 hover:text-red-400 opacity-0 group-hover:opacity-100 flex-shrink-0">
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+
+                    {r.type === "quran" && (
+                      <div className="w-20 shrink-0">
+                        <Progress value={prog} />
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEditRound(r)}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteRound(r.id)}
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-[#C97B5C]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
                   </div>
                 )
               })
               })()}
+              </div>
             </div>
           )}
 
