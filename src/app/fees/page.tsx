@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { Check, X, CreditCard, TrendingUp, AlertCircle, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
+import { toast } from "sonner"
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -110,10 +111,18 @@ export default function FeesPage() {
       f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f
     ))
 
-    await supabase
+    const { error } = await supabase
       .from("fee_payments")
       .update({ is_paid: newPaid, paid_at: paidAt })
       .eq("id", fee.id)
+
+    if (error) {
+      // Roll back the optimistic change so the UI doesn't diverge from the DB.
+      setFees(prev => prev.map(f =>
+        f.id === fee.id ? { ...f, is_paid: fee.is_paid, paid_at: fee.paid_at } : f
+      ))
+      toast.error(`Couldn't update payment: ${error.message}`)
+    }
   }
 
   // Custom sort for nested fields
@@ -144,18 +153,22 @@ export default function FeesPage() {
 
   const paidCount = fees.filter((f) => f.is_paid).length
 
-  // Convert all fees to PKR for totals
-  function toPKR(fee: number, currency: string): number {
-    const pkr = convertToPKR(fee, currency, rates)
-    return pkr !== null ? pkr : fee // If PKR already or no rates, use raw amount
+  // Convert a fee to PKR. Returns null when conversion isn't possible yet
+  // (rates still loading / unknown currency) so we don't add a foreign amount
+  // as if it were raw PKR (e.g. £35 counted as Rs 35).
+  function toPKR(fee: number, currency: string): number | null {
+    if (currency === "PKR") return fee
+    return convertToPKR(fee, currency, rates)
   }
 
-  const totalCollectedPKR = fees
-    .filter((f) => f.is_paid)
-    .reduce((sum, f) => sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
-  const totalPendingPKR = fees
-    .filter((f) => !f.is_paid)
-    .reduce((sum, f) => sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+  const sumPKR = (list: FeeRecord[]) =>
+    list.reduce((sum, f) => {
+      const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
+      return v == null ? sum : sum + v
+    }, 0)
+
+  const totalCollectedPKR = sumPKR(fees.filter((f) => f.is_paid))
+  const totalPendingPKR = sumPKR(fees.filter((f) => !f.is_paid))
 
   // Per-currency breakdown for collected
   function currencyBreakdown(items: FeeRecord[]) {

@@ -16,6 +16,8 @@ import {
   Square, FileText, BookOpen,
 } from "lucide-react"
 import { format, differenceInCalendarDays } from "date-fns"
+import { formatLocalDate } from "@/lib/utils"
+import { toast } from "sonner"
 
 interface QuranPara {
   id: string
@@ -38,7 +40,8 @@ interface LiveSessionProps {
   memItems: MemItem[]
   paras: QuranPara[]
   initialParaNumber: number
-  onEnd: (sessionData: SessionEndData) => void
+  // Returns false if the save failed so the live session can recover.
+  onEnd: (sessionData: SessionEndData) => void | boolean | Promise<void | boolean>
   onMemItemsChange: (items: MemItem[]) => void
   onRoundsChange: (rounds: QuranRound[]) => void
 }
@@ -143,19 +146,32 @@ export default function LiveSession({
       const bTime = b.last_revised_at ? new Date(b.last_revised_at).getTime() : 0
       return aTime - bTime
     })
-    setRevisionPick(sorted[0])
+    // "Another" should actually change the pick: exclude the current one, then
+    // choose randomly among the least-recently-revised few for some variety.
+    const pool = revisionPick ? sorted.filter(m => m.id !== revisionPick.id) : sorted
+    const candidates = pool.length > 0 ? pool : sorted
+    const topN = candidates.slice(0, Math.min(3, candidates.length))
+    setRevisionPick(topN[Math.floor(Math.random() * topN.length)])
   }
 
   async function markRevised(id: string) {
-    const item = memItems.find(m => m.id === id)
-    if (item) {
-      setRevisionsThisSession(prev => [...prev, item.memorization_catalog?.title])
-    }
-
-    await supabase
+    const { error } = await supabase
       .from("student_memorization")
       .update({ last_revised_at: new Date().toISOString() })
       .eq("id", id)
+
+    if (error) {
+      toast.error(`Couldn't record revision: ${error.message}`)
+      return
+    }
+
+    // Only count the revision once the DB write succeeded, and only if the item
+    // actually has a title (avoid pushing undefined into the string[]).
+    const item = memItems.find(m => m.id === id)
+    const title = item?.memorization_catalog?.title
+    if (title) {
+      setRevisionsThisSession(prev => [...prev, title])
+    }
 
     const { data } = await supabase
       .from("student_memorization")
@@ -171,11 +187,27 @@ export default function LiveSession({
 
   async function advancePara() {
     if (!activeRound) return
-    const newAsc = currentParaNumber + 1
-    await supabase
+    // Finishing the final para completes the round. asc_completed is 1-indexed
+    // ("currently on para N"), and the DB caps it at 30 — so we must not write 31.
+    // Instead mark the round completed using the same shape as a finished round.
+    const finishing = currentParaNumber >= 30
+    const update = finishing
+      ? {
+          desc_completed: 30,
+          asc_completed: 0,
+          completed_at: formatLocalDate(),
+        }
+      : { asc_completed: currentParaNumber + 1 }
+
+    const { error } = await supabase
       .from("quran_rounds")
-      .update({ asc_completed: newAsc })
+      .update(update)
       .eq("id", activeRound.id)
+
+    if (error) {
+      toast.error(`Couldn't update progress: ${error.message}`)
+      return
+    }
 
     const { data } = await supabase
       .from("quran_rounds")
@@ -183,6 +215,8 @@ export default function LiveSession({
       .eq("student_id", student.id)
       .order("round_number", { ascending: true })
     onRoundsChange(data || [])
+
+    if (finishing) toast.success("Round complete — all 30 paras done!")
   }
 
   const canAdvance = activeRound && currentParaNumber >= (activeRound.asc_completed || 1)
@@ -201,7 +235,16 @@ export default function LiveSession({
       memorizationRevised: revisionsThisSession,
       notes,
     }
-    onEnd(sessionData)
+    try {
+      const result = await onEnd(sessionData)
+      // A false result means the save failed — re-enable the button so the
+      // teacher can retry instead of being stuck on "Saving..." forever.
+      if (result === false) setSaving(false)
+    } catch (e) {
+      console.error("Failed to end session:", e)
+      toast.error("Couldn't save the session. Please try again.")
+      setSaving(false)
+    }
   }
 
   return (

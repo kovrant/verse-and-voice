@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
+import { supabase, fetchAllRows } from "@/lib/supabase"
+import { CURRENCY_SYMBOLS, STATUS_CONFIG, parseLocalDate, type StudentStatus } from "@/lib/utils"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/ui/pagination"
 import { SortableHeader, sortData, toggleSort, type SortDirection } from "@/components/ui/sortable-header"
-import { QuranProgress, type QuranRound } from "@/components/quran-progress"
+import { QuranProgress, getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { Plus, Search, Users, ArrowRight, MapPin, Settings2, Eye, EyeOff } from "lucide-react"
 import { format } from "date-fns"
 
@@ -45,7 +45,7 @@ const ALL_COLUMNS: ColumnConfig[] = [
   { key: "started_at",  label: "Admission",  sortKey: "started_at", default: true },
   { key: "fee",         label: "Fee",        sortKey: "fee",        default: true },
   { key: "class_time",  label: "Class Time", sortKey: "class_time", default: true },
-  { key: "quran_progress", label: "Quran",    sortKey: "asc_completed", default: false },
+  { key: "quran_progress", label: "Quran",    sortKey: "quran_progress", default: false },
   { key: "status",      label: "Status",     sortKey: "status",     default: true },
 ]
 
@@ -111,15 +111,18 @@ export default function StudentsPage() {
   }, [])
 
   async function loadStudents() {
-    const [studentsRes, roundsRes] = await Promise.all([
+    const [studentsRes, allRounds] = await Promise.all([
       supabase.from("students").select("*").order("created_at", { ascending: false }),
-      supabase.from("quran_rounds").select("*").order("round_number", { ascending: true }),
+      // Page past the 1000-row cap so progress data isn't silently dropped.
+      fetchAllRows<QuranRound>("quran_rounds", (q) =>
+        q.select("*").order("round_number", { ascending: true })
+      ),
     ])
     setStudents(studentsRes.data || [])
 
     // Group rounds by student_id
     const map: Record<string, QuranRound[]> = {}
-    ;(roundsRes.data || []).forEach((r: QuranRound) => {
+    ;(allRounds || []).forEach((r: QuranRound) => {
       if (!map[r.student_id]) map[r.student_id] = []
       map[r.student_id].push(r)
     })
@@ -151,7 +154,52 @@ export default function StudentsPage() {
     return matchesStatus && matchesSearch
   })
 
-  const sorted = sortData(filtered, sortKey, sortDir)
+  // Live Quran progress (from rounds), used for sorting the Quran column —
+  // students.asc_completed is stale legacy data written only at creation.
+  function quranScore(studentId: string): number {
+    const rs = roundsMap[studentId] || []
+    const completedQuran = rs.filter((r) => r.type === "quran" && r.completed_at).length
+    const active = getActiveRound(rs)
+    const desc = active?.desc_completed || 0
+    const asc = active?.asc_completed || 0
+    return completedQuran * 30 + desc + (asc > 0 ? asc - 1 : 0)
+  }
+
+  // Parse "h:mm AM/PM …" to minutes since midnight for correct chronological
+  // sorting (lexical sort puts "10:00 AM" before "9:00 AM").
+  function classTimeMinutes(timeStr: string | null): number | null {
+    if (!timeStr) return null
+    const m = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+    if (!m) return null
+    let h = parseInt(m[1], 10)
+    const min = parseInt(m[2], 10)
+    const period = m[3].toUpperCase()
+    if (period === "PM" && h !== 12) h += 12
+    if (period === "AM" && h === 12) h = 0
+    return h * 60 + min
+  }
+
+  function compareNullableNumber(a: number | null, b: number | null, dir: SortDirection): number {
+    if (a == null && b == null) return 0
+    if (a == null) return dir === "asc" ? 1 : -1 // missing values sink to the bottom
+    if (b == null) return dir === "asc" ? -1 : 1
+    return dir === "asc" ? a - b : b - a
+  }
+
+  let sorted: Student[]
+  if (sortKey === "quran_progress" && sortDir) {
+    sorted = [...filtered].sort((a, b) =>
+      sortDir === "asc"
+        ? quranScore(a.id) - quranScore(b.id)
+        : quranScore(b.id) - quranScore(a.id)
+    )
+  } else if (sortKey === "class_time" && sortDir) {
+    sorted = [...filtered].sort((a, b) =>
+      compareNullableNumber(classTimeMinutes(a.class_time), classTimeMinutes(b.class_time), sortDir)
+    )
+  } else {
+    sorted = sortData(filtered, sortKey, sortDir)
+  }
   const totalPages = Math.ceil(sorted.length / pageSize)
   const paginated = sorted.slice((page - 1) * pageSize, page * pageSize)
 
@@ -390,7 +438,7 @@ export default function StudentsPage() {
                     )}
                     {isVisible("quran_progress") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Quran" sortKey="asc_completed" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader label="Quran" sortKey="quran_progress" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
                       </th>
                     )}
                     {isVisible("status") && (
@@ -434,7 +482,7 @@ export default function StudentsPage() {
                         )}
                         {isVisible("started_at") && (
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {format(new Date(student.started_at), "MMM d, yyyy")}
+                            {format(parseLocalDate(student.started_at) ?? new Date(), "MMM d, yyyy")}
                           </td>
                         )}
                         {isVisible("fee") && (

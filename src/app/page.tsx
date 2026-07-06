@@ -25,7 +25,7 @@ interface FeePayment {
   id: string
   student_id: string
   is_paid: boolean
-  students: { name: string; fee: number; fee_currency: string }
+  students: { name: string; fee: number; fee_currency: string; status: string }
 }
 
 export default function Dashboard() {
@@ -46,6 +46,20 @@ export default function Dashboard() {
     const month = now.getMonth() + 1
     const year = now.getFullYear()
 
+    // Ensure this month's fee rows exist for active students. Without this the
+    // dashboard shows "All Clear!" / Rs0 pending at the start of a month until
+    // someone opens /fees (which is what creates the rows).
+    const { data: activeForFees } = await supabase
+      .from("students")
+      .select("id")
+      .eq("status", "Reading")
+    if (activeForFees && activeForFees.length > 0) {
+      await supabase.from("fee_payments").upsert(
+        activeForFees.map((s) => ({ student_id: s.id, month, year })),
+        { onConflict: "student_id,month,year", ignoreDuplicates: true }
+      )
+    }
+
     const [
       { count: total },
       { count: active },
@@ -55,15 +69,18 @@ export default function Dashboard() {
       supabase.from("students").select("*", { count: "exact", head: true }),
       supabase.from("students").select("*", { count: "exact", head: true }).eq("status", "Reading"),
       supabase.from("students").select("*").order("created_at", { ascending: false }).limit(5),
-      supabase.from("fee_payments").select("*, students(name, fee, fee_currency)").eq("month", month).eq("year", year),
+      supabase.from("fee_payments").select("*, students(name, fee, fee_currency, status)").eq("month", month).eq("year", year),
     ])
 
     setTotalStudents(total || 0)
     setActiveStudents(active || 0)
     setRecentStudents(recent || [])
 
-    const paid = (fees || []).filter((f: any) => f.is_paid)
-    const unpaid = (fees || []).filter((f: any) => !f.is_paid)
+    // Only count fees for active ("Reading") students — mirrors the Fees page —
+    // so departed students don't show up in Collected/Pending this month.
+    const activeFees = (fees || []).filter((f: any) => f.students?.status === "Reading")
+    const paid = activeFees.filter((f: any) => f.is_paid)
+    const unpaid = activeFees.filter((f: any) => !f.is_paid)
 
     setPaidFees(paid as any)
     setUnpaidFees(unpaid as any)
@@ -93,15 +110,21 @@ export default function Dashboard() {
   const now = new Date()
   const currentMonth = format(now, "MMMM yyyy")
 
-  function toPKR(fee: number, currency: string): number {
-    const pkr = convertToPKR(fee, currency, rates)
-    return pkr !== null ? pkr : fee
+  // Returns null when conversion isn't possible yet (rates loading / unknown
+  // currency), so foreign amounts aren't added as raw PKR before rates resolve.
+  function toPKR(fee: number, currency: string): number | null {
+    if (currency === "PKR") return fee
+    return convertToPKR(fee, currency, rates)
   }
 
-  const feesCollected = paidFees.reduce((sum, f: any) =>
-    sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
-  const feesPending = unpaidFees.reduce((sum, f: any) =>
-    sum + toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR"), 0)
+  const sumPKR = (list: FeePayment[]) =>
+    list.reduce((sum, f: any) => {
+      const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
+      return v == null ? sum : sum + v
+    }, 0)
+
+  const feesCollected = sumPKR(paidFees)
+  const feesPending = sumPKR(unpaidFees)
 
   function currencyBreakdown(items: FeePayment[]) {
     const map: Record<string, number> = {}

@@ -3,8 +3,8 @@
 import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS, COUNTRIES, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
+import { supabase, fetchAllRows } from "@/lib/supabase"
+import { CURRENCY_SYMBOLS, COUNTRIES, STATUS_CONFIG, parseLocalDate, formatLocalDate, type StudentStatus } from "@/lib/utils"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { FeeDisplay } from "@/components/fee-display"
 import { Pagination } from "@/components/ui/pagination"
@@ -129,7 +129,7 @@ export default function StudentDetailPage() {
   const [newRoundOpen, setNewRoundOpen] = useState(false)
   const [newRoundForm, setNewRoundForm] = useState({
     type: "quran" as "qaida" | "quran",
-    started_at: new Date().toISOString().split("T")[0],
+    started_at: formatLocalDate(),
     completed_at: "",
     desc_completed: "0",
     asc_completed: "0",
@@ -181,12 +181,11 @@ export default function StudentDetailPage() {
   }
 
   async function loadSessions() {
-    const { data } = await supabase
-      .from("class_sessions")
-      .select("*")
-      .eq("student_id", params.id)
-      .order("started_at", { ascending: false })
-    setSessions(data || [])
+    // Page past the 1000-row cap so older sessions aren't silently dropped.
+    const data = await fetchAllRows<ClassSession>("class_sessions", (q) =>
+      q.select("*").eq("student_id", params.id).order("started_at", { ascending: false })
+    )
+    setSessions(data)
   }
 
   async function deleteSession() {
@@ -210,12 +209,19 @@ export default function StudentDetailPage() {
   }
 
   async function ensureFeeRecords(s: Student) {
-    const startDate = new Date(s.started_at)
+    const startDate = parseLocalDate(s.started_at) ?? new Date()
     const now = new Date()
     const months: { student_id: string; month: number; year: number }[] = []
 
+    // Only generate fees up to the student's last active month. For students who
+    // have left, cap at ended_at so we don't create bogus unpaid rows forever.
+    let endBoundary = now
+    const ended = s.ended_at ? parseLocalDate(s.ended_at) : null
+    if (ended && ended < endBoundary) endBoundary = ended
+
     let d = new Date(startDate.getFullYear(), startDate.getMonth(), 1)
-    while (d <= now) {
+    const lastMonth = new Date(endBoundary.getFullYear(), endBoundary.getMonth(), 1)
+    while (d <= lastMonth) {
       months.push({
         student_id: s.id,
         month: d.getMonth() + 1,
@@ -303,24 +309,44 @@ export default function StudentDetailPage() {
       f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f
     ))
 
-    await supabase
+    const { error } = await supabase
       .from("fee_payments")
       .update({ is_paid: newPaid, paid_at: paidAt })
       .eq("id", fee.id)
+
+    if (error) {
+      // Roll back so the money screen doesn't diverge from the DB.
+      setFees(prev => prev.map(f =>
+        f.id === fee.id ? { ...f, is_paid: fee.is_paid, paid_at: fee.paid_at } : f
+      ))
+      toast.error(`Couldn't update payment: ${error.message}`)
+    }
   }
 
   async function saveEdit() {
-    await supabase
+    // Guard against an empty fee becoming NaN (NOT NULL violation): keep the
+    // existing fee if the field was cleared/invalid.
+    const parsedFee = parseFloat(editForm.fee)
+    const fee = Number.isNaN(parsedFee) ? student?.fee ?? 0 : parsedFee
+
+    const { error } = await supabase
       .from("students")
       .update({
-        fee: parseFloat(editForm.fee),
+        fee,
         fee_currency: editForm.fee_currency,
         class_time: editForm.class_time || null,
         country: editForm.country || null,
         status: editForm.status,
-        ended_at: editForm.ended_at || null,
+        // "Reading" students have no end date — clear any stale value left over
+        // from a previous "Completed"/"Left" status.
+        ended_at: editForm.status === "Reading" ? null : (editForm.ended_at || null),
       })
       .eq("id", params.id)
+
+    if (error) {
+      toast.error(`Couldn't save changes: ${error.message}`)
+      return
+    }
 
     setEditOpen(false)
     loadStudent()
@@ -332,7 +358,7 @@ export default function StudentDetailPage() {
     if (!active) return
     await supabase
       .from("quran_rounds")
-      .update({ completed_at: new Date().toISOString().split("T")[0] })
+      .update({ completed_at: formatLocalDate() })
       .eq("id", active.id)
     await loadRounds()
     toast.success("Round marked as completed")
@@ -361,15 +387,35 @@ export default function StudentDetailPage() {
       ? Math.max(...existingOfType.map(r => r.round_number)) + 1
       : 1
 
+    // A completed round = all 30 paras done. Progress is computed as
+    // desc + max(asc - 1, 0), so a finished round is desc=30, asc=0 (=> 30/30).
+    // Using asc=30 would wrongly compute 30 + 29 = 59/30.
     const desc = newRoundForm.is_completed ? 30 : (parseInt(newRoundForm.desc_completed) || 0)
-    const asc = newRoundForm.is_completed ? 30 : (parseInt(newRoundForm.asc_completed) || 0)
+    const asc = newRoundForm.is_completed ? 0 : (parseInt(newRoundForm.asc_completed) || 0)
+
+    // Starting a new in-progress round closes out the current active one, so a
+    // student never ends up with two open rounds (which made Update/Complete
+    // ambiguous). Logging a past completed round leaves the active round alone.
+    if (!newRoundForm.is_completed) {
+      const active = getActiveRound(rounds)
+      if (active) {
+        const { error: closeError } = await supabase
+          .from("quran_rounds")
+          .update({ completed_at: newRoundForm.started_at || formatLocalDate() })
+          .eq("id", active.id)
+        if (closeError) {
+          toast.error(closeError.message)
+          return
+        }
+      }
+    }
 
     const { error } = await supabase.from("quran_rounds").insert({
       student_id: params.id,
       type: newRoundForm.type,
       round_number: nextNum,
       started_at: newRoundForm.started_at,
-      completed_at: newRoundForm.is_completed ? (newRoundForm.completed_at || new Date().toISOString().split("T")[0]) : null,
+      completed_at: newRoundForm.is_completed ? (newRoundForm.completed_at || formatLocalDate()) : null,
       desc_completed: desc,
       asc_completed: asc,
     })
@@ -382,7 +428,7 @@ export default function StudentDetailPage() {
     setNewRoundOpen(false)
     setNewRoundForm({
       type: "quran",
-      started_at: new Date().toISOString().split("T")[0],
+      started_at: formatLocalDate(),
       completed_at: "",
       desc_completed: "0",
       asc_completed: "0",
@@ -405,14 +451,15 @@ export default function StudentDetailPage() {
   async function saveEditRound() {
     if (!editingRound) return
 
+    // Completed round => desc=30, asc=0 (=> 30/30). See note in startNewRound.
     const desc = editRoundForm.is_completed ? 30 : (parseInt(editRoundForm.desc_completed) || 0)
-    const asc = editRoundForm.is_completed ? 30 : (parseInt(editRoundForm.asc_completed) || 0)
+    const asc = editRoundForm.is_completed ? 0 : (parseInt(editRoundForm.asc_completed) || 0)
 
     const { error } = await supabase
       .from("quran_rounds")
       .update({
         started_at: editRoundForm.started_at,
-        completed_at: editRoundForm.is_completed ? (editRoundForm.completed_at || new Date().toISOString().split("T")[0]) : null,
+        completed_at: editRoundForm.is_completed ? (editRoundForm.completed_at || formatLocalDate()) : null,
         desc_completed: desc,
         asc_completed: asc,
       })
@@ -462,7 +509,7 @@ export default function StudentDetailPage() {
     )
   }
 
-  const daysSinceStart = differenceInDays(new Date(), new Date(student.started_at))
+  const daysSinceStart = differenceInDays(new Date(), parseLocalDate(student.started_at) ?? new Date())
   const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
   const activeRound = getActiveRound(rounds)
   const { completedQuranCount } = getStudentStage(rounds)
@@ -506,7 +553,7 @@ export default function StudentDetailPage() {
             <span>{student.guardian_name}</span>
             {student.country && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{student.country}</span>}
             <span>{daysSinceStart} days enrolled</span>
-            {student.ended_at && <span>Ended {format(new Date(student.ended_at), "MMM yyyy")}</span>}
+            {student.ended_at && <span>Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}</span>}
           </div>
         </div>
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -744,8 +791,8 @@ export default function StudentDetailPage() {
                         className="text-[12px] mt-0.5"
                         style={{ color: "#5B8E87" }}
                       >
-                        {format(new Date(r.started_at), "MMM yyyy")} →{" "}
-                        {r.completed_at ? format(new Date(r.completed_at), "MMM yyyy") : "Now"}
+                        {format(parseLocalDate(r.started_at) ?? new Date(), "MMM yyyy")} →{" "}
+                        {r.completed_at ? format(parseLocalDate(r.completed_at) ?? new Date(), "MMM yyyy") : "Now"}
                       </p>
                     </div>
 

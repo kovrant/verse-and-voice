@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { supabase } from "@/lib/supabase"
-import { COUNTRIES } from "@/lib/utils"
+import { COUNTRIES, formatLocalDate } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,7 +27,7 @@ export default function NewStudentPage() {
     name: "",
     guardian_name: "",
     country: "",
-    started_at: new Date().toISOString().split("T")[0],
+    started_at: formatLocalDate(),
     fee: "",
     fee_currency: "GBP",
     class_time: "",
@@ -63,7 +63,7 @@ export default function NewStudentPage() {
     }
 
     // Create first round
-    await supabase.from("quran_rounds").insert({
+    const { error: roundError } = await supabase.from("quran_rounds").insert({
       student_id: student.id,
       type: form.round_type,
       round_number: 1,
@@ -72,7 +72,15 @@ export default function NewStudentPage() {
       asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
     })
 
-    router.push("/students")
+    if (roundError) {
+      toast.error(
+        `Student saved, but the starting round failed: ${roundError.message}. ` +
+        `You can add it from the student's page.`
+      )
+      setSaving(false)
+    }
+
+    router.push(`/students/${student.id}`)
   }
 
   return (

@@ -179,6 +179,9 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
   const [hour, setHour] = useState(parsed.hour)
   const [minute, setMinute] = useState(parsed.minute)
   const [period, setPeriod] = useState(parsed.period)
+  // Only emit after the user actively picks a value. Prevents the picker from
+  // fabricating a time on mount or after Clear (when state is seeded internally).
+  const interactedRef = useRef(false)
 
   // Sync from external value
   useEffect(() => {
@@ -188,14 +191,37 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
     setPeriod(p.period)
   }, [value])
 
-  // Emit changes
+  // Emit changes — only once the user has interacted with the picker.
   useEffect(() => {
+    if (!interactedRef.current) return
     if (hour && minute && period) {
       const newVal = `${hour}:${minute} ${period} PKT`
       if (newVal !== value) {
         onChange(newVal)
       }
     }
+    // Intentionally only re-run when the picked parts change. Including `value`
+    // or `onChange` would risk feedback loops; the guard above prevents redundant emits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hour, minute, period])
+
+  // Wrapped setters that mark the picker as user-touched before updating state.
+  const pickHour = useCallback((v: string) => { interactedRef.current = true; setHour(v) }, [])
+  const pickMinute = useCallback((v: string) => { interactedRef.current = true; setMinute(v) }, [])
+  const pickPeriod = useCallback((v: string) => { interactedRef.current = true; setPeriod(v) }, [])
+
+  // Open/close the dropdown. When opening an empty picker, seed sensible defaults
+  // into the columns WITHOUT marking interaction, so nothing is written unless
+  // the user actually chooses a time.
+  const toggleOpen = useCallback(() => {
+    setOpen((wasOpen) => {
+      if (!wasOpen && !hour && !minute && !period) {
+        setHour("8")
+        setMinute("00")
+        setPeriod("AM")
+      }
+      return !wasOpen
+    })
   }, [hour, minute, period])
 
   // Close on outside click
@@ -222,7 +248,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
       {/* Trigger */}
       <button
         type="button"
-        onClick={() => setOpen(!open)}
+        onClick={toggleOpen}
         className={cn(
           "flex h-11 w-full items-center gap-3 rounded-xl border border-border/50 bg-secondary/50 px-4 py-2 text-sm text-left transition-all duration-200",
           "hover:border-border hover:bg-secondary/80",
@@ -237,10 +263,11 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
             type="button"
             onClick={(e) => {
               e.stopPropagation()
+              interactedRef.current = false
               onChange("")
-              setHour("8")
-              setMinute("00")
-              setPeriod("AM")
+              setHour("")
+              setMinute("")
+              setPeriod("")
             }}
             className="text-muted-foreground hover:text-foreground p-0.5"
           >
@@ -274,7 +301,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
             <ScrollColumn
               items={hours}
               selected={hour}
-              onSelect={setHour}
+              onSelect={pickHour}
               width="flex-1"
             />
 
@@ -283,7 +310,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
             <ScrollColumn
               items={minutes}
               selected={minute}
-              onSelect={setMinute}
+              onSelect={pickMinute}
               width="flex-1"
             />
 
@@ -292,7 +319,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
             <ScrollColumn
               items={periods}
               selected={period}
-              onSelect={setPeriod}
+              onSelect={pickPeriod}
               width="w-16"
             />
           </div>
@@ -313,11 +340,11 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
   )
 }
 
-function parseTime(val: string): { hour: string; minute: string; period: string } {
-  if (!val) return { hour: "8", minute: "00", period: "AM" }
+export function parseTime(val: string): { hour: string; minute: string; period: string } {
+  if (!val) return { hour: "", minute: "", period: "" }
   const match = val.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
   if (match) {
     return { hour: match[1], minute: match[2], period: match[3].toUpperCase() }
   }
-  return { hour: "8", minute: "00", period: "AM" }
+  return { hour: "", minute: "", period: "" }
 }

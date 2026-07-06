@@ -34,18 +34,26 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
+  // Carry any cookies Supabase refreshed (token rotation) onto the redirect,
+  // otherwise the rotated session is lost and the user gets logged out.
+  const redirectTo = (url: URL) => {
+    const redirect = NextResponse.redirect(url)
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie))
+    return redirect
+  }
+
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.searchParams.set("redirectTo", pathname)
-    return NextResponse.redirect(url)
+    return redirectTo(url)
   }
 
   if (user && pathname === "/login") {
     const url = request.nextUrl.clone()
     url.pathname = "/"
     url.search = ""
-    return NextResponse.redirect(url)
+    return redirectTo(url)
   }
 
   return response

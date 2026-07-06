@@ -87,6 +87,21 @@ CREATE TABLE media_library (
   created_at timestamptz DEFAULT now()
 );
 
+-- Class sessions (one row per completed live class)
+CREATE TABLE class_sessions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  started_at timestamptz NOT NULL,
+  ended_at timestamptz NOT NULL,
+  duration_seconds integer NOT NULL DEFAULT 0,
+  starting_para integer,
+  ending_para integer,
+  paras_covered integer[] NOT NULL DEFAULT '{}',
+  memorization_revised text[] NOT NULL DEFAULT '{}',
+  notes text,
+  created_at timestamptz DEFAULT now()
+);
+
 -- RLS policies (allow all — private local tool, no auth)
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE fee_payments ENABLE ROW LEVEL SECURITY;
@@ -100,6 +115,8 @@ ALTER TABLE quran_rounds ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on quran_rounds" ON quran_rounds FOR ALL USING (true) WITH CHECK (true);
 ALTER TABLE media_library ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all on media_library" ON media_library FOR ALL USING (true) WITH CHECK (true);
+ALTER TABLE class_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all on class_sessions" ON class_sessions FOR ALL USING (true) WITH CHECK (true);
 
 -- Indexes
 CREATE INDEX idx_fee_payments_student_id ON fee_payments(student_id);
@@ -111,6 +128,8 @@ CREATE INDEX idx_quran_rounds_student ON quran_rounds(student_id);
 CREATE INDEX idx_quran_rounds_student_type ON quran_rounds(student_id, type);
 CREATE INDEX idx_media_type ON media_library(type);
 CREATE INDEX idx_media_type_category ON media_library(type, category);
+CREATE INDEX idx_class_sessions_student ON class_sessions(student_id);
+CREATE INDEX idx_class_sessions_student_started ON class_sessions(student_id, started_at DESC);
 
 -- Seed: Students
 INSERT INTO students (name, guardian_name, country, started_at, status, ended_at, fee, fee_currency, is_qaida, desc_completed, asc_completed) VALUES

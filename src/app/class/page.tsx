@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { supabase } from "@/lib/supabase"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,7 @@ import {
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 import { differenceInDays, format } from "date-fns"
+import { parseLocalDate } from "@/lib/utils"
 import { toast } from "sonner"
 
 interface Student {
@@ -66,6 +67,9 @@ export default function ClassPage() {
   const [starting, setStarting] = useState(false)
   const [search, setSearch] = useState("")
   const [quickPickOpen, setQuickPickOpen] = useState(false)
+  // Monotonic token so a slow load for an earlier selection can't overwrite a
+  // newer one (clicking A then B quickly).
+  const selectSeq = useRef(0)
 
   useEffect(() => {
     loadStudents()
@@ -98,6 +102,7 @@ export default function ClassPage() {
   }
 
   async function handleSelect(studentId: string) {
+    const seq = ++selectSeq.current
     const student = students.find((s) => s.id === studentId) || null
     setSelected(student)
     if (student) {
@@ -119,6 +124,8 @@ export default function ClassPage() {
           .order("started_at", { ascending: false })
           .limit(10),
       ])
+      // A newer selection started while we were loading — discard these results.
+      if (seq !== selectSeq.current) return
       setMemItems((memResult.data as any) || [])
       setRounds(roundsResult.data || [])
       setSessions(sessionsResult.data || [])
@@ -144,8 +151,9 @@ export default function ClassPage() {
     }, 1100)
   }
 
-  // End class — save session and return to landing
-  async function handleEndSession(data: SessionEndData) {
+  // End class — save session and return to landing.
+  // Returns false on failure so LiveSession can re-enable its Save button.
+  async function handleEndSession(data: SessionEndData): Promise<boolean> {
     const { error } = await supabase.from("class_sessions").insert({
       student_id: selected!.id,
       started_at: data.startedAt.toISOString(),
@@ -161,7 +169,7 @@ export default function ClassPage() {
     if (error) {
       console.error("Failed to save class session:", error)
       toast.error(`Failed to save session: ${error.message}`)
-      return
+      return false
     }
 
     setMode("landing")
@@ -177,6 +185,8 @@ export default function ClassPage() {
         .limit(10)
       setSessions(sessionsData || [])
     }
+
+    return true
   }
 
   // Live session mode
@@ -661,7 +671,7 @@ export default function ClassPage() {
                   <CalendarDays className="h-3.5 w-3.5" style={{ color: "#5B8E87" }} />
                   <p className="text-[13px] font-medium" style={{ color: "#5B8E87" }}>
                     <span className="font-bold text-[#1F2937]">
-                      {differenceInDays(new Date(), new Date(selected.started_at)).toLocaleString()}
+                      {differenceInDays(new Date(), parseLocalDate(selected.started_at) ?? new Date()).toLocaleString()}
                     </span>{" "}
                     days since enrollment
                   </p>
@@ -752,7 +762,7 @@ export default function ClassPage() {
           {filteredStudents.length === 0 ? (
             <Card className="border-dashed">
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No students match "{search}"</p>
+                <p className="text-muted-foreground">No students match &ldquo;{search}&rdquo;</p>
               </CardContent>
             </Card>
           ) : (

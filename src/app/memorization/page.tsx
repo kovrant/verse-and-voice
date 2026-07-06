@@ -44,6 +44,7 @@ export default function MemorizationPage() {
   const [newTitle, setNewTitle] = useState("")
   const [newCategory, setNewCategory] = useState("General")
   const [newImage, setNewImage] = useState<File | null>(null)
+  const [newImagePreview, setNewImagePreview] = useState<string | null>(null)
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
@@ -57,6 +58,17 @@ export default function MemorizationPage() {
   useEffect(() => {
     loadItems()
   }, [])
+
+  // Manage the new-image preview URL with proper cleanup, instead of calling
+  // URL.createObjectURL() inline in render (which leaks a blob per re-render).
+  useEffect(() => {
+    if (newImage) {
+      const url = URL.createObjectURL(newImage)
+      setNewImagePreview(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setNewImagePreview(null)
+  }, [newImage])
 
   async function loadItems() {
     // Load from memorization_catalog
@@ -186,19 +198,33 @@ export default function MemorizationPage() {
   async function handleEditImage(itemId: string, file: File) {
     setUploadingFor(itemId)
     const item = items.find(i => i.id === itemId)
+    const oldUrl = item?.image_url
 
-    // Delete old image if exists
-    if (item?.image_url) {
-      await deleteImage(item.image_url)
-    }
-
+    // Upload the new image FIRST. Only delete the old one after the new upload
+    // and DB update both succeed — otherwise a failed upload would leave the
+    // record pointing at an image that no longer exists.
     const imageUrl = await uploadImage(file)
-    if (imageUrl) {
-      await supabase
-        .from("memorization_catalog")
-        .update({ image_url: imageUrl })
-        .eq("id", itemId)
+    if (!imageUrl) {
+      toast.error("Image upload failed. The existing image was kept.")
+      setUploadingFor(null)
+      return
     }
+
+    const { error } = await supabase
+      .from("memorization_catalog")
+      .update({ image_url: imageUrl })
+      .eq("id", itemId)
+
+    if (error) {
+      toast.error(`Couldn't update image: ${error.message}`)
+      setUploadingFor(null)
+      return
+    }
+
+    if (oldUrl) {
+      await deleteImage(oldUrl)
+    }
+
     setUploadingFor(null)
     await loadItems()
   }
@@ -297,10 +323,10 @@ export default function MemorizationPage() {
               Add
             </Button>
           </div>
-          {newImage && (
+          {newImage && newImagePreview && (
             <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-3">
               <img
-                src={URL.createObjectURL(newImage)}
+                src={newImagePreview}
                 alt="Preview"
                 className="h-12 w-12 rounded-lg object-cover"
               />

@@ -21,10 +21,19 @@ interface QuranProgressProps {
 }
 
 /**
- * Get the active (in-progress) round — the latest one without completed_at.
+ * Get the active (in-progress) round — the LATEST one without completed_at.
+ * `rounds` may arrive in any order, so we explicitly pick the most recent by
+ * started_at (then round_number) rather than relying on array position.
  */
 export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
-  return rounds.find(r => !r.completed_at) || null
+  const incomplete = rounds.filter(r => !r.completed_at)
+  if (incomplete.length === 0) return null
+  return incomplete.reduce((latest, r) => {
+    const cmp = r.started_at.localeCompare(latest.started_at)
+    if (cmp > 0) return r
+    if (cmp === 0 && r.round_number > latest.round_number) return r
+    return latest
+  })
 }
 
 /**
@@ -75,7 +84,7 @@ export function getChronologicalRoundNumber(rounds: QuranRound[], round: QuranRo
 /**
  * Compute current para and total from desc/asc progress.
  */
-function computeProgress(desc: number, asc: number) {
+export function computeProgress(desc: number, asc: number) {
   const completedFromAsc = asc > 0 ? asc - 1 : 0
   const total = desc + completedFromAsc
   const isCompleted = total >= 30

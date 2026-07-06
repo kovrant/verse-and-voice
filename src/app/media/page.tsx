@@ -75,7 +75,20 @@ export default function MediaPage() {
   const [category, setCategory] = useState("Para")
   const [paraNumber, setParaNumber] = useState("")
   const [file, setFile] = useState<File | null>(null)
+  const [filePreview, setFilePreview] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
+
+  // Create the image preview URL once per file and revoke it on change/unmount,
+  // instead of calling URL.createObjectURL() inline in render (which leaks a
+  // blob on every re-render, e.g. each keystroke in the Title field).
+  useEffect(() => {
+    if (file && file.type.startsWith("image/")) {
+      const url = URL.createObjectURL(file)
+      setFilePreview(url)
+      return () => URL.revokeObjectURL(url)
+    }
+    setFilePreview(null)
+  }, [file])
 
   // Custom categories added by the user
   const [customCategories, setCustomCategories] = useState<Record<string, string[]>>({})
@@ -105,28 +118,6 @@ export default function MediaPage() {
       .order("created_at", { ascending: false })
 
     const all = data || []
-
-    // One-time repair: fix quran items with missing para_number or wrong titles
-    const needsRepair = all.filter(
-      item => item.type === "quran" && (!item.meta?.para_number || !item.title.match(/^Para \d+$/))
-    )
-    for (const item of needsRepair) {
-      // Try to extract para number from title
-      const numMatch = item.title.match(/(\d+)/)
-      if (numMatch) {
-        const num = parseInt(numMatch[1])
-        if (num >= 1 && num <= 30) {
-          const newTitle = `Para ${num}`
-          const newMeta = { ...item.meta, para_number: num }
-          await supabase
-            .from("media_library")
-            .update({ title: newTitle, meta: newMeta })
-            .eq("id", item.id)
-          item.title = newTitle
-          item.meta = newMeta
-        }
-      }
-    }
 
     // Sort quran paras by para number ascending
     const sorted = all.sort((a, b) => {
@@ -273,13 +264,23 @@ export default function MediaPage() {
   }
 
   async function deleteItem(item: MediaItem) {
-    // Delete from storage
-    const path = item.file_url.split("/media/").pop()
-    if (path) {
-      await supabase.storage.from("media").remove([path])
+    // Delete the DB row first — that's the source of truth. Only report success
+    // if it actually worked.
+    const { error: dbError } = await supabase.from("media_library").delete().eq("id", item.id)
+    if (dbError) {
+      toast.error(`Couldn't delete "${item.title}": ${dbError.message}`)
+      return
     }
 
-    await supabase.from("media_library").delete().eq("id", item.id)
+    // Best-effort storage cleanup; warn but don't fail the delete if it errors.
+    const path = item.file_url.split("/media/").pop()
+    if (path) {
+      const { error: storageError } = await supabase.storage.from("media").remove([path])
+      if (storageError) {
+        toast.warning(`"${item.title}" removed, but the file couldn't be deleted from storage.`)
+      }
+    }
+
     setPreviewItem(null)
     toast.success(`"${item.title}" deleted`)
     await loadItems()
@@ -572,8 +573,8 @@ export default function MediaPage() {
               />
               {file ? (
                 <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-3">
-                  {file.type.startsWith("image/") ? (
-                    <img src={URL.createObjectURL(file)} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                  {file.type.startsWith("image/") && filePreview ? (
+                    <img src={filePreview} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10">
                       <FileText className="h-6 w-6 text-red-400" />
