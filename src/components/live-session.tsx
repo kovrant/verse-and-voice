@@ -250,17 +250,17 @@ export default function LiveSession({
   return (
     <div ref={containerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#E5DCC8] bg-white">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
         <div className="flex items-center gap-4">
           {/* Student name */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white text-sm font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
               {student.name.charAt(0)}
             </div>
-            <span className="font-semibold text-sm text-[#1F2937]">{student.name}</span>
+            <span className="font-semibold text-sm text-foreground">{student.name}</span>
           </div>
 
-          <div className="h-5 w-px bg-[#E5DCC8]" />
+          <div className="h-5 w-px bg-border" />
 
           {/* Para info */}
           <div className="flex items-center gap-2">
@@ -273,9 +273,9 @@ export default function LiveSession({
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium min-w-[80px] text-center text-[#1F2937]">
+            <span className="text-sm font-medium min-w-[80px] text-center text-foreground">
               Para <span className="text-primary font-bold">{currentParaNumber}</span>
-              <span className="text-[#5B8E87] text-xs ml-1">/ 30</span>
+              <span className="text-muted-foreground text-xs ml-1">/ 30</span>
             </span>
             <Button
               variant="ghost"
@@ -291,9 +291,9 @@ export default function LiveSession({
 
         <div className="flex items-center gap-3">
           {/* Timer — white pill, deep ink digits */}
-          <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-white border border-[#E5DCC8]">
+          <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
             <Clock className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-bold text-[#1F2937] tabular-nums">{formatTimer(elapsed)}</span>
+            <span className="text-sm font-bold text-foreground tabular-nums">{formatTimer(elapsed)}</span>
           </div>
 
           {/* Sidebar toggle */}
@@ -323,21 +323,21 @@ export default function LiveSession({
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         {sidebarOpen && (
-          <div className="w-80 border-r border-[#E5DCC8] bg-white overflow-y-auto flex-shrink-0">
+          <div className="w-80 border-r border-border bg-card overflow-y-auto flex-shrink-0">
             <div className="p-5 space-y-5">
               {/* Quick Actions */}
               {canAdvance && (
                 <div className="space-y-2.5">
                   <p
-                    className="text-[11px] font-semibold uppercase"
-                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                    className="text-[11px] font-semibold uppercase text-muted-foreground"
+                    style={{ letterSpacing: "0.08em" }}
                   >
                     Quick Actions
                   </p>
                   <button
                     type="button"
                     onClick={advancePara}
-                    className="group w-full flex items-center justify-center gap-2 rounded-[10px] px-[14px] py-2.5 bg-white border border-primary text-primary text-sm font-semibold transition-colors hover:bg-primary hover:text-white"
+                    className="group w-full flex items-center justify-center gap-2 rounded-[10px] px-[14px] py-2.5 bg-card border border-primary text-primary text-sm font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
                   >
                     <ArrowUpRight className="h-4 w-4 transition-colors" />
                     Advance to Para {currentParaNumber + 1}
@@ -348,20 +348,20 @@ export default function LiveSession({
               {/* Current progress — inline, no panel */}
               {activeRound && (
                 <>
-                  {canAdvance && <div className="h-px bg-[#F0E8D5]" />}
+                  {canAdvance && <div className="h-px bg-border" />}
                   <div className="space-y-1">
                     <p
-                      className="text-[11px] font-semibold uppercase"
-                      style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                      className="text-[11px] font-semibold uppercase text-muted-foreground"
+                      style={{ letterSpacing: "0.08em" }}
                     >
                       Current Progress
                     </p>
-                    <p className="text-sm text-[#1F2937]">
+                    <p className="text-sm text-foreground">
                       Student is on Para{" "}
                       <span className="text-primary font-bold">{activeRound.asc_completed || 1}</span>
                     </p>
                     {activeRound.desc_completed > 0 && (
-                      <p className="text-xs" style={{ color: "#5B8E87" }}>
+                      <p className="text-xs text-muted-foreground">
                         From end: {activeRound.desc_completed} paras
                       </p>
                     )}
@@ -372,13 +372,13 @@ export default function LiveSession({
               {/* Memorization */}
               {memItems.length > 0 && (
                 <>
-                  <div className="h-px bg-[#F0E8D5]" />
+                  <div className="h-px bg-border" />
                   <div className="space-y-3">
                     <div className="flex items-center gap-1.5">
                       <BookMarked className="h-3.5 w-3.5 text-primary" />
                       <p
-                        className="text-[11px] font-semibold uppercase"
-                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        className="text-[11px] font-semibold uppercase text-muted-foreground"
+                        style={{ letterSpacing: "0.08em" }}
                       >
                         Memorization
                       </p>
@@ -387,8 +387,8 @@ export default function LiveSession({
                     {memorizing.length > 0 && (
                       <div className="space-y-1.5">
                         <p
-                          className="text-[10px] font-semibold uppercase flex items-center gap-1"
-                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                          className="text-[10px] font-semibold uppercase flex items-center gap-1 text-muted-foreground"
+                          style={{ letterSpacing: "0.08em" }}
                         >
                           <Sparkles className="h-2.5 w-2.5 text-primary" />
                           Currently Memorizing
@@ -396,7 +396,7 @@ export default function LiveSession({
                         {memorizing.map((item) => (
                           <div
                             key={item.id}
-                            className="flex items-center gap-2 rounded-[10px] border border-[#E5DCC8] bg-white px-3 py-2.5"
+                            className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2.5"
                           >
                             {item.memorization_catalog?.image_url && (
                               <img
@@ -405,7 +405,7 @@ export default function LiveSession({
                                 className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
                               />
                             )}
-                            <p className="text-sm font-medium text-[#1F2937]">
+                            <p className="text-sm font-medium text-foreground">
                               {item.memorization_catalog?.title}
                             </p>
                           </div>
@@ -416,8 +416,8 @@ export default function LiveSession({
                     {memorized.length > 0 && (
                       <div className="space-y-1.5">
                         <p
-                          className="text-[10px] font-semibold uppercase flex items-center gap-1"
-                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                          className="text-[10px] font-semibold uppercase flex items-center gap-1 text-muted-foreground"
+                          style={{ letterSpacing: "0.08em" }}
                         >
                           <Check className="h-2.5 w-2.5 text-primary" />
                           Memorized ({memorized.length})
@@ -426,8 +426,7 @@ export default function LiveSession({
                           {memorized.map((item) => (
                             <span
                               key={item.id}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border border-[#E5DCC8] bg-white"
-                              style={{ color: "#5B8E87" }}
+                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border border-border bg-card text-muted-foreground"
                             >
                               {item.memorization_catalog?.title}
                             </span>
@@ -440,12 +439,12 @@ export default function LiveSession({
                     {memorized.length > 0 && (
                       <div className="pt-1">
                         {revisionPick ? (
-                          <div className="rounded-[10px] border border-[#E5DCC8] bg-white p-3 space-y-2">
+                          <div className="rounded-[10px] border border-border bg-card p-3 space-y-2">
                             <div className="flex items-center gap-1.5">
                               <RotateCcw className="h-3 w-3 text-primary" />
                               <p
-                                className="text-[10px] font-semibold uppercase"
-                                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                                className="text-[10px] font-semibold uppercase text-muted-foreground"
+                                style={{ letterSpacing: "0.08em" }}
                               >
                                 Revision Pick
                               </p>
@@ -458,12 +457,12 @@ export default function LiveSession({
                                   className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
                                 />
                               )}
-                              <p className="text-base font-bold text-[#1F2937]">
+                              <p className="text-base font-bold text-foreground">
                                 {revisionPick.memorization_catalog?.title}
                               </p>
                             </div>
                             {revisionPick.last_revised_at && (
-                              <p className="text-[10px]" style={{ color: "#5B8E87" }}>
+                              <p className="text-[10px] text-muted-foreground">
                                 Last: {format(new Date(revisionPick.last_revised_at), "MMM d")}
                                 {" "}({differenceInCalendarDays(new Date(), new Date(revisionPick.last_revised_at))}d ago)
                               </p>
@@ -492,22 +491,22 @@ export default function LiveSession({
               )}
 
               {/* This Session — inline, no panel */}
-              <div className="h-px bg-[#F0E8D5]" />
+              <div className="h-px bg-border" />
               <div className="space-y-1.5">
                 <p
-                  className="text-[11px] font-semibold uppercase"
-                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                  className="text-[11px] font-semibold uppercase text-muted-foreground"
+                  style={{ letterSpacing: "0.08em" }}
                 >
                   This Session
                 </p>
                 <div className="text-sm space-y-0.5">
-                  <p style={{ color: "#5B8E87" }}>
+                  <p className="text-muted-foreground">
                     Paras viewed:{" "}
-                    <span className="font-bold text-[#1F2937] tabular-nums">{parasViewed.size}</span>
+                    <span className="font-bold text-foreground tabular-nums">{parasViewed.size}</span>
                   </p>
-                  <p style={{ color: "#5B8E87" }}>
+                  <p className="text-muted-foreground">
                     Revisions done:{" "}
-                    <span className="font-bold text-[#1F2937] tabular-nums">{revisionsThisSession.length}</span>
+                    <span className="font-bold text-foreground tabular-nums">{revisionsThisSession.length}</span>
                   </p>
                 </div>
               </div>
@@ -552,41 +551,40 @@ export default function LiveSession({
       {/* End Class Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
         <DialogContent
-          className="max-w-md bg-white border border-[#E5DCC8] rounded-[20px] p-8"
-          style={{ boxShadow: "0 20px 60px rgba(15, 118, 110, 0.15)" }}
+          className="max-w-md bg-card border border-border rounded-[20px] p-8"
         >
           <DialogHeader className="space-y-1.5">
-            <DialogTitle className="text-[22px] font-bold text-[#1F2937]">
+            <DialogTitle className="text-[22px] font-bold text-foreground">
               End Class Session
             </DialogTitle>
-            <DialogDescription className="text-sm font-medium" style={{ color: "#5B8E87" }}>
+            <DialogDescription className="text-sm font-medium text-muted-foreground">
               Review the session summary and add any notes.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5">
             {/* Stats — clean two-column, no fills */}
-            <div className="grid grid-cols-2 gap-6 py-5 border-y border-[#F0E8D5]">
+            <div className="grid grid-cols-2 gap-6 py-5 border-y border-border">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock className="h-4 w-4" style={{ color: "#5B8E87" }} />
+                  <Clock className="h-4 w-4 text-muted-foreground" />
                   <span
-                    className="text-[11px] font-semibold uppercase"
-                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                    className="text-[11px] font-semibold uppercase text-muted-foreground"
+                    style={{ letterSpacing: "0.08em" }}
                   >
                     Duration
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-[#1F2937] tabular-nums">
+                <div className="text-2xl font-bold text-foreground tabular-nums">
                   {formatDuration(elapsed)}
                 </div>
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-4 w-4" style={{ color: "#5B8E87" }} />
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <span
-                    className="text-[11px] font-semibold uppercase"
-                    style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                    className="text-[11px] font-semibold uppercase text-muted-foreground"
+                    style={{ letterSpacing: "0.08em" }}
                   >
                     Paras Covered
                   </span>
@@ -601,8 +599,8 @@ export default function LiveSession({
             {revisionsThisSession.length > 0 && (
               <div className="space-y-2">
                 <span
-                  className="text-[11px] font-semibold uppercase"
-                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                  className="text-[11px] font-semibold uppercase text-muted-foreground"
+                  style={{ letterSpacing: "0.08em" }}
                 >
                   Memorization Revised
                 </span>
@@ -610,8 +608,7 @@ export default function LiveSession({
                   {revisionsThisSession.map((title, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold text-primary"
-                      style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground"
                     >
                       {title}
                     </span>
@@ -622,7 +619,7 @@ export default function LiveSession({
 
             {/* Notes */}
             <div className="space-y-2">
-              <label className="text-[13px] font-semibold text-[#1F2937]">
+              <label className="text-[13px] font-semibold text-foreground">
                 Notes (optional)
               </label>
               <Textarea
@@ -638,8 +635,7 @@ export default function LiveSession({
             <button
               type="button"
               onClick={() => setShowEndDialog(false)}
-              className="px-5 py-3 rounded-[10px] text-[15px] font-semibold transition-colors hover:bg-[#F5EFE3]"
-              style={{ color: "#5B8E87" }}
+              className="px-5 py-3 rounded-[10px] text-[15px] font-semibold transition-colors hover:bg-muted text-muted-foreground"
             >
               Continue Class
             </button>
@@ -647,8 +643,7 @@ export default function LiveSession({
               type="button"
               onClick={handleEndClass}
               disabled={saving}
-              className="px-6 py-3 rounded-[10px] bg-primary hover:bg-[#0B5E58] text-white text-[15px] font-bold transition-colors disabled:opacity-60"
-              style={{ boxShadow: "0 2px 8px rgba(15, 118, 110, 0.2)" }}
+              className="px-6 py-3 rounded-[10px] bg-primary hover:bg-primary-hover text-primary-foreground text-[15px] font-bold transition-colors disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save & End"}
             </button>

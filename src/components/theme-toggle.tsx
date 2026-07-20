@@ -1,48 +1,49 @@
 "use client"
 
 import { useTheme } from "@/components/theme-provider"
-import { themes, themeKeys } from "@/lib/themes"
+import { Sun, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// Segmented Light/Dark control for the admin portal. A segmented control (rather
+// than a switch) stays legible in both palettes — the graphite dark palette flips
+// --primary to near-white, which made a filled-track switch knob disappear.
 export function ThemeToggle() {
-  const { theme, setTheme } = useTheme()
+  const { dark, toggleDark } = useTheme()
+
+  const seg =
+    "flex-1 flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors"
 
   return (
     <div className="mx-4 mb-3">
-      <div className="flex items-center gap-1.5 rounded-xl border border-border bg-muted/40 p-1">
-        {themeKeys.map((key) => {
-          const t = themes[key]
-          const isActive = theme === key
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTheme(key)}
-              title={t.description}
-              className={cn(
-                "flex-1 flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-[11px] font-medium transition-all",
-                isActive
-                  ? "bg-card text-foreground shadow-sm ring-1 ring-border"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <span
-                className="inline-flex h-3.5 w-3.5 rounded-full ring-1 ring-black/5 overflow-hidden flex-shrink-0"
-                aria-hidden
-              >
-                <span
-                  className="block w-1/2 h-full"
-                  style={{ background: `hsl(${t.preview[0]})` }}
-                />
-                <span
-                  className="block w-1/2 h-full"
-                  style={{ background: `hsl(${t.preview[1]})` }}
-                />
-              </span>
-              <span className="truncate">{t.name}</span>
-            </button>
-          )
-        })}
+      <div className="flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
+        <button
+          type="button"
+          onClick={() => dark && toggleDark()}
+          aria-pressed={!dark}
+          className={cn(
+            seg,
+            !dark
+              ? "bg-card text-foreground shadow-soft"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Sun className="h-3.5 w-3.5" />
+          Light
+        </button>
+        <button
+          type="button"
+          onClick={() => !dark && toggleDark()}
+          aria-pressed={dark}
+          className={cn(
+            seg,
+            dark
+              ? "bg-card text-foreground shadow-soft"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <Moon className="h-3.5 w-3.5" />
+          Dark
+        </button>
       </div>
     </div>
   )

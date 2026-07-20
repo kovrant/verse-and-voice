@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
 import { QuranProgress, type QuranRound, getActiveRound, getStudentStage, getChronologicalRoundNumber } from "@/components/quran-progress"
+import { StudentPortalAccess } from "@/components/student-portal-access"
 import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play, History } from "lucide-react"
 import { format, differenceInDays, formatDistanceToNow } from "date-fns"
 import * as Popover from "@radix-ui/react-popover"
@@ -541,7 +542,7 @@ export default function StudentDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 text-lg font-bold flex-shrink-0">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 text-lg font-bold flex-shrink-0">
           {student.name.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
@@ -651,6 +652,9 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
+      {/* Portal Access */}
+      <StudentPortalAccess studentId={student.id} />
+
       {/* Tab Navigation */}
       <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 mb-4">
         {TABS.map(tab => (
@@ -660,7 +664,7 @@ export default function StudentDetailPage() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
               activeTab === tab.id
-                ? "bg-emerald-500/15 text-emerald-400"
+                ? "bg-secondary text-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
           >
@@ -668,7 +672,7 @@ export default function StudentDetailPage() {
             <span className="hidden sm:inline">{tab.label}</span>
             {tab.count != null && tab.count > 0 && (
               <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.id ? "bg-emerald-500/20 text-emerald-400" : "bg-secondary text-muted-foreground"
+                activeTab === tab.id ? "bg-emerald-500/10 text-emerald-500" : "bg-secondary text-muted-foreground"
               }`}>{tab.count}</span>
             )}
           </button>
@@ -705,8 +709,8 @@ export default function StudentDetailPage() {
           {rounds.length > 0 && (
             <div className="space-y-3">
               <p
-                className="text-[11px] font-semibold uppercase"
-                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                className="text-[11px] font-semibold uppercase text-muted-foreground"
+                style={{ letterSpacing: "0.08em" }}
               >
                 All Rounds
               </p>
@@ -733,64 +737,49 @@ export default function StudentDetailPage() {
                 return (
                   <div
                     key={r.id}
-                    className="group flex items-center gap-3 rounded-[14px] border bg-white px-4 py-3 transition-all hover:-translate-y-px"
-                    style={{
-                      borderColor: isActive ? "rgba(15, 118, 110, 0.30)" : "#E5DCC8",
-                      boxShadow: isActive
-                        ? "0 4px 16px rgba(15, 118, 110, 0.10)"
-                        : "0 1px 0 rgba(15, 118, 110, 0.04)",
-                    }}
+                    className={`group flex items-center gap-3 rounded-[14px] border px-4 py-3 transition-all hover:-translate-y-px bg-card ${
+                      isActive ? "border-primary/30" : "border-border"
+                    }`}
                   >
                     <span
-                      className="flex h-9 w-9 items-center justify-center rounded-xl shrink-0"
-                      style={{
-                        backgroundColor:
-                          r.type === "qaida"
-                            ? "rgba(232, 212, 176, 0.55)"
-                            : isActive
-                              ? "rgba(15, 118, 110, 0.12)"
-                              : "rgba(167, 215, 197, 0.45)",
-                      }}
+                      className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
+                        r.type === "qaida"
+                          ? "bg-secondary"
+                          : isActive
+                            ? "bg-emerald-500/10"
+                            : "bg-secondary"
+                      }`}
                     >
                       <Icon
-                        className="h-[16px] w-[16px]"
-                        style={{
-                          color:
-                            r.type === "qaida"
-                              ? "#A87142"
-                              : "#0F766E",
-                        }}
+                        className={`h-[16px] w-[16px] ${
+                          r.type === "qaida" ? "text-amber-600" : "text-primary"
+                        }`}
                         strokeWidth={2.25}
                       />
                     </span>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[14px] font-bold text-[#1F2937]">
+                        <span className="text-[14px] font-bold text-foreground">
                           {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
                         </span>
                         {isActive && (
-                          <span
-                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary"
-                            style={{ backgroundColor: "rgba(15, 118, 110, 0.12)" }}
-                          >
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary bg-emerald-500/10">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                             Active
                           </span>
                         )}
                         {r.type === "quran" && (
                           <span
-                            className="text-[11px] font-semibold tabular-nums"
-                            style={{ color: isActive ? "#0F766E" : "#5B8E87" }}
+                            className={`text-[11px] font-semibold tabular-nums ${
+                              isActive ? "text-primary" : "text-muted-foreground"
+                            }`}
                           >
                             {total}/30
                           </span>
                         )}
                       </div>
-                      <p
-                        className="text-[12px] mt-0.5"
-                        style={{ color: "#5B8E87" }}
-                      >
+                      <p className="text-[12px] mt-0.5 text-muted-foreground">
                         {format(parseLocalDate(r.started_at) ?? new Date(), "MMM yyyy")} →{" "}
                         {r.completed_at ? format(parseLocalDate(r.completed_at) ?? new Date(), "MMM yyyy") : "Now"}
                       </p>
@@ -815,7 +804,7 @@ export default function StudentDetailPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteRound(r.id)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-[#C97B5C]"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
@@ -861,24 +850,21 @@ export default function StudentDetailPage() {
         return (
         <div className="animate-fade-in-up">
           {totalSessions === 0 ? (
-            <div className="py-16 text-center bg-white rounded-[16px] border border-[#E5DCC8]">
+            <div className="py-16 text-center bg-card rounded-[16px] border border-border">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
                 <Clock className="h-6 w-6 text-primary" />
               </div>
-              <p className="text-base font-semibold text-[#1F2937] mb-1">No sessions yet</p>
-              <p className="text-sm" style={{ color: "#5B8E87" }}>
+              <p className="text-base font-semibold text-foreground mb-1">No sessions yet</p>
+              <p className="text-sm text-muted-foreground">
                 Sessions will appear here after the first class
               </p>
             </div>
           ) : (
             <div id="sessions-list-top">
-            <div
-              className="bg-white rounded-[16px] border border-[#E5DCC8] px-5 py-1"
-              style={{ boxShadow: "0 4px 20px rgba(15, 118, 110, 0.06)" }}
-            >
+            <div className="bg-card rounded-[16px] border border-border px-5 py-1">
               {/* Sort indicator */}
-              <div className="flex items-center justify-end px-2 py-2 border-b border-[#F0E8D5]">
-                <span className="text-[13px] font-medium" style={{ color: "#5B8E87" }}>
+              <div className="flex items-center justify-end px-2 py-2 border-b border-border">
+                <span className="text-[13px] font-medium text-muted-foreground">
                   Sort: Newest first ↓
                 </span>
               </div>
@@ -887,8 +873,8 @@ export default function StudentDetailPage() {
                 {paginatedSessions.map((session, i) => (
                   <div
                     key={session.id}
-                    className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-[#F5EFE3] ${
-                      i < paginatedSessions.length - 1 ? "border-b border-[#F0E8D5]" : ""
+                    className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
+                      i < paginatedSessions.length - 1 ? "border-b border-border" : ""
                     }`}
                   >
                     <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/50 flex-shrink-0">
@@ -896,17 +882,14 @@ export default function StudentDetailPage() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-[#1F2937]">
+                        <p className="text-sm font-semibold text-foreground">
                           {format(new Date(session.started_at), "MMM d, yyyy")}
                         </p>
-                        <span
-                          className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-[#E5DCC8] bg-white"
-                          style={{ color: "#5B8E87" }}
-                        >
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-border bg-card text-muted-foreground">
                           {Math.floor(session.duration_seconds / 60)}m
                         </span>
                       </div>
-                      <div className="flex items-center gap-2 text-[13px] mt-0.5" style={{ color: "#5B8E87" }}>
+                      <div className="flex items-center gap-2 text-[13px] mt-0.5 text-muted-foreground">
                         {session.paras_covered?.length > 0 && (
                           <span>Paras: {session.paras_covered.join(", ")}</span>
                         )}
@@ -918,12 +901,12 @@ export default function StudentDetailPage() {
                         )}
                       </div>
                       {session.notes && (
-                        <p className="text-xs mt-1 truncate" style={{ color: "#8B9A95" }}>
+                        <p className="text-xs mt-1 truncate text-muted-foreground">
                           {session.notes}
                         </p>
                       )}
                     </div>
-                    <span className="text-[11px] flex-shrink-0" style={{ color: "#8B9A95" }}>
+                    <span className="text-[11px] flex-shrink-0 text-muted-foreground">
                       {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
                     </span>
                     <Popover.Root
@@ -934,11 +917,8 @@ export default function StudentDetailPage() {
                         <button
                           type="button"
                           title="Delete session"
-                          className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors"
-                          style={{ color: "#8B9A95" }}
+                          className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors text-muted-foreground hover:text-destructive"
                           onClick={(e) => e.stopPropagation()}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = "#C97B5C")}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = "#8B9A95")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -948,9 +928,9 @@ export default function StudentDetailPage() {
                           side="top"
                           align="end"
                           sideOffset={8}
-                          className="z-50 rounded-xl border border-[#E5DCC8] bg-white p-3 shadow-lg w-52"
+                          className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
                         >
-                          <p className="text-xs font-medium mb-2.5 text-[#1F2937]">Delete this session?</p>
+                          <p className="text-xs font-medium mb-2.5 text-foreground">Delete this session?</p>
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -963,17 +943,14 @@ export default function StudentDetailPage() {
                             </Button>
                             <button
                               type="button"
-                              className="h-7 flex-1 text-xs rounded-md font-semibold text-white transition-colors disabled:opacity-60"
-                              style={{ backgroundColor: "#C97B5C" }}
-                              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#B86A4D")}
-                              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "#C97B5C")}
+                              className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
                               onClick={deleteSession}
                               disabled={deletingSession}
                             >
                               {deletingSession ? "..." : "Yes"}
                             </button>
                           </div>
-                          <Popover.Arrow className="fill-white" />
+                          <Popover.Arrow className="fill-border" />
                         </Popover.Content>
                       </Popover.Portal>
                     </Popover.Root>
@@ -1156,7 +1133,7 @@ export default function StudentDetailPage() {
 
             <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, is_completed: !newRoundForm.is_completed })} className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all">
               <div className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${newRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}>
-                <div className="h-4 w-4 rounded-full bg-white shadow-sm mt-0.5" style={{ transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
+                <div className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5" style={{ transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
               </div>
               <div>
                 <p className="text-sm font-medium">Already completed</p>
@@ -1218,7 +1195,7 @@ export default function StudentDetailPage() {
           <div className="space-y-4 pt-2">
             <button type="button" onClick={() => setEditRoundForm({ ...editRoundForm, is_completed: !editRoundForm.is_completed })} className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all">
               <div className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${editRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}>
-                <div className="h-4 w-4 rounded-full bg-white shadow-sm mt-0.5" style={{ transform: editRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
+                <div className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5" style={{ transform: editRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
               </div>
               <div>
                 <p className="text-sm font-medium">Completed</p>

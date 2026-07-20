@@ -1,30 +1,36 @@
 import type { Metadata, Viewport } from "next"
-import { Fredoka, Baloo_2, Amiri } from "next/font/google"
+import localFont from "next/font/local"
 import "./globals.css"
-import { Sidebar } from "@/components/sidebar"
+import { AppShell } from "@/components/app-shell"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
 import { Toaster } from "sonner"
 
-const fredoka = Fredoka({
-  subsets: ["latin"],
+// Self-hosted fonts (via @fontsource, copied into ./fonts) so the app never
+// depends on Google Fonts at build/dev time.
+const fredoka = localFont({
+  src: "./fonts/fredoka.woff2",
   variable: "--font-fredoka",
-  weight: ["400", "500", "600", "700"],
+  weight: "300 700",
   display: "swap",
 })
 
-const baloo = Baloo_2({
-  subsets: ["latin"],
+const baloo = localFont({
+  src: "./fonts/baloo-2.woff2",
   variable: "--font-baloo",
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "400 800",
   display: "swap",
 })
 
 // Amiri (Quran variant) for Arabic text
-const amiri = Amiri({
-  subsets: ["arabic", "latin"],
+const amiri = localFont({
+  src: [
+    { path: "./fonts/amiri-latin-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/amiri-latin-700.woff2", weight: "700", style: "normal" },
+    { path: "./fonts/amiri-arabic-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/amiri-arabic-700.woff2", weight: "700", style: "normal" },
+  ],
   variable: "--font-amiri-quran",
-  weight: ["400", "700"],
   display: "swap",
 })
 
@@ -51,26 +57,15 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${fredoka.variable} ${baloo.variable} ${amiri.variable} ${baloo.className}`}>
+        {/* Set the portal palette (and admin dark mode) before first paint to avoid a flash. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var p=location.pathname;var portal=(p==='/login'||p==='/student'||p.indexOf('/student/')===0)?'student':'admin';var d=document.documentElement;d.setAttribute('data-portal',portal);if(portal==='admin'&&localStorage.getItem('qa-admin-dark')==='true'){d.classList.add('dark')}}catch(e){}})()`,
+          }}
+        />
         <ThemeProvider>
         <SidebarVisibilityProvider>
-        <div className="flex h-screen overflow-hidden bg-background">
-            <Sidebar />
-            <main
-              className="flex-1 min-w-0 h-screen overflow-y-auto main-scroll"
-              style={{ contain: "layout style" }}
-            >
-              {/* Layered ambient background */}
-              <div className="fixed inset-0 pointer-events-none -z-10 bg-mesh-gradient" />
-              <div className="fixed inset-0 islamic-pattern pointer-events-none opacity-50 dark:opacity-30 -z-10 [.light_&]:opacity-50" />
-              {/* Subtle noise — only in dark for analog warmth */}
-              <div className="fixed inset-0 pointer-events-none z-[9999] opacity-0 dark:opacity-[0.015] mix-blend-overlay" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
-              }} />
-              <div className="relative p-4 pt-16 lg:p-8 lg:pt-8">
-                {children}
-              </div>
-            </main>
-          </div>
+          <AppShell>{children}</AppShell>
         </SidebarVisibilityProvider>
         </ThemeProvider>
         <Toaster

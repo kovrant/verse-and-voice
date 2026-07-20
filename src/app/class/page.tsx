@@ -9,7 +9,7 @@ import * as Popover from "@radix-ui/react-popover"
 import { getActiveRound, getCompletedRounds, getChronologicalRoundNumber, type QuranRound } from "@/components/quran-progress"
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import {
-  Clock, User, Users, Sparkles, CalendarDays, BookMarked,
+  Clock, User, Users, CalendarDays, BookMarked,
   Play, BookOpen, Search, ChevronDown, ChevronLeft, UserPlus, Check,
 } from "lucide-react"
 import Link from "next/link"
@@ -259,7 +259,7 @@ export default function ClassPage() {
         <h1 className="text-3xl font-semibold tracking-tight text-primary">
           Class Session
         </h1>
-        <p className="text-sm mt-1.5" style={{ color: "#5B8E87" }}>
+        <p className="text-sm mt-1.5 text-muted-foreground">
           Select a student and start a live class
         </p>
       </div>
@@ -289,7 +289,7 @@ export default function ClassPage() {
             <button
               type="button"
               onClick={() => handleSelect("")}
-              className="inline-flex items-center gap-1 rounded-[10px] px-3.5 py-2 text-sm font-medium text-[#5B8E87] hover:text-primary hover:bg-[#F5EFE3] transition-colors"
+              className="inline-flex items-center gap-1 rounded-[10px] px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
               Change student
@@ -298,36 +298,30 @@ export default function ClassPage() {
           {selected && (
             <div className="max-w-[640px] mx-auto animate-fade-in-up">
               {/* Main Class Card — single clean white surface */}
-              <div
-                className="bg-white rounded-[20px] border border-[#E5DCC8] p-8"
-                style={{ boxShadow: "0 4px 20px rgba(15, 118, 110, 0.06)" }}
-              >
+              <div className="bg-card rounded-[20px] border border-border p-8">
                 {/* SECTION 1 — HEADER */}
                 <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#A7D7C5] text-primary text-[28px] font-bold flex-shrink-0">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[28px] font-bold flex-shrink-0">
                     {selected.name.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-heading font-semibold text-[28px] leading-tight text-[#1F2937]">
+                      <h2 className="font-heading font-semibold text-[28px] leading-tight text-foreground">
                         {selected.name}
                       </h2>
-                      <span
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold text-primary"
-                        style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
-                      >
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
                         <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                         Active
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-1 text-sm font-medium" style={{ color: "#5B8E87" }}>
+                    <div className="flex items-center gap-1.5 mt-1 text-sm font-medium text-muted-foreground">
                       <User className="h-3.5 w-3.5" />
                       <span>{selected.guardian_name}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="my-6 h-px bg-[#F0E8D5]" />
+                <div className="my-6 h-px bg-border" />
 
                 {/* SECTION 2 — TODAY'S SESSION */}
                 <div className="flex flex-wrap gap-x-12 gap-y-5">
@@ -335,12 +329,12 @@ export default function ClassPage() {
                     <Clock className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       <p
-                        className="text-[11px] font-semibold uppercase"
-                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        className="text-[11px] font-semibold uppercase text-muted-foreground"
+                        style={{ letterSpacing: "0.08em" }}
                       >
                         Class Time
                       </p>
-                      <p className="text-xl font-bold text-[#1F2937] mt-0.5">
+                      <p className="text-xl font-bold text-foreground mt-0.5">
                         {selected.class_time || "Not set"}
                       </p>
                     </div>
@@ -349,8 +343,8 @@ export default function ClassPage() {
                     <BookOpen className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
                     <div>
                       <p
-                        className="text-[11px] font-semibold uppercase"
-                        style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                        className="text-[11px] font-semibold uppercase text-muted-foreground"
+                        style={{ letterSpacing: "0.08em" }}
                       >
                         Currently On
                       </p>
@@ -375,26 +369,26 @@ export default function ClassPage() {
                     <div>
                       <div className="flex items-center justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2">
-                          <BookOpen className="h-4 w-4 text-[#1F2937]" />
-                          <span className="text-base font-semibold text-[#1F2937]">Quran Progress</span>
+                          <BookOpen className="h-4 w-4 text-foreground" />
+                          <span className="text-base font-semibold text-foreground">Quran Progress</span>
                           {activeRound && roundNum > 0 && (
-                            <span className="text-sm" style={{ color: "#5B8E87" }}>
+                            <span className="text-sm text-muted-foreground">
                               (Round {roundNum})
                             </span>
                           )}
                         </div>
                         <div className="text-base font-bold tabular-nums">
                           <span className="text-primary">{currentPara || total}</span>
-                          <span style={{ color: "#5B8E87" }}> / 30</span>
+                          <span className="text-muted-foreground"> / 30</span>
                         </div>
                       </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: "#F0E8D5" }}>
+                      <div className="h-2 rounded-full overflow-hidden bg-border">
                         <div
                           className="h-full rounded-full bg-primary transition-all"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
-                      <div className="flex items-center justify-between mt-2 text-xs" style={{ color: "#5B8E87" }}>
+                      <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
                         <span>From start: {asc > 0 ? asc : total} paras</span>
                         <span className="text-primary font-semibold">{percent}% complete</span>
                       </div>
@@ -466,24 +460,18 @@ export default function ClassPage() {
                     <div>
                       <div className="flex items-end justify-between mb-4">
                         <p
-                          className="text-[11px] font-semibold uppercase"
-                          style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                          className="text-[11px] font-semibold uppercase text-muted-foreground"
+                          style={{ letterSpacing: "0.08em" }}
                         >
                           History
                         </p>
-                        <p className="text-[11px] font-semibold" style={{ color: "#5B8E87" }}>
+                        <p className="text-[11px] font-semibold text-muted-foreground">
                           <span className="font-bold text-primary">{journey}</span> of journey
                         </p>
                       </div>
                       <div className="relative pl-1">
-                        {/* Connecting gradient line */}
-                        <div
-                          className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full"
-                          style={{
-                            background:
-                              "linear-gradient(to bottom, rgba(15,118,110,0.55), rgba(15,118,110,0.18))",
-                          }}
-                        />
+                        {/* Connecting line */}
+                        <div className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full bg-border" />
                         <div className="space-y-2">
                           {entries.map((e) => {
                             const Icon = e.type === "qaida" ? BookMarked : BookOpen
@@ -498,53 +486,41 @@ export default function ClassPage() {
                             return (
                               <div
                                 key={e.key}
-                                className="relative flex items-center gap-3 rounded-[12px] py-2 pl-10 pr-3 transition-all hover:-translate-y-px"
-                                style={{
-                                  backgroundColor: e.isCurrent
-                                    ? "rgba(167, 215, 197, 0.28)"
-                                    : "rgba(245, 240, 228, 0.55)",
-                                  boxShadow: e.isCurrent
-                                    ? "0 1px 0 rgba(15,118,110,0.10) inset"
-                                    : undefined,
-                                }}
+                                className={`relative flex items-center gap-3 rounded-[12px] py-2 pl-10 pr-3 transition-all hover:-translate-y-px ${
+                                  e.isCurrent ? "bg-secondary" : "bg-muted"
+                                }`}
                               >
                                 {/* Dot with icon — pulses on the active round */}
                                 <span
-                                  className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-[#FAF6EE] ${
-                                    e.isCurrent ? "bg-primary" : "bg-white border border-primary/40"
+                                  className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-card ${
+                                    e.isCurrent ? "bg-primary" : "bg-card border border-primary/40"
                                   }`}
                                 >
                                   {e.isCurrent ? (
                                     <span className="absolute inset-0 rounded-full bg-primary/60 animate-ping" />
                                   ) : null}
                                   <Icon
-                                    className="h-[10px] w-[10px] relative"
-                                    style={{ color: e.isCurrent ? "#FFFFFF" : "#0F766E" }}
+                                    className={`h-[10px] w-[10px] relative ${
+                                      e.isCurrent ? "text-primary-foreground" : "text-primary"
+                                    }`}
                                   />
                                 </span>
 
                                 <span
-                                  className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-bold text-primary shrink-0"
-                                  style={{
-                                    width: 78,
-                                    backgroundColor: e.isCurrent
-                                      ? "rgba(15, 118, 110, 0.14)"
-                                      : "rgba(167, 215, 197, 0.55)",
-                                  }}
+                                  className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-secondary text-secondary-foreground shrink-0"
+                                  style={{ width: 78 }}
                                 >
                                   {e.stage}
                                 </span>
 
                                 <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
                                   <span
-                                    className="text-[13px] font-medium truncate"
-                                    style={{ color: "#1F2937" }}
+                                    className="text-[13px] font-medium truncate text-foreground"
                                   >
                                     {range}
                                   </span>
                                   <span
-                                    className="text-[11px] font-semibold tabular-nums shrink-0"
-                                    style={{ color: "#5B8E87" }}
+                                    className="text-[11px] font-semibold tabular-nums shrink-0 text-muted-foreground"
                                   >
                                     {duration}
                                   </span>
@@ -581,14 +557,9 @@ export default function ClassPage() {
                   onClick={handleStartClass}
                   disabled={starting}
                   aria-live="polite"
-                  className={`relative w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary text-white text-[17px] font-bold overflow-hidden transition-all ${
-                    starting ? "cursor-default" : "hover:bg-[#0B5E58] hover:-translate-y-px"
+                  className={`relative w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary text-primary-foreground text-[17px] font-bold overflow-hidden transition-all ${
+                    starting ? "cursor-default" : "hover:bg-primary-hover hover:-translate-y-px"
                   }`}
-                  style={{
-                    boxShadow: starting
-                      ? "0 6px 20px rgba(15, 118, 110, 0.35), 0 0 0 4px rgba(212, 165, 116, 0.18)"
-                      : "0 4px 12px rgba(15, 118, 110, 0.25)",
-                  }}
                 >
                   {/* Default content — fades out when starting */}
                   <span
@@ -600,7 +571,7 @@ export default function ClassPage() {
                     Start Class
                   </span>
 
-                  {/* Book + sparkles overlay — appears when starting */}
+                  {/* Book overlay — appears when starting */}
                   {starting && (
                     <span
                       aria-hidden="true"
@@ -608,46 +579,8 @@ export default function ClassPage() {
                     >
                       {/* The book — pops in with a slight bounce */}
                       <BookOpen
-                        className="h-7 w-7 book-open-anim"
-                        style={{ color: "#FFFFFF" }}
+                        className="h-7 w-7 book-open-anim text-primary-foreground"
                         strokeWidth={2.25}
-                      />
-                      {/* Sparkles — twinkle around the book at staggered times */}
-                      <Sparkles
-                        className="absolute h-3 w-3 sparkle-twinkle"
-                        style={{
-                          top: "22%",
-                          left: "calc(50% - 36px)",
-                          color: "#E8D4B0",
-                          animationDelay: "120ms",
-                        }}
-                      />
-                      <Sparkles
-                        className="absolute h-3.5 w-3.5 sparkle-twinkle"
-                        style={{
-                          top: "16%",
-                          left: "calc(50% + 22px)",
-                          color: "#FFE8B8",
-                          animationDelay: "260ms",
-                        }}
-                      />
-                      <Sparkles
-                        className="absolute h-2.5 w-2.5 sparkle-twinkle"
-                        style={{
-                          bottom: "20%",
-                          left: "calc(50% + 30px)",
-                          color: "#E8D4B0",
-                          animationDelay: "440ms",
-                        }}
-                      />
-                      <Sparkles
-                        className="absolute h-3 w-3 sparkle-twinkle"
-                        style={{
-                          bottom: "22%",
-                          left: "calc(50% - 30px)",
-                          color: "#FFE8B8",
-                          animationDelay: "600ms",
-                        }}
                       />
                     </span>
                   )}
@@ -657,20 +590,17 @@ export default function ClassPage() {
                 <div className="mt-4 mb-2 flex justify-center">
                   <Link
                     href={`/students/${selected.id}`}
-                    className="text-[13px] font-medium transition-colors"
-                    style={{ color: "#5B8E87" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#0F766E")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#5B8E87")}
+                    className="text-[13px] font-medium transition-colors text-muted-foreground hover:text-primary"
                   >
                     View full student profile →
                   </Link>
                 </div>
 
                 {/* SECTION 6 — FOOTER META */}
-                <div className="pt-4 border-t border-[#F0E8D5] flex items-center justify-center gap-2">
-                  <CalendarDays className="h-3.5 w-3.5" style={{ color: "#5B8E87" }} />
-                  <p className="text-[13px] font-medium" style={{ color: "#5B8E87" }}>
-                    <span className="font-bold text-[#1F2937]">
+                <div className="pt-4 border-t border-border flex items-center justify-center gap-2">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="text-[13px] font-medium text-muted-foreground">
+                    <span className="font-bold text-foreground">
                       {differenceInDays(new Date(), parseLocalDate(selected.started_at) ?? new Date()).toLocaleString()}
                     </span>{" "}
                     days since enrollment
@@ -689,8 +619,7 @@ export default function ClassPage() {
               <Popover.Trigger asChild>
                 <button
                   type="button"
-                  className="w-full flex items-center justify-between gap-2 rounded-xl border border-[#D4C8AE] bg-card px-4 py-3.5 min-h-[52px] text-left transition-all hover:border-primary/60 focus:outline-none focus:border-primary focus:border-2 focus:px-[15px] focus:py-[13px] data-[state=open]:border-primary data-[state=open]:border-2 data-[state=open]:px-[15px] data-[state=open]:py-[13px]"
-                  style={{ boxShadow: "0 1px 3px rgba(31, 41, 55, 0.06)" }}
+                  className="w-full flex items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-3.5 min-h-[52px] text-left transition-all hover:border-primary/60 focus:outline-none focus:border-primary focus:border-2 focus:px-[15px] focus:py-[13px] data-[state=open]:border-primary data-[state=open]:border-2 data-[state=open]:px-[15px] data-[state=open]:py-[13px]"
                 >
                   <span className="text-sm text-muted-foreground">Quick select — type a name…</span>
                   <ChevronDown
@@ -772,7 +701,7 @@ export default function ClassPage() {
                   key={s.id}
                   type="button"
                   onClick={() => handleSelect(s.id)}
-                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-[0_4px_16px_rgba(15,118,110,0.12)] focus-visible:border-primary"
+                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary focus-visible:border-primary"
                 >
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary/60 text-primary text-xl font-bold">
                     {s.name.charAt(0).toUpperCase()}

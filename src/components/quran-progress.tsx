@@ -145,31 +145,20 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
   }
 
   if (variant === "full") {
-    // Shared card chrome — clean white card on parchment, sage accents
-    const cardStyle: React.CSSProperties = {
-      boxShadow: "0 4px 16px rgba(15, 118, 110, 0.06)",
-    }
-
     if (rounds.length === 0) {
       return (
-        <div
-          className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6 flex items-center gap-4"
-          style={cardStyle}
-        >
-          <span
-            className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
-            style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
-          >
-            <BookOpen className="h-5 w-5 text-primary" strokeWidth={2.25} />
+        <div className="rounded-[20px] bg-card border border-border p-5 sm:p-6 flex items-center gap-4">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-secondary">
+            <BookOpen className="h-5 w-5 text-muted-foreground" strokeWidth={2.25} />
           </span>
           <div className="min-w-0">
             <p
-              className="text-[11px] font-semibold uppercase"
-              style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+              className="text-[11px] font-semibold uppercase text-muted-foreground"
+              style={{ letterSpacing: "0.08em" }}
             >
               Quran Progress
             </p>
-            <p className="text-sm" style={{ color: "#5B8E87" }}>
+            <p className="text-sm text-muted-foreground">
               No rounds started yet. Add a round to begin tracking.
             </p>
           </div>
@@ -179,33 +168,26 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
 
     if (isQaida) {
       return (
-        <div
-          className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6"
-          style={cardStyle}
-        >
+        <div className="rounded-[20px] bg-card border border-border p-5 sm:p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
-                style={{ backgroundColor: "rgba(232, 212, 176, 0.55)" }}
-              >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-secondary">
                 <BookMarked
-                  className="h-5 w-5"
-                  style={{ color: "#A87142" }}
+                  className="h-5 w-5 text-muted-foreground"
                   strokeWidth={2.25}
                 />
               </span>
               <div className="min-w-0">
                 <p
-                  className="text-[11px] font-semibold uppercase"
-                  style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                  className="text-[11px] font-semibold uppercase text-muted-foreground"
+                  style={{ letterSpacing: "0.08em" }}
                 >
                   Learning Stage
                 </p>
-                <h3 className="text-base font-bold text-[#1F2937] truncate">
+                <h3 className="text-base font-bold text-foreground truncate">
                   Norani Qaida
                   {activeRound && activeRoundNum > 1 ? (
-                    <span className="font-medium" style={{ color: "#5B8E87" }}>
+                    <span className="font-medium text-muted-foreground">
                       {" "}· Round {activeRoundNum}
                     </span>
                   ) : null}
@@ -213,7 +195,7 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
               </div>
             </div>
           </div>
-          <p className="text-[13px] mt-3" style={{ color: "#5B8E87" }}>
+          <p className="text-[13px] mt-3 text-muted-foreground">
             Student is learning the basics through Norani Qaida before starting Quran reading.
           </p>
         </div>
@@ -224,26 +206,20 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
       activeRound && activeRoundNum > 1 ? `Round ${activeRoundNum}` : "Current Round"
 
     return (
-      <div
-        className="rounded-[20px] bg-white border border-[#E5DCC8] p-5 sm:p-6"
-        style={cardStyle}
-      >
+      <div className="rounded-[20px] bg-card border border-border p-5 sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <span
-              className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
-              style={{ backgroundColor: "rgba(167, 215, 197, 0.4)" }}
-            >
-              <BookOpen className="h-5 w-5 text-primary" strokeWidth={2.25} />
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-secondary">
+              <BookOpen className="h-5 w-5 text-muted-foreground" strokeWidth={2.25} />
             </span>
             <div className="min-w-0">
               <p
-                className="text-[11px] font-semibold uppercase"
-                style={{ letterSpacing: "0.08em", color: "#8B9A95" }}
+                className="text-[11px] font-semibold uppercase text-muted-foreground"
+                style={{ letterSpacing: "0.08em" }}
               >
                 Quran Progress
               </p>
-              <h3 className="text-base font-bold text-[#1F2937] truncate">{headerLabel}</h3>
+              <h3 className="text-base font-bold text-foreground truncate">{headerLabel}</h3>
             </div>
           </div>
           <div className="text-right shrink-0">
@@ -258,18 +234,15 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
               </Badge>
             ) : currentPara ? (
               <div className="leading-tight">
-                <span className="text-2xl font-extrabold text-primary tabular-nums">
+                <span className="text-2xl font-extrabold text-emerald-500 tabular-nums">
                   Para {currentPara}
                 </span>
-                <span
-                  className="text-sm font-semibold tabular-nums ml-1.5"
-                  style={{ color: "#8B9A95" }}
-                >
+                <span className="text-sm font-semibold tabular-nums ml-1.5 text-muted-foreground">
                   / 30
                 </span>
               </div>
             ) : (
-              <span className="text-sm" style={{ color: "#5B8E87" }}>
+              <span className="text-sm text-muted-foreground">
                 Not started
               </span>
             )}
@@ -279,21 +252,21 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
           <div className="mt-4">
             <Progress value={progress} />
             <div className="flex items-center justify-between text-xs mt-2.5">
-              <div className="flex gap-4" style={{ color: "#5B8E87" }}>
+              <div className="flex gap-4 text-muted-foreground">
                 {desc > 0 && (
                   <span>
                     From end:{" "}
-                    <span className="font-bold text-[#1F2937] tabular-nums">{desc}</span> paras
+                    <span className="font-bold text-foreground tabular-nums">{desc}</span> paras
                   </span>
                 )}
                 {asc > 0 && (
                   <span>
                     From start:{" "}
-                    <span className="font-bold text-[#1F2937] tabular-nums">{asc}</span> paras
+                    <span className="font-bold text-foreground tabular-nums">{asc}</span> paras
                   </span>
                 )}
               </div>
-              <span className="font-bold text-primary tabular-nums">
+              <span className="font-bold text-emerald-500 tabular-nums">
                 {Math.round(progress)}%
               </span>
             </div>

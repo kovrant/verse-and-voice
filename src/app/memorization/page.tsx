@@ -32,10 +32,10 @@ interface CatalogItem {
 const CATEGORIES = ["Surah", "Dua", "Namaz", "General"]
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Surah:   { bg: "bg-emerald-500/15", text: "text-emerald-400" },
-  Dua:     { bg: "bg-blue-500/15",    text: "text-blue-400" },
-  Namaz:   { bg: "bg-amber-500/15",   text: "text-amber-400" },
-  General: { bg: "bg-purple-500/15",  text: "text-purple-400" },
+  Surah:   { bg: "bg-secondary", text: "text-muted-foreground" },
+  Dua:     { bg: "bg-secondary", text: "text-muted-foreground" },
+  Namaz:   { bg: "bg-secondary", text: "text-muted-foreground" },
+  General: { bg: "bg-secondary", text: "text-muted-foreground" },
 }
 
 export default function MemorizationPage() {
@@ -272,7 +272,7 @@ export default function MemorizationPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-gradient-gold">Memorization</span>
+          <span className="text-foreground">Memorization</span>
         </h1>
         <p className="text-muted-foreground mt-1">
           Manage the catalog of items students can memorize. {items.length} items total.
@@ -358,7 +358,7 @@ export default function MemorizationPage() {
               onClick={() => setFilterCat(c)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                 filterCat === c
-                  ? "bg-emerald-500/15 text-emerald-400"
+                  ? "bg-emerald-500/10 text-emerald-500"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
@@ -473,7 +473,6 @@ export default function MemorizationPage() {
                         onClick={() => setPreviewUrl(item.file_url || null)}
                         className="w-full aspect-[3/2] overflow-hidden bg-secondary/80 relative flex items-center justify-center"
                       >
-                        <div className="absolute inset-0 islamic-pattern opacity-30" />
                         <div className="relative flex flex-col items-center gap-1">
                           <BookMarked className={`h-8 w-8 ${colors.text} opacity-40`} />
                           <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">PDF</span>
@@ -488,7 +487,7 @@ export default function MemorizationPage() {
                     {/* Media library badge */}
                     {isMedia && (
                       <div className="absolute top-2 left-2">
-                        <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-[9px] font-medium text-blue-400 backdrop-blur-sm">
+                        <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-medium text-muted-foreground backdrop-blur-sm">
                           Media Library
                         </span>
                       </div>
@@ -544,7 +543,7 @@ export default function MemorizationPage() {
                               <button
                                 type="button"
                                 onClick={() => removeImage(item.id)}
-                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80 backdrop-blur-sm"
                                 title="Remove image"
                               >
                                 <X className="h-3.5 w-3.5" />
@@ -567,7 +566,7 @@ export default function MemorizationPage() {
                             <Popover.Trigger asChild>
                               <button
                                 type="button"
-                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-red-400 hover:bg-black/80 backdrop-blur-sm"
+                                className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80 backdrop-blur-sm"
                                 title="Delete"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -582,7 +581,7 @@ export default function MemorizationPage() {
                               >
                                 <p className="text-xs text-foreground font-medium mb-1">Delete &quot;{item.title}&quot;?</p>
                                 {(item.assignment_count ?? 0) > 0 && (
-                                  <p className="text-[10px] text-amber-400 mb-2">
+                                  <p className="text-[10px] text-muted-foreground mb-2">
                                     Assigned to {item.assignment_count} student{item.assignment_count !== 1 ? "s" : ""}
                                   </p>
                                 )}
@@ -598,7 +597,7 @@ export default function MemorizationPage() {
                                   </Button>
                                   <Button
                                     size="sm"
-                                    className="h-7 flex-1 text-xs bg-red-600 hover:bg-red-500 text-white"
+                                    className="h-7 flex-1 text-xs bg-destructive hover:bg-destructive/90 text-white"
                                     onClick={confirmDeleteItem}
                                     disabled={deleting}
                                   >

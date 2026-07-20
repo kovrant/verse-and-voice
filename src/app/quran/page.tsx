@@ -142,7 +142,7 @@ export default function QuranPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-gradient-gold">Quran Paras</span>
+          <span className="text-foreground">Quran Paras</span>
         </h1>
         <p className="text-muted-foreground mt-1">
           {paras.length > 0
@@ -168,8 +168,8 @@ export default function QuranPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/10">
-              <BookOpen className="h-7 w-7 text-emerald-400" />
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+              <BookOpen className="h-7 w-7 text-muted-foreground" />
             </div>
             {paras.length === 0 ? (
               <>
@@ -193,20 +193,20 @@ export default function QuranPage() {
               key={para.id}
               type="button"
               onClick={() => setViewingPara(para)}
-              className="group relative flex flex-col items-center rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all"
+              className="group relative flex flex-col items-center rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border hover:bg-secondary transition-all"
             >
               {/* Para number display */}
               <div className="w-full aspect-square flex flex-col items-center justify-center gap-1 p-2">
                 {para.meta?.para_number ? (
                   <>
-                    <span className="text-2xl font-bold text-emerald-400">
+                    <span className="text-2xl font-bold text-foreground">
                       {para.meta.para_number}
                     </span>
                     <span className="text-[10px] text-muted-foreground">Para</span>
                   </>
                 ) : (
                   <>
-                    <FileText className="h-6 w-6 text-emerald-400/60" />
+                    <FileText className="h-6 w-6 text-muted-foreground" />
                     <span className="text-[10px] text-muted-foreground text-center truncate w-full px-1">
                       {para.title}
                     </span>
@@ -222,9 +222,9 @@ export default function QuranPage() {
               </div>
 
               {/* Hover glow ring — keeps content visible */}
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-emerald-500/30" />
+              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-border" />
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[8px] font-semibold text-emerald-400 uppercase tracking-wider">Open</span>
+                <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Open</span>
               </div>
             </button>
           ))}
@@ -236,11 +236,11 @@ export default function QuranPage() {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-muted-foreground">Upload progress</span>
-            <span className="text-emerald-400 font-medium">{paras.length}/30 paras</span>
+            <span className="text-emerald-500 font-medium">{paras.length}/30 paras</span>
           </div>
           <div className="h-2 rounded-full bg-secondary overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
               style={{ width: `${(paras.length / 30) * 100}%` }}
             />
           </div>

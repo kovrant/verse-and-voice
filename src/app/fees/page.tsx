@@ -191,7 +191,7 @@ export default function FeesPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-gradient-gold">Fee Management</span>
+          <span className="text-foreground">Fee Management</span>
         </h1>
         <p className="text-muted-foreground mt-1">Track and manage monthly fee payments</p>
       </div>
@@ -247,12 +247,11 @@ export default function FeesPage() {
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Payment Status</CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-500/15">
-                <CheckCircle2 className="h-4.5 w-4.5 text-blue-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
+                <CheckCircle2 className="h-4.5 w-4.5 text-muted-foreground" />
               </div>
             </div>
           </CardHeader>
@@ -264,17 +263,16 @@ export default function FeesPage() {
         </Card>
 
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Collected</CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/15">
-                <TrendingUp className="h-4.5 w-4.5 text-emerald-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
+                <TrendingUp className="h-4.5 w-4.5 text-emerald-500" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-emerald-400">
+            <p className="text-2xl font-bold text-emerald-500">
               Rs{totalCollectedPKR.toLocaleString()}
             </p>
             <div className="flex flex-wrap gap-x-2 mt-1">
@@ -288,17 +286,16 @@ export default function FeesPage() {
         </Card>
 
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Pending</CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-500/15">
-                <AlertCircle className="h-4.5 w-4.5 text-amber-400" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
+                <AlertCircle className="h-4.5 w-4.5 text-muted-foreground" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-amber-400">
+            <p className="text-2xl font-bold text-foreground">
               Rs{totalPendingPKR.toLocaleString()}
             </p>
             <div className="flex flex-wrap gap-x-2 mt-1">
@@ -340,11 +337,7 @@ export default function FeesPage() {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 ${
-                      fee.is_paid
-                        ? "bg-emerald-500/10 text-emerald-400"
-                        : "bg-amber-500/10 text-amber-400"
-                    }`}>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 bg-secondary text-muted-foreground">
                       {fee.students?.name?.charAt(0)}
                     </div>
                     <div className="min-w-0">
@@ -411,11 +404,7 @@ export default function FeesPage() {
                   <tr key={fee.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className={`flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 ${
-                          fee.is_paid
-                            ? "bg-emerald-500/10 text-emerald-400"
-                            : "bg-amber-500/10 text-amber-400"
-                        }`}>
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 bg-secondary text-muted-foreground">
                           {fee.students?.name?.charAt(0)}
                         </div>
                         <span className="font-medium text-sm">{fee.students?.name}</span>

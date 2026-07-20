@@ -238,7 +238,7 @@ export default function StudentsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-gradient-gold">Students</span>
+            <span className="text-foreground">Students</span>
           </h1>
           <p className="text-muted-foreground mt-1">
             {filtered.length === students.length
@@ -276,7 +276,7 @@ export default function StudentsPage() {
                 onClick={() => { setStatusFilter(s); localStorage.setItem(FILTER_STORAGE_KEY, s) }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   statusFilter === s
-                    ? "bg-emerald-500/15 text-emerald-400"
+                    ? "bg-secondary text-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                 }`}
               >
@@ -292,7 +292,7 @@ export default function StudentsPage() {
               onClick={() => setSettingsOpen(!settingsOpen)}
               className={`flex items-center justify-center h-[38px] w-[38px] rounded-xl border border-border/50 transition-all ${
                 settingsOpen
-                  ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                  ? "bg-secondary text-foreground border-border"
                   : "bg-card text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
               title="Column settings"
@@ -308,7 +308,7 @@ export default function StudentsPage() {
                 <div className="p-2">
                   {/* Student column is always visible */}
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg opacity-50">
-                    <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                    <Eye className="h-3.5 w-3.5 text-foreground" />
                     <span className="text-sm font-medium">Student</span>
                     <span className="ml-auto text-[10px] text-muted-foreground">Always on</span>
                   </div>
@@ -321,15 +321,15 @@ export default function StudentsPage() {
                       className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left transition-colors hover:bg-secondary"
                     >
                       {isVisible(col.key) ? (
-                        <Eye className="h-3.5 w-3.5 text-emerald-400" />
+                        <Eye className="h-3.5 w-3.5 text-foreground" />
                       ) : (
                         <EyeOff className="h-3.5 w-3.5 text-muted-foreground/40" />
                       )}
                       <span className={`text-sm font-medium ${isVisible(col.key) ? "text-foreground" : "text-muted-foreground/60"}`}>
                         {col.label}
                       </span>
-                      <div className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-emerald-500" : "bg-secondary"}`}>
-                        <div className={`h-3 w-3 rounded-full bg-white shadow-sm transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`} />
+                      <div className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-primary" : "bg-secondary"}`}>
+                        <div className={`h-3 w-3 rounded-full bg-background shadow-sm transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`} />
                       </div>
                     </button>
                   ))}
@@ -373,7 +373,7 @@ export default function StudentsPage() {
                   <Card className="group hover:border-border transition-all">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold flex-shrink-0">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-muted-foreground text-sm font-bold flex-shrink-0">
                           {student.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -459,7 +459,7 @@ export default function StudentsPage() {
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 text-sm font-bold flex-shrink-0">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground text-sm font-bold flex-shrink-0">
                               {student.name.charAt(0)}
                             </div>
                             <div>

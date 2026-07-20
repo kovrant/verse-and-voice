@@ -142,26 +142,23 @@ export default function Dashboard() {
       label: "Active Students",
       value: activeStudents,
       icon: Users,
-      color: "from-emerald-500 to-teal-600",
-      iconBg: "bg-secondary/50",
-      iconColor: "text-primary",
+      iconBg: "bg-secondary",
+      iconColor: "text-muted-foreground",
     },
     {
       label: "Total Students",
       value: totalStudents,
       icon: UserPlus,
-      color: "from-blue-500 to-indigo-600",
-      iconBg: "bg-secondary/50",
-      iconColor: "text-primary",
+      iconBg: "bg-secondary",
+      iconColor: "text-muted-foreground",
     },
     {
       label: "Collected This Month",
       value: `${feesCollected.toLocaleString()}`,
       prefix: "Rs",
       icon: TrendingUp,
-      color: "from-emerald-500 to-green-600",
-      iconBg: "bg-secondary/50",
-      iconColor: "text-primary",
+      iconBg: "bg-secondary",
+      iconColor: "text-muted-foreground",
       breakdown: collectedByCurrency,
     },
     {
@@ -169,9 +166,8 @@ export default function Dashboard() {
       value: `${feesPending.toLocaleString()}`,
       prefix: "Rs",
       icon: AlertCircle,
-      color: "from-amber-500 to-orange-600",
-      iconBg: "bg-amber-300/60",
-      iconColor: "text-amber-600",
+      iconBg: "bg-secondary",
+      iconColor: "text-muted-foreground",
       breakdown: pendingByCurrency,
     },
   ]
@@ -189,53 +185,50 @@ export default function Dashboard() {
 
       {/* Onboarding — shown when no students exist */}
       {totalStudents === 0 && (
-        <Card className="relative overflow-hidden">
-          <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-500" />
-          <div className="absolute inset-0 islamic-pattern opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-card" />
+        <Card className="relative overflow-hidden bg-card border border-border">
           <CardContent className="relative pt-8 pb-6">
             <div className="text-center mb-6">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg">
-                <Sparkles className="h-7 w-7 text-white" />
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-foreground">
+                <Sparkles className="h-7 w-7" />
               </div>
               <h2 className="text-xl font-bold">Welcome to Quran Academy</h2>
               <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">
               <Link href="/students/new">
-                <div className="group flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 flex-shrink-0">
-                    <UserPlus className="h-5 w-5 text-emerald-400" />
+                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
+                    <UserPlus className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold">Add Students</p>
                     <p className="text-[11px] text-muted-foreground">Register your first student</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-emerald-400/50 group-hover:text-emerald-400 transition-colors flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Link>
               <Link href="/media">
-                <div className="group flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 flex-shrink-0">
-                    <Upload className="h-5 w-5 text-amber-400" />
+                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
+                    <Upload className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold">Upload Quran</p>
                     <p className="text-[11px] text-muted-foreground">Add Quran para PDFs</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-amber-400/50 group-hover:text-amber-400 transition-colors flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Link>
               <Link href="/memorization">
-                <div className="group flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/15 flex-shrink-0">
-                    <BookMarked className="h-5 w-5 text-blue-400" />
+                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
+                    <BookMarked className="h-5 w-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold">Set Up Catalog</p>
                     <p className="text-[11px] text-muted-foreground">Add surahs & duas</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-blue-400/50 group-hover:text-blue-400 transition-colors flex-shrink-0" />
+                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Link>
             </div>
@@ -246,8 +239,7 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="group relative overflow-hidden opacity-0 animate-fade-in-up [animation-fill-mode:forwards]" style={{ animationDelay: `${i * 80}ms` }}>
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-[0.04] group-hover:opacity-[0.08] transition-opacity duration-300`} />
+          <Card key={i} className="group relative overflow-hidden bg-card border border-border opacity-0 animate-fade-in-up [animation-fill-mode:forwards]" style={{ animationDelay: `${i * 80}ms` }}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.label}
@@ -342,7 +334,7 @@ export default function Dashboard() {
             {unpaidFees.length === 0 ? (
               <div className="text-center py-10">
                 <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10">
-                  <CreditCard className="h-6 w-6 text-emerald-400" />
+                  <CreditCard className="h-6 w-6 text-emerald-500" />
                 </div>
                 <p className="font-medium mb-1">All Clear!</p>
                 <p className="text-sm text-muted-foreground">
@@ -357,7 +349,7 @@ export default function Dashboard() {
                     className="flex items-center justify-between rounded-xl border border-border/50 p-3.5"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-300/60 text-amber-600 text-sm font-bold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground text-sm font-bold">
                         {(f.students as any)?.name?.charAt(0)}
                       </div>
                       <p className="font-medium text-sm">{(f.students as any)?.name}</p>

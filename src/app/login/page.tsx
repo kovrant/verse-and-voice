@@ -2,27 +2,29 @@
 
 import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { supabase } from "@/lib/supabase"
+import { resolveLoginEmail } from "@/lib/student-auth"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2 } from "lucide-react"
+import { Loader2, User, Lock, Eye, EyeOff, Sparkles, Star } from "lucide-react"
 
-export default function LoginPage() {
+export default function StudentLoginPage() {
   return (
     <Suspense fallback={null}>
-      <LoginForm />
+      <StudentLoginForm />
     </Suspense>
   )
 }
 
-function LoginForm() {
+function StudentLoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo") || "/"
+  const redirectTo = searchParams.get("redirectTo") || "/student"
 
-  const [email, setEmail] = useState("")
+  const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -31,7 +33,8 @@ function LoginForm() {
     setError(null)
     setLoading(true)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const email = resolveLoginEmail(identifier)
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
       setError(error.message)
@@ -39,63 +42,126 @@ function LoginForm() {
       return
     }
 
-    router.replace(redirectTo)
+    const role = (data.user?.app_metadata as { role?: string } | null)?.role
+    router.replace(role === "student" ? redirectTo : "/")
     router.refresh()
   }
 
+  const fieldClass =
+    "h-14 w-full rounded-2xl border-2 border-border bg-card text-base text-foreground transition-all duration-200 placeholder:text-muted-foreground/50 hover:border-primary/40 focus-visible:border-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
+
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-logo-glow ring-1 ring-white/10">
-            <span className="text-white text-2xl">&#1756;</span>
+    <div className="-m-4 -mt-16 lg:-m-8 min-h-dvh flex items-center justify-center px-4 py-10 relative overflow-hidden">
+      {/* Sunny pastel ambient blobs */}
+      <div
+        className="pointer-events-none absolute -top-24 -left-16 h-80 w-80 rounded-full opacity-60 blur-3xl animate-float"
+        style={{ background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.5), transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute top-1/3 -right-24 h-96 w-96 rounded-full opacity-50 blur-3xl"
+        style={{ background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.5), transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-28 left-1/4 h-80 w-80 rounded-full opacity-50 blur-3xl animate-float"
+        style={{ background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.4), transparent 70%)", animationDelay: "1.5s" }}
+      />
+
+      <div className="relative w-full max-w-md animate-fade-in-up">
+        <div className="overflow-hidden rounded-[2rem] bg-card shadow-soft-lg border border-border/60">
+          {/* Playful header */}
+          <div
+            className="relative px-8 pb-10 pt-10 text-center"
+            style={{ background: "linear-gradient(150deg, hsl(var(--c-a-400)), hsl(var(--primary)) 55%, hsl(var(--c-s-500)))" }}
+          >
+            <div className="absolute inset-0 opacity-30">
+              <Star className="absolute left-8 top-6 h-4 w-4 text-white sparkle-twinkle" fill="currentColor" />
+              <Sparkles className="absolute right-10 top-10 h-5 w-5 text-white sparkle-twinkle" style={{ animationDelay: "0.4s" }} />
+              <Star className="absolute right-1/3 bottom-6 h-3 w-3 text-white sparkle-twinkle" fill="currentColor" style={{ animationDelay: "0.8s" }} />
+            </div>
+            <div className="relative flex flex-col items-center gap-3">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm text-4xl animate-float">
+                📖
+              </div>
+              <div>
+                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm">Quran Academy</h1>
+                <p className="text-sm text-white/90 mt-0.5">Welcome back! Ready to learn? ✨</p>
+              </div>
+            </div>
           </div>
-          <div className="text-center">
-            <h1 className="font-brand text-2xl font-semibold text-primary">Quran Academy</h1>
-            <p className="text-sm text-muted-foreground mt-1">Sign in to continue</p>
+
+          {/* Form */}
+          <div className="px-7 py-8">
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              <div className="space-y-2">
+                <Label htmlFor="identifier" className="text-sm font-semibold text-foreground/90">
+                  Username
+                </Label>
+                <div className="relative">
+                  <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" aria-hidden="true" />
+                  <input
+                    id="identifier"
+                    type="text"
+                    autoComplete="username"
+                    autoCapitalize="none"
+                    spellCheck={false}
+                    placeholder="your username"
+                    required
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    disabled={loading}
+                    className={`${fieldClass} pl-12 pr-4`}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground/90">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" aria-hidden="true" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
+                    className={`${fieldClass} pl-12 pr-12`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    disabled={loading}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <p role="alert" aria-live="polite" className="rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" size="lg" disabled={loading} className="w-full h-14 text-base rounded-2xl hover-bounce">
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : "Let's go! 🚀"}
+              </Button>
+            </form>
+
+            <p className="mt-6 text-center text-xs text-muted-foreground">
+              Are you a teacher?{" "}
+              <Link href="/admin" className="font-semibold text-primary hover:underline">
+                Sign in here
+              </Link>
+            </p>
           </div>
         </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-border bg-card p-6 shadow-lg"
-        >
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-            />
-          </div>
-
-          {error && (
-            <p className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-              {error}
-            </p>
-          )}
-
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sign in"}
-          </Button>
-        </form>
       </div>
     </div>
   )

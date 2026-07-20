@@ -101,20 +101,18 @@ export default function NewStudentPage() {
           </Link>
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
-              <span className="text-gradient-gold">Add Student</span>
+              <span className="text-foreground">Add Student</span>
             </h1>
             <p className="text-muted-foreground mt-1">Register a new student to the academy</p>
           </div>
         </div>
       </div>
 
-      <Card className="relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
-
-        <CardHeader className="pt-8">
+      <Card>
+        <CardHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-              <UserPlus className="h-5 w-5 text-emerald-400" />
+              <UserPlus className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
               <CardTitle>Student Information</CardTitle>
@@ -127,7 +125,7 @@ export default function NewStudentPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Details */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
                 Personal Details
               </div>
@@ -175,7 +173,7 @@ export default function NewStudentPage() {
 
             {/* Schedule & Fees */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
                 Schedule & Fees
               </div>
@@ -237,7 +235,7 @@ export default function NewStudentPage() {
 
             {/* Starting Round */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-amber-400 uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                 <Sparkles className="h-3 w-3" />
                 Starting Stage
               </div>
@@ -248,7 +246,7 @@ export default function NewStudentPage() {
                   onClick={() => setForm({ ...form, round_type: "qaida", desc_completed: "0", asc_completed: "0" })}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     form.round_type === "qaida"
-                      ? "bg-amber-500/15 text-amber-400 shadow-sm"
+                      ? "bg-secondary text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -259,7 +257,7 @@ export default function NewStudentPage() {
                   onClick={() => setForm({ ...form, round_type: "quran" })}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     form.round_type === "quran"
-                      ? "bg-emerald-500/15 text-emerald-400 shadow-sm"
+                      ? "bg-secondary text-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
@@ -268,8 +266,8 @@ export default function NewStudentPage() {
               </div>
 
               {form.round_type === "qaida" ? (
-                <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                  <p className="text-sm text-amber-300 font-medium">Student is learning the basics</p>
+                <div className="rounded-xl border border-border bg-muted p-4">
+                  <p className="text-sm text-foreground font-medium">Student is learning the basics</p>
                   <p className="text-xs text-muted-foreground mt-1">Norani Qaida must be completed before starting Quran reading.</p>
                 </div>
               ) : (

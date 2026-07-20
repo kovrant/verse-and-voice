@@ -3,91 +3,223 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
-    /* ── Madinah Garden theme — emerald, sage, manuscript gold on parchment ──
-     * Palette reference:
-     *   #FAF6EE parchment bg   #FFFFFF surface       #F5EFE3 surface-alt
-     *   #0F766E emerald        #0B5E58 emerald-hover #A7D7C5 sage soft
-     *   #D4A574 manuscript gold #E8D4B0 gold soft
-     *   #1F2937 ink            #5B8E87 muted-teal    #8B9A95 muted
-     *   #16A34A success        #C97B5C terracotta error
-     *   #E5DCC8 border         #D4C8AE border-strong
-     */
-    --background: 40 50% 95%;
-    --foreground: 220 18% 17%;
+  /* ══════════════════════════════════════════════════════════════════════
+   * Portal-scoped palettes.
+   * The active portal is stamped on <html data-portal="admin|student"> by the
+   * PortalTheme provider (see src/components/theme-provider.tsx). Because every
+   * Tailwind color resolves through these CSS vars, swapping the block swaps the
+   * whole UI. Base :root == admin light, so first paint is always sane.
+   * ────────────────────────────────────────────────────────────────────── */
+
+  /* ── ADMIN — Graphite Minimal (light) ── default ── */
+  :root,
+  [data-portal="admin"] {
+    --background: 220 16% 98%;
+    --foreground: 220 18% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 220 18% 17%;
-    --surface-alt: 38 42% 92%;
+    --card-foreground: 220 18% 12%;
+    --surface-alt: 220 14% 96%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 18% 17%;
-    --secondary: 159 38% 75%;
-    --secondary-foreground: 175 77% 18%;
-    --muted: 38 42% 92%;
-    --muted-foreground: 173 22% 46%;
-    --destructive: 15 50% 58%;
+    --popover-foreground: 220 18% 12%;
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 16% 22%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 38% 84%;
-    --border-strong: 38 36% 75%;
-    --input: 40 38% 84%;
-    --radius: 1rem;
+    --border: 220 13% 91%;
+    --border-strong: 220 13% 82%;
+    --input: 220 13% 91%;
+    --radius: 0.75rem;
 
-    /* Primary (deep emerald — Islamic tradition) */
-    --primary: 175 77% 26%;
-    --primary-hover: 176 79% 20%;
+    /* Primary = graphite (near-black buttons) */
+    --primary: 220 16% 16%;
+    --primary-hover: 220 12% 26%;
     --primary-foreground: 0 0% 100%;
-    --ring: 175 77% 26%;
+    --ring: 187 62% 40%;
 
-    /* Accent (manuscript gold) */
-    --accent: 31 50% 64%;
-    --accent-soft: 36 53% 80%;
-    --accent-foreground: 220 18% 17%;
-    --gold: 31 50% 64%;
-    --gold-foreground: 220 18% 17%;
+    /* Accent = single restrained teal */
+    --accent: 187 62% 40%;
+    --accent-soft: 187 45% 88%;
+    --accent-foreground: 0 0% 100%;
+    --gold: 187 62% 40%;
+    --gold-foreground: 0 0% 100%;
 
-    /* Status */
-    --success: 142 76% 36%;
-    --warning: 31 50% 64%;
-    --error: 15 50% 58%;
+    --success: 150 55% 40%;
+    --warning: 36 80% 48%;
+    --error: 0 72% 51%;
 
-    /* Primary scale (emerald — #0F766E family) */
-    --c-p-300: 173 45% 55%;
-    --c-p-400: 174 60% 38%;
-    --c-p-500: 175 77% 26%;
-    --c-p-600: 176 79% 20%;
-    --c-p-900: 175 80% 12%;
-    /* Secondary scale (sage — #A7D7C5 family) */
-    --c-s-300: 159 40% 85%;
-    --c-s-400: 159 38% 80%;
-    --c-s-500: 159 38% 75%;
-    --c-s-600: 159 32% 60%;
-    --c-s-900: 159 38% 30%;
-    /* Accent scale (manuscript gold — #D4A574 family) */
-    --c-a-300: 36 53% 80%;
-    --c-a-400: 33 50% 72%;
-    --c-a-500: 31 50% 64%;
-    --c-a-600: 28 50% 50%;
-    --c-y-300: 36 53% 80%;
-    --c-y-400: 33 50% 72%;
-    /* Alt gradient stops — success green / terracotta */
-    --c-g-600: 142 76% 36%;
-    --c-o-600: 15 50% 58%;
-    /* RGB values for rgba() in shadows — emerald primary, gold accent */
-    --c-p-rgb: 15 118 110;
-    --c-p-light-rgb: 167 215 197;
-    --c-a-rgb: 212 165 116;
-    /* Background haze — soft sage + gold whisper */
-    --c-p-bg-glow: 159 38% 85%;
-    --c-a-bg-glow: 36 53% 88%;
+    /* Primary scale = teal accent (drives text-emerald-* icon accents) */
+    --c-p-300: 187 45% 58%;
+    --c-p-400: 187 55% 47%;
+    --c-p-500: 187 62% 40%;
+    --c-p-600: 188 66% 31%;
+    --c-p-900: 190 60% 16%;
+    /* Secondary scale = cool grays */
+    --c-s-300: 210 16% 90%;
+    --c-s-400: 210 13% 82%;
+    --c-s-500: 210 11% 72%;
+    --c-s-600: 210 9% 54%;
+    --c-s-900: 214 16% 26%;
+    /* Accent scale = muted amber (status: warning/unpaid) */
+    --c-a-300: 40 62% 74%;
+    --c-a-400: 38 66% 58%;
+    --c-a-500: 36 70% 48%;
+    --c-a-600: 34 72% 40%;
+    --c-y-300: 44 70% 74%;
+    --c-y-400: 42 72% 60%;
+    --c-g-600: 150 55% 40%;
+    --c-o-600: 14 72% 52%;
+    --c-p-rgb: 37 137 155;
+    --c-p-light-rgb: 150 200 210;
+    --c-a-rgb: 196 150 70;
+    --c-p-bg-glow: 210 16% 92%;
+    --c-a-bg-glow: 40 40% 90%;
 
-    /* Soft shadow tokens — tinted with primary emerald */
-    --shadow-soft: 0 2px 8px rgba(15, 118, 110, 0.06);
-    --shadow-soft-md: 0 4px 12px rgba(15, 118, 110, 0.08);
-    --shadow-soft-lg: 0 8px 20px rgba(15, 118, 110, 0.10);
+    --shadow-soft: 0 1px 2px rgba(20, 24, 33, 0.06), 0 1px 3px rgba(20, 24, 33, 0.05);
+    --shadow-soft-md: 0 2px 6px rgba(20, 24, 33, 0.07);
+    --shadow-soft-lg: 0 8px 24px rgba(20, 24, 33, 0.10);
 
-    /* Component radii */
-    --radius-button: 0.75rem;  /* 12px */
-    --radius-card: 1rem;       /* 16px */
-    --radius-input: 0.625rem;  /* 10px */
+    --radius-button: 0.5rem;   /* 8px — tighter, minimal */
+    --radius-card: 0.75rem;    /* 12px */
+    --radius-input: 0.5rem;    /* 8px */
+  }
+
+  /* ── ADMIN — Graphite Minimal (dark) ── */
+  [data-portal="admin"].dark {
+    --background: 220 18% 8%;
+    --foreground: 210 16% 92%;
+    --card: 220 16% 11%;
+    --card-foreground: 210 16% 92%;
+    --surface-alt: 220 14% 14%;
+    --popover: 220 16% 11%;
+    --popover-foreground: 210 16% 92%;
+    --secondary: 220 12% 18%;
+    --secondary-foreground: 210 16% 88%;
+    --muted: 220 12% 16%;
+    --muted-foreground: 220 8% 60%;
+    --destructive: 0 66% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 12% 20%;
+    --border-strong: 220 12% 30%;
+    --input: 220 12% 22%;
+
+    /* In dark, primary flips to near-white with dark text (minimal convention) */
+    --primary: 210 16% 92%;
+    --primary-hover: 210 16% 84%;
+    --primary-foreground: 220 18% 12%;
+    --ring: 187 66% 50%;
+
+    --accent: 187 66% 50%;
+    --accent-soft: 190 40% 22%;
+    --accent-foreground: 220 18% 10%;
+    --gold: 187 66% 50%;
+    --gold-foreground: 220 18% 10%;
+
+    --success: 150 52% 48%;
+    --warning: 38 82% 56%;
+    --error: 0 66% 56%;
+
+    --c-p-300: 187 50% 70%;
+    --c-p-400: 187 58% 58%;
+    --c-p-500: 187 66% 50%;
+    --c-p-600: 188 66% 42%;
+    --c-p-900: 190 55% 24%;
+    --c-s-300: 214 12% 60%;
+    --c-s-400: 214 12% 46%;
+    --c-s-500: 214 12% 36%;
+    --c-s-600: 214 12% 28%;
+    --c-s-900: 214 16% 82%;
+    --c-a-300: 40 70% 70%;
+    --c-a-400: 38 74% 60%;
+    --c-a-500: 36 78% 52%;
+    --c-a-600: 34 78% 44%;
+    --c-y-300: 44 78% 70%;
+    --c-y-400: 42 80% 60%;
+    --c-g-600: 150 52% 48%;
+    --c-o-600: 14 76% 58%;
+    --c-p-rgb: 60 175 195;
+    --c-p-light-rgb: 120 200 215;
+    --c-a-rgb: 220 170 80;
+    --c-p-bg-glow: 200 20% 16%;
+    --c-a-bg-glow: 40 30% 16%;
+
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.45);
+    --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+  }
+
+  /* ── STUDENT — Sunny Pastels (light) ── */
+  [data-portal="student"] {
+    --background: 38 80% 97%;
+    --foreground: 230 28% 24%;
+    --card: 0 0% 100%;
+    --card-foreground: 230 28% 24%;
+    --surface-alt: 40 60% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 230 28% 24%;
+    --secondary: 202 78% 92%;
+    --secondary-foreground: 220 42% 30%;
+    --muted: 40 45% 94%;
+    --muted-foreground: 230 14% 50%;
+    --destructive: 0 78% 63%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 36 45% 88%;
+    --border-strong: 34 40% 80%;
+    --input: 36 45% 88%;
+    --radius: 1.25rem;
+
+    /* Primary = friendly warm coral */
+    --primary: 16 92% 65%;
+    --primary-hover: 13 86% 59%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 16 92% 65%;
+
+    /* Accent = sky blue */
+    --accent: 199 90% 68%;
+    --accent-soft: 200 85% 90%;
+    --accent-foreground: 220 42% 24%;
+    --gold: 42 100% 62%;
+    --gold-foreground: 28 60% 24%;
+
+    --success: 150 60% 46%;
+    --warning: 38 95% 58%;
+    --error: 0 78% 63%;
+
+    /* Primary scale = cheerful mint (drives progress/emerald accents) */
+    --c-p-300: 160 62% 76%;
+    --c-p-400: 160 56% 58%;
+    --c-p-500: 162 58% 48%;
+    --c-p-600: 164 60% 40%;
+    --c-p-900: 166 55% 24%;
+    /* Secondary scale = sky */
+    --c-s-300: 205 88% 89%;
+    --c-s-400: 205 82% 80%;
+    --c-s-500: 205 76% 72%;
+    --c-s-600: 210 56% 60%;
+    --c-s-900: 220 42% 32%;
+    /* Accent scale = sunny peach (drives amber highlights) */
+    --c-a-300: 32 100% 83%;
+    --c-a-400: 26 100% 75%;
+    --c-a-500: 20 96% 68%;
+    --c-a-600: 16 86% 60%;
+    --c-y-300: 46 100% 80%;
+    --c-y-400: 42 100% 70%;
+    --c-g-600: 150 60% 44%;
+    --c-o-600: 8 86% 64%;
+    --c-p-rgb: 52 193 157;
+    --c-p-light-rgb: 165 235 210;
+    --c-a-rgb: 250 150 110;
+    --c-p-bg-glow: 160 60% 88%;
+    --c-a-bg-glow: 30 100% 90%;
+
+    --shadow-soft: 0 4px 14px rgba(250, 150, 110, 0.10);
+    --shadow-soft-md: 0 6px 18px rgba(250, 150, 110, 0.14);
+    --shadow-soft-lg: 0 12px 28px rgba(250, 150, 110, 0.18);
+
+    --radius-button: 1rem;     /* 16px — round & friendly */
+    --radius-card: 1.5rem;     /* 24px */
+    --radius-input: 0.875rem;  /* 14px */
   }
 }
 
@@ -172,6 +304,19 @@
   }
   input[type="number"] {
     -moz-appearance: textfield;
+  }
+
+  /* Neutralize the browser autofill background so filled inputs match the theme
+   * (Chrome otherwise paints a pale blue/lavender fill that clashes). */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-text-fill-color: hsl(var(--foreground));
+    -webkit-box-shadow: 0 0 0 1000px hsl(var(--card)) inset;
+    box-shadow: 0 0 0 1000px hsl(var(--card)) inset;
+    caret-color: hsl(var(--foreground));
+    transition: background-color 9999s ease-in-out 0s;
   }
 
   /* Refined scrollbar — default (sidebar nav, modals, etc.) */

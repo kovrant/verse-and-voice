@@ -55,9 +55,9 @@ const DEFAULT_CATEGORIES: Record<string, string[]> = {
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  quran:        { bg: "bg-emerald-500/15", text: "text-emerald-400" },
-  memorization: { bg: "bg-amber-500/15",   text: "text-amber-400" },
-  general:      { bg: "bg-blue-500/15",    text: "text-blue-400" },
+  quran:        { bg: "bg-secondary", text: "text-muted-foreground" },
+  memorization: { bg: "bg-secondary", text: "text-muted-foreground" },
+  general:      { bg: "bg-secondary", text: "text-muted-foreground" },
 }
 
 export default function MediaPage() {
@@ -327,7 +327,7 @@ export default function MediaPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-gradient-gold">Media Library</span>
+            <span className="text-foreground">Media Library</span>
           </h1>
           <p className="text-muted-foreground mt-1">Central hub for all uploads — Quran, memorization, and resources</p>
         </div>
@@ -357,10 +357,9 @@ export default function MediaPage() {
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-[0.03]" />
           <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-              <BookOpen className="h-5 w-5 text-emerald-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+              <BookOpen className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{totalQuran}</p>
@@ -369,10 +368,9 @@ export default function MediaPage() {
           </CardContent>
         </Card>
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-orange-600 opacity-[0.03]" />
           <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-              <Sparkles className="h-5 w-5 text-amber-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+              <Sparkles className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{totalMem}</p>
@@ -381,10 +379,9 @@ export default function MediaPage() {
           </CardContent>
         </Card>
         <Card className="group relative overflow-hidden hover:border-border">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-[0.03]" />
           <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-500/10">
-              <HardDrive className="h-5 w-5 text-blue-400" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
+              <HardDrive className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
               <p className="text-2xl font-bold">{totalFiles}</p>
@@ -402,11 +399,11 @@ export default function MediaPage() {
               <span className="text-muted-foreground">
                 Uploading <span className="text-foreground font-medium">{bulkProgress.current}</span>
               </span>
-              <span className="text-emerald-400 font-medium">{bulkProgress.done}/{bulkProgress.total}</span>
+              <span className="text-foreground font-medium">{bulkProgress.done}/{bulkProgress.total}</span>
             </div>
             <div className="h-2 rounded-full bg-secondary overflow-hidden">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
+                className="h-full rounded-full bg-primary transition-all duration-300"
                 style={{ width: `${(bulkProgress.done / bulkProgress.total) * 100}%` }}
               />
             </div>
@@ -433,7 +430,7 @@ export default function MediaPage() {
               onClick={() => setFilterType(t)}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
                 filterType === t
-                  ? "bg-emerald-500/15 text-emerald-400"
+                  ? "bg-emerald-500/10 text-emerald-500"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
@@ -539,7 +536,7 @@ export default function MediaPage() {
                       {getCategories(type).map(c => (
                         <SelectItem key={c} value={c}>{c}</SelectItem>
                       ))}
-                      <SelectItem value="__add_new__" className="text-emerald-400">
+                      <SelectItem value="__add_new__" className="text-primary">
                         + Add New Category
                       </SelectItem>
                     </SelectContent>
@@ -576,8 +573,8 @@ export default function MediaPage() {
                   {file.type.startsWith("image/") && filePreview ? (
                     <img src={filePreview} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-red-500/10">
-                      <FileText className="h-6 w-6 text-red-400" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary">
+                      <FileText className="h-6 w-6 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
@@ -592,7 +589,7 @@ export default function MediaPage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="w-full rounded-xl border-2 border-dashed border-border/50 bg-secondary/20 py-8 text-center hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all"
+                  className="w-full rounded-xl border-2 border-dashed border-border/50 bg-secondary/20 py-8 text-center hover:border-border hover:bg-secondary transition-all"
                 >
                   <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
                   <p className="text-sm text-muted-foreground">Click to select a file</p>
@@ -632,7 +629,7 @@ export default function MediaPage() {
                   <p className="text-xs text-muted-foreground">{previewItem.type} &middot; {previewItem.category}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => deleteItem(previewItem)} className="text-red-400 hover:text-red-300">
+                  <Button variant="ghost" size="sm" onClick={() => deleteItem(previewItem)} className="text-destructive hover:text-destructive/80">
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPreviewItem(null)}>
@@ -715,8 +712,6 @@ export default function MediaPage() {
                           width={320}
                           fallback={
                             <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
-                              <div className="absolute inset-0 islamic-pattern opacity-30" />
-                              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/60" />
                               {item.meta?.para_number ? (
                                 <div className="relative flex flex-col items-center gap-1">
                                   <span className="text-3xl font-bold text-primary/30">{item.meta.para_number}</span>

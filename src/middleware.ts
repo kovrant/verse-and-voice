@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
-const PUBLIC_PATHS = ["/login", "/auth"]
+const PUBLIC_PATHS = ["/login", "/admin", "/auth"]
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -34,6 +34,12 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
 
+  // Role lives in the JWT (app_metadata) so we branch without a DB round-trip.
+  // A logged-in user with no role is the original teacher account.
+  const role = (user?.app_metadata as { role?: string } | null)?.role ?? "teacher"
+  const isStudent = role === "student"
+  const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
+
   // Carry any cookies Supabase refreshed (token rotation) onto the redirect,
   // otherwise the rotated session is lost and the user gets logged out.
   const redirectTo = (url: URL) => {
@@ -42,18 +48,33 @@ export async function middleware(request: NextRequest) {
     return redirect
   }
 
+  const redirectPath = (path: string) => {
+    const url = request.nextUrl.clone()
+    url.pathname = path
+    url.search = ""
+    return redirectTo(url)
+  }
+
+  // Unauthenticated: send to the right login. Student area (and the default
+  // student face) → /login; teacher pages → /admin.
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname = isStudentArea ? "/login" : "/admin"
     url.searchParams.set("redirectTo", pathname)
     return redirectTo(url)
   }
 
-  if (user && pathname === "/login") {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
-    url.search = ""
-    return redirectTo(url)
+  // Already signed in but sitting on a login page → go to the right home.
+  if (user && (pathname === "/login" || pathname === "/admin")) {
+    return redirectPath(isStudent ? "/student" : "/")
+  }
+
+  // Students are confined to their portal; teachers may not roam into it.
+  if (user && isStudent && !isStudentArea && !isPublic) {
+    return redirectPath("/student")
+  }
+  if (user && !isStudent && isStudentArea) {
+    return redirectPath("/")
   }
 
   return response
