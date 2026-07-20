@@ -55,11 +55,11 @@ export async function middleware(request: NextRequest) {
     return redirectTo(url)
   }
 
-  // Unauthenticated: send to the right login. Student area (and the default
-  // student face) → /login; teacher pages → /admin.
+  // Unauthenticated: the student login is the default entry for everything.
+  // The teacher login lives at /admin and is only reached by going there directly.
   if (!user && !isPublic) {
     const url = request.nextUrl.clone()
-    url.pathname = isStudentArea ? "/login" : "/admin"
+    url.pathname = "/login"
     url.searchParams.set("redirectTo", pathname)
     return redirectTo(url)
   }

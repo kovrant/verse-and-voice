@@ -12,6 +12,7 @@ import {
   History,
   Menu,
   X,
+  BookAudio,
 } from "lucide-react"
 
 // Each item gets its own cheerful color for a friendly, playful nav.
@@ -73,12 +74,12 @@ export function StudentSidebar() {
           style={{ background: "linear-gradient(150deg, hsl(var(--c-a-400)), hsl(var(--primary)) 60%, hsl(var(--c-s-500)))" }}
         >
           <div className="relative flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm text-2xl flex-shrink-0">
-              📖
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm flex-shrink-0">
+              <BookAudio className="h-6 w-6 text-white" strokeWidth={2} />
             </div>
             <div className="min-w-0">
               <h1 className="font-brand text-lg font-bold text-white whitespace-nowrap drop-shadow-sm">
-                Quran Academy
+                VerseandVoice
               </h1>
               <p className="text-[11px] text-white/85 tracking-wide whitespace-nowrap">
                 Student Portal

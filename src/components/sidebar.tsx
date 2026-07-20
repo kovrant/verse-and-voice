@@ -16,6 +16,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
+  BookAudio,
 } from "lucide-react"
 import { useState, useEffect, memo, createContext, useContext } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -132,11 +133,11 @@ export const Sidebar = memo(function Sidebar() {
                 collapsed ? "lg:h-9 lg:w-9 h-10 w-10" : "h-10 w-10"
               )}
             >
-              <span className="text-lg font-semibold">&#1602;</span>
+              <BookAudio className="h-5 w-5" />
             </div>
             <div className={cn("min-w-0 transition-all duration-300", collapsed ? "lg:hidden" : "block")}>
               <h1 className="text-[15px] font-semibold tracking-tight text-foreground whitespace-nowrap">
-                Quran Academy
+                VerseandVoice
               </h1>
               <p className="text-[11px] text-muted-foreground tracking-wide whitespace-nowrap">
                 Admin
@@ -232,7 +233,7 @@ export const Sidebar = memo(function Sidebar() {
 
         {/* Sign out */}
         <form
-          action="/auth/signout"
+          action="/auth/signout?next=/admin"
           method="post"
           className={cn("border-t border-border", collapsed && "lg:flex lg:justify-center")}
         >

@@ -2,12 +2,11 @@
 
 import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { resolveLoginEmail } from "@/lib/student-auth"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, Lock, Eye, EyeOff, Sparkles, Star } from "lucide-react"
+import { Loader2, User, Lock, Eye, EyeOff, Sparkles, Star, BookAudio } from "lucide-react"
 
 export default function StudentLoginPage() {
   return (
@@ -79,11 +78,11 @@ function StudentLoginForm() {
               <Star className="absolute right-1/3 bottom-6 h-3 w-3 text-white sparkle-twinkle" fill="currentColor" style={{ animationDelay: "0.8s" }} />
             </div>
             <div className="relative flex flex-col items-center gap-3">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm text-4xl animate-float">
-                📖
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm animate-float">
+                <BookAudio className="h-10 w-10 text-white" strokeWidth={1.75} />
               </div>
               <div>
-                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm">Quran Academy</h1>
+                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm">VerseandVoice</h1>
                 <p className="text-sm text-white/90 mt-0.5">Welcome back! Ready to learn? ✨</p>
               </div>
             </div>
@@ -153,13 +152,6 @@ function StudentLoginForm() {
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : "Let's go! 🚀"}
               </Button>
             </form>
-
-            <p className="mt-6 text-center text-xs text-muted-foreground">
-              Are you a teacher?{" "}
-              <Link href="/admin" className="font-semibold text-primary hover:underline">
-                Sign in here
-              </Link>
-            </p>
           </div>
         </div>
       </div>

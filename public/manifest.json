@@ -1,11 +1,11 @@
 {
-  "name": "Quran Academy",
-  "short_name": "Quran Academy",
-  "description": "Student management dashboard for Quran Academy",
+  "name": "VerseandVoice",
+  "short_name": "VerseandVoice",
+  "description": "A friendly Quran learning space",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FAF6EE",
-  "theme_color": "#FAF6EE",
+  "background_color": "#FEF7EC",
+  "theme_color": "#FEF7EC",
   "icons": [
     {
       "src": "/icon",

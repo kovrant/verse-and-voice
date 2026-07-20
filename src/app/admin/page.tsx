@@ -6,7 +6,7 @@ import Link from "next/link"
 import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Loader2, Eye, EyeOff } from "lucide-react"
+import { Loader2, Eye, EyeOff, BookAudio } from "lucide-react"
 
 export default function AdminLoginPage() {
   return (
@@ -54,9 +54,9 @@ function AdminLoginForm() {
         {/* Wordmark */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-lg font-semibold">ق</span>
+            <BookAudio className="h-5 w-5" />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">Quran Academy</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">VerseandVoice</h1>
           <p className="text-xs text-muted-foreground mt-0.5">Admin sign in</p>
         </div>
 

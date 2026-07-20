@@ -179,7 +179,7 @@ export default function Dashboard() {
           Dashboard
         </h1>
         <p className="text-muted-foreground mt-1">
-          Welcome to Quran Academy &middot; {currentMonth}
+          Welcome to VerseandVoice &middot; {currentMonth}
         </p>
       </div>
 
@@ -191,7 +191,7 @@ export default function Dashboard() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-foreground">
                 <Sparkles className="h-7 w-7" />
               </div>
-              <h2 className="text-xl font-bold">Welcome to Quran Academy</h2>
+              <h2 className="text-xl font-bold">Welcome to VerseandVoice</h2>
               <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">

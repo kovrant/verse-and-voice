@@ -35,18 +35,18 @@ const amiri = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "Quran Academy",
+  title: "VerseandVoice",
   description: "A friendly Quran learning space for kids",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Quran Academy",
+    title: "VerseandVoice",
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#FAF6EE",
+  themeColor: "#FEF7EC",
 }
 
 export default function RootLayout({

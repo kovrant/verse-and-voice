@@ -11,16 +11,17 @@ export default function Icon() {
           width: 32,
           height: 32,
           borderRadius: 8,
-          background: "linear-gradient(135deg, #0F766E, #0B5E58)",
+          background: "linear-gradient(140deg, #F6A94C, #F26B4E 55%, #7CB8E8)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontFamily: "serif",
-          fontSize: 18,
           color: "white",
+          fontSize: 20,
+          fontWeight: 800,
+          fontFamily: "sans-serif",
         }}
       >
-        Q
+        V
       </div>
     ),
     { ...size }
