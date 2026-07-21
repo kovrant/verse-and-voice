@@ -52,6 +52,11 @@ function genId() {
   }
 }
 
+// Private channels enforce RLS on realtime.messages (see
+// supabase/migration_realtime_class_auth.sql). Env-gated so it only turns on
+// AFTER that SQL is applied — otherwise the channel would be denied.
+const PRIVATE_CHANNEL = process.env.NEXT_PUBLIC_REALTIME_PRIVATE === "true"
+
 /**
  * Live-class channel over Supabase Realtime — Presence ("who's here / where")
  * + Broadcast (page/para events). No database involvement. There must be at
@@ -92,7 +97,7 @@ export function useClassChannel({
     if (!enabled || !studentId) return
 
     const channel = supabase.channel(`class:${studentId}`, {
-      config: { presence: { key: clientId }, broadcast: { self: false } },
+      config: { private: PRIVATE_CHANNEL, presence: { key: clientId }, broadcast: { self: false } },
     })
     channelRef.current = channel
     subscribedRef.current = false
