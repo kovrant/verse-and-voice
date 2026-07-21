@@ -150,14 +150,33 @@ export function useClassChannel({
         setPeerNav(null)
         onEndRef.current?.()
       })
-      .subscribe((status) => {
+
+    // Guard the (possibly deferred) subscribe against this effect being torn
+    // down first — otherwise React 18 StrictMode's mount→unmount→mount in dev
+    // runs cleanup before the async setAuth resolves, and we'd subscribe a
+    // channel that was already removed (a zombie that flickers presence).
+    let cancelled = false
+    const doSubscribe = () => {
+      if (cancelled) return
+      channel.subscribe((status) => {
         if (status === "SUBSCRIBED") {
           subscribedRef.current = true
           if (presentRef.current) channel.track({ role })
         }
       })
+    }
+
+    // Private channels run RLS on realtime.messages, which needs the user's JWT
+    // on the socket. setAuth() (no arg → current session token) attaches it
+    // before subscribe; without it the server denies the subscription silently.
+    if (PRIVATE_CHANNEL) {
+      supabase.realtime.setAuth().then(doSubscribe).catch(doSubscribe)
+    } else {
+      doSubscribe()
+    }
 
     return () => {
+      cancelled = true
       subscribedRef.current = false
       channel.untrack().catch(() => {})
       supabase.removeChannel(channel)
@@ -177,15 +196,19 @@ export function useClassChannel({
   const sendNav = useCallback(
     (nav: NavState) => {
       const ch = channelRef.current
-      if (!ch) return
+      // Guard: sending / tracking before the channel is joined throws
+      // "tried to push … before joining". Silently no-op until subscribed.
+      if (!ch || !subscribedRef.current) return
       ch.send({ type: "broadcast", event: "nav", payload: { ...nav, by: clientId } })
-      ch.track({ role, paraNumber: nav.paraNumber, page: nav.page })
+      ch.track({ role, paraNumber: nav.paraNumber, page: nav.page }).catch(() => {})
     },
     [clientId, role]
   )
 
   const endClass = useCallback(() => {
-    channelRef.current?.send({ type: "broadcast", event: "end", payload: { by: clientId } })
+    const ch = channelRef.current
+    if (!ch || !subscribedRef.current) return
+    ch.send({ type: "broadcast", event: "end", payload: { by: clientId } })
   }, [clientId])
 
   return { live, peerNav, sendNav, endClass }

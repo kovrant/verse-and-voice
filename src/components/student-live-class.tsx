@@ -33,9 +33,11 @@ export function StudentLiveClass() {
   const [mediaMap, setMediaMap] = useState<Record<number, string>>({})
   const [mediaLoaded, setMediaLoaded] = useState(false)
 
-  // Suppressed until we've synced + on each remote apply, so we never broadcast
-  // a guessed/echoed position that would drag the teacher.
-  const applyingRemote = useRef(true)
+  // Echo guard by VALUE, not a flag: remember the last position the teacher
+  // pushed us to. We only broadcast when our current position differs from it,
+  // so duplicate/no-op teacher broadcasts can never wedge the guard. Starts at
+  // a sentinel so we never broadcast our pre-sync guessed position (para 1).
+  const lastRemote = useRef<NavState | null>({ paraNumber: -1, page: -1 })
   const paraRef = useRef(para)
   const pageRef = useRef(page)
   const syncedRef = useRef(synced)
@@ -47,7 +49,7 @@ export function StudentLiveClass() {
   useEffect(
     () =>
       subscribeNav((nav) => {
-        applyingRemote.current = true
+        lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
         if (nav.paraNumber !== paraRef.current) setPara(nav.paraNumber)
         if (nav.page !== pageRef.current) setPage(nav.page)
         if (!syncedRef.current) setSynced(true)
@@ -61,6 +63,7 @@ export function StudentLiveClass() {
     if (synced) return
     const t = setTimeout(() => {
       if (peerNav) {
+        lastRemote.current = { paraNumber: peerNav.paraNumber, page: peerNav.page }
         setPara(peerNav.paraNumber)
         setPage(peerNav.page)
       }
@@ -91,13 +94,13 @@ export function StudentLiveClass() {
     }
   }, [])
 
-  // Broadcast our page turns (only after synced; skip echoes) so the teacher follows.
+  // Broadcast our page turns (only after synced) so the teacher follows. Skip
+  // only when our position exactly matches what the teacher last pushed us to —
+  // that's an echo, not a user turn.
   useEffect(() => {
     if (!synced) return
-    if (applyingRemote.current) {
-      applyingRemote.current = false
-      return
-    }
+    const lr = lastRemote.current
+    if (lr && lr.paraNumber === para && lr.page === page) return
     sendNav({ paraNumber: para, page })
   }, [para, page, synced, sendNav])
 

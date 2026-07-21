@@ -146,7 +146,9 @@ export default function LiveSession({
   }
 
   // ── Realtime: the teacher hosts the live class channel ──
-  const applyingRemote = useRef(false)
+  // Echo guard by VALUE: remember the last position the student pushed us to and
+  // only broadcast when ours differs — immune to duplicate/no-op broadcasts.
+  const lastRemote = useRef<{ paraNumber: number; page: number } | null>(null)
   const { live: studentJoined, sendNav, endClass } = useClassChannel({
     studentId: student.id,
     role: "teacher",
@@ -156,7 +158,7 @@ export default function LiveSession({
       // student's pre-sync default of para 1), which must not move the teacher.
       if (nav.paraNumber !== currentParaNumber) return
       if (nav.page === pdfPage) return
-      applyingRemote.current = true
+      lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
       setPdfPage(nav.page)
     },
     // A student just joined → push our authoritative position so they land here.
@@ -165,7 +167,8 @@ export default function LiveSession({
 
   // Broadcast the teacher's position on every local change (skip our own echoes).
   useEffect(() => {
-    if (applyingRemote.current) { applyingRemote.current = false; return }
+    const lr = lastRemote.current
+    if (lr && lr.paraNumber === currentParaNumber && lr.page === pdfPage) return
     sendNav({ paraNumber: currentParaNumber, page: pdfPage })
   }, [currentParaNumber, pdfPage, sendNav])
 
