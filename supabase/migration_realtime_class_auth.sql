@@ -12,9 +12,12 @@
 --
 -- Relies on the existing SECURITY DEFINER helpers from
 -- migration_student_portal.sql: public.is_teacher() and public.my_student_id().
+--
+-- NOTE: do NOT run `alter table realtime.messages enable row level security` —
+-- that table is owned by a Supabase internal role (you'll get "must be owner of
+-- table messages") and RLS is already enabled on it by default. Just create the
+-- policies below.
 -- ─────────────────────────────────────────────────────────────────────────────
-
-alter table realtime.messages enable row level security;
 
 drop policy if exists "class channel members can read" on realtime.messages;
 create policy "class channel members can read"
