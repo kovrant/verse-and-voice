@@ -161,6 +161,8 @@ export default function ClassPage() {
       duration_seconds: data.durationSeconds,
       starting_para: data.startingPara,
       ending_para: data.endingPara,
+      ending_page: data.endingPage,
+      last_page: data.endingPage,
       paras_covered: data.parasCovered,
       memorization_revised: data.memorizationRevised,
       notes: data.notes || null,

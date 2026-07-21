@@ -18,6 +18,7 @@ import {
 } from "lucide-react"
 import { format, differenceInCalendarDays } from "date-fns"
 import { formatLocalDate } from "@/lib/utils"
+import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { toast } from "sonner"
 import dynamic from "next/dynamic"
 
@@ -67,6 +68,7 @@ export interface SessionEndData {
   durationSeconds: number
   startingPara: number
   endingPara: number
+  endingPage: number
   parasCovered: number[]
   memorizationRevised: string[]
   notes: string
@@ -166,6 +168,28 @@ export default function LiveSession({
     if (applyingRemote.current) { applyingRemote.current = false; return }
     sendNav({ paraNumber: currentParaNumber, page: pdfPage })
   }, [currentParaNumber, pdfPage, sendNav])
+
+  // ── Persist the reading position (student_para_progress) ──
+  const currentParaRef = useRef(currentParaNumber)
+  currentParaRef.current = currentParaNumber
+
+  // Debounced save of the current page for this para.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      saveLastPage(student.id, currentParaNumber, pdfPage)
+    }, 1200)
+    return () => clearTimeout(t)
+  }, [student.id, currentParaNumber, pdfPage])
+
+  // Resume the starting para at its last-read page (once, on open).
+  const resumedRef = useRef(false)
+  useEffect(() => {
+    if (resumedRef.current) return
+    resumedRef.current = true
+    loadLastPage(student.id, initialParaNumber).then((p) => {
+      if (p > 1 && currentParaRef.current === initialParaNumber) setPdfPage(p)
+    })
+  }, [student.id, initialParaNumber])
 
 
   // Memorization
@@ -267,6 +291,7 @@ export default function LiveSession({
       durationSeconds: Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000),
       startingPara: initialParaNumber,
       endingPara: currentParaNumber,
+      endingPage: pdfPage,
       parasCovered: Array.from(parasViewed).sort((a, b) => a - b),
       memorizationRevised: revisionsThisSession,
       notes,
