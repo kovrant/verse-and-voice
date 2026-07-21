@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react"
 import { fetchAllRows } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
+import { useLiveClass } from "@/components/live-class-provider"
+import { StudentLiveClass } from "@/components/student-live-class"
 import { Card, CardContent } from "@/components/ui/card"
 import { Clock, History } from "lucide-react"
 import { format, formatDistanceToNow } from "date-fns"
@@ -21,6 +23,7 @@ interface ClassSession {
 
 export default function StudentClassesPage() {
   const { student, loading } = useStudent()
+  const { live, joined, join } = useLiveClass()
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [loadingSessions, setLoadingSessions] = useState(true)
 
@@ -33,6 +36,11 @@ export default function StudentClassesPage() {
       setLoadingSessions(false)
     })
   }, [student])
+
+  // Full-screen live class overlay.
+  if (joined) {
+    return <StudentLiveClass />
+  }
 
   if (loading || loadingSessions) {
     return (
@@ -54,6 +62,24 @@ export default function StudentClassesPage() {
           <p className="text-sm text-muted-foreground">A record of your past class sessions.</p>
         </div>
       </div>
+
+      {/* Live class join banner */}
+      {live && (
+        <button
+          type="button"
+          onClick={join}
+          className="flex w-full items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-left transition-colors hover:bg-emerald-500/15"
+        >
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-emerald-500/20">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+          </span>
+          <span className="flex-1 min-w-0">
+            <span className="block font-bold text-foreground">Your class is live now</span>
+            <span className="block text-sm text-muted-foreground">Tap to join and follow along with your teacher.</span>
+          </span>
+          <span className="flex-shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Join →</span>
+        </button>
+      )}
 
       {sessions.length === 0 ? (
         <Card>

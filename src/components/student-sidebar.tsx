@@ -6,6 +6,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Brand } from "@/components/brand"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useLiveClass } from "@/components/live-class-provider"
 import {
   LayoutDashboard,
   BookOpen,
@@ -28,6 +29,7 @@ const navItems = [
 export function StudentSidebar() {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { live } = useLiveClass()
 
   if (pathname === "/login") return null
 
@@ -112,6 +114,12 @@ export function StudentSidebar() {
                   strokeWidth={2}
                 />
                 <span className="whitespace-nowrap">{item.label}</span>
+                {live && item.href === "/student/classes" && (
+                  <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    LIVE
+                  </span>
+                )}
               </Link>
             )
           })}

@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { Sidebar } from "@/components/sidebar"
 import { StudentSidebar } from "@/components/student-sidebar"
 import { StudentTopBar } from "@/components/student-topbar"
+import { LiveClassProvider } from "@/components/live-class-provider"
 
 /**
  * Chooses the navigation shell + ambient background by route. The student
@@ -15,7 +16,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isStudentArea =
     pathname === "/student" || pathname.startsWith("/student/")
 
-  return (
+  const shell = (
     <div className="flex h-screen overflow-hidden bg-background">
       {isStudentArea ? <StudentSidebar /> : <Sidebar />}
       <main
@@ -59,4 +60,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
     </div>
   )
+
+  return isStudentArea ? <LiveClassProvider>{shell}</LiveClassProvider> : shell
 }

@@ -1,0 +1,161 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import { supabase } from "@/lib/supabase"
+import { useLiveClass } from "@/components/live-class-provider"
+import { BookOpen, LogOut, Loader2 } from "lucide-react"
+
+const SyncedPdfViewer = dynamic(
+  () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  }
+)
+
+/**
+ * Full-screen live class for the student. Waits for the teacher's authoritative
+ * position (pushed on join) before showing anything, so it always lands on the
+ * teacher's exact para/page — never a stale presence guess. Broadcasts the
+ * student's own page turns (after syncing) so the teacher follows too.
+ */
+export function StudentLiveClass() {
+  const { peerNav, sendNav, subscribeNav, leave } = useLiveClass()
+
+  const [para, setPara] = useState(1)
+  const [page, setPage] = useState(1)
+  const [synced, setSynced] = useState(false)
+  const [mediaMap, setMediaMap] = useState<Record<number, string>>({})
+  const [mediaLoaded, setMediaLoaded] = useState(false)
+
+  // Suppressed until we've synced + on each remote apply, so we never broadcast
+  // a guessed/echoed position that would drag the teacher.
+  const applyingRemote = useRef(true)
+  const paraRef = useRef(para)
+  const pageRef = useRef(page)
+  const syncedRef = useRef(synced)
+  paraRef.current = para
+  pageRef.current = page
+  syncedRef.current = synced
+
+  // Follow the teacher. The first nav we receive is authoritative — it lands us.
+  useEffect(
+    () =>
+      subscribeNav((nav) => {
+        applyingRemote.current = true
+        if (nav.paraNumber !== paraRef.current) setPara(nav.paraNumber)
+        if (nav.page !== pageRef.current) setPage(nav.page)
+        if (!syncedRef.current) setSynced(true)
+      }),
+    [subscribeNav]
+  )
+
+  // Fallback: if the teacher hasn't pushed a position within 2.5s (e.g. flaky
+  // network), proceed with the presence hint so we don't hang on "Connecting…".
+  useEffect(() => {
+    if (synced) return
+    const t = setTimeout(() => {
+      if (peerNav) {
+        setPara(peerNav.paraNumber)
+        setPage(peerNav.page)
+      }
+      setSynced(true)
+    }, 2500)
+    return () => clearTimeout(t)
+  }, [synced, peerNav])
+
+  // Load the Quran para PDFs (para_number → file_url).
+  useEffect(() => {
+    let active = true
+    supabase
+      .from("media_library")
+      .select("file_url, meta")
+      .eq("type", "quran")
+      .then(({ data }) => {
+        if (!active) return
+        const m: Record<number, string> = {}
+        for (const r of (data || []) as { file_url: string; meta?: { para_number?: number } }[]) {
+          const n = Number(r.meta?.para_number)
+          if (n) m[n] = r.file_url
+        }
+        setMediaMap(m)
+        setMediaLoaded(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [])
+
+  // Broadcast our page turns (only after synced; skip echoes) so the teacher follows.
+  useEffect(() => {
+    if (!synced) return
+    if (applyingRemote.current) {
+      applyingRemote.current = false
+      return
+    }
+    sendNav({ paraNumber: para, page })
+  }, [para, page, synced, sendNav])
+
+  const ready = synced && mediaLoaded
+  const fileUrl = mediaMap[para]
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            LIVE
+          </span>
+          <span className="text-sm font-semibold text-foreground">
+            {ready ? (
+              <>
+                Para <span className="text-primary">{para}</span>
+                <span className="text-muted-foreground text-xs"> / 30</span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">Connecting…</span>
+            )}
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={leave}
+          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+        >
+          <LogOut className="h-4 w-4" />
+          Leave
+        </button>
+      </div>
+
+      {/* Body */}
+      {!ready ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Connecting to your teacher…</p>
+        </div>
+      ) : fileUrl ? (
+        <SyncedPdfViewer
+          fileUrl={fileUrl}
+          page={page}
+          onPageChange={setPage}
+          followingLabel="Synced with teacher"
+        />
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
+            <BookOpen className="h-7 w-7 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-medium">Para {para} isn&apos;t available</p>
+          <p className="text-sm text-muted-foreground">This para&apos;s PDF hasn&apos;t been uploaded yet.</p>
+        </div>
+      )}
+    </div>
+  )
+}

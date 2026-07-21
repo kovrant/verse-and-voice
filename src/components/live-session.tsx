@@ -10,14 +10,29 @@ import {
 } from "@/components/ui/dialog"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { useClassChannel } from "@/lib/use-class-channel"
 import {
   ChevronLeft, ChevronRight, Clock, X, PanelLeftClose, PanelLeftOpen,
   BookMarked, Sparkles, Check, RotateCcw, Shuffle, ArrowUpRight,
-  Square, FileText, BookOpen,
+  Square, FileText, BookOpen, Loader2,
 } from "lucide-react"
 import { format, differenceInCalendarDays } from "date-fns"
 import { formatLocalDate } from "@/lib/utils"
 import { toast } from "sonner"
+import dynamic from "next/dynamic"
+
+// react-pdf renders client-side only.
+const SyncedPdfViewer = dynamic(
+  () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    ),
+  }
+)
 
 interface QuranPara {
   id: string
@@ -79,6 +94,7 @@ export default function LiveSession({
 }: LiveSessionProps) {
   const [currentParaNumber, setCurrentParaNumber] = useState(initialParaNumber)
   const [parasViewed, setParasViewed] = useState<Set<number>>(() => new Set([initialParaNumber]))
+  const [pdfPage, setPdfPage] = useState(1)
   const [startedAt] = useState(() => new Date())
   const [elapsed, setElapsed] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -114,17 +130,8 @@ export default function LiveSession({
     return () => window.removeEventListener("beforeunload", handler)
   }, [])
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    function handleKey(e: KeyboardEvent) {
-      if (showEndDialog) return
-      if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) return
-      if (e.key === "ArrowLeft") navigatePara("prev")
-      if (e.key === "ArrowRight") navigatePara("next")
-    }
-    window.addEventListener("keydown", handleKey)
-    return () => window.removeEventListener("keydown", handleKey)
-  }, [currentParaNumber, paras, showEndDialog])
+  // Arrow keys page through the PDF (handled inside <SyncedPdfViewer>).
+  // Para switching is an explicit button in the top bar.
 
   const currentPara = paras.find(p => p.meta?.para_number === currentParaNumber) || null
 
@@ -132,8 +139,34 @@ export default function LiveSession({
     const next = direction === "prev" ? currentParaNumber - 1 : currentParaNumber + 1
     if (next < 1 || next > 30) return
     setCurrentParaNumber(next)
+    setPdfPage(1)
     setParasViewed(prev => { const s = new Set(Array.from(prev)); s.add(next); return s })
   }
+
+  // ── Realtime: the teacher hosts the live class channel ──
+  const applyingRemote = useRef(false)
+  const { live: studentJoined, sendNav, endClass } = useClassChannel({
+    studentId: student.id,
+    role: "teacher",
+    onNav: (nav) => {
+      // The teacher leads the para; only accept the student's PAGE turns within
+      // the teacher's current para. Ignore any other-para position (e.g. the
+      // student's pre-sync default of para 1), which must not move the teacher.
+      if (nav.paraNumber !== currentParaNumber) return
+      if (nav.page === pdfPage) return
+      applyingRemote.current = true
+      setPdfPage(nav.page)
+    },
+    // A student just joined → push our authoritative position so they land here.
+    onPeerJoin: () => sendNav({ paraNumber: currentParaNumber, page: pdfPage }),
+  })
+
+  // Broadcast the teacher's position on every local change (skip our own echoes).
+  useEffect(() => {
+    if (applyingRemote.current) { applyingRemote.current = false; return }
+    sendNav({ paraNumber: currentParaNumber, page: pdfPage })
+  }, [currentParaNumber, pdfPage, sendNav])
+
 
   // Memorization
   const memorizing = memItems.filter(m => m.status === "memorizing")
@@ -224,6 +257,9 @@ export default function LiveSession({
   // End class
   async function handleEndClass() {
     setSaving(true)
+    // Tell the student first so they close immediately (before the channel is
+    // torn down on unmount — presence-leave alone is too slow/unreliable).
+    endClass()
     const endedAt = new Date()
     const sessionData: SessionEndData = {
       startedAt,
@@ -262,31 +298,49 @@ export default function LiveSession({
 
           <div className="h-5 w-px bg-border" />
 
-          {/* Para info */}
+          {/* Para switcher — explicit buttons (the ← → arrows page the PDF). */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={() => navigatePara("prev")}
-              disabled={currentParaNumber <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <span className="text-sm font-medium min-w-[80px] text-center text-foreground">
+            <span className="text-sm font-medium text-foreground">
               Para <span className="text-primary font-bold">{currentParaNumber}</span>
               <span className="text-muted-foreground text-xs ml-1">/ 30</span>
             </span>
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 w-7 p-0"
+              className="h-7 px-2"
+              onClick={() => navigatePara("prev")}
+              disabled={currentParaNumber <= 1}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="ml-0.5 hidden sm:inline">Prev para</span>
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2.5"
               onClick={() => navigatePara("next")}
               disabled={currentParaNumber >= 30}
             >
+              <span className="mr-0.5 hidden sm:inline">Next para</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          <div className="h-5 w-px bg-border" />
+
+          {/* Live presence */}
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+              studentJoined ? "bg-emerald-500/15 text-emerald-600" : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            <span
+              className={`h-1.5 w-1.5 rounded-full ${
+                studentJoined ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
+              }`}
+            />
+            {studentJoined ? "Student joined" : "Waiting for student…"}
+          </span>
         </div>
 
         <div className="flex items-center gap-3">
@@ -517,23 +571,21 @@ export default function LiveSession({
         {/* Quran Para Viewer */}
         <div className="flex-1 flex flex-col overflow-hidden">
           {currentPara ? (
-            <div className="flex-1 overflow-auto">
-              {currentPara.file_type === "pdf" ? (
-                <iframe
+            currentPara.file_type === "pdf" ? (
+              <SyncedPdfViewer
+                fileUrl={currentPara.file_url}
+                page={pdfPage}
+                onPageChange={setPdfPage}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center overflow-auto p-4">
+                <img
                   src={currentPara.file_url}
-                  className="w-full h-full"
-                  title={currentPara.title}
+                  alt={currentPara.title}
+                  className="max-w-full max-h-full object-contain rounded-xl"
                 />
-              ) : (
-                <div className="flex items-center justify-center p-4 h-full">
-                  <img
-                    src={currentPara.file_url}
-                    alt={currentPara.title}
-                    className="max-w-full max-h-full object-contain rounded-xl"
-                  />
-                </div>
-              )}
-            </div>
+              </div>
+            )
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-3">
