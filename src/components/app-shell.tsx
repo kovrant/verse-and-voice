@@ -23,22 +23,25 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         style={{ contain: "layout style" }}
       >
         {isStudentArea ? (
-          // Soft pastel ambient — cheerful, gentle blobs.
-          <>
-            <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
+          // Soft pastel ambient — cheerful, gentle blobs. Clipped to the
+          // viewport so the off-screen blobs can't extend the scroll area
+          // (main has `contain: layout`, which would otherwise let these
+          // fixed blobs add phantom vertical/horizontal scroll).
+          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+            <div className="absolute inset-0 bg-background" />
             <div
-              className="fixed -top-32 -left-24 h-96 w-96 rounded-full opacity-40 blur-3xl pointer-events-none -z-10"
+              className="absolute -top-32 -left-24 h-96 w-96 rounded-full opacity-40 blur-3xl"
               style={{ background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.4), transparent 70%)" }}
             />
             <div
-              className="fixed top-1/4 -right-32 h-[28rem] w-[28rem] rounded-full opacity-35 blur-3xl pointer-events-none -z-10"
+              className="absolute top-1/4 -right-32 h-[28rem] w-[28rem] rounded-full opacity-35 blur-3xl"
               style={{ background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.4), transparent 70%)" }}
             />
             <div
-              className="fixed -bottom-40 left-1/3 h-96 w-96 rounded-full opacity-30 blur-3xl pointer-events-none -z-10"
+              className="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full opacity-30 blur-3xl"
               style={{ background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.35), transparent 70%)" }}
             />
-          </>
+          </div>
         ) : (
           // Admin — clean, minimal.
           <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />

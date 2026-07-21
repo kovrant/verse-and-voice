@@ -3,7 +3,7 @@ import { ImageResponse } from "next/og"
 export const size = { width: 180, height: 180 }
 export const contentType = "image/png"
 
-// VerseandVoice: a bold "V" (verse) over a small equalizer (voice).
+// Verse & Voice: a bold "V" (verse) over a small equalizer (voice).
 export default function AppleIcon() {
   const bar = (h: number, o: number) => ({
     width: 13,

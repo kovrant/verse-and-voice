@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Loader2, Eye, EyeOff, BookAudio } from "lucide-react"
+import { Brand } from "@/components/brand"
 
 export default function AdminLoginPage() {
   return (
@@ -56,7 +57,7 @@ function AdminLoginForm() {
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <BookAudio className="h-5 w-5" />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">VerseandVoice</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground"><Brand /></h1>
           <p className="text-xs text-muted-foreground mt-0.5">Admin sign in</p>
         </div>
 

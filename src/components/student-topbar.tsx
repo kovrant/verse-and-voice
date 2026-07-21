@@ -14,10 +14,7 @@ export function StudentTopBar() {
   const name = student?.name || username || "Student"
   const initial = (name[0] || "?").toUpperCase()
 
-  const avatarStyle = {
-    background:
-      "linear-gradient(135deg, hsl(var(--c-a-500)), hsl(var(--primary)) 55%, hsl(var(--c-s-500)))",
-  }
+  const avatarStyle = { background: "hsl(var(--primary))" }
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-end border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
@@ -28,22 +25,12 @@ export function StudentTopBar() {
             className="group flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2.5 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card"
           >
             <span
-              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-white ring-2 ring-white/70 shadow-sm flex-shrink-0"
+              className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-primary-foreground ring-2 ring-white/70 shadow-sm flex-shrink-0"
               style={avatarStyle}
             >
               {initial}
             </span>
-            <span className="hidden text-left leading-tight sm:block">
-              <span className="block text-sm font-bold text-foreground max-w-[10rem] truncate">
-                {name}
-              </span>
-              {username && (
-                <span className="block text-[10px] font-medium text-muted-foreground -mt-0.5">
-                  {username}
-                </span>
-              )}
-            </span>
-            <ChevronDown className="hidden h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180 sm:block" />
+            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
           </button>
         </Popover.Trigger>
 
@@ -56,7 +43,7 @@ export function StudentTopBar() {
             {/* Identity header */}
             <div className="flex items-center gap-3 px-2.5 py-2.5">
               <span
-                className="flex h-11 w-11 items-center justify-center rounded-2xl text-base font-bold text-white ring-2 ring-white/70 shadow-sm flex-shrink-0"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl text-base font-bold text-primary-foreground ring-2 ring-white/70 shadow-sm flex-shrink-0"
                 style={avatarStyle}
               >
                 {initial}

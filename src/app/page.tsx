@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Users, CreditCard, AlertCircle, UserPlus, ArrowRight, TrendingUp, BookOpen, Upload, BookMarked, Sparkles, ChevronRight } from "lucide-react"
 import { format } from "date-fns"
+import { Brand } from "@/components/brand"
 
 interface Student {
   id: string
@@ -179,7 +180,7 @@ export default function Dashboard() {
           Dashboard
         </h1>
         <p className="text-muted-foreground mt-1">
-          Welcome to VerseandVoice &middot; {currentMonth}
+          Welcome to <Brand /> &middot; {currentMonth}
         </p>
       </div>
 
@@ -191,7 +192,7 @@ export default function Dashboard() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-foreground">
                 <Sparkles className="h-7 w-7" />
               </div>
-              <h2 className="text-xl font-bold">Welcome to VerseandVoice</h2>
+              <h2 className="text-xl font-bold">Welcome to <Brand /></h2>
               <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">

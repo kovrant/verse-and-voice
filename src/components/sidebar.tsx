@@ -22,6 +22,7 @@ import { useState, useEffect, memo, createContext, useContext } from "react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { useCurrentUser } from "@/lib/use-current-user"
+import { Brand } from "@/components/brand"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
 
@@ -137,7 +138,7 @@ export const Sidebar = memo(function Sidebar() {
             </div>
             <div className={cn("min-w-0 transition-all duration-300", collapsed ? "lg:hidden" : "block")}>
               <h1 className="text-[15px] font-semibold tracking-tight text-foreground whitespace-nowrap">
-                VerseandVoice
+                <Brand />
               </h1>
               <p className="text-[11px] text-muted-foreground tracking-wide whitespace-nowrap">
                 Admin

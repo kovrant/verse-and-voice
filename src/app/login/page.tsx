@@ -7,6 +7,7 @@ import { resolveLoginEmail } from "@/lib/student-auth"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Loader2, User, Lock, Eye, EyeOff, Sparkles, Star, BookAudio } from "lucide-react"
+import { Brand } from "@/components/brand"
 
 export default function StudentLoginPage() {
   return (
@@ -82,7 +83,7 @@ function StudentLoginForm() {
                 <BookAudio className="h-10 w-10 text-white" strokeWidth={1.75} />
               </div>
               <div>
-                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm">VerseandVoice</h1>
+                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm"><Brand amp="text-white/80" /></h1>
                 <p className="text-sm text-white/90 mt-0.5">Welcome back! Ready to learn? ✨</p>
               </div>
             </div>

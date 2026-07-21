@@ -46,6 +46,8 @@ const config = {
           DEFAULT: "hsl(var(--gold))",
           foreground: "hsl(var(--gold-foreground))",
         },
+        brand: "hsl(var(--brand))",
+        "brand-soft": "hsl(var(--brand-soft))",
 
         /* ── Themed color scale overrides ──
          * These override Tailwind's built-in color names so that ALL existing
@@ -84,11 +86,13 @@ const config = {
         },
       },
       fontFamily: {
-        sans: ["var(--font-baloo)", "Baloo 2", "system-ui", "sans-serif"],
-        display: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
-        heading: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
-        brand: ["var(--font-fredoka)", "Fredoka", "system-ui", "sans-serif"],
-        arabic: ["var(--font-amiri-quran)", "Amiri Quran", "Amiri", "serif"],
+        sans: ["var(--font-body)", "Nunito Sans", "system-ui", "sans-serif"],
+        body: ["var(--font-body)", "Nunito Sans", "system-ui", "sans-serif"],
+        heading: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
+        display: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
+        brand: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
+        serif: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
+        arabic: ["var(--font-arabic)", "Amiri", "serif"],
       },
       borderRadius: {
         lg: "var(--radius-card)",       /* 16px — cards */

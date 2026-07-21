@@ -10,12 +10,12 @@ import {
 import { usePathname } from "next/navigation"
 
 // Portal-scoped theming. The active portal is stamped on <html data-portal>,
-// which selects the palette block in globals.css. Admin supports a light/dark
-// toggle; the student portal is light-first (dark is ignored there).
+// which selects the palette block in globals.css. Both portals support a
+// light/dark toggle, sharing a single preference.
 
 export type Portal = "admin" | "student"
 
-const DARK_KEY = "qa-admin-dark"
+const DARK_KEY = "qa-dark"
 
 export function portalForPath(pathname: string): Portal {
   if (
@@ -54,8 +54,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = document.documentElement
     root.dataset.portal = portal
-    // Student portal is light-first — never apply dark there.
-    root.classList.toggle("dark", portal === "admin" && dark)
+    root.classList.toggle("dark", dark)
   }, [portal, dark])
 
   const toggleDark = useCallback(() => {
@@ -69,9 +68,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <ThemeContext.Provider
-      value={{ portal, dark: portal === "admin" && dark, toggleDark }}
-    >
+    <ThemeContext.Provider value={{ portal, dark, toggleDark }}>
       {children}
     </ThemeContext.Provider>
   )

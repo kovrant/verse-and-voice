@@ -1,6 +1,6 @@
 {
-  "name": "VerseandVoice",
-  "short_name": "VerseandVoice",
+  "name": "Verse & Voice",
+  "short_name": "Verse & Voice",
   "description": "A friendly Quran learning space",
   "start_url": "/",
   "display": "standalone",
