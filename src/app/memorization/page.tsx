@@ -1,11 +1,14 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { supabase } from "@/lib/supabase"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import * as Popover from "@radix-ui/react-popover"
+import { BookMarked, Eye, ImagePlus, Plus, Search, Trash2, Users, X } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -13,9 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import * as Popover from "@radix-ui/react-popover"
-import { Plus, Trash2, BookMarked, Users, Search, ImagePlus, X, Eye } from "lucide-react"
-import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
 
 interface CatalogItem {
   id: string

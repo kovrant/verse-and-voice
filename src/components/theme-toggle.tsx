@@ -1,7 +1,8 @@
 "use client"
 
+import { Moon, Sun } from "lucide-react"
+
 import { useTheme } from "@/components/theme-provider"
-import { Sun, Moon } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 // Segmented Light/Dark control for the admin portal. A segmented control (rather

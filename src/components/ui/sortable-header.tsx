@@ -1,7 +1,8 @@
 "use client"
 
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react"
+
 import { cn } from "@/lib/utils"
-import { ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 
 export type SortDirection = "asc" | "desc" | null
 

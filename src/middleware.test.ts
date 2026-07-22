@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
 import { NextRequest } from "next/server"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Shared, hoisted mock state so the factory below can read it.
 const state = vi.hoisted(() => ({ user: null as null | { id: string }, rotate: true }))

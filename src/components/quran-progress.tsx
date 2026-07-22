@@ -1,8 +1,9 @@
 "use client"
 
+import { BookMarked, BookOpen, Trophy } from "lucide-react"
+
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, BookMarked, Trophy } from "lucide-react"
 
 export interface QuranRound {
   id: string

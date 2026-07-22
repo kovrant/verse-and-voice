@@ -1,12 +1,33 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { supabase } from "@/lib/supabase"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  BookOpen,
+  Eye,
+  FileText,
+  FolderOpen,
+  HardDrive,
+  Search,
+  Sparkles,
+  Trash2,
+  Upload,
+  X,
+} from "lucide-react"
+import dynamic from "next/dynamic"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import {
   Select,
   SelectContent,
@@ -14,28 +35,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog"
-import {
-  Upload,
-  Trash2,
-  FileText,
-  Image as ImageIcon,
-  Search,
-  Eye,
-  X,
-  HardDrive,
-  BookOpen,
-  Sparkles,
-  FolderOpen,
-} from "lucide-react"
-import { toast } from "sonner"
-import dynamic from "next/dynamic"
+import { supabase } from "@/lib/supabase"
 
 // react-pdf is client-only (uses worker + canvas) — avoid SSR
 const PdfThumbnail = dynamic(

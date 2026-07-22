@@ -1,37 +1,37 @@
 "use client"
 
-import { useEffect, useState, useRef } from "react"
-import { supabase } from "@/lib/supabase"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 import * as Popover from "@radix-ui/react-popover"
+import { differenceInDays, format } from "date-fns"
 import {
-  getActiveRound,
-  getCompletedRounds,
-  getChronologicalRoundNumber,
-  type QuranRound,
-} from "@/components/quran-progress"
-import LiveSession, { type SessionEndData } from "@/components/live-session"
-import {
-  Clock,
-  User,
-  Users,
-  CalendarDays,
   BookMarked,
-  Play,
   BookOpen,
-  Search,
+  CalendarDays,
+  Check,
   ChevronDown,
   ChevronLeft,
+  Clock,
+  Play,
+  Search,
+  User,
   UserPlus,
-  Check,
+  Users,
 } from "lucide-react"
 import Link from "next/link"
-import { Input } from "@/components/ui/input"
-import { differenceInDays, format } from "date-fns"
-import { parseLocalDate } from "@/lib/utils"
+import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
+
+import LiveSession, { type SessionEndData } from "@/components/live-session"
+import {
+  getActiveRound,
+  getChronologicalRoundNumber,
+  getCompletedRounds,
+  type QuranRound,
+} from "@/components/quran-progress"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { supabase } from "@/lib/supabase"
+import { parseLocalDate } from "@/lib/utils"
 
 interface Student {
   id: string

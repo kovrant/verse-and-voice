@@ -1,8 +1,9 @@
 "use client"
 
-import { useCallback, useEffect, useRef, useState } from "react"
-import { supabase } from "@/lib/supabase"
 import type { RealtimeChannel } from "@supabase/supabase-js"
+import { useCallback, useEffect, useRef, useState } from "react"
+
+import { supabase } from "@/lib/supabase"
 
 export interface NavState {
   paraNumber: number

@@ -1,17 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-import { useStudent } from "@/lib/use-student"
+import { useEffect, useState } from "react"
+
 import {
-  type QuranRound,
-  getStudentStage,
   computeProgress,
   getChronologicalRoundNumber,
+  getStudentStage,
+  type QuranRound,
 } from "@/components/quran-progress"
-import { StudentParaPdf } from "@/components/student-para-pdf"
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
+import { StudentParaPdf } from "@/components/student-para-pdf"
+import { supabase } from "@/lib/supabase"
+import { useStudent } from "@/lib/use-student"
 
 /** Bar heights for the 30-para tracker. */
 const BAR_HEIGHTS = [

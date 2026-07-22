@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { ArrowLeft, Sparkles, UserPlus } from "lucide-react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-import { COUNTRIES, formatLocalDate } from "@/lib/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
+import { toast } from "sonner"
+
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -16,9 +18,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
-import { ArrowLeft, UserPlus, Sparkles } from "lucide-react"
-import Link from "next/link"
-import { toast } from "sonner"
+import { supabase } from "@/lib/supabase"
+import { COUNTRIES, formatLocalDate } from "@/lib/utils"
 
 export default function NewStudentPage() {
   const router = useRouter()

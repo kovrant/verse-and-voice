@@ -1,8 +1,9 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
+import { ChevronDown, LogOut } from "lucide-react"
+
 import { useStudent } from "@/lib/use-student"
-import { LogOut, ChevronDown } from "lucide-react"
 
 /**
  * Sticky top bar for the student portal. Follows the standard SaaS pattern:

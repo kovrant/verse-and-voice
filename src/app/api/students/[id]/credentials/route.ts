@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
-import { createSupabaseServerClient } from "@/lib/supabase-server"
-import { createSupabaseAdminClient } from "@/lib/supabase-admin"
+
 import { isValidUsername, normalizeUsername, usernameToEmail } from "@/lib/student-auth"
+import { createSupabaseAdminClient } from "@/lib/supabase-admin"
+import { createSupabaseServerClient } from "@/lib/supabase-server"
 
 // POST /api/students/:id/credentials
 // Teacher-only. Creates a login for the student, or resets the password /

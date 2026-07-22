@@ -1,11 +1,12 @@
 "use client"
 
+import { BookOpen, ChevronLeft, ChevronRight, FileText, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { Card, CardContent } from "@/components/ui/card"
+
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { BookOpen, Search, X, ChevronLeft, ChevronRight, FileText } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 interface QuranPara {
   id: string

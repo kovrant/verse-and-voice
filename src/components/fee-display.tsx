@@ -1,7 +1,7 @@
 "use client"
 
-import { CURRENCY_SYMBOLS } from "@/lib/utils"
 import { convertToPKR } from "@/lib/exchange-rates"
+import { CURRENCY_SYMBOLS } from "@/lib/utils"
 
 interface FeeDisplayProps {
   amount: number

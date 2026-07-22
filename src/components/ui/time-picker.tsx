@@ -1,8 +1,9 @@
 "use client"
 
+import { ChevronDown, ChevronUp, Clock } from "lucide-react"
 import * as React from "react"
-import { useState, useRef, useEffect, useCallback } from "react"
-import { Clock, ChevronUp, ChevronDown } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
+
 import { cn } from "@/lib/utils"
 
 interface TimePickerProps {

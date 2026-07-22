@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser } from "@/lib/use-current-user"
 import type { StudentStatus } from "@/lib/utils"

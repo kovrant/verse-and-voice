@@ -1,14 +1,15 @@
 "use client"
 
+import { format } from "date-fns"
+import { CreditCard } from "lucide-react"
 import { useEffect, useState } from "react"
+
+import { FeeDisplay } from "@/components/fee-display"
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
-import { useExchangeRates } from "@/lib/exchange-rates"
-import { FeeDisplay } from "@/components/fee-display"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { CreditCard } from "lucide-react"
-import { format } from "date-fns"
 
 interface FeePayment {
   id: string

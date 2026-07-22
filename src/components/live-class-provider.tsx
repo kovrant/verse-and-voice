@@ -1,9 +1,10 @@
 "use client"
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
-import { useStudent } from "@/lib/use-student"
-import { useClassChannel, type NavState } from "@/lib/use-class-channel"
 import { toast } from "sonner"
+
+import { type NavState, useClassChannel } from "@/lib/use-class-channel"
+import { useStudent } from "@/lib/use-student"
 
 type NavListener = (nav: NavState) => void
 

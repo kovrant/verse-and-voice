@@ -1,13 +1,14 @@
 "use client"
 
+import { format, formatDistanceToNow } from "date-fns"
+import { Clock, History } from "lucide-react"
 import { useEffect, useState } from "react"
-import { fetchAllRows } from "@/lib/supabase"
-import { useStudent } from "@/lib/use-student"
+
 import { useLiveClass } from "@/components/live-class-provider"
 import { StudentLiveClass } from "@/components/student-live-class"
 import { Card, CardContent } from "@/components/ui/card"
-import { Clock, History } from "lucide-react"
-import { format, formatDistanceToNow } from "date-fns"
+import { fetchAllRows } from "@/lib/supabase"
+import { useStudent } from "@/lib/use-student"
 
 interface ClassSession {
   id: string

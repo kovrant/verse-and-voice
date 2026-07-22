@@ -1,10 +1,12 @@
+import "./globals.css"
+
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
-import "./globals.css"
-import { AppShell } from "@/components/app-shell"
-import { ThemeProvider } from "@/components/theme-provider"
-import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
 import { Toaster } from "sonner"
+
+import { AppShell } from "@/components/app-shell"
+import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
+import { ThemeProvider } from "@/components/theme-provider"
 
 // Self-hosted fonts (via @fontsource, copied into ./fonts) so the app never
 // depends on Google Fonts at build/dev time.

@@ -1,44 +1,42 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
-import { supabase } from "@/lib/supabase"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
+import { differenceInCalendarDays, format } from "date-fns"
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { getActiveRound, type QuranRound } from "@/components/quran-progress"
-import { useSidebarVisibility } from "@/components/sidebar-visibility"
-import { useClassChannel } from "@/lib/use-class-channel"
-import {
+  ArrowUpRight,
+  BookMarked,
+  BookOpen,
+  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
-  X,
+  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
-  BookMarked,
-  Sparkles,
-  Check,
   RotateCcw,
   Shuffle,
-  ArrowUpRight,
+  Sparkles,
   Square,
-  FileText,
-  BookOpen,
-  Loader2,
 } from "lucide-react"
-import { format, differenceInCalendarDays } from "date-fns"
-import { formatLocalDate } from "@/lib/utils"
-import { loadLastPage, saveLastPage } from "@/lib/para-progress"
-import { toast } from "sonner"
 import dynamic from "next/dynamic"
+import { useEffect, useRef, useState } from "react"
+import { toast } from "sonner"
+
+import { getActiveRound, type QuranRound } from "@/components/quran-progress"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { loadLastPage, saveLastPage } from "@/lib/para-progress"
+import { supabase } from "@/lib/supabase"
+import { useClassChannel } from "@/lib/use-class-channel"
+import { formatLocalDate } from "@/lib/utils"
 
 // react-pdf renders client-side only.
 const SyncedPdfViewer = dynamic(

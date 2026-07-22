@@ -1,13 +1,14 @@
 "use client"
 
-import { Suspense, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { BookAudio, Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
+
+import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Loader2, Eye, EyeOff, BookAudio } from "lucide-react"
-import { Brand } from "@/components/brand"
+import { supabase } from "@/lib/supabase"
 
 export default function AdminLoginPage() {
   return (

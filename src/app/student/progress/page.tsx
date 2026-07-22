@@ -1,18 +1,19 @@
 "use client"
 
+import { format } from "date-fns"
+import { BookMarked, BookOpen, Trophy } from "lucide-react"
 import { useEffect, useState } from "react"
-import { supabase } from "@/lib/supabase"
-import { useStudent } from "@/lib/use-student"
-import { parseLocalDate } from "@/lib/utils"
+
 import {
+  getChronologicalRoundNumber,
   QuranProgress,
   type QuranRound,
-  getChronologicalRoundNumber,
 } from "@/components/quran-progress"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { BookOpen, BookMarked, Trophy } from "lucide-react"
-import { format } from "date-fns"
+import { supabase } from "@/lib/supabase"
+import { useStudent } from "@/lib/use-student"
+import { parseLocalDate } from "@/lib/utils"
 
 export default function StudentProgressPage() {
   const { student, loading } = useStudent()

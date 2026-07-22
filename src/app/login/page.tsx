@@ -1,13 +1,14 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { BookAudio, Eye, EyeOff, Loader2, Lock, Sparkles, Star, User } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { supabase } from "@/lib/supabase"
-import { resolveLoginEmail } from "@/lib/student-auth"
+import { Suspense, useState } from "react"
+
+import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, Lock, Eye, EyeOff, Sparkles, Star, BookAudio } from "lucide-react"
-import { Brand } from "@/components/brand"
+import { resolveLoginEmail } from "@/lib/student-auth"
+import { supabase } from "@/lib/supabase"
 
 export default function StudentLoginPage() {
   return (

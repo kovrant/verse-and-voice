@@ -1,12 +1,13 @@
 "use client"
 
+import { format } from "date-fns"
+import { BookMarked, Check, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
+
+import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { BookMarked, Sparkles, Check } from "lucide-react"
-import { format } from "date-fns"
 
 interface CatalogItem {
   id: string

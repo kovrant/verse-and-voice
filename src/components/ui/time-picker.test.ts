@@ -1,4 +1,5 @@
-import { describe, it, expect } from "vitest"
+import { describe, expect, it } from "vitest"
+
 import { parseTime } from "./time-picker"
 
 // Bug 4 — parseTime("") must return EMPTY parts (not a fabricated 8:00 AM),

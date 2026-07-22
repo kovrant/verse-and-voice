@@ -1,29 +1,29 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { format } from "date-fns"
+import {
+  AlertCircle,
+  ArrowRight,
+  BookMarked,
+  ChevronRight,
+  CreditCard,
+  Sparkles,
+  TrendingUp,
+  Upload,
+  UserPlus,
+  Users,
+} from "lucide-react"
 import Link from "next/link"
-import { supabase } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS } from "@/lib/utils"
-import { useExchangeRates, convertToPKR } from "@/lib/exchange-rates"
+import { useEffect, useState } from "react"
+
+import { Brand } from "@/components/brand"
 import { FeeDisplay } from "@/components/fee-display"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Users,
-  CreditCard,
-  AlertCircle,
-  UserPlus,
-  ArrowRight,
-  TrendingUp,
-  BookOpen,
-  Upload,
-  BookMarked,
-  Sparkles,
-  ChevronRight,
-} from "lucide-react"
-import { format } from "date-fns"
-import { Brand } from "@/components/brand"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
+import { supabase } from "@/lib/supabase"
+import { CURRENCY_SYMBOLS } from "@/lib/utils"
 
 interface Student {
   id: string

@@ -1,11 +1,12 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { BookOpen, Loader2, LogOut } from "lucide-react"
 import dynamic from "next/dynamic"
-import { supabase } from "@/lib/supabase"
+import { useEffect, useRef, useState } from "react"
+
 import { useLiveClass } from "@/components/live-class-provider"
+import { supabase } from "@/lib/supabase"
 import type { NavState } from "@/lib/use-class-channel"
-import { BookOpen, LogOut, Loader2 } from "lucide-react"
 
 const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),

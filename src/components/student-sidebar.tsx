@@ -1,22 +1,23 @@
 "use client"
 
+import {
+  BookAudio,
+  BookMarked,
+  BookOpen,
+  CreditCard,
+  History,
+  LayoutDashboard,
+  Menu,
+  X,
+} from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useState } from "react"
-import { cn } from "@/lib/utils"
+
 import { Brand } from "@/components/brand"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { useLiveClass } from "@/components/live-class-provider"
-import {
-  LayoutDashboard,
-  BookOpen,
-  BookMarked,
-  CreditCard,
-  History,
-  Menu,
-  X,
-  BookAudio,
-} from "lucide-react"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true },

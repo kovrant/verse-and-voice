@@ -1,7 +1,7 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { usePathname } from "next/navigation"
+import { createContext, useCallback, useContext, useEffect, useState } from "react"
 
 // Portal-scoped theming. The active portal is stamped on <html data-portal>,
 // which selects the palette block in globals.css. Both portals support a

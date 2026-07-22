@@ -1,28 +1,29 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { cn } from "@/lib/utils"
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
+  BookAudio,
   BookMarked,
-  CreditCard,
-  Menu,
-  X,
-  Upload,
+  BookOpen,
   BookOpenCheck,
+  CreditCard,
+  LayoutDashboard,
+  LogOut,
+  Menu,
   PanelLeftClose,
   PanelLeftOpen,
-  LogOut,
-  BookAudio,
+  Upload,
+  Users,
+  X,
 } from "lucide-react"
-import { useState, useEffect, memo, createContext, useContext } from "react"
-import { ThemeToggle } from "@/components/theme-toggle"
-import { useSidebarVisibility } from "@/components/sidebar-visibility"
-import { useCurrentUser } from "@/lib/use-current-user"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { createContext, memo, useContext, useEffect, useState } from "react"
+
 import { Brand } from "@/components/brand"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { ThemeToggle } from "@/components/theme-toggle"
+import { useCurrentUser } from "@/lib/use-current-user"
+import { cn } from "@/lib/utils"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
 
