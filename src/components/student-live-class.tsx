@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import dynamic from "next/dynamic"
 import { supabase } from "@/lib/supabase"
 import { useLiveClass } from "@/components/live-class-provider"
+import type { NavState } from "@/lib/use-class-channel"
 import { BookOpen, LogOut, Loader2 } from "lucide-react"
 
 const SyncedPdfViewer = dynamic(
