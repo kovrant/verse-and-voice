@@ -6,6 +6,7 @@ import { LiveClassProvider } from "@/components/live-class-provider"
 import { Sidebar } from "@/components/sidebar"
 import { StudentSidebar } from "@/components/student-sidebar"
 import { StudentTopBar } from "@/components/student-topbar"
+import { TeacherTopBar } from "@/components/teacher-topbar"
 
 /**
  * Chooses the navigation shell + ambient background by route. The student
@@ -15,6 +16,8 @@ import { StudentTopBar } from "@/components/student-topbar"
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
+  // Auth/entry pages hide the chrome (matches Sidebar returning null there).
+  const isAuthArea = pathname === "/login" || pathname === "/admin"
 
   const shell = (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -53,12 +56,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           // Admin — clean, minimal.
           <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
         )}
-        {isStudentArea && <StudentTopBar />}
-        <div
-          className={isStudentArea ? "relative p-4 lg:p-8" : "relative p-4 pt-16 lg:p-8 lg:pt-8"}
-        >
-          {children}
-        </div>
+        {isStudentArea ? <StudentTopBar /> : !isAuthArea && <TeacherTopBar />}
+        <div className="relative p-4 lg:p-8">{children}</div>
       </main>
     </div>
   )
