@@ -19,8 +19,18 @@ interface FeePayment {
 }
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ]
 
 export default function StudentFeesPage() {
@@ -104,13 +114,22 @@ export default function StudentFeesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border/50">
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                    >
                       Month
                     </th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                    >
                       Status
                     </th>
-                    <th scope="col" className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                    >
                       Paid Date
                     </th>
                   </tr>

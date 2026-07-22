@@ -55,15 +55,22 @@ function StudentLoginForm() {
       {/* Sunny pastel ambient blobs */}
       <div
         className="pointer-events-none absolute -top-24 -left-16 h-80 w-80 rounded-full opacity-60 blur-3xl animate-float"
-        style={{ background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.5), transparent 70%)" }}
+        style={{
+          background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.5), transparent 70%)",
+        }}
       />
       <div
         className="pointer-events-none absolute top-1/3 -right-24 h-96 w-96 rounded-full opacity-50 blur-3xl"
-        style={{ background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.5), transparent 70%)" }}
+        style={{
+          background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.5), transparent 70%)",
+        }}
       />
       <div
         className="pointer-events-none absolute -bottom-28 left-1/4 h-80 w-80 rounded-full opacity-50 blur-3xl animate-float"
-        style={{ background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.4), transparent 70%)", animationDelay: "1.5s" }}
+        style={{
+          background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.4), transparent 70%)",
+          animationDelay: "1.5s",
+        }}
       />
 
       <div className="relative w-full max-w-md animate-fade-in-up">
@@ -71,19 +78,34 @@ function StudentLoginForm() {
           {/* Playful header */}
           <div
             className="relative px-8 pb-10 pt-10 text-center"
-            style={{ background: "linear-gradient(150deg, hsl(var(--c-a-400)), hsl(var(--primary)) 55%, hsl(var(--c-s-500)))" }}
+            style={{
+              background:
+                "linear-gradient(150deg, hsl(var(--c-a-400)), hsl(var(--primary)) 55%, hsl(var(--c-s-500)))",
+            }}
           >
             <div className="absolute inset-0 opacity-30">
-              <Star className="absolute left-8 top-6 h-4 w-4 text-white sparkle-twinkle" fill="currentColor" />
-              <Sparkles className="absolute right-10 top-10 h-5 w-5 text-white sparkle-twinkle" style={{ animationDelay: "0.4s" }} />
-              <Star className="absolute right-1/3 bottom-6 h-3 w-3 text-white sparkle-twinkle" fill="currentColor" style={{ animationDelay: "0.8s" }} />
+              <Star
+                className="absolute left-8 top-6 h-4 w-4 text-white sparkle-twinkle"
+                fill="currentColor"
+              />
+              <Sparkles
+                className="absolute right-10 top-10 h-5 w-5 text-white sparkle-twinkle"
+                style={{ animationDelay: "0.4s" }}
+              />
+              <Star
+                className="absolute right-1/3 bottom-6 h-3 w-3 text-white sparkle-twinkle"
+                fill="currentColor"
+                style={{ animationDelay: "0.8s" }}
+              />
             </div>
             <div className="relative flex flex-col items-center gap-3">
               <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/25 ring-2 ring-white/40 backdrop-blur-sm animate-float">
                 <BookAudio className="h-10 w-10 text-white" strokeWidth={1.75} />
               </div>
               <div>
-                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm"><Brand amp="text-white/80" /></h1>
+                <h1 className="font-brand text-2xl font-bold text-white drop-shadow-sm">
+                  <Brand amp="text-white/80" />
+                </h1>
                 <p className="text-sm text-white/90 mt-0.5">Welcome back! Ready to learn? ✨</p>
               </div>
             </div>
@@ -97,7 +119,10 @@ function StudentLoginForm() {
                   Username
                 </Label>
                 <div className="relative">
-                  <User className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" aria-hidden="true" />
+                  <User
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60"
+                    aria-hidden="true"
+                  />
                   <input
                     id="identifier"
                     type="text"
@@ -119,7 +144,10 @@ function StudentLoginForm() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60" aria-hidden="true" />
+                  <Lock
+                    className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-primary/60"
+                    aria-hidden="true"
+                  />
                   <input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -144,13 +172,26 @@ function StudentLoginForm() {
               </div>
 
               {error && (
-                <p role="alert" aria-live="polite" className="rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive">
+                <p
+                  role="alert"
+                  aria-live="polite"
+                  className="rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+                >
                   {error}
                 </p>
               )}
 
-              <Button type="submit" size="lg" disabled={loading} className="w-full h-14 text-base rounded-2xl hover-bounce">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" /> : "Let's go! 🚀"}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={loading}
+                className="w-full h-14 text-base rounded-2xl hover-bounce"
+              >
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+                ) : (
+                  "Let's go! 🚀"
+                )}
               </Button>
             </form>
           </div>

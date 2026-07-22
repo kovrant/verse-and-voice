@@ -116,7 +116,7 @@ export const Sidebar = memo(function Sidebar() {
               ? "lg:w-[72px] lg:opacity-100"
               : "lg:w-64 lg:opacity-100",
           "w-64",
-          mobileOpen && visible ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen && visible ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
         style={{ contain: "layout style paint" }}
       >
@@ -125,18 +125,23 @@ export const Sidebar = memo(function Sidebar() {
           <div
             className={cn(
               "flex items-center transition-all duration-300",
-              collapsed ? "lg:justify-center" : "gap-3"
+              collapsed ? "lg:justify-center" : "gap-3",
             )}
           >
             <div
               className={cn(
                 "flex items-center justify-center rounded-lg bg-primary text-primary-foreground flex-shrink-0 transition-all duration-300",
-                collapsed ? "lg:h-9 lg:w-9 h-10 w-10" : "h-10 w-10"
+                collapsed ? "lg:h-9 lg:w-9 h-10 w-10" : "h-10 w-10",
               )}
             >
               <BookAudio className="h-5 w-5" />
             </div>
-            <div className={cn("min-w-0 transition-all duration-300", collapsed ? "lg:hidden" : "block")}>
+            <div
+              className={cn(
+                "min-w-0 transition-all duration-300",
+                collapsed ? "lg:hidden" : "block",
+              )}
+            >
               <h1 className="text-[15px] font-semibold tracking-tight text-foreground whitespace-nowrap">
                 <Brand />
               </h1>
@@ -160,17 +165,22 @@ export const Sidebar = memo(function Sidebar() {
         <nav
           className={cn(
             "flex-1 py-2 space-y-1 overflow-y-auto overflow-x-hidden transition-all duration-300",
-            collapsed ? "lg:px-2" : "px-3"
+            collapsed ? "lg:px-2" : "px-3",
           )}
         >
           {navSections.map((section, si) => (
             <div key={si} className={si > 0 ? "mt-6" : ""}>
               {section.label && (
-                <div className={cn("pb-1.5 transition-all duration-300", collapsed ? "lg:px-0" : "px-3")}>
+                <div
+                  className={cn(
+                    "pb-1.5 transition-all duration-300",
+                    collapsed ? "lg:px-0" : "px-3",
+                  )}
+                >
                   <p
                     className={cn(
                       "text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap",
-                      collapsed && "lg:hidden"
+                      collapsed && "lg:hidden",
                     )}
                   >
                     {section.label}
@@ -194,19 +204,21 @@ export const Sidebar = memo(function Sidebar() {
                           : "gap-3 px-3 py-2",
                         isActive
                           ? "bg-secondary text-foreground"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
                       )}
                     >
                       <item.icon
                         className={cn(
                           "h-[18px] w-[18px] transition-colors flex-shrink-0",
-                          isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                          isActive
+                            ? "text-foreground"
+                            : "text-muted-foreground group-hover:text-foreground",
                         )}
                       />
                       <span
                         className={cn(
                           "whitespace-nowrap transition-all duration-300",
-                          collapsed ? "lg:hidden" : "block"
+                          collapsed ? "lg:hidden" : "block",
                         )}
                       >
                         {item.label}
@@ -243,11 +255,15 @@ export const Sidebar = memo(function Sidebar() {
             title="Sign out"
             className={cn(
               "flex items-center gap-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors",
-              collapsed ? "lg:justify-center lg:w-12 lg:px-0 lg:py-2.5 w-full px-5 py-3" : "w-full px-5 py-3"
+              collapsed
+                ? "lg:justify-center lg:w-12 lg:px-0 lg:py-2.5 w-full px-5 py-3"
+                : "w-full px-5 py-3",
             )}
           >
             <LogOut className="h-[18px] w-[18px] flex-shrink-0" />
-            <span className={cn("whitespace-nowrap", collapsed ? "lg:hidden" : "block")}>Sign out</span>
+            <span className={cn("whitespace-nowrap", collapsed ? "lg:hidden" : "block")}>
+              Sign out
+            </span>
           </button>
         </form>
 
@@ -259,7 +275,11 @@ export const Sidebar = memo(function Sidebar() {
             className="flex items-center justify-center w-full py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <PanelLeftOpen className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" />
+            )}
           </button>
         </div>
       </aside>
@@ -277,7 +297,7 @@ function SidebarIdentity({ collapsed }: { collapsed: boolean }) {
       <div
         className={cn(
           "flex items-center gap-2.5 rounded-lg border border-border bg-muted/40 px-2.5 py-2",
-          collapsed && "lg:justify-center lg:px-0 lg:h-9 lg:w-9 lg:gap-0"
+          collapsed && "lg:justify-center lg:px-0 lg:h-9 lg:w-9 lg:gap-0",
         )}
         title={collapsed ? `${label} · Teacher` : undefined}
       >

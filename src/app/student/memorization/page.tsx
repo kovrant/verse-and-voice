@@ -61,8 +61,12 @@ export default function StudentMemorizationPage() {
           <BookMarked className="h-6 w-6" strokeWidth={2.25} />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Memorization</h1>
-          <p className="text-sm text-muted-foreground">Surahs, duas and more you&apos;re learning 🌙</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Memorization
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Surahs, duas and more you&apos;re learning 🌙
+          </p>
         </div>
       </div>
 
@@ -87,7 +91,10 @@ export default function StudentMemorizationPage() {
               <span className="flex-1 text-sm font-medium text-amber-300">
                 {item.memorization_catalog?.title}
               </span>
-              <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">
+              <Badge
+                variant="outline"
+                className="text-[10px] border-border/30 text-muted-foreground/60"
+              >
                 {item.memorization_catalog?.category}
               </Badge>
             </div>

@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react"
+import { createContext, useContext, useEffect, useState, useCallback } from "react"
 import { usePathname } from "next/navigation"
 
 // Portal-scoped theming. The active portal is stamped on <html data-portal>,
@@ -18,11 +12,7 @@ export type Portal = "admin" | "student"
 const DARK_KEY = "qa-dark"
 
 export function portalForPath(pathname: string): Portal {
-  if (
-    pathname === "/login" ||
-    pathname === "/student" ||
-    pathname.startsWith("/student/")
-  ) {
+  if (pathname === "/login" || pathname === "/student" || pathname.startsWith("/student/")) {
     return "student"
   }
   return "admin"
@@ -68,9 +58,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   return (
-    <ThemeContext.Provider value={{ portal, dark, toggleDark }}>
-      {children}
-    </ThemeContext.Provider>
+    <ThemeContext.Provider value={{ portal, dark, toggleDark }}>{children}</ThemeContext.Provider>
   )
 }
 

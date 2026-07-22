@@ -13,13 +13,13 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           "hover:border-[hsl(var(--border-strong))]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/30 focus-visible:border-emerald-500/40",
           "disabled:cursor-not-allowed disabled:opacity-50",
-          className
+          className,
         )}
         ref={ref}
         {...props}
       />
     )
-  }
+  },
 )
 Textarea.displayName = "Textarea"
 

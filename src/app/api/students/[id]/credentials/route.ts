@@ -1,19 +1,12 @@
 import { NextResponse } from "next/server"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
-import {
-  isValidUsername,
-  normalizeUsername,
-  usernameToEmail,
-} from "@/lib/student-auth"
+import { isValidUsername, normalizeUsername, usernameToEmail } from "@/lib/student-auth"
 
 // POST /api/students/:id/credentials
 // Teacher-only. Creates a login for the student, or resets the password /
 // renames an existing login. Body: { username, password }.
-export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function POST(request: Request, { params }: { params: { id: string } }) {
   const studentId = params.id
 
   // 1. Authenticate the caller and confirm they are a teacher.
@@ -37,21 +30,17 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const username =
-    typeof body.username === "string" ? normalizeUsername(body.username) : ""
+  const username = typeof body.username === "string" ? normalizeUsername(body.username) : ""
   const password = typeof body.password === "string" ? body.password : ""
 
   if (!isValidUsername(username)) {
     return NextResponse.json(
       { error: "Username must be 3–30 characters: letters, digits, . _ - only." },
-      { status: 400 }
+      { status: 400 },
     )
   }
   if (password.length < 6) {
-    return NextResponse.json(
-      { error: "Password must be at least 6 characters." },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Password must be at least 6 characters." }, { status: 400 })
   }
 
   const admin = createSupabaseAdminClient()
@@ -78,10 +67,7 @@ export async function POST(
     .maybeSingle()
 
   if (usernameOwner && usernameOwner.student_id !== studentId) {
-    return NextResponse.json(
-      { error: "That username is already taken." },
-      { status: 409 }
-    )
+    return NextResponse.json({ error: "That username is already taken." }, { status: 409 })
   }
 
   const email = usernameToEmail(username)
@@ -127,7 +113,7 @@ export async function POST(
   if (createErr || !created?.user) {
     return NextResponse.json(
       { error: createErr?.message || "Failed to create login" },
-      { status: 500 }
+      { status: 500 },
     )
   }
 
@@ -148,10 +134,7 @@ export async function POST(
 }
 
 // GET /api/students/:id/credentials → { username } | { username: null }
-export async function GET(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: Request, { params }: { params: { id: string } }) {
   const supabase = createSupabaseServerClient()
   const {
     data: { user },

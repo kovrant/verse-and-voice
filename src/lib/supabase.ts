@@ -17,7 +17,7 @@ export const supabase = createBrowserClient(supabaseUrl, supabaseAnonKey)
 export async function fetchAllRows<T = any>(
   table: string,
   build: (query: any) => any,
-  pageSize = 1000
+  pageSize = 1000,
 ): Promise<T[]> {
   const all: T[] = []
   let from = 0

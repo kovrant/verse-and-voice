@@ -6,11 +6,26 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import * as Popover from "@radix-ui/react-popover"
-import { getActiveRound, getCompletedRounds, getChronologicalRoundNumber, type QuranRound } from "@/components/quran-progress"
+import {
+  getActiveRound,
+  getCompletedRounds,
+  getChronologicalRoundNumber,
+  type QuranRound,
+} from "@/components/quran-progress"
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import {
-  Clock, User, Users, CalendarDays, BookMarked,
-  Play, BookOpen, Search, ChevronDown, ChevronLeft, UserPlus, Check,
+  Clock,
+  User,
+  Users,
+  CalendarDays,
+  BookMarked,
+  Play,
+  BookOpen,
+  Search,
+  ChevronDown,
+  ChevronLeft,
+  UserPlus,
+  Check,
 } from "lucide-react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
@@ -109,7 +124,9 @@ export default function ClassPage() {
       const [memResult, roundsResult, sessionsResult] = await Promise.all([
         supabase
           .from("student_memorization")
-          .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
+          .select(
+            "id, status, last_revised_at, memorization_catalog(id, title, category, image_url)",
+          )
           .eq("student_id", student.id)
           .order("created_at", { ascending: false }),
         supabase
@@ -250,7 +267,7 @@ export default function ClassPage() {
   })
 
   const filteredStudents = sortedStudents.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase())
+    s.name.toLowerCase().includes(search.toLowerCase()),
   )
   const showQuickPick = students.length > 20
 
@@ -258,9 +275,7 @@ export default function ClassPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="mb-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-primary">
-          Class Session
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-primary">Class Session</h1>
         <p className="text-sm mt-1.5 text-muted-foreground">
           Select a student and start a live class
         </p>
@@ -365,14 +380,18 @@ export default function ClassPage() {
                   const asc = activeRound?.asc_completed || 0
                   const total = desc + (asc > 0 ? asc - 1 : 0)
                   const percent = Math.min(100, Math.round((total / 30) * 100))
-                  const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 0
+                  const roundNum = activeRound
+                    ? getChronologicalRoundNumber(rounds, activeRound)
+                    : 0
 
                   return (
                     <div>
                       <div className="flex items-center justify-between gap-3 mb-3">
                         <div className="flex items-center gap-2">
                           <BookOpen className="h-4 w-4 text-foreground" />
-                          <span className="text-base font-semibold text-foreground">Quran Progress</span>
+                          <span className="text-base font-semibold text-foreground">
+                            Quran Progress
+                          </span>
                           {activeRound && roundNum > 0 && (
                             <span className="text-sm text-muted-foreground">
                               (Round {roundNum})
@@ -478,11 +497,7 @@ export default function ClassPage() {
                           {entries.map((e) => {
                             const Icon = e.type === "qaida" ? BookMarked : BookOpen
                             const range = `${format(e.startedAt, "MMM yyyy")} → ${
-                              e.isCurrent
-                                ? "Now"
-                                : e.endedAt
-                                  ? format(e.endedAt, "MMM yyyy")
-                                  : "…"
+                              e.isCurrent ? "Now" : e.endedAt ? format(e.endedAt, "MMM yyyy") : "…"
                             }`
                             const duration = fmtDuration(e.startedAt, e.endedAt ?? new Date())
                             return (
@@ -516,14 +531,10 @@ export default function ClassPage() {
                                 </span>
 
                                 <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                                  <span
-                                    className="text-[13px] font-medium truncate text-foreground"
-                                  >
+                                  <span className="text-[13px] font-medium truncate text-foreground">
                                     {range}
                                   </span>
-                                  <span
-                                    className="text-[11px] font-semibold tabular-nums shrink-0 text-muted-foreground"
-                                  >
+                                  <span className="text-[11px] font-semibold tabular-nums shrink-0 text-muted-foreground">
                                     {duration}
                                   </span>
                                 </div>
@@ -603,13 +614,15 @@ export default function ClassPage() {
                   <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
                   <p className="text-[13px] font-medium text-muted-foreground">
                     <span className="font-bold text-foreground">
-                      {differenceInDays(new Date(), parseLocalDate(selected.started_at) ?? new Date()).toLocaleString()}
+                      {differenceInDays(
+                        new Date(),
+                        parseLocalDate(selected.started_at) ?? new Date(),
+                      ).toLocaleString()}
                     </span>{" "}
                     days since enrollment
                   </p>
                 </div>
               </div>
-
             </div>
           )}
         </>
@@ -647,7 +660,9 @@ export default function ClassPage() {
                   </div>
                   <div className="max-h-[320px] overflow-y-auto py-1">
                     {filteredStudents.length === 0 ? (
-                      <p className="px-4 py-6 text-center text-sm text-muted-foreground">No matches</p>
+                      <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        No matches
+                      </p>
                     ) : (
                       filteredStudents.map((s) => (
                         <button
@@ -666,7 +681,9 @@ export default function ClassPage() {
                           <span className="flex-1 min-w-0">
                             <span className="block text-sm font-medium truncate">{s.name}</span>
                             {s.class_time && (
-                              <span className="block text-xs text-muted-foreground">{s.class_time}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {s.class_time}
+                              </span>
                             )}
                           </span>
                         </button>
@@ -727,7 +744,6 @@ export default function ClassPage() {
           )}
         </div>
       )}
-
     </div>
   )
 }

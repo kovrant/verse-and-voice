@@ -21,7 +21,7 @@ export async function saveLastPage(
   studentId: string,
   paraNumber: number,
   page: number,
-  totalPages?: number
+  totalPages?: number,
 ): Promise<void> {
   const { data } = await supabase
     .from("student_para_progress")

@@ -24,7 +24,7 @@ export function ThemeToggle() {
             seg,
             !dark
               ? "bg-card text-foreground shadow-soft"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Sun className="h-3.5 w-3.5" />
@@ -38,7 +38,7 @@ export function ThemeToggle() {
             seg,
             dark
               ? "bg-card text-foreground shadow-soft"
-              : "text-muted-foreground hover:text-foreground"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <Moon className="h-3.5 w-3.5" />

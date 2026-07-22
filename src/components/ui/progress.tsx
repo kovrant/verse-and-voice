@@ -22,7 +22,7 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         style={{ left: `calc(${Math.min(100, Math.max(0, value))}% - 8px)` }}
       />
     </div>
-  )
+  ),
 )
 Progress.displayName = "Progress"
 

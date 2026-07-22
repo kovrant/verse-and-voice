@@ -77,19 +77,25 @@ function ScrollColumn({
     }
   }, [])
 
-  const nudge = useCallback((dir: -1 | 1) => {
-    const i = items.indexOf(selected)
-    const next = i + dir
-    if (next >= 0 && next < items.length) {
-      isScrollingRef.current = false // allow useEffect to scroll
-      onSelect(items[next])
-    }
-  }, [items, selected, onSelect])
+  const nudge = useCallback(
+    (dir: -1 | 1) => {
+      const i = items.indexOf(selected)
+      const next = i + dir
+      if (next >= 0 && next < items.length) {
+        isScrollingRef.current = false // allow useEffect to scroll
+        onSelect(items[next])
+      }
+    },
+    [items, selected, onSelect],
+  )
 
-  const handleItemClick = useCallback((item: string) => {
-    isScrollingRef.current = false
-    onSelect(item)
-  }, [onSelect])
+  const handleItemClick = useCallback(
+    (item: string) => {
+      isScrollingRef.current = false
+      onSelect(item)
+    },
+    [onSelect],
+  )
 
   return (
     <div className={cn("flex flex-col items-center gap-1", width)}>
@@ -100,7 +106,7 @@ function ScrollColumn({
           "p-1.5 rounded-lg transition-colors",
           selectedIndex <= 0
             ? "text-muted-foreground/20 cursor-not-allowed"
-            : "text-muted-foreground hover:text-foreground hover:bg-secondary active:scale-95"
+            : "text-muted-foreground hover:text-foreground hover:bg-secondary active:scale-95",
         )}
         disabled={selectedIndex <= 0}
       >
@@ -137,7 +143,7 @@ function ScrollColumn({
                   ? "text-emerald-400 font-bold text-xl"
                   : distance === 1
                     ? "text-muted-foreground/60 text-base"
-                    : "text-muted-foreground/25 text-sm"
+                    : "text-muted-foreground/25 text-sm",
               )}
               style={{
                 height: itemHeight,
@@ -161,7 +167,7 @@ function ScrollColumn({
           "p-1.5 rounded-lg transition-colors",
           selectedIndex >= items.length - 1
             ? "text-muted-foreground/20 cursor-not-allowed"
-            : "text-muted-foreground hover:text-foreground hover:bg-secondary active:scale-95"
+            : "text-muted-foreground hover:text-foreground hover:bg-secondary active:scale-95",
         )}
         disabled={selectedIndex >= items.length - 1}
       >
@@ -206,9 +212,18 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
   }, [hour, minute, period])
 
   // Wrapped setters that mark the picker as user-touched before updating state.
-  const pickHour = useCallback((v: string) => { interactedRef.current = true; setHour(v) }, [])
-  const pickMinute = useCallback((v: string) => { interactedRef.current = true; setMinute(v) }, [])
-  const pickPeriod = useCallback((v: string) => { interactedRef.current = true; setPeriod(v) }, [])
+  const pickHour = useCallback((v: string) => {
+    interactedRef.current = true
+    setHour(v)
+  }, [])
+  const pickMinute = useCallback((v: string) => {
+    interactedRef.current = true
+    setMinute(v)
+  }, [])
+  const pickPeriod = useCallback((v: string) => {
+    interactedRef.current = true
+    setPeriod(v)
+  }, [])
 
   // Open/close the dropdown. When opening an empty picker, seed sensible defaults
   // into the columns WITHOUT marking interaction, so nothing is written unless
@@ -239,9 +254,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
   const minutes = ["00", "05", "10", "15", "20", "25", "30", "35", "40", "45", "50", "55"]
   const periods = ["AM", "PM"]
 
-  const displayValue = hour && minute && period
-    ? `${hour}:${minute} ${period} PKT`
-    : ""
+  const displayValue = hour && minute && period ? `${hour}:${minute} ${period} PKT` : ""
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -253,7 +266,7 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
           "flex h-11 w-full items-center gap-3 rounded-xl border border-border/50 bg-secondary/50 px-4 py-2 text-sm text-left transition-all duration-200",
           "hover:border-border hover:bg-secondary/80",
           open && "ring-2 ring-emerald-500/30 border-emerald-500/50 bg-secondary",
-          !displayValue && "text-muted-foreground/60"
+          !displayValue && "text-muted-foreground/60",
         )}
       >
         <Clock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
@@ -281,7 +294,9 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
         <div className="absolute z-50 mt-2 w-full rounded-2xl border border-border/50 bg-card shadow-xl shadow-black/20 overflow-hidden animate-fade-in-up">
           {/* Header */}
           <div className="px-4 py-3 border-b border-border/50 bg-secondary/30">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Select Time</p>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Select Time
+            </p>
             <p className="text-lg font-bold text-emerald-400 mt-0.5">
               {hour || "--"}:{minute || "--"} {period || "--"}{" "}
               <span className="text-xs text-muted-foreground font-normal">PKT</span>
@@ -291,37 +306,25 @@ export function TimePicker({ value, onChange, placeholder }: TimePickerProps) {
           {/* Scroll columns */}
           <div className="relative flex items-center justify-center gap-0 py-2 px-2">
             {/* Selection highlight bar */}
-            <div className="absolute inset-x-3 pointer-events-none" style={{ top: "50%", transform: "translateY(-50%)" }}>
+            <div
+              className="absolute inset-x-3 pointer-events-none"
+              style={{ top: "50%", transform: "translateY(-50%)" }}
+            >
               <div
                 className="rounded-xl border border-emerald-500/20 bg-emerald-500/5"
                 style={{ height: 44 }}
               />
             </div>
 
-            <ScrollColumn
-              items={hours}
-              selected={hour}
-              onSelect={pickHour}
-              width="flex-1"
-            />
+            <ScrollColumn items={hours} selected={hour} onSelect={pickHour} width="flex-1" />
 
             <div className="text-2xl font-bold text-muted-foreground/30 self-center">:</div>
 
-            <ScrollColumn
-              items={minutes}
-              selected={minute}
-              onSelect={pickMinute}
-              width="flex-1"
-            />
+            <ScrollColumn items={minutes} selected={minute} onSelect={pickMinute} width="flex-1" />
 
             <div className="w-px h-16 bg-border/50 mx-2 self-center" />
 
-            <ScrollColumn
-              items={periods}
-              selected={period}
-              onSelect={pickPeriod}
-              width="w-16"
-            />
+            <ScrollColumn items={periods} selected={period} onSelect={pickPeriod} width="w-16" />
           </div>
 
           {/* Footer */}

@@ -6,15 +6,33 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { useClassChannel } from "@/lib/use-class-channel"
 import {
-  ChevronLeft, ChevronRight, Clock, X, PanelLeftClose, PanelLeftOpen,
-  BookMarked, Sparkles, Check, RotateCcw, Shuffle, ArrowUpRight,
-  Square, FileText, BookOpen, Loader2,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  X,
+  PanelLeftClose,
+  PanelLeftOpen,
+  BookMarked,
+  Sparkles,
+  Check,
+  RotateCcw,
+  Shuffle,
+  ArrowUpRight,
+  Square,
+  FileText,
+  BookOpen,
+  Loader2,
 } from "lucide-react"
 import { format, differenceInCalendarDays } from "date-fns"
 import { formatLocalDate } from "@/lib/utils"
@@ -32,7 +50,7 @@ const SyncedPdfViewer = dynamic(
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     ),
-  }
+  },
 )
 
 interface QuranPara {
@@ -91,8 +109,14 @@ function formatDuration(seconds: number): string {
 }
 
 export default function LiveSession({
-  student, rounds, memItems, paras, initialParaNumber,
-  onEnd, onMemItemsChange, onRoundsChange,
+  student,
+  rounds,
+  memItems,
+  paras,
+  initialParaNumber,
+  onEnd,
+  onMemItemsChange,
+  onRoundsChange,
 }: LiveSessionProps) {
   const [currentParaNumber, setCurrentParaNumber] = useState(initialParaNumber)
   const [parasViewed, setParasViewed] = useState<Set<number>>(() => new Set([initialParaNumber]))
@@ -135,21 +159,29 @@ export default function LiveSession({
   // Arrow keys page through the PDF (handled inside <SyncedPdfViewer>).
   // Para switching is an explicit button in the top bar.
 
-  const currentPara = paras.find(p => p.meta?.para_number === currentParaNumber) || null
+  const currentPara = paras.find((p) => p.meta?.para_number === currentParaNumber) || null
 
   function navigatePara(direction: "prev" | "next") {
     const next = direction === "prev" ? currentParaNumber - 1 : currentParaNumber + 1
     if (next < 1 || next > 30) return
     setCurrentParaNumber(next)
     setPdfPage(1)
-    setParasViewed(prev => { const s = new Set(Array.from(prev)); s.add(next); return s })
+    setParasViewed((prev) => {
+      const s = new Set(Array.from(prev))
+      s.add(next)
+      return s
+    })
   }
 
   // ── Realtime: the teacher hosts the live class channel ──
   // Echo guard by VALUE: remember the last position the student pushed us to and
   // only broadcast when ours differs — immune to duplicate/no-op broadcasts.
   const lastRemote = useRef<{ paraNumber: number; page: number } | null>(null)
-  const { live: studentJoined, sendNav, endClass } = useClassChannel({
+  const {
+    live: studentJoined,
+    sendNav,
+    endClass,
+  } = useClassChannel({
     studentId: student.id,
     role: "teacher",
     onNav: (nav) => {
@@ -194,10 +226,9 @@ export default function LiveSession({
     })
   }, [student.id, initialParaNumber])
 
-
   // Memorization
-  const memorizing = memItems.filter(m => m.status === "memorizing")
-  const memorized = memItems.filter(m => m.status === "memorized")
+  const memorizing = memItems.filter((m) => m.status === "memorizing")
+  const memorized = memItems.filter((m) => m.status === "memorized")
 
   function pickRevision() {
     if (memorized.length === 0) return
@@ -208,7 +239,7 @@ export default function LiveSession({
     })
     // "Another" should actually change the pick: exclude the current one, then
     // choose randomly among the least-recently-revised few for some variety.
-    const pool = revisionPick ? sorted.filter(m => m.id !== revisionPick.id) : sorted
+    const pool = revisionPick ? sorted.filter((m) => m.id !== revisionPick.id) : sorted
     const candidates = pool.length > 0 ? pool : sorted
     const topN = candidates.slice(0, Math.min(3, candidates.length))
     setRevisionPick(topN[Math.floor(Math.random() * topN.length)])
@@ -227,10 +258,10 @@ export default function LiveSession({
 
     // Only count the revision once the DB write succeeded, and only if the item
     // actually has a title (avoid pushing undefined into the string[]).
-    const item = memItems.find(m => m.id === id)
+    const item = memItems.find((m) => m.id === id)
     const title = item?.memorization_catalog?.title
     if (title) {
-      setRevisionsThisSession(prev => [...prev, title])
+      setRevisionsThisSession((prev) => [...prev, title])
     }
 
     const { data } = await supabase
@@ -259,10 +290,7 @@ export default function LiveSession({
         }
       : { asc_completed: currentParaNumber + 1 }
 
-    const { error } = await supabase
-      .from("quran_rounds")
-      .update(update)
-      .eq("id", activeRound.id)
+    const { error } = await supabase.from("quran_rounds").update(update).eq("id", activeRound.id)
 
     if (error) {
       toast.error(`Couldn't update progress: ${error.message}`)
@@ -359,7 +387,9 @@ export default function LiveSession({
           {/* Live presence */}
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-              studentJoined ? "bg-emerald-500/15 text-emerald-600" : "bg-secondary text-muted-foreground"
+              studentJoined
+                ? "bg-emerald-500/15 text-emerald-600"
+                : "bg-secondary text-muted-foreground"
             }`}
           >
             <span
@@ -375,7 +405,9 @@ export default function LiveSession({
           {/* Timer — white pill, deep ink digits */}
           <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
             <Clock className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-bold text-foreground tabular-nums">{formatTimer(elapsed)}</span>
+            <span className="text-sm font-bold text-foreground tabular-nums">
+              {formatTimer(elapsed)}
+            </span>
           </div>
 
           {/* Sidebar toggle */}
@@ -385,7 +417,11 @@ export default function LiveSession({
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="h-8 w-8 p-0"
           >
-            {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
+            {sidebarOpen ? (
+              <PanelLeftClose className="h-4 w-4" />
+            ) : (
+              <PanelLeftOpen className="h-4 w-4" />
+            )}
           </Button>
 
           {/* End Class */}
@@ -440,7 +476,9 @@ export default function LiveSession({
                     </p>
                     <p className="text-sm text-foreground">
                       Student is on Para{" "}
-                      <span className="text-primary font-bold">{activeRound.asc_completed || 1}</span>
+                      <span className="text-primary font-bold">
+                        {activeRound.asc_completed || 1}
+                      </span>
                     </p>
                     {activeRound.desc_completed > 0 && (
                       <p className="text-xs text-muted-foreground">
@@ -545,23 +583,41 @@ export default function LiveSession({
                             </div>
                             {revisionPick.last_revised_at && (
                               <p className="text-[10px] text-muted-foreground">
-                                Last: {format(new Date(revisionPick.last_revised_at), "MMM d")}
-                                {" "}({differenceInCalendarDays(new Date(), new Date(revisionPick.last_revised_at))}d ago)
+                                Last: {format(new Date(revisionPick.last_revised_at), "MMM d")} (
+                                {differenceInCalendarDays(
+                                  new Date(),
+                                  new Date(revisionPick.last_revised_at),
+                                )}
+                                d ago)
                               </p>
                             )}
                             <div className="flex gap-1.5">
-                              <Button size="sm" className="h-7 text-xs" onClick={() => markRevised(revisionPick.id)}>
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs"
+                                onClick={() => markRevised(revisionPick.id)}
+                              >
                                 <Check className="h-3 w-3 mr-1" />
                                 Revised
                               </Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={pickRevision}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs"
+                                onClick={pickRevision}
+                              >
                                 <Shuffle className="h-3 w-3 mr-1" />
                                 Another
                               </Button>
                             </div>
                           </div>
                         ) : (
-                          <Button variant="outline" size="sm" onClick={pickRevision} className="w-full text-xs">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={pickRevision}
+                            className="w-full text-xs"
+                          >
                             <Shuffle className="h-3 w-3 mr-1.5" />
                             Pick Revision
                           </Button>
@@ -584,11 +640,15 @@ export default function LiveSession({
                 <div className="text-sm space-y-0.5">
                   <p className="text-muted-foreground">
                     Paras viewed:{" "}
-                    <span className="font-bold text-foreground tabular-nums">{parasViewed.size}</span>
+                    <span className="font-bold text-foreground tabular-nums">
+                      {parasViewed.size}
+                    </span>
                   </p>
                   <p className="text-muted-foreground">
                     Revisions done:{" "}
-                    <span className="font-bold text-foreground tabular-nums">{revisionsThisSession.length}</span>
+                    <span className="font-bold text-foreground tabular-nums">
+                      {revisionsThisSession.length}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -621,7 +681,9 @@ export default function LiveSession({
                   <BookOpen className="h-7 w-7 text-muted-foreground" />
                 </div>
                 <p className="text-lg font-medium">Para {currentParaNumber} not uploaded</p>
-                <p className="text-sm text-muted-foreground">Upload this para from the Media Library</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload this para from the Media Library
+                </p>
               </div>
             </div>
           )}
@@ -630,9 +692,7 @@ export default function LiveSession({
 
       {/* End Class Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent
-          className="max-w-md bg-card border border-border rounded-[20px] p-8"
-        >
+        <DialogContent className="max-w-md bg-card border border-border rounded-[20px] p-8">
           <DialogHeader className="space-y-1.5">
             <DialogTitle className="text-[22px] font-bold text-foreground">
               End Class Session
@@ -670,7 +730,9 @@ export default function LiveSession({
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-primary tabular-nums">
-                  {Array.from(parasViewed).sort((a, b) => a - b).join(", ")}
+                  {Array.from(parasViewed)
+                    .sort((a, b) => a - b)
+                    .join(", ")}
                 </div>
               </div>
             </div>
@@ -699,9 +761,7 @@ export default function LiveSession({
 
             {/* Notes */}
             <div className="space-y-2">
-              <label className="text-[13px] font-semibold text-foreground">
-                Notes (optional)
-              </label>
+              <label className="text-[13px] font-semibold text-foreground">Notes (optional)</label>
               <Textarea
                 placeholder="How did the session go? Any observations..."
                 value={notes}

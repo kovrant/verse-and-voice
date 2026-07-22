@@ -42,19 +42,23 @@ export default function NewStudentPage() {
     setSaving(true)
 
     // Insert student
-    const { data: student, error } = await supabase.from("students").insert({
-      name: form.name,
-      guardian_name: form.guardian_name,
-      country: form.country || null,
-      started_at: form.started_at,
-      fee: parseFloat(form.fee),
-      fee_currency: form.fee_currency,
-      is_qaida: form.round_type === "qaida",
-      desc_completed: form.round_type === "quran" ? parseInt(form.desc_completed) || 0 : 0,
-      asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
-      class_time: form.class_time || null,
-      status: "Reading",
-    }).select("id").single()
+    const { data: student, error } = await supabase
+      .from("students")
+      .insert({
+        name: form.name,
+        guardian_name: form.guardian_name,
+        country: form.country || null,
+        started_at: form.started_at,
+        fee: parseFloat(form.fee),
+        fee_currency: form.fee_currency,
+        is_qaida: form.round_type === "qaida",
+        desc_completed: form.round_type === "quran" ? parseInt(form.desc_completed) || 0 : 0,
+        asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
+        class_time: form.class_time || null,
+        status: "Reading",
+      })
+      .select("id")
+      .single()
 
     if (error || !student) {
       toast.error("Error saving student: " + (error?.message || "Unknown error"))
@@ -75,7 +79,7 @@ export default function NewStudentPage() {
     if (roundError) {
       toast.error(
         `Student saved, but the starting round failed: ${roundError.message}. ` +
-        `You can add it from the student's page.`
+          `You can add it from the student's page.`,
       )
       setSaving(false)
     }
@@ -87,9 +91,13 @@ export default function NewStudentPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
       <div>
         <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-          <Link href="/" className="hover:text-foreground transition-colors">Dashboard</Link>
+          <Link href="/" className="hover:text-foreground transition-colors">
+            Dashboard
+          </Link>
           <span className="text-muted-foreground/40">/</span>
-          <Link href="/students" className="hover:text-foreground transition-colors">Students</Link>
+          <Link href="/students" className="hover:text-foreground transition-colors">
+            Students
+          </Link>
           <span className="text-muted-foreground/40">/</span>
           <span className="text-foreground font-medium">New</span>
         </nav>
@@ -116,7 +124,9 @@ export default function NewStudentPage() {
             </div>
             <div>
               <CardTitle>Student Information</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">Fields marked with * are required</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Fields marked with * are required
+              </p>
             </div>
           </div>
         </CardHeader>
@@ -163,7 +173,9 @@ export default function NewStudentPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRIES.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -243,7 +255,14 @@ export default function NewStudentPage() {
               <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
                 <button
                   type="button"
-                  onClick={() => setForm({ ...form, round_type: "qaida", desc_completed: "0", asc_completed: "0" })}
+                  onClick={() =>
+                    setForm({
+                      ...form,
+                      round_type: "qaida",
+                      desc_completed: "0",
+                      asc_completed: "0",
+                    })
+                  }
                   className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
                     form.round_type === "qaida"
                       ? "bg-secondary text-foreground shadow-sm"
@@ -267,8 +286,12 @@ export default function NewStudentPage() {
 
               {form.round_type === "qaida" ? (
                 <div className="rounded-xl border border-border bg-muted p-4">
-                  <p className="text-sm text-foreground font-medium">Student is learning the basics</p>
-                  <p className="text-xs text-muted-foreground mt-1">Norani Qaida must be completed before starting Quran reading.</p>
+                  <p className="text-sm text-foreground font-medium">
+                    Student is learning the basics
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Norani Qaida must be completed before starting Quran reading.
+                  </p>
                 </div>
               ) : (
                 <div className="grid gap-5 sm:grid-cols-2">
@@ -316,7 +339,9 @@ export default function NewStudentPage() {
                 )}
               </Button>
               <Link href="/students">
-                <Button type="button" variant="outline">Cancel</Button>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
               </Link>
             </div>
           </form>

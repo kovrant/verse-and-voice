@@ -86,7 +86,12 @@ describe("getStudentStage", () => {
     const rounds = [
       round({ type: "qaida", completed_at: "2020-06-01" }),
       round({ type: "quran", completed_at: "2021-06-01", round_number: 1 }),
-      round({ type: "quran", completed_at: "2022-06-01", round_number: 2, started_at: "2021-07-01" }),
+      round({
+        type: "quran",
+        completed_at: "2022-06-01",
+        round_number: 2,
+        started_at: "2021-07-01",
+      }),
       round({ type: "quran", round_number: 3, started_at: "2022-07-01" }), // active
     ]
     const stage = getStudentStage(rounds)
@@ -99,8 +104,18 @@ describe("getStudentStage", () => {
 
 describe("getChronologicalRoundNumber", () => {
   it("numbers completed quran rounds first, then the active one", () => {
-    const r1 = round({ id: "r1", type: "quran", completed_at: "2021-01-01", started_at: "2020-01-01" })
-    const r2 = round({ id: "r2", type: "quran", completed_at: "2022-01-01", started_at: "2021-02-01" })
+    const r1 = round({
+      id: "r1",
+      type: "quran",
+      completed_at: "2021-01-01",
+      started_at: "2020-01-01",
+    })
+    const r2 = round({
+      id: "r2",
+      type: "quran",
+      completed_at: "2022-01-01",
+      started_at: "2021-02-01",
+    })
     const active = round({ id: "r3", type: "quran", started_at: "2022-02-01" })
     const rounds = [active, r2, r1]
     expect(getChronologicalRoundNumber(rounds, r1)).toBe(1)

@@ -35,7 +35,11 @@ async function fetchRates(): Promise<Rates> {
   return { GBP: 0.0027, USD: 0.0036, SAR: 0.0133, BHD: 0.0014, PKR: 1 }
 }
 
-export function convertToPKR(amount: number, fromCurrency: string, rates: Rates | null): number | null {
+export function convertToPKR(
+  amount: number,
+  fromCurrency: string,
+  rates: Rates | null,
+): number | null {
   if (!rates || fromCurrency === "PKR") return null
   const rate = rates[fromCurrency]
   if (!rate || rate === 0) return null
@@ -47,7 +51,7 @@ export function useExchangeRates() {
   const [loading, setLoading] = useState(!cachedRates)
 
   useEffect(() => {
-    fetchRates().then(r => {
+    fetchRates().then((r) => {
       setRates(r)
       setLoading(false)
     })

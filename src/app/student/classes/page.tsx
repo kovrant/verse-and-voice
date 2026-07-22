@@ -30,7 +30,7 @@ export default function StudentClassesPage() {
   useEffect(() => {
     if (!student) return
     fetchAllRows<ClassSession>("class_sessions", (q) =>
-      q.select("*").eq("student_id", student.id).order("started_at", { ascending: false })
+      q.select("*").eq("student_id", student.id).order("started_at", { ascending: false }),
     ).then((data) => {
       setSessions(data)
       setLoadingSessions(false)
@@ -75,9 +75,13 @@ export default function StudentClassesPage() {
           </span>
           <span className="flex-1 min-w-0">
             <span className="block font-bold text-foreground">Your class is live now</span>
-            <span className="block text-sm text-muted-foreground">Tap to join and follow along with your teacher.</span>
+            <span className="block text-sm text-muted-foreground">
+              Tap to join and follow along with your teacher.
+            </span>
           </span>
-          <span className="flex-shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">Join →</span>
+          <span className="flex-shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+            Join →
+          </span>
         </button>
       )}
 
@@ -88,9 +92,7 @@ export default function StudentClassesPage() {
               <Clock className="h-6 w-6 text-primary" />
             </div>
             <p className="text-base font-semibold mb-1">No sessions yet</p>
-            <p className="text-sm text-muted-foreground">
-              Sessions appear here after each class.
-            </p>
+            <p className="text-sm text-muted-foreground">Sessions appear here after each class.</p>
           </CardContent>
         </Card>
       ) : (

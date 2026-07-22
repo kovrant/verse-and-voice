@@ -28,7 +28,7 @@ export function SortableHeader({
       onClick={() => onSort(sortKey)}
       className={cn(
         "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider transition-colors group",
-        isActive ? "text-emerald-400" : "text-muted-foreground hover:text-foreground"
+        isActive ? "text-emerald-400" : "text-muted-foreground hover:text-foreground",
       )}
     >
       {label}
@@ -45,19 +45,11 @@ export function SortableHeader({
   )
 }
 
-export function useSorting<T>(
-  data: T[],
-  defaultKey?: string,
-  defaultDirection?: SortDirection
-) {
+export function useSorting<T>(data: T[], defaultKey?: string, defaultDirection?: SortDirection) {
   // This is a utility — use it with useState in the component
 }
 
-export function sortData<T>(
-  data: T[],
-  sortKey: string | null,
-  direction: SortDirection
-): T[] {
+export function sortData<T>(data: T[], sortKey: string | null, direction: SortDirection): T[] {
   if (!sortKey || !direction) return data
 
   return [...data].sort((a, b) => {
@@ -82,7 +74,7 @@ export function sortData<T>(
 export function toggleSort(
   currentKey: string | null,
   currentDirection: SortDirection,
-  newKey: string
+  newKey: string,
 ): { key: string; direction: SortDirection } {
   if (currentKey !== newKey) return { key: newKey, direction: "asc" }
   if (currentDirection === "asc") return { key: newKey, direction: "desc" }

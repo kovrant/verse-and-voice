@@ -26,7 +26,7 @@ interface QuranProgressProps {
  * started_at (then round_number) rather than relying on array position.
  */
 export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
-  const incomplete = rounds.filter(r => !r.completed_at)
+  const incomplete = rounds.filter((r) => !r.completed_at)
   if (incomplete.length === 0) return null
   return incomplete.reduce((latest, r) => {
     const cmp = r.started_at.localeCompare(latest.started_at)
@@ -40,7 +40,9 @@ export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
  * Get completed rounds sorted by round_number.
  */
 export function getCompletedRounds(rounds: QuranRound[]): QuranRound[] {
-  return rounds.filter(r => r.completed_at).sort((a, b) => a.started_at.localeCompare(b.started_at))
+  return rounds
+    .filter((r) => r.completed_at)
+    .sort((a, b) => a.started_at.localeCompare(b.started_at))
 }
 
 /**
@@ -53,8 +55,8 @@ export function getStudentStage(rounds: QuranRound[]): {
   completedQaidaCount: number
 } {
   const active = getActiveRound(rounds)
-  const completedQuran = rounds.filter(r => r.type === "quran" && r.completed_at)
-  const completedQaida = rounds.filter(r => r.type === "qaida" && r.completed_at)
+  const completedQuran = rounds.filter((r) => r.type === "quran" && r.completed_at)
+  const completedQaida = rounds.filter((r) => r.type === "qaida" && r.completed_at)
   const isQaida = active?.type === "qaida"
 
   return {
@@ -70,14 +72,16 @@ export function getStudentStage(rounds: QuranRound[]): {
  * Completed rounds are numbered first (by started_at), active rounds get the next number.
  */
 export function getChronologicalRoundNumber(rounds: QuranRound[], round: QuranRound): number {
-  const quranRounds = rounds.filter(r => r.type === "quran").sort((a, b) => {
-    // Completed rounds first, then active
-    const aActive = !a.completed_at ? 1 : 0
-    const bActive = !b.completed_at ? 1 : 0
-    if (aActive !== bActive) return aActive - bActive
-    return a.started_at.localeCompare(b.started_at)
-  })
-  const idx = quranRounds.findIndex(r => r.id === round.id)
+  const quranRounds = rounds
+    .filter((r) => r.type === "quran")
+    .sort((a, b) => {
+      // Completed rounds first, then active
+      const aActive = !a.completed_at ? 1 : 0
+      const bActive = !b.completed_at ? 1 : 0
+      if (aActive !== bActive) return aActive - bActive
+      return a.started_at.localeCompare(b.started_at)
+    })
+  const idx = quranRounds.findIndex((r) => r.id === round.id)
   return idx >= 0 ? idx + 1 : round.round_number
 }
 
@@ -111,7 +115,10 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
     }
     if (isQaida) {
       return (
-        <Badge variant="outline" className="border-amber-500/30 text-amber-400 bg-amber-500/5 gap-1">
+        <Badge
+          variant="outline"
+          className="border-amber-500/30 text-amber-400 bg-amber-500/5 gap-1"
+        >
           <BookMarked className="h-3 w-3" />
           Norani Qaida
         </Badge>
@@ -129,7 +136,9 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
       return (
         <span className="text-muted-foreground text-sm">
           Quran R{activeRoundNum}
-          {completedQuranCount > 0 && <span className="text-emerald-400/60 ml-1">({completedQuranCount}x done)</span>}
+          {completedQuranCount > 0 && (
+            <span className="text-emerald-400/60 ml-1">({completedQuranCount}x done)</span>
+          )}
         </span>
       )
     }
@@ -172,10 +181,7 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <span className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0 bg-secondary">
-                <BookMarked
-                  className="h-5 w-5 text-muted-foreground"
-                  strokeWidth={2.25}
-                />
+                <BookMarked className="h-5 w-5 text-muted-foreground" strokeWidth={2.25} />
               </span>
               <div className="min-w-0">
                 <p
@@ -188,7 +194,8 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
                   Norani Qaida
                   {activeRound && activeRoundNum > 1 ? (
                     <span className="font-medium text-muted-foreground">
-                      {" "}· Round {activeRoundNum}
+                      {" "}
+                      · Round {activeRoundNum}
                     </span>
                   ) : null}
                 </h3>
@@ -242,9 +249,7 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
                 </span>
               </div>
             ) : (
-              <span className="text-sm text-muted-foreground">
-                Not started
-              </span>
+              <span className="text-sm text-muted-foreground">Not started</span>
             )}
           </div>
         </div>
@@ -255,8 +260,8 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
               <div className="flex gap-4 text-muted-foreground">
                 {desc > 0 && (
                   <span>
-                    From end:{" "}
-                    <span className="font-bold text-foreground tabular-nums">{desc}</span> paras
+                    From end: <span className="font-bold text-foreground tabular-nums">{desc}</span>{" "}
+                    paras
                   </span>
                 )}
                 {asc > 0 && (
@@ -328,4 +333,3 @@ export function QuranProgress({ rounds, variant = "compact" }: QuranProgressProp
     </>
   )
 }
-

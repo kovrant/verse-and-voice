@@ -4,14 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 import "react-pdf/dist/esm/Page/AnnotationLayer.css"
 import "react-pdf/dist/esm/Page/TextLayer.css"
-import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Maximize2,
-  Loader2,
-} from "lucide-react"
+import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize2, Loader2 } from "lucide-react"
 
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
@@ -65,7 +58,7 @@ export function SyncedPdfViewer({
       if (clamped !== page) onPageChange(clamped)
       scrollRef.current?.scrollTo({ top: 0 })
     },
-    [numPages, page, onPageChange]
+    [numPages, page, onPageChange],
   )
 
   // Keep an out-of-range controlled page in bounds once we know the count.
@@ -101,14 +94,26 @@ export function SyncedPdfViewer({
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
         <div className="flex items-center gap-1">
-          <button type="button" onClick={() => go(page - 1)} disabled={atFirst} aria-label="Previous page" className={iconBtn}>
+          <button
+            type="button"
+            onClick={() => go(page - 1)}
+            disabled={atFirst}
+            aria-label="Previous page"
+            className={iconBtn}
+          >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <span className="min-w-[92px] text-center text-sm font-medium tabular-nums text-foreground">
             Page {page}
             {numPages ? <span className="text-muted-foreground"> / {numPages}</span> : null}
           </span>
-          <button type="button" onClick={() => go(page + 1)} disabled={atLast} aria-label="Next page" className={iconBtn}>
+          <button
+            type="button"
+            onClick={() => go(page + 1)}
+            disabled={atLast}
+            aria-label="Next page"
+            className={iconBtn}
+          >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -119,14 +124,32 @@ export function SyncedPdfViewer({
               {followingLabel}
             </span>
           ) : null}
-          <button type="button" onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.15).toFixed(2)))} aria-label="Zoom out" className={iconBtn}>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.15).toFixed(2)))}
+            aria-label="Zoom out"
+            className={iconBtn}
+          >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <span className="w-10 text-center text-xs font-medium tabular-nums text-muted-foreground">{Math.round(zoom * 100)}%</span>
-          <button type="button" onClick={() => setZoom((z) => Math.min(3, +(z + 0.15).toFixed(2)))} aria-label="Zoom in" className={iconBtn}>
+          <span className="w-10 text-center text-xs font-medium tabular-nums text-muted-foreground">
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            type="button"
+            onClick={() => setZoom((z) => Math.min(3, +(z + 0.15).toFixed(2)))}
+            aria-label="Zoom in"
+            className={iconBtn}
+          >
             <ZoomIn className="h-4 w-4" />
           </button>
-          <button type="button" onClick={() => setZoom(1)} aria-label="Fit width" title="Fit width" className={iconBtn}>
+          <button
+            type="button"
+            onClick={() => setZoom(1)}
+            aria-label="Fit width"
+            title="Fit width"
+            className={iconBtn}
+          >
             <Maximize2 className="h-4 w-4" />
           </button>
         </div>

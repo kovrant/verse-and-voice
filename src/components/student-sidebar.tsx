@@ -59,7 +59,7 @@ export function StudentSidebar() {
           "transition-transform duration-300 ease-in-out",
           "lg:static lg:z-auto lg:translate-x-0 lg:flex-shrink-0 lg:w-72",
           "w-72",
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
         style={{ contain: "layout style paint" }}
       >
@@ -91,9 +91,7 @@ export function StudentSidebar() {
         {/* Nav */}
         <nav className="flex-1 space-y-0.5 overflow-y-auto overflow-x-hidden px-3 py-2">
           {navItems.map((item) => {
-            const isActive = item.exact
-              ? pathname === item.href
-              : pathname.startsWith(item.href)
+            const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
             return (
               <Link
                 key={item.href}
@@ -103,13 +101,15 @@ export function StudentSidebar() {
                   "group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-150",
                   isActive
                     ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )}
               >
                 <item.icon
                   className={cn(
                     "h-[18px] w-[18px] flex-shrink-0 transition-colors",
-                    isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground"
+                    isActive
+                      ? "text-foreground"
+                      : "text-muted-foreground group-hover:text-foreground",
                   )}
                   strokeWidth={2}
                 />

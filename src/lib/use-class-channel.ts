@@ -132,7 +132,7 @@ export function useClassChannel({
       .on("presence", { event: "sync" }, computePresence)
       .on("presence", { event: "join" }, ({ newPresences }) => {
         const others = (newPresences as Array<{ role?: ClassRole }>).some(
-          (p) => p.role && p.role !== role
+          (p) => p.role && p.role !== role,
         )
         if (others) onPeerJoinRef.current?.()
       })
@@ -202,7 +202,7 @@ export function useClassChannel({
       ch.send({ type: "broadcast", event: "nav", payload: { ...nav, by: clientId } })
       ch.track({ role, paraNumber: nav.paraNumber, page: nav.page }).catch(() => {})
     },
-    [clientId, role]
+    [clientId, role],
   )
 
   const endClass = useCallback(() => {

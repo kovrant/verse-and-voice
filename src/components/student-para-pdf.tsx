@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase"
 // react-pdf renders client-side only.
 const PdfThumbnail = dynamic(
   () => import("@/components/pdf-thumbnail").then((m) => m.PdfThumbnail),
-  { ssr: false, loading: () => null }
+  { ssr: false, loading: () => null },
 )
 
 interface ParaMedia {
@@ -41,12 +41,9 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
       if (!active) return
       const match =
         (data || []).find(
-          (m: { meta?: { para_number?: number } }) =>
-            Number(m.meta?.para_number) === paraNumber
+          (m: { meta?: { para_number?: number } }) => Number(m.meta?.para_number) === paraNumber,
         ) || null
-      setItem(
-        match ? { id: match.id, title: match.title, file_url: match.file_url } : null
-      )
+      setItem(match ? { id: match.id, title: match.title, file_url: match.file_url } : null)
       setLoading(false)
     }
     load()
@@ -88,7 +85,9 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
             fileUrl={item.file_url}
             width={126}
             fallback={
-              <div className="flex h-full items-center justify-center bg-secondary text-3xl">📄</div>
+              <div className="flex h-full items-center justify-center bg-secondary text-3xl">
+                📄
+              </div>
             }
           />
         </a>
@@ -100,7 +99,10 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
 
       {/* Details */}
       <div className="min-w-0 flex-1">
-        <div className="text-[12px] font-semibold text-muted-foreground" style={{ letterSpacing: "1.4px" }}>
+        <div
+          className="text-[12px] font-semibold text-muted-foreground"
+          style={{ letterSpacing: "1.4px" }}
+        >
           CURRENT PARA
         </div>
         <div className="font-heading text-[22px] font-bold text-foreground">
@@ -110,7 +112,9 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
 
         {item ? (
           <>
-            <div className="mt-1 text-[13px] text-muted-foreground">Open your current juz to read along.</div>
+            <div className="mt-1 text-[13px] text-muted-foreground">
+              Open your current juz to read along.
+            </div>
             <div className="mt-[16px] flex flex-wrap gap-[10px]">
               <a
                 href={item.file_url}

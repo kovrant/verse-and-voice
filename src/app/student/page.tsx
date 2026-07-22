@@ -15,8 +15,8 @@ import { StudentMemorizationCard } from "@/components/student-memorization-card"
 
 /** Bar heights for the 30-para tracker. */
 const BAR_HEIGHTS = [
-  56, 62, 50, 68, 58, 66, 54, 60, 64, 52, 66, 58, 70, 56, 62, 68, 54, 64, 60, 66,
-  58, 52, 64, 44, 40, 42, 38, 44, 40, 46,
+  56, 62, 50, 68, 58, 66, 54, 60, 64, 52, 66, 58, 70, 56, 62, 68, 54, 64, 60, 66, 58, 52, 64, 44,
+  40, 42, 38, 44, 40, 46,
 ]
 
 const QUICK_LINKS = [
@@ -97,7 +97,10 @@ export default function StudentDashboardPage() {
         </div>
         <div>
           <div className="text-[18px] font-medium text-muted-foreground">Assalamu Alaikum</div>
-          <div className="font-heading font-bold tracking-tight text-foreground" style={{ fontSize: "clamp(30px, 7vw, 40px)" }}>
+          <div
+            className="font-heading font-bold tracking-tight text-foreground"
+            style={{ fontSize: "clamp(30px, 7vw, 40px)" }}
+          >
             {student.name}
           </div>
         </div>
@@ -107,10 +110,15 @@ export default function StudentDashboardPage() {
       <div className="mb-[26px] rounded-2xl border border-border bg-[hsl(var(--surface-alt))] p-[26px_28px_30px]">
         <div className="mb-[22px] flex items-center gap-[9px]">
           <span className="text-[19px]">✨</span>
-          <span className="font-heading text-[19px] font-bold text-foreground">My Quran Journey</span>
+          <span className="font-heading text-[19px] font-bold text-foreground">
+            My Quran Journey
+          </span>
         </div>
 
-        <div className="grid items-stretch gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}>
+        <div
+          className="grid items-stretch gap-[22px]"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}
+        >
           {/* Student card */}
           <div className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-border bg-card p-[24px_22px_22px] shadow-soft">
             <div className="absolute inset-x-0 top-0 h-[92px] bg-secondary" />
@@ -126,7 +134,10 @@ export default function StudentDashboardPage() {
               />
               <div className="absolute inset-0 rounded-full bg-card" />
               <div className="absolute inset-[5px] flex items-center justify-center overflow-hidden rounded-full bg-secondary">
-                <span className="font-heading text-foreground font-extrabold" style={{ fontSize: "74px", letterSpacing: "-2px" }}>
+                <span
+                  className="font-heading text-foreground font-extrabold"
+                  style={{ fontSize: "74px", letterSpacing: "-2px" }}
+                >
                   {initial}
                 </span>
               </div>
@@ -135,8 +146,12 @@ export default function StudentDashboardPage() {
               </div>
             </div>
 
-            <div className="font-heading mt-[22px] text-[23px] font-bold text-foreground">{student.name}</div>
-            <div className="mb-[16px] text-[13px] text-muted-foreground">@{username ?? "student"} · Age 9</div>
+            <div className="font-heading mt-[22px] text-[23px] font-bold text-foreground">
+              {student.name}
+            </div>
+            <div className="mb-[16px] text-[13px] text-muted-foreground">
+              @{username ?? "student"} · Age 9
+            </div>
 
             {/* Mini stats */}
             <div className="flex w-full gap-[10px]">
@@ -145,7 +160,9 @@ export default function StudentDashboardPage() {
                 <div className="text-[11px] font-medium text-muted-foreground">Paras</div>
               </div>
               <div className="flex-1 rounded-xl bg-secondary p-[10px_6px] text-center">
-                <div className="text-[19px] font-bold text-foreground">{stage.completedQuranCount}</div>
+                <div className="text-[19px] font-bold text-foreground">
+                  {stage.completedQuranCount}
+                </div>
                 <div className="text-[11px] font-medium text-muted-foreground">Rounds</div>
               </div>
               <div className="flex-1 rounded-xl bg-secondary p-[10px_6px] text-center">
@@ -159,10 +176,19 @@ export default function StudentDashboardPage() {
           <div className="flex flex-col rounded-2xl border border-border bg-card p-[26px_30px] shadow-soft">
             <div className="mb-[22px] flex flex-wrap items-start justify-between gap-[14px]">
               <div className="flex items-center gap-[14px]">
-                <div className="flex h-[50px] w-[50px] items-center justify-center rounded-xl bg-secondary text-[24px]">📖</div>
+                <div className="flex h-[50px] w-[50px] items-center justify-center rounded-xl bg-secondary text-[24px]">
+                  📖
+                </div>
                 <div>
-                  <div className="text-[12px] font-semibold text-muted-foreground" style={{ letterSpacing: "1.4px" }}>QURAN PROGRESS</div>
-                  <div className="font-heading text-[21px] font-bold text-foreground">Round {roundNum} · In progress</div>
+                  <div
+                    className="text-[12px] font-semibold text-muted-foreground"
+                    style={{ letterSpacing: "1.4px" }}
+                  >
+                    QURAN PROGRESS
+                  </div>
+                  <div className="font-heading text-[21px] font-bold text-foreground">
+                    Round {roundNum} · In progress
+                  </div>
                 </div>
               </div>
               <div className="text-right">
@@ -170,14 +196,21 @@ export default function StudentDashboardPage() {
                   Para {paraLabel}
                   <span className="text-[19px] font-semibold text-muted-foreground"> / 30</span>
                 </div>
-                <div className="mt-[4px] text-[13px] text-muted-foreground">{pct}% of the Quran</div>
+                <div className="mt-[4px] text-[13px] text-muted-foreground">
+                  {pct}% of the Quran
+                </div>
               </div>
             </div>
 
             {/* Segmented para tracker */}
             <div className="mb-[12px] flex h-[66px] items-end gap-[4px]">
               {paras.map((p) => (
-                <div key={p.n} title={`Para ${p.n}`} className="flex-1 rounded-[5px]" style={{ height: p.h, background: p.bg, boxShadow: p.shadow }} />
+                <div
+                  key={p.n}
+                  title={`Para ${p.n}`}
+                  className="flex-1 rounded-[5px]"
+                  style={{ height: p.h, background: p.bg, boxShadow: p.shadow }}
+                />
               ))}
             </div>
             <div className="mb-[20px] flex justify-between text-[11px] font-medium text-muted-foreground">
@@ -206,25 +239,35 @@ export default function StudentDashboardPage() {
       </div>
 
       {/* Current para PDF + current memorization */}
-      <div className="mb-[26px] grid items-stretch gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))" }}>
+      <div
+        className="mb-[26px] grid items-stretch gap-[22px]"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))" }}
+      >
         <StudentParaPdf paraNumber={paraLabel > 0 ? paraLabel : null} />
         <StudentMemorizationCard studentId={student.id} />
       </div>
 
       {/* Quick links */}
-      <div className="grid gap-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))" }}>
+      <div
+        className="grid gap-[22px]"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))" }}
+      >
         {QUICK_LINKS.map((l) => (
           <Link
             key={l.href}
             href={l.href}
             className="group flex items-center gap-[18px] rounded-2xl border border-border bg-card p-[22px_24px] shadow-soft transition-colors hover:border-[hsl(var(--border-strong))]"
           >
-            <div className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-secondary text-[25px]">{l.icon}</div>
+            <div className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-secondary text-[25px]">
+              {l.icon}
+            </div>
             <div className="flex-1">
               <div className="font-heading text-[19px] font-bold text-foreground">{l.title}</div>
               <div className="text-[14px] text-muted-foreground">{l.sub}</div>
             </div>
-            <div className="text-[20px] text-muted-foreground/60 transition-transform group-hover:translate-x-0.5">→</div>
+            <div className="text-[20px] text-muted-foreground/60 transition-transform group-hover:translate-x-0.5">
+              →
+            </div>
           </Link>
         ))}
       </div>

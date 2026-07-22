@@ -18,12 +18,14 @@ export function FeeDisplay({ amount, currency, rates, size = "sm" }: FeeDisplayP
     return (
       <div>
         <p className="text-2xl font-bold text-emerald-400">
-          {symbol}{amount.toLocaleString()}
+          {symbol}
+          {amount.toLocaleString()}
           <span className="text-sm font-medium text-muted-foreground ml-1">{currency}</span>
         </p>
         {pkrAmount !== null && (
           <p className="text-sm font-semibold text-amber-400/80 mt-1">
-            Rs{pkrAmount.toLocaleString()} <span className="text-xs font-normal text-muted-foreground">PKR</span>
+            Rs{pkrAmount.toLocaleString()}{" "}
+            <span className="text-xs font-normal text-muted-foreground">PKR</span>
           </p>
         )}
       </div>
@@ -33,7 +35,8 @@ export function FeeDisplay({ amount, currency, rates, size = "sm" }: FeeDisplayP
   return (
     <div className="leading-tight">
       <span className="text-sm font-semibold text-emerald-400">
-        {symbol}{amount.toLocaleString()}
+        {symbol}
+        {amount.toLocaleString()}
       </span>
       {pkrAmount !== null && (
         <span className="block text-[11px] text-amber-400/70 font-medium">

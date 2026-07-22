@@ -13,8 +13,7 @@ import { LiveClassProvider } from "@/components/live-class-provider"
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const isStudentArea =
-    pathname === "/student" || pathname.startsWith("/student/")
+  const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
 
   const shell = (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -32,15 +31,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="absolute inset-0 bg-background" />
             <div
               className="absolute -top-32 -left-24 h-96 w-96 rounded-full opacity-40 blur-3xl"
-              style={{ background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.4), transparent 70%)" }}
+              style={{
+                background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.4), transparent 70%)",
+              }}
             />
             <div
               className="absolute top-1/4 -right-32 h-[28rem] w-[28rem] rounded-full opacity-35 blur-3xl"
-              style={{ background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.4), transparent 70%)" }}
+              style={{
+                background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.4), transparent 70%)",
+              }}
             />
             <div
               className="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full opacity-30 blur-3xl"
-              style={{ background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.35), transparent 70%)" }}
+              style={{
+                background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.35), transparent 70%)",
+              }}
             />
           </div>
         ) : (
@@ -49,11 +54,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         )}
         {isStudentArea && <StudentTopBar />}
         <div
-          className={
-            isStudentArea
-              ? "relative p-4 lg:p-8"
-              : "relative p-4 pt-16 lg:p-8 lg:pt-8"
-          }
+          className={isStudentArea ? "relative p-4 lg:p-8" : "relative p-4 pt-16 lg:p-8 lg:pt-8"}
         >
           {children}
         </div>

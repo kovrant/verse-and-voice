@@ -56,7 +56,10 @@ export const COUNTRIES = [
 
 export type StudentStatus = "Reading" | "Completed" | "Left Uncompleted"
 
-export const STATUS_CONFIG: Record<StudentStatus, { label: string; variant: "success" | "secondary" | "warning" }> = {
+export const STATUS_CONFIG: Record<
+  StudentStatus,
+  { label: string; variant: "success" | "secondary" | "warning" }
+> = {
   Reading: { label: "Reading", variant: "success" },
   Completed: { label: "Completed", variant: "secondary" },
   "Left Uncompleted": { label: "Left Uncompleted", variant: "warning" },

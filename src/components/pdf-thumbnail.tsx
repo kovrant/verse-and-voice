@@ -29,7 +29,7 @@ export function PdfThumbnail({ fileUrl, width = 320, fallback }: PdfThumbnailPro
           io.disconnect()
         }
       },
-      { rootMargin: "300px" }
+      { rootMargin: "300px" },
     )
     io.observe(el)
     return () => io.disconnect()
@@ -40,9 +40,7 @@ export function PdfThumbnail({ fileUrl, width = 320, fallback }: PdfThumbnailPro
       ref={containerRef}
       className="absolute inset-0 overflow-hidden bg-[hsl(var(--background))]"
     >
-      {(!visible || errored || !rendered) && (
-        <div className="absolute inset-0">{fallback}</div>
-      )}
+      {(!visible || errored || !rendered) && <div className="absolute inset-0">{fallback}</div>}
 
       {visible && !errored && (
         <div className="absolute inset-0 flex items-start justify-center">

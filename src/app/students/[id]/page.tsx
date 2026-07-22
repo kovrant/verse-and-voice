@@ -4,7 +4,14 @@ import { useEffect, useState, useCallback } from "react"
 import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import { supabase, fetchAllRows } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS, COUNTRIES, STATUS_CONFIG, parseLocalDate, formatLocalDate, type StudentStatus } from "@/lib/utils"
+import {
+  CURRENCY_SYMBOLS,
+  COUNTRIES,
+  STATUS_CONFIG,
+  parseLocalDate,
+  formatLocalDate,
+  type StudentStatus,
+} from "@/lib/utils"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { FeeDisplay } from "@/components/fee-display"
 import { Pagination } from "@/components/ui/pagination"
@@ -31,9 +38,33 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { TimePicker } from "@/components/ui/time-picker"
-import { QuranProgress, type QuranRound, getActiveRound, getStudentStage, getChronologicalRoundNumber } from "@/components/quran-progress"
+import {
+  QuranProgress,
+  type QuranRound,
+  getActiveRound,
+  getStudentStage,
+  getChronologicalRoundNumber,
+} from "@/components/quran-progress"
 import { StudentPortalAccess } from "@/components/student-portal-access"
-import { ArrowLeft, Pencil, Check, X, CreditCard, Clock, BookOpen, CalendarDays, Sparkles, MapPin, Plus, Trash2, RotateCcw, BookMarked, Trophy, Play, History } from "lucide-react"
+import {
+  ArrowLeft,
+  Pencil,
+  Check,
+  X,
+  CreditCard,
+  Clock,
+  BookOpen,
+  CalendarDays,
+  Sparkles,
+  MapPin,
+  Plus,
+  Trash2,
+  RotateCcw,
+  BookMarked,
+  Trophy,
+  Play,
+  History,
+} from "lucide-react"
 import { format, differenceInDays, formatDistanceToNow } from "date-fns"
 import * as Popover from "@radix-ui/react-popover"
 import { toast } from "sonner"
@@ -119,7 +150,9 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
-  const [activeTab, setActiveTab] = useState<"journey" | "sessions" | "memorization" | "fees">("journey")
+  const [activeTab, setActiveTab] = useState<"journey" | "sessions" | "memorization" | "fees">(
+    "journey",
+  )
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -146,11 +179,7 @@ export default function StudentDetailPage() {
   })
 
   const loadStudent = useCallback(async () => {
-    const { data } = await supabase
-      .from("students")
-      .select("*")
-      .eq("id", params.id)
-      .single()
+    const { data } = await supabase.from("students").select("*").eq("id", params.id).single()
 
     if (!data) {
       router.push("/students")
@@ -184,7 +213,7 @@ export default function StudentDetailPage() {
   async function loadSessions() {
     // Page past the 1000-row cap so older sessions aren't silently dropped.
     const data = await fetchAllRows<ClassSession>("class_sessions", (q) =>
-      q.select("*").eq("student_id", params.id).order("started_at", { ascending: false })
+      q.select("*").eq("student_id", params.id).order("started_at", { ascending: false }),
     )
     setSessions(data)
   }
@@ -269,11 +298,14 @@ export default function StudentDetailPage() {
   }
 
   async function assignItem(catalogId: string) {
-    await supabase.from("student_memorization").upsert({
-      student_id: params.id,
-      catalog_id: catalogId,
-      status: "memorizing",
-    }, { onConflict: "student_id,catalog_id" })
+    await supabase.from("student_memorization").upsert(
+      {
+        student_id: params.id,
+        catalog_id: catalogId,
+        status: "memorizing",
+      },
+      { onConflict: "student_id,catalog_id" },
+    )
     await loadMemItems()
   }
 
@@ -306,9 +338,9 @@ export default function StudentDetailPage() {
     const newPaid = !fee.is_paid
     const paidAt = newPaid ? new Date().toISOString() : null
 
-    setFees(prev => prev.map(f =>
-      f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f
-    ))
+    setFees((prev) =>
+      prev.map((f) => (f.id === fee.id ? { ...f, is_paid: newPaid, paid_at: paidAt } : f)),
+    )
 
     const { error } = await supabase
       .from("fee_payments")
@@ -317,9 +349,11 @@ export default function StudentDetailPage() {
 
     if (error) {
       // Roll back so the money screen doesn't diverge from the DB.
-      setFees(prev => prev.map(f =>
-        f.id === fee.id ? { ...f, is_paid: fee.is_paid, paid_at: fee.paid_at } : f
-      ))
+      setFees((prev) =>
+        prev.map((f) =>
+          f.id === fee.id ? { ...f, is_paid: fee.is_paid, paid_at: fee.paid_at } : f,
+        ),
+      )
       toast.error(`Couldn't update payment: ${error.message}`)
     }
   }
@@ -328,7 +362,7 @@ export default function StudentDetailPage() {
     // Guard against an empty fee becoming NaN (NOT NULL violation): keep the
     // existing fee if the field was cleared/invalid.
     const parsedFee = parseFloat(editForm.fee)
-    const fee = Number.isNaN(parsedFee) ? student?.fee ?? 0 : parsedFee
+    const fee = Number.isNaN(parsedFee) ? (student?.fee ?? 0) : parsedFee
 
     const { error } = await supabase
       .from("students")
@@ -340,7 +374,7 @@ export default function StudentDetailPage() {
         status: editForm.status,
         // "Reading" students have no end date — clear any stale value left over
         // from a previous "Completed"/"Left" status.
-        ended_at: editForm.status === "Reading" ? null : (editForm.ended_at || null),
+        ended_at: editForm.status === "Reading" ? null : editForm.ended_at || null,
       })
       .eq("id", params.id)
 
@@ -383,16 +417,15 @@ export default function StudentDetailPage() {
 
   async function startNewRound() {
     // Determine round number
-    const existingOfType = rounds.filter(r => r.type === newRoundForm.type)
-    const nextNum = existingOfType.length > 0
-      ? Math.max(...existingOfType.map(r => r.round_number)) + 1
-      : 1
+    const existingOfType = rounds.filter((r) => r.type === newRoundForm.type)
+    const nextNum =
+      existingOfType.length > 0 ? Math.max(...existingOfType.map((r) => r.round_number)) + 1 : 1
 
     // A completed round = all 30 paras done. Progress is computed as
     // desc + max(asc - 1, 0), so a finished round is desc=30, asc=0 (=> 30/30).
     // Using asc=30 would wrongly compute 30 + 29 = 59/30.
-    const desc = newRoundForm.is_completed ? 30 : (parseInt(newRoundForm.desc_completed) || 0)
-    const asc = newRoundForm.is_completed ? 0 : (parseInt(newRoundForm.asc_completed) || 0)
+    const desc = newRoundForm.is_completed ? 30 : parseInt(newRoundForm.desc_completed) || 0
+    const asc = newRoundForm.is_completed ? 0 : parseInt(newRoundForm.asc_completed) || 0
 
     // Starting a new in-progress round closes out the current active one, so a
     // student never ends up with two open rounds (which made Update/Complete
@@ -416,7 +449,9 @@ export default function StudentDetailPage() {
       type: newRoundForm.type,
       round_number: nextNum,
       started_at: newRoundForm.started_at,
-      completed_at: newRoundForm.is_completed ? (newRoundForm.completed_at || formatLocalDate()) : null,
+      completed_at: newRoundForm.is_completed
+        ? newRoundForm.completed_at || formatLocalDate()
+        : null,
       desc_completed: desc,
       asc_completed: asc,
     })
@@ -453,14 +488,16 @@ export default function StudentDetailPage() {
     if (!editingRound) return
 
     // Completed round => desc=30, asc=0 (=> 30/30). See note in startNewRound.
-    const desc = editRoundForm.is_completed ? 30 : (parseInt(editRoundForm.desc_completed) || 0)
-    const asc = editRoundForm.is_completed ? 0 : (parseInt(editRoundForm.asc_completed) || 0)
+    const desc = editRoundForm.is_completed ? 30 : parseInt(editRoundForm.desc_completed) || 0
+    const asc = editRoundForm.is_completed ? 0 : parseInt(editRoundForm.asc_completed) || 0
 
     const { error } = await supabase
       .from("quran_rounds")
       .update({
         started_at: editRoundForm.started_at,
-        completed_at: editRoundForm.is_completed ? (editRoundForm.completed_at || formatLocalDate()) : null,
+        completed_at: editRoundForm.is_completed
+          ? editRoundForm.completed_at || formatLocalDate()
+          : null,
         desc_completed: desc,
         asc_completed: asc,
       })
@@ -510,28 +547,40 @@ export default function StudentDetailPage() {
     )
   }
 
-  const daysSinceStart = differenceInDays(new Date(), parseLocalDate(student.started_at) ?? new Date())
+  const daysSinceStart = differenceInDays(
+    new Date(),
+    parseLocalDate(student.started_at) ?? new Date(),
+  )
   const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
   const activeRound = getActiveRound(rounds)
   const { completedQuranCount } = getStudentStage(rounds)
-  const paidCount = fees.filter(f => f.is_paid).length
-  const unpaidCount = fees.filter(f => !f.is_paid).length
-  const memorizingCount = memItems.filter(m => m.status === "memorizing").length
-  const memorizedCount = memItems.filter(m => m.status === "memorized").length
+  const paidCount = fees.filter((f) => f.is_paid).length
+  const unpaidCount = fees.filter((f) => !f.is_paid).length
+  const memorizingCount = memItems.filter((m) => m.status === "memorizing").length
+  const memorizedCount = memItems.filter((m) => m.status === "memorized").length
 
   const TABS = [
     { id: "journey" as const, label: "Quran Journey", icon: BookOpen },
     { id: "sessions" as const, label: "Sessions", icon: History, count: sessions.length },
-    { id: "memorization" as const, label: "Memorization", icon: BookMarked, count: memorizingCount + memorizedCount },
+    {
+      id: "memorization" as const,
+      label: "Memorization",
+      icon: BookMarked,
+      count: memorizingCount + memorizedCount,
+    },
     { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
   ]
 
   return (
     <div className="animate-fade-in-up">
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-        <Link href="/" className="hover:text-foreground transition-colors">Dashboard</Link>
+        <Link href="/" className="hover:text-foreground transition-colors">
+          Dashboard
+        </Link>
         <span className="text-muted-foreground/40">/</span>
-        <Link href="/students" className="hover:text-foreground transition-colors">Students</Link>
+        <Link href="/students" className="hover:text-foreground transition-colors">
+          Students
+        </Link>
         <span className="text-muted-foreground/40">/</span>
         <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
       </nav>
@@ -548,13 +597,24 @@ export default function StudentDetailPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight truncate">{student.name}</h1>
-            <Badge variant={statusCfg.variant} className="flex-shrink-0">{statusCfg.label}</Badge>
+            <Badge variant={statusCfg.variant} className="flex-shrink-0">
+              {statusCfg.label}
+            </Badge>
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>{student.guardian_name}</span>
-            {student.country && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{student.country}</span>}
+            {student.country && (
+              <span className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                {student.country}
+              </span>
+            )}
             <span>{daysSinceStart} days enrolled</span>
-            {student.ended_at && <span>Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}</span>}
+            {student.ended_at && (
+              <span>
+                Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
+              </span>
+            )}
           </div>
         </div>
         <Dialog open={editOpen} onOpenChange={setEditOpen}>
@@ -567,31 +627,57 @@ export default function StudentDetailPage() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit — {student.name}</DialogTitle>
-              <DialogDescription>Update details for {student.name} ({student.guardian_name})</DialogDescription>
+              <DialogDescription>
+                Update details for {student.name} ({student.guardian_name})
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-2">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Country</Label>
-                  <Select value={editForm.country} onValueChange={(val) => setEditForm({ ...editForm, country: val })}>
-                    <SelectTrigger><SelectValue placeholder="Select country" /></SelectTrigger>
-                    <SelectContent>{COUNTRIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  <Select
+                    value={editForm.country}
+                    onValueChange={(val) => setEditForm({ ...editForm, country: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Class Time</Label>
-                  <TimePicker value={editForm.class_time} onChange={(val) => setEditForm({ ...editForm, class_time: val })} placeholder="Select class time" />
+                  <TimePicker
+                    value={editForm.class_time}
+                    onChange={(val) => setEditForm({ ...editForm, class_time: val })}
+                    placeholder="Select class time"
+                  />
                 </div>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Monthly Fee</Label>
-                  <Input type="number" value={editForm.fee} onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })} />
+                  <Input
+                    type="number"
+                    value={editForm.fee}
+                    onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Select value={editForm.fee_currency} onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={editForm.fee_currency}
+                    onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="GBP">GBP (£)</SelectItem>
                       <SelectItem value="USD">USD ($)</SelectItem>
@@ -605,8 +691,15 @@ export default function StudentDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Status</Label>
-                  <Select value={editForm.status} onValueChange={(val) => setEditForm({ ...editForm, status: val as StudentStatus })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={editForm.status}
+                    onValueChange={(val) =>
+                      setEditForm({ ...editForm, status: val as StudentStatus })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Reading">Reading</SelectItem>
                       <SelectItem value="Completed">Completed</SelectItem>
@@ -617,13 +710,19 @@ export default function StudentDetailPage() {
                 {editForm.status !== "Reading" && (
                   <div className="space-y-2">
                     <Label>End Date</Label>
-                    <Input type="date" value={editForm.ended_at} onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })} />
+                    <Input
+                      type="date"
+                      value={editForm.ended_at}
+                      onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
+                    />
                   </div>
                 )}
               </div>
               <div className="flex gap-3 pt-2">
                 <Button onClick={saveEdit}>Save Changes</Button>
-                <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </Button>
               </div>
             </div>
           </DialogContent>
@@ -635,7 +734,12 @@ export default function StudentDetailPage() {
         <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
           <CreditCard className="h-4 w-4 text-emerald-400 flex-shrink-0" />
           <div className="min-w-0">
-            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="sm" />
+            <FeeDisplay
+              amount={student.fee}
+              currency={student.fee_currency}
+              rates={rates}
+              size="sm"
+            />
           </div>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
@@ -648,7 +752,10 @@ export default function StudentDetailPage() {
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
           <CalendarDays className="h-4 w-4 text-purple-400 flex-shrink-0" />
-          <span className="text-sm"><span className="font-semibold">{daysSinceStart}</span> <span className="text-muted-foreground">days</span></span>
+          <span className="text-sm">
+            <span className="font-semibold">{daysSinceStart}</span>{" "}
+            <span className="text-muted-foreground">days</span>
+          </span>
         </div>
       </div>
 
@@ -657,7 +764,7 @@ export default function StudentDetailPage() {
 
       {/* Tab Navigation */}
       <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 mb-4">
-        {TABS.map(tab => (
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -671,9 +778,15 @@ export default function StudentDetailPage() {
             <tab.icon className="h-4 w-4" />
             <span className="hidden sm:inline">{tab.label}</span>
             {tab.count != null && tab.count > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                activeTab === tab.id ? "bg-emerald-500/10 text-emerald-500" : "bg-secondary text-muted-foreground"
-              }`}>{tab.count}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                  activeTab === tab.id
+                    ? "bg-emerald-500/10 text-emerald-500"
+                    : "bg-secondary text-muted-foreground"
+                }`}
+              >
+                {tab.count}
+              </span>
             )}
           </button>
         ))}
@@ -686,11 +799,26 @@ export default function StudentDetailPage() {
           <div className="flex items-center gap-2 justify-end">
             {activeRound && (
               <>
-                <Button variant="outline" size="sm" onClick={() => { setRoundForm({ desc_completed: (activeRound.desc_completed || 0).toString(), asc_completed: (activeRound.asc_completed || 0).toString() }); setRoundEditOpen(true) }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setRoundForm({
+                      desc_completed: (activeRound.desc_completed || 0).toString(),
+                      asc_completed: (activeRound.asc_completed || 0).toString(),
+                    })
+                    setRoundEditOpen(true)
+                  }}
+                >
                   <Pencil className="h-3.5 w-3.5 mr-1" />
                   Update Progress
                 </Button>
-                <Button variant="outline" size="sm" onClick={completeActiveRound} className="text-emerald-400 hover:text-emerald-300">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={completeActiveRound}
+                  className="text-emerald-400 hover:text-emerald-300"
+                >
                   <Check className="h-3.5 w-3.5 mr-1" />
                   Complete
                 </Button>
@@ -715,104 +843,106 @@ export default function StudentDetailPage() {
                 All Rounds
               </p>
               <div className="space-y-2">
-              {(() => {
-                // Active rounds first, then by started_at descending
-                const sorted = [...rounds].sort((a, b) => {
-                  const aActive = !a.completed_at ? 1 : 0
-                  const bActive = !b.completed_at ? 1 : 0
-                  if (aActive !== bActive) return bActive - aActive
-                  return b.started_at.localeCompare(a.started_at)
-                })
-                return sorted.map(r => {
-                const isActive = !r.completed_at
-                const desc = r.desc_completed
-                const asc = r.asc_completed
-                const completedFromAsc = asc > 0 ? asc - 1 : 0
-                const total = r.type === "quran" ? desc + completedFromAsc : 0
-                const prog = (total / 30) * 100
-                const chronologicalNum = getChronologicalRoundNumber(rounds, r)
-                const Icon =
-                  r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
+                {(() => {
+                  // Active rounds first, then by started_at descending
+                  const sorted = [...rounds].sort((a, b) => {
+                    const aActive = !a.completed_at ? 1 : 0
+                    const bActive = !b.completed_at ? 1 : 0
+                    if (aActive !== bActive) return bActive - aActive
+                    return b.started_at.localeCompare(a.started_at)
+                  })
+                  return sorted.map((r) => {
+                    const isActive = !r.completed_at
+                    const desc = r.desc_completed
+                    const asc = r.asc_completed
+                    const completedFromAsc = asc > 0 ? asc - 1 : 0
+                    const total = r.type === "quran" ? desc + completedFromAsc : 0
+                    const prog = (total / 30) * 100
+                    const chronologicalNum = getChronologicalRoundNumber(rounds, r)
+                    const Icon =
+                      r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
 
-                return (
-                  <div
-                    key={r.id}
-                    className={`group flex items-center gap-3 rounded-[14px] border px-4 py-3 transition-all hover:-translate-y-px bg-card ${
-                      isActive ? "border-primary/30" : "border-border"
-                    }`}
-                  >
-                    <span
-                      className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
-                        r.type === "qaida"
-                          ? "bg-secondary"
-                          : isActive
-                            ? "bg-emerald-500/10"
-                            : "bg-secondary"
-                      }`}
-                    >
-                      <Icon
-                        className={`h-[16px] w-[16px] ${
-                          r.type === "qaida" ? "text-amber-600" : "text-primary"
+                    return (
+                      <div
+                        key={r.id}
+                        className={`group flex items-center gap-3 rounded-[14px] border px-4 py-3 transition-all hover:-translate-y-px bg-card ${
+                          isActive ? "border-primary/30" : "border-border"
                         }`}
-                        strokeWidth={2.25}
-                      />
-                    </span>
-
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[14px] font-bold text-foreground">
-                          {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
-                        </span>
-                        {isActive && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary bg-emerald-500/10">
-                            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                            Active
-                          </span>
-                        )}
-                        {r.type === "quran" && (
-                          <span
-                            className={`text-[11px] font-semibold tabular-nums ${
-                              isActive ? "text-primary" : "text-muted-foreground"
+                      >
+                        <span
+                          className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
+                            r.type === "qaida"
+                              ? "bg-secondary"
+                              : isActive
+                                ? "bg-emerald-500/10"
+                                : "bg-secondary"
+                          }`}
+                        >
+                          <Icon
+                            className={`h-[16px] w-[16px] ${
+                              r.type === "qaida" ? "text-amber-600" : "text-primary"
                             }`}
-                          >
-                            {total}/30
-                          </span>
+                            strokeWidth={2.25}
+                          />
+                        </span>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="text-[14px] font-bold text-foreground">
+                              {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
+                            </span>
+                            {isActive && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary bg-emerald-500/10">
+                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                Active
+                              </span>
+                            )}
+                            {r.type === "quran" && (
+                              <span
+                                className={`text-[11px] font-semibold tabular-nums ${
+                                  isActive ? "text-primary" : "text-muted-foreground"
+                                }`}
+                              >
+                                {total}/30
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[12px] mt-0.5 text-muted-foreground">
+                            {format(parseLocalDate(r.started_at) ?? new Date(), "MMM yyyy")} →{" "}
+                            {r.completed_at
+                              ? format(parseLocalDate(r.completed_at) ?? new Date(), "MMM yyyy")
+                              : "Now"}
+                          </p>
+                        </div>
+
+                        {r.type === "quran" && (
+                          <div className="w-20 shrink-0">
+                            <Progress value={prog} />
+                          </div>
                         )}
-                      </div>
-                      <p className="text-[12px] mt-0.5 text-muted-foreground">
-                        {format(parseLocalDate(r.started_at) ?? new Date(), "MMM yyyy")} →{" "}
-                        {r.completed_at ? format(parseLocalDate(r.completed_at) ?? new Date(), "MMM yyyy") : "Now"}
-                      </p>
-                    </div>
 
-                    {r.type === "quran" && (
-                      <div className="w-20 shrink-0">
-                        <Progress value={prog} />
+                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditRound(r)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteRound(r.id)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
                       </div>
-                    )}
-
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditRound(r)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                      >
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteRound(r.id)}
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })
-              })()}
+                    )
+                  })
+                })()}
               </div>
             </div>
           )}
@@ -824,161 +954,173 @@ export default function StudentDetailPage() {
                   <BookOpen className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="font-medium mb-1">No rounds yet</p>
-                <p className="text-sm text-muted-foreground">Click &ldquo;Add Round&rdquo; to start tracking progress</p>
+                <p className="text-sm text-muted-foreground">
+                  Click &ldquo;Add Round&rdquo; to start tracking progress
+                </p>
               </CardContent>
             </Card>
           )}
         </div>
       )}
 
-      {activeTab === "sessions" && (() => {
-        const totalSessions = sessions.length
-        const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
-        const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
-        const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
-        const handlePageChange = (page: number) => {
-          setSessionPage(page)
-          if (typeof window !== "undefined") {
-            requestAnimationFrame(() => {
-              document.getElementById("sessions-list-top")?.scrollIntoView({
-                behavior: "smooth",
-                block: "start",
+      {activeTab === "sessions" &&
+        (() => {
+          const totalSessions = sessions.length
+          const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
+          const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
+          const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
+          const handlePageChange = (page: number) => {
+            setSessionPage(page)
+            if (typeof window !== "undefined") {
+              requestAnimationFrame(() => {
+                document.getElementById("sessions-list-top")?.scrollIntoView({
+                  behavior: "smooth",
+                  block: "start",
+                })
               })
-            })
+            }
           }
-        }
-        return (
-        <div className="animate-fade-in-up">
-          {totalSessions === 0 ? (
-            <div className="py-16 text-center bg-card rounded-[16px] border border-border">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
-                <Clock className="h-6 w-6 text-primary" />
-              </div>
-              <p className="text-base font-semibold text-foreground mb-1">No sessions yet</p>
-              <p className="text-sm text-muted-foreground">
-                Sessions will appear here after the first class
-              </p>
-            </div>
-          ) : (
-            <div id="sessions-list-top">
-            <div className="bg-card rounded-[16px] border border-border px-5 py-1">
-              {/* Sort indicator */}
-              <div className="flex items-center justify-end px-2 py-2 border-b border-border">
-                <span className="text-[13px] font-medium text-muted-foreground">
-                  Sort: Newest first ↓
-                </span>
-              </div>
-
-              <div className="max-h-[600px] overflow-y-auto main-scroll -mr-2 pr-2">
-                {paginatedSessions.map((session, i) => (
-                  <div
-                    key={session.id}
-                    className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
-                      i < paginatedSessions.length - 1 ? "border-b border-border" : ""
-                    }`}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/50 flex-shrink-0">
-                      <Clock className="h-4 w-4 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-semibold text-foreground">
-                          {format(new Date(session.started_at), "MMM d, yyyy")}
-                        </p>
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-border bg-card text-muted-foreground">
-                          {Math.floor(session.duration_seconds / 60)}m
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[13px] mt-0.5 text-muted-foreground">
-                        {session.paras_covered?.length > 0 && (
-                          <span>Paras: {session.paras_covered.join(", ")}</span>
-                        )}
-                        {session.memorization_revised?.length > 0 && (
-                          <>
-                            <span>&middot;</span>
-                            <span>{session.memorization_revised.length} revised</span>
-                          </>
-                        )}
-                      </div>
-                      {session.notes && (
-                        <p className="text-xs mt-1 truncate text-muted-foreground">
-                          {session.notes}
-                        </p>
-                      )}
-                    </div>
-                    <span className="text-[11px] flex-shrink-0 text-muted-foreground">
-                      {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
-                    </span>
-                    <Popover.Root
-                      open={sessionToDelete?.id === session.id}
-                      onOpenChange={(open) => setSessionToDelete(open ? session : null)}
-                    >
-                      <Popover.Trigger asChild>
-                        <button
-                          type="button"
-                          title="Delete session"
-                          className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors text-muted-foreground hover:text-destructive"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </Popover.Trigger>
-                      <Popover.Portal>
-                        <Popover.Content
-                          side="top"
-                          align="end"
-                          sideOffset={8}
-                          className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
-                        >
-                          <p className="text-xs font-medium mb-2.5 text-foreground">Delete this session?</p>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 flex-1 text-xs"
-                              onClick={() => setSessionToDelete(null)}
-                              disabled={deletingSession}
-                            >
-                              No
-                            </Button>
-                            <button
-                              type="button"
-                              className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
-                              onClick={deleteSession}
-                              disabled={deletingSession}
-                            >
-                              {deletingSession ? "..." : "Yes"}
-                            </button>
-                          </div>
-                          <Popover.Arrow className="fill-border" />
-                        </Popover.Content>
-                      </Popover.Portal>
-                    </Popover.Root>
+          return (
+            <div className="animate-fade-in-up">
+              {totalSessions === 0 ? (
+                <div className="py-16 text-center bg-card rounded-[16px] border border-border">
+                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
+                    <Clock className="h-6 w-6 text-primary" />
                   </div>
-                ))}
-              </div>
-            </div>
+                  <p className="text-base font-semibold text-foreground mb-1">No sessions yet</p>
+                  <p className="text-sm text-muted-foreground">
+                    Sessions will appear here after the first class
+                  </p>
+                </div>
+              ) : (
+                <div id="sessions-list-top">
+                  <div className="bg-card rounded-[16px] border border-border px-5 py-1">
+                    {/* Sort indicator */}
+                    <div className="flex items-center justify-end px-2 py-2 border-b border-border">
+                      <span className="text-[13px] font-medium text-muted-foreground">
+                        Sort: Newest first ↓
+                      </span>
+                    </div>
 
-            {/* Pagination — only when more than one page */}
-            {totalSessions > SESSION_PAGE_SIZE && (
-              <Pagination
-                currentPage={sessionPage}
-                totalPages={totalSessionPages}
-                totalItems={totalSessions}
-                pageSize={SESSION_PAGE_SIZE}
-                onPageChange={handlePageChange}
-              />
-            )}
+                    <div className="max-h-[600px] overflow-y-auto main-scroll -mr-2 pr-2">
+                      {paginatedSessions.map((session, i) => (
+                        <div
+                          key={session.id}
+                          className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
+                            i < paginatedSessions.length - 1 ? "border-b border-border" : ""
+                          }`}
+                        >
+                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/50 flex-shrink-0">
+                            <Clock className="h-4 w-4 text-primary" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <p className="text-sm font-semibold text-foreground">
+                                {format(new Date(session.started_at), "MMM d, yyyy")}
+                              </p>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-border bg-card text-muted-foreground">
+                                {Math.floor(session.duration_seconds / 60)}m
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2 text-[13px] mt-0.5 text-muted-foreground">
+                              {session.paras_covered?.length > 0 && (
+                                <span>Paras: {session.paras_covered.join(", ")}</span>
+                              )}
+                              {session.memorization_revised?.length > 0 && (
+                                <>
+                                  <span>&middot;</span>
+                                  <span>{session.memorization_revised.length} revised</span>
+                                </>
+                              )}
+                            </div>
+                            {session.notes && (
+                              <p className="text-xs mt-1 truncate text-muted-foreground">
+                                {session.notes}
+                              </p>
+                            )}
+                          </div>
+                          <span className="text-[11px] flex-shrink-0 text-muted-foreground">
+                            {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
+                          </span>
+                          <Popover.Root
+                            open={sessionToDelete?.id === session.id}
+                            onOpenChange={(open) => setSessionToDelete(open ? session : null)}
+                          >
+                            <Popover.Trigger asChild>
+                              <button
+                                type="button"
+                                title="Delete session"
+                                className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors text-muted-foreground hover:text-destructive"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </Popover.Trigger>
+                            <Popover.Portal>
+                              <Popover.Content
+                                side="top"
+                                align="end"
+                                sideOffset={8}
+                                className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
+                              >
+                                <p className="text-xs font-medium mb-2.5 text-foreground">
+                                  Delete this session?
+                                </p>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 flex-1 text-xs"
+                                    onClick={() => setSessionToDelete(null)}
+                                    disabled={deletingSession}
+                                  >
+                                    No
+                                  </Button>
+                                  <button
+                                    type="button"
+                                    className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+                                    onClick={deleteSession}
+                                    disabled={deletingSession}
+                                  >
+                                    {deletingSession ? "..." : "Yes"}
+                                  </button>
+                                </div>
+                                <Popover.Arrow className="fill-border" />
+                              </Popover.Content>
+                            </Popover.Portal>
+                          </Popover.Root>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Pagination — only when more than one page */}
+                  {totalSessions > SESSION_PAGE_SIZE && (
+                    <Pagination
+                      currentPage={sessionPage}
+                      totalPages={totalSessionPages}
+                      totalItems={totalSessions}
+                      pageSize={SESSION_PAGE_SIZE}
+                      onPageChange={handlePageChange}
+                    />
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        )
-      })()}
+          )
+        })()}
 
       {activeTab === "memorization" && (
         <div className="space-y-4 animate-fade-in-up">
           <div className="flex justify-end">
-            <Button variant="outline" size="sm" onClick={() => { setAssignOpen(!assignOpen); if (!assignOpen) loadCatalog() }}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setAssignOpen(!assignOpen)
+                if (!assignOpen) loadCatalog()
+              }}
+            >
               <Plus className="h-3.5 w-3.5 mr-1" />
               Assign
             </Button>
@@ -986,52 +1128,136 @@ export default function StudentDetailPage() {
 
           {assignOpen && (
             <div className="rounded-xl border border-border/50 bg-secondary/20 p-4 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Assign from Catalog</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Assign from Catalog
+              </p>
               <div className="flex flex-wrap gap-2">
-                {catalog.filter(c => !memItems.some(m => m.catalog_id === c.id)).map(item => (
-                  <button key={item.id} type="button" onClick={() => assignItem(item.id)} className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all">
-                    <Plus className="h-3 w-3" />{item.title}<span className="text-muted-foreground/40">({item.category})</span>
-                  </button>
-                ))}
-                {catalog.filter(c => !memItems.some(m => m.catalog_id === c.id)).length === 0 && (
-                  <p className="text-xs text-muted-foreground">All items assigned.</p>
-                )}
+                {catalog
+                  .filter((c) => !memItems.some((m) => m.catalog_id === c.id))
+                  .map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => assignItem(item.id)}
+                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all"
+                    >
+                      <Plus className="h-3 w-3" />
+                      {item.title}
+                      <span className="text-muted-foreground/40">({item.category})</span>
+                    </button>
+                  ))}
+                {catalog.filter((c) => !memItems.some((m) => m.catalog_id === c.id)).length ===
+                  0 && <p className="text-xs text-muted-foreground">All items assigned.</p>}
               </div>
             </div>
           )}
 
-          {memItems.filter(m => m.status === "memorizing").length > 0 && (
+          {memItems.filter((m) => m.status === "memorizing").length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" />Currently Memorizing
+                <Sparkles className="h-3 w-3" />
+                Currently Memorizing
               </p>
-              {memItems.filter(m => m.status === "memorizing").map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group">
-                  {item.memorization_catalog?.image_url && <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />}
-                  <span className="flex-1 text-sm font-medium text-amber-300">{item.memorization_catalog?.title}</span>
-                  <Badge variant="outline" className="text-[10px] border-border/30 text-muted-foreground/60">{item.memorization_catalog?.category}</Badge>
-                  <Button variant="ghost" size="sm" onClick={() => toggleMemStatus(item)} className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"><Check className="h-3 w-3 mr-1" />Done</Button>
-                  <Button variant="ghost" size="sm" onClick={() => unassignItem(item.id)} className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></Button>
-                </div>
-              ))}
+              {memItems
+                .filter((m) => m.status === "memorizing")
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group"
+                  >
+                    {item.memorization_catalog?.image_url && (
+                      <img
+                        src={item.memorization_catalog.image_url}
+                        alt=""
+                        className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <span className="flex-1 text-sm font-medium text-amber-300">
+                      {item.memorization_catalog?.title}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="text-[10px] border-border/30 text-muted-foreground/60"
+                    >
+                      {item.memorization_catalog?.category}
+                    </Badge>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleMemStatus(item)}
+                      className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Check className="h-3 w-3 mr-1" />
+                      Done
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unassignItem(item.id)}
+                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
             </div>
           )}
 
-          {memItems.filter(m => m.status === "memorized").length > 0 && (
+          {memItems.filter((m) => m.status === "memorized").length > 0 && (
             <div className="space-y-2">
               <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Check className="h-3 w-3" />Memorized ({memorizedCount})
+                <Check className="h-3 w-3" />
+                Memorized ({memorizedCount})
               </p>
-              {memItems.filter(m => m.status === "memorized").map((item) => (
-                <div key={item.id} className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 group">
-                  {item.memorization_catalog?.image_url && <img src={item.memorization_catalog.image_url} alt="" className="h-8 w-8 rounded-lg object-cover flex-shrink-0" />}
-                  <span className="flex-1 text-sm text-muted-foreground">{item.memorization_catalog?.title}</span>
-                  {item.last_revised_at && <span className="text-[10px] text-muted-foreground/60">Revised {format(new Date(item.last_revised_at), "MMM d")}</span>}
-                  <Button variant="ghost" size="sm" onClick={() => markRevised(item.id)} className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"><RotateCcw className="h-3 w-3 mr-1" />Revised</Button>
-                  <Button variant="ghost" size="sm" onClick={() => toggleMemStatus(item)} className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">Undo</Button>
-                  <Button variant="ghost" size="sm" onClick={() => unassignItem(item.id)} className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 className="h-3 w-3" /></Button>
-                </div>
-              ))}
+              {memItems
+                .filter((m) => m.status === "memorized")
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 group"
+                  >
+                    {item.memorization_catalog?.image_url && (
+                      <img
+                        src={item.memorization_catalog.image_url}
+                        alt=""
+                        className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                      />
+                    )}
+                    <span className="flex-1 text-sm text-muted-foreground">
+                      {item.memorization_catalog?.title}
+                    </span>
+                    {item.last_revised_at && (
+                      <span className="text-[10px] text-muted-foreground/60">
+                        Revised {format(new Date(item.last_revised_at), "MMM d")}
+                      </span>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => markRevised(item.id)}
+                      className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Revised
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleMemStatus(item)}
+                      className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      Undo
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => unassignItem(item.id)}
+                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
             </div>
           )}
 
@@ -1042,7 +1268,9 @@ export default function StudentDetailPage() {
                   <BookMarked className="h-6 w-6 text-muted-foreground" />
                 </div>
                 <p className="font-medium mb-1">No memorization items</p>
-                <p className="text-sm text-muted-foreground">Click &ldquo;Assign&rdquo; to add items for this student</p>
+                <p className="text-sm text-muted-foreground">
+                  Click &ldquo;Assign&rdquo; to add items for this student
+                </p>
               </CardContent>
             </Card>
           )}
@@ -1064,7 +1292,12 @@ export default function StudentDetailPage() {
               <span className="font-semibold">{unpaidCount}</span>
             </span>
             <span className="text-muted-foreground/40">|</span>
-            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="sm" />
+            <FeeDisplay
+              amount={student.fee}
+              currency={student.fee_currency}
+              rates={rates}
+              size="sm"
+            />
             <span className="text-muted-foreground text-xs">/ month</span>
           </div>
           <FeeHistoryTable
@@ -1090,29 +1323,51 @@ export default function StudentDetailPage() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>Update Progress</DialogTitle>
-            <DialogDescription>{activeRound?.type === "qaida" ? "Norani Qaida" : `Quran Round ${activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 1}`}</DialogDescription>
+            <DialogDescription>
+              {activeRound?.type === "qaida"
+                ? "Norani Qaida"
+                : `Quran Round ${activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 1}`}
+            </DialogDescription>
           </DialogHeader>
           {activeRound?.type === "quran" ? (
             <div className="space-y-4 pt-2">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Paras from End (30→)</Label>
-                  <Input type="number" min="0" max="30" value={roundForm.desc_completed} onChange={(e) => setRoundForm({ ...roundForm, desc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={roundForm.desc_completed}
+                    onChange={(e) => setRoundForm({ ...roundForm, desc_completed: e.target.value })}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Currently on Para</Label>
-                  <Input type="number" min="0" max="30" value={roundForm.asc_completed} onChange={(e) => setRoundForm({ ...roundForm, asc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={roundForm.asc_completed}
+                    onChange={(e) => setRoundForm({ ...roundForm, asc_completed: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="flex gap-3">
                 <Button onClick={saveRoundProgress}>Save</Button>
-                <Button variant="outline" onClick={() => setRoundEditOpen(false)}>Cancel</Button>
+                <Button variant="outline" onClick={() => setRoundEditOpen(false)}>
+                  Cancel
+                </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-4 pt-2">
-              <p className="text-sm text-muted-foreground">Qaida has no para progress. Use &ldquo;Complete&rdquo; to finish this round.</p>
-              <Button variant="outline" onClick={() => setRoundEditOpen(false)}>Close</Button>
+              <p className="text-sm text-muted-foreground">
+                Qaida has no para progress. Use &ldquo;Complete&rdquo; to finish this round.
+              </p>
+              <Button variant="outline" onClick={() => setRoundEditOpen(false)}>
+                Close
+              </Button>
             </div>
           )}
         </DialogContent>
@@ -1127,13 +1382,39 @@ export default function StudentDetailPage() {
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
-              <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, type: "qaida" })} className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "qaida" ? "bg-amber-500/15 text-amber-400" : "text-muted-foreground hover:text-foreground"}`}>Norani Qaida</button>
-              <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, type: "quran" })} className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "quran" ? "bg-emerald-500/15 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}>Quran Reading</button>
+              <button
+                type="button"
+                onClick={() => setNewRoundForm({ ...newRoundForm, type: "qaida" })}
+                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "qaida" ? "bg-amber-500/15 text-amber-400" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Norani Qaida
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewRoundForm({ ...newRoundForm, type: "quran" })}
+                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "quran" ? "bg-emerald-500/15 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                Quran Reading
+              </button>
             </div>
 
-            <button type="button" onClick={() => setNewRoundForm({ ...newRoundForm, is_completed: !newRoundForm.is_completed })} className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all">
-              <div className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${newRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}>
-                <div className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5" style={{ transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
+            <button
+              type="button"
+              onClick={() =>
+                setNewRoundForm({ ...newRoundForm, is_completed: !newRoundForm.is_completed })
+              }
+              className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
+            >
+              <div
+                className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${newRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
+              >
+                <div
+                  className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
+                  style={{
+                    transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)",
+                    transition: "transform 0.2s",
+                  }}
+                />
               </div>
               <div>
                 <p className="text-sm font-medium">Already completed</p>
@@ -1144,12 +1425,22 @@ export default function StudentDetailPage() {
             <div className={`grid gap-4 ${newRoundForm.is_completed ? "sm:grid-cols-2" : ""}`}>
               <div className="space-y-2">
                 <Label>Start Date</Label>
-                <Input type="date" value={newRoundForm.started_at} onChange={(e) => setNewRoundForm({ ...newRoundForm, started_at: e.target.value })} />
+                <Input
+                  type="date"
+                  value={newRoundForm.started_at}
+                  onChange={(e) => setNewRoundForm({ ...newRoundForm, started_at: e.target.value })}
+                />
               </div>
               {newRoundForm.is_completed && (
                 <div className="space-y-2">
                   <Label>Completed Date</Label>
-                  <Input type="date" value={newRoundForm.completed_at} onChange={(e) => setNewRoundForm({ ...newRoundForm, completed_at: e.target.value })} />
+                  <Input
+                    type="date"
+                    value={newRoundForm.completed_at}
+                    onChange={(e) =>
+                      setNewRoundForm({ ...newRoundForm, completed_at: e.target.value })
+                    }
+                  />
                 </div>
               )}
             </div>
@@ -1158,44 +1449,97 @@ export default function StudentDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Paras from End (30→)</Label>
-                  <Input type="number" min="0" max="30" value={newRoundForm.desc_completed} onChange={(e) => setNewRoundForm({ ...newRoundForm, desc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={newRoundForm.desc_completed}
+                    onChange={(e) =>
+                      setNewRoundForm({ ...newRoundForm, desc_completed: e.target.value })
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Currently on Para</Label>
-                  <Input type="number" min="0" max="30" value={newRoundForm.asc_completed} onChange={(e) => setNewRoundForm({ ...newRoundForm, asc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={newRoundForm.asc_completed}
+                    onChange={(e) =>
+                      setNewRoundForm({ ...newRoundForm, asc_completed: e.target.value })
+                    }
+                  />
                 </div>
               </div>
             )}
 
             {newRoundForm.is_completed && (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <p className="text-xs text-emerald-400">{newRoundForm.type === "quran" ? "Saved as fully completed (30/30)." : "Saved as completed Qaida round."}</p>
+                <p className="text-xs text-emerald-400">
+                  {newRoundForm.type === "quran"
+                    ? "Saved as fully completed (30/30)."
+                    : "Saved as completed Qaida round."}
+                </p>
               </div>
             )}
 
             <div className="flex gap-3 pt-1">
               <Button onClick={startNewRound}>
-                {newRoundForm.is_completed ? <><Trophy className="h-3.5 w-3.5 mr-1" />Add Completed Round</> : <><Play className="h-3.5 w-3.5 mr-1" />Start Round</>}
+                {newRoundForm.is_completed ? (
+                  <>
+                    <Trophy className="h-3.5 w-3.5 mr-1" />
+                    Add Completed Round
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-3.5 w-3.5 mr-1" />
+                    Start Round
+                  </>
+                )}
               </Button>
-              <Button variant="outline" onClick={() => setNewRoundOpen(false)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setNewRoundOpen(false)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Edit Round Dialog */}
-      <Dialog open={!!editingRound} onOpenChange={(open) => { if (!open) setEditingRound(null) }}>
+      <Dialog
+        open={!!editingRound}
+        onOpenChange={(open) => {
+          if (!open) setEditingRound(null)
+        }}
+      >
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Round</DialogTitle>
             <DialogDescription>
-              {editingRound?.type === "qaida" ? "Norani Qaida" : `Quran Round ${editingRound ? getChronologicalRoundNumber(rounds, editingRound) : ""}`}
+              {editingRound?.type === "qaida"
+                ? "Norani Qaida"
+                : `Quran Round ${editingRound ? getChronologicalRoundNumber(rounds, editingRound) : ""}`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            <button type="button" onClick={() => setEditRoundForm({ ...editRoundForm, is_completed: !editRoundForm.is_completed })} className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all">
-              <div className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${editRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}>
-                <div className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5" style={{ transform: editRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)", transition: "transform 0.2s" }} />
+            <button
+              type="button"
+              onClick={() =>
+                setEditRoundForm({ ...editRoundForm, is_completed: !editRoundForm.is_completed })
+              }
+              className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
+            >
+              <div
+                className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${editRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
+              >
+                <div
+                  className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
+                  style={{
+                    transform: editRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)",
+                    transition: "transform 0.2s",
+                  }}
+                />
               </div>
               <div>
                 <p className="text-sm font-medium">Completed</p>
@@ -1206,12 +1550,24 @@ export default function StudentDetailPage() {
             <div className={`grid gap-4 ${editRoundForm.is_completed ? "sm:grid-cols-2" : ""}`}>
               <div className="space-y-2">
                 <Label>Start Date</Label>
-                <Input type="date" value={editRoundForm.started_at} onChange={(e) => setEditRoundForm({ ...editRoundForm, started_at: e.target.value })} />
+                <Input
+                  type="date"
+                  value={editRoundForm.started_at}
+                  onChange={(e) =>
+                    setEditRoundForm({ ...editRoundForm, started_at: e.target.value })
+                  }
+                />
               </div>
               {editRoundForm.is_completed && (
                 <div className="space-y-2">
                   <Label>Completed Date</Label>
-                  <Input type="date" value={editRoundForm.completed_at} onChange={(e) => setEditRoundForm({ ...editRoundForm, completed_at: e.target.value })} />
+                  <Input
+                    type="date"
+                    value={editRoundForm.completed_at}
+                    onChange={(e) =>
+                      setEditRoundForm({ ...editRoundForm, completed_at: e.target.value })
+                    }
+                  />
                 </div>
               )}
             </div>
@@ -1220,26 +1576,49 @@ export default function StudentDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Paras from End (30→)</Label>
-                  <Input type="number" min="0" max="30" value={editRoundForm.desc_completed} onChange={(e) => setEditRoundForm({ ...editRoundForm, desc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={editRoundForm.desc_completed}
+                    onChange={(e) =>
+                      setEditRoundForm({ ...editRoundForm, desc_completed: e.target.value })
+                    }
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label>Currently on Para</Label>
-                  <Input type="number" min="0" max="30" value={editRoundForm.asc_completed} onChange={(e) => setEditRoundForm({ ...editRoundForm, asc_completed: e.target.value })} />
+                  <Input
+                    type="number"
+                    min="0"
+                    max="30"
+                    value={editRoundForm.asc_completed}
+                    onChange={(e) =>
+                      setEditRoundForm({ ...editRoundForm, asc_completed: e.target.value })
+                    }
+                  />
                 </div>
               </div>
             )}
 
             {editRoundForm.is_completed && (
               <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <p className="text-xs text-emerald-400">{editingRound?.type === "quran" ? "Saved as fully completed (30/30)." : "Saved as completed Qaida round."}</p>
+                <p className="text-xs text-emerald-400">
+                  {editingRound?.type === "quran"
+                    ? "Saved as fully completed (30/30)."
+                    : "Saved as completed Qaida round."}
+                </p>
               </div>
             )}
 
             <div className="flex gap-3 pt-1">
               <Button onClick={saveEditRound}>
-                <Check className="h-3.5 w-3.5 mr-1" />Save Changes
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Save Changes
               </Button>
-              <Button variant="outline" onClick={() => setEditingRound(null)}>Cancel</Button>
+              <Button variant="outline" onClick={() => setEditingRound(null)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -1249,8 +1628,18 @@ export default function StudentDetailPage() {
 }
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
 ]
 
 function FeeHistoryTable({
@@ -1279,20 +1668,21 @@ function FeeHistoryTable({
     return (fee as any)[key]
   }
 
-  const sorted = sortKey && sortDir
-    ? [...fees].sort((a, b) => {
-        const aVal = getFeeSort(a, sortKey)
-        const bVal = getFeeSort(b, sortKey)
-        if (aVal == null && bVal == null) return 0
-        if (aVal == null) return sortDir === "asc" ? -1 : 1
-        if (bVal == null) return sortDir === "asc" ? 1 : -1
-        if (typeof aVal === "number" && typeof bVal === "number") {
-          return sortDir === "asc" ? aVal - bVal : bVal - aVal
-        }
-        const cmp = String(aVal).localeCompare(String(bVal))
-        return sortDir === "asc" ? cmp : -cmp
-      })
-    : fees
+  const sorted =
+    sortKey && sortDir
+      ? [...fees].sort((a, b) => {
+          const aVal = getFeeSort(a, sortKey)
+          const bVal = getFeeSort(b, sortKey)
+          if (aVal == null && bVal == null) return 0
+          if (aVal == null) return sortDir === "asc" ? -1 : 1
+          if (bVal == null) return sortDir === "asc" ? 1 : -1
+          if (typeof aVal === "number" && typeof bVal === "number") {
+            return sortDir === "asc" ? aVal - bVal : bVal - aVal
+          }
+          const cmp = String(aVal).localeCompare(String(bVal))
+          return sortDir === "asc" ? cmp : -cmp
+        })
+      : fees
 
   const totalPages = Math.ceil(sorted.length / pageSize)
   const paginated = sorted.slice((page - 1) * pageSize, page * pageSize)
@@ -1320,20 +1710,46 @@ function FeeHistoryTable({
                 <thead>
                   <tr className="border-b border-border/50">
                     <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader label="Month" sortKey="month_year" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
+                      <SortableHeader
+                        label="Month"
+                        sortKey="month_year"
+                        currentSort={sortKey}
+                        currentDirection={sortDir}
+                        onSort={onSort}
+                      />
                     </th>
                     <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader label="Status" sortKey="is_paid" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
+                      <SortableHeader
+                        label="Status"
+                        sortKey="is_paid"
+                        currentSort={sortKey}
+                        currentDirection={sortDir}
+                        onSort={onSort}
+                      />
                     </th>
                     <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader label="Paid Date" sortKey="paid_at" currentSort={sortKey} currentDirection={sortDir} onSort={onSort} />
+                      <SortableHeader
+                        label="Paid Date"
+                        sortKey="paid_at"
+                        currentSort={sortKey}
+                        currentDirection={sortDir}
+                        onSort={onSort}
+                      />
                     </th>
-                    <th scope="col" className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+                    <th
+                      scope="col"
+                      className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                    >
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginated.map((fee) => (
-                    <tr key={fee.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors">
+                    <tr
+                      key={fee.id}
+                      className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
+                    >
                       <td className="px-5 py-3.5 font-medium text-sm">
                         {MONTH_NAMES[fee.month - 1]} {fee.year}
                       </td>

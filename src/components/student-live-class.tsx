@@ -16,7 +16,7 @@ const SyncedPdfViewer = dynamic(
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     ),
-  }
+  },
 )
 
 /**
@@ -55,7 +55,7 @@ export function StudentLiveClass() {
         if (nav.page !== pageRef.current) setPage(nav.page)
         if (!syncedRef.current) setSynced(true)
       }),
-    [subscribeNav]
+    [subscribeNav],
   )
 
   // Fallback: if the teacher hasn't pushed a position within 2.5s (e.g. flaky
@@ -157,7 +157,9 @@ export function StudentLiveClass() {
             <BookOpen className="h-7 w-7 text-muted-foreground" />
           </div>
           <p className="text-lg font-medium">Para {para} isn&apos;t available</p>
-          <p className="text-sm text-muted-foreground">This para&apos;s PDF hasn&apos;t been uploaded yet.</p>
+          <p className="text-sm text-muted-foreground">
+            This para&apos;s PDF hasn&apos;t been uploaded yet.
+          </p>
         </div>
       )}
     </div>

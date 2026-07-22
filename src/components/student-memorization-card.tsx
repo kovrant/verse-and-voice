@@ -67,9 +67,14 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
     <div className={card}>
       {/* Header */}
       <div className="mb-[18px] flex items-center gap-[12px]">
-        <div className="flex h-[44px] w-[44px] items-center justify-center rounded-xl bg-secondary text-[22px]">📖</div>
+        <div className="flex h-[44px] w-[44px] items-center justify-center rounded-xl bg-secondary text-[22px]">
+          📖
+        </div>
         <div>
-          <div className="text-[12px] font-semibold text-muted-foreground" style={{ letterSpacing: "1.4px" }}>
+          <div
+            className="text-[12px] font-semibold text-muted-foreground"
+            style={{ letterSpacing: "1.4px" }}
+          >
             NOW MEMORIZING
           </div>
           <div className="font-heading text-[20px] font-bold text-foreground">
@@ -84,20 +89,29 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
           {shown.map((m) => {
             const c = m.memorization_catalog!
             return (
-              <div key={m.id} className="flex items-center gap-[12px] rounded-xl bg-secondary p-[9px_12px]">
+              <div
+                key={m.id}
+                className="flex items-center gap-[12px] rounded-xl bg-secondary p-[9px_12px]"
+              >
                 {c.image_url ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={c.image_url}
                     alt=""
                     className="h-[38px] w-[38px] flex-shrink-0 rounded-lg object-cover"
-                    onError={(e) => { e.currentTarget.style.display = "none" }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none"
+                    }}
                   />
                 ) : (
-                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg bg-card text-[18px]">🌙</div>
+                  <div className="flex h-[38px] w-[38px] flex-shrink-0 items-center justify-center rounded-lg bg-card text-[18px]">
+                    🌙
+                  </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <div className="truncate font-heading text-[15px] font-bold text-foreground">{c.title}</div>
+                  <div className="truncate font-heading text-[15px] font-bold text-foreground">
+                    {c.title}
+                  </div>
                   <div className="truncate text-[12px] text-muted-foreground">{c.category}</div>
                 </div>
                 <span className="flex-shrink-0 rounded-full bg-card px-[10px] py-[3px] text-[11px] font-semibold text-muted-foreground">
@@ -107,7 +121,9 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
             )
           })}
           {extra > 0 && (
-            <div className="text-[12px] font-medium text-muted-foreground">+{extra} more in progress</div>
+            <div className="text-[12px] font-medium text-muted-foreground">
+              +{extra} more in progress
+            </div>
           )}
         </div>
       ) : (
@@ -117,12 +133,18 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
       )}
 
       {/* Footer */}
-      <div className="mt-auto flex items-center justify-between border-t border-border pt-[16px]" style={{ marginTop: shown.length > 0 ? "18px" : "16px" }}>
+      <div
+        className="mt-auto flex items-center justify-between border-t border-border pt-[16px]"
+        style={{ marginTop: shown.length > 0 ? "18px" : "16px" }}
+      >
         <div className="flex items-center gap-[7px] text-[13px] font-medium text-muted-foreground">
           <span className="h-[12px] w-[12px] rounded-[4px] bg-primary" />
           {memorizedCount} memorized
         </div>
-        <Link href="/student/memorization" className="text-[13px] font-semibold text-foreground transition-colors hover:text-[hsl(var(--primary-hover))]">
+        <Link
+          href="/student/memorization"
+          className="text-[13px] font-semibold text-foreground transition-colors hover:text-[hsl(var(--primary-hover))]"
+        >
           View all →
         </Link>
       </div>

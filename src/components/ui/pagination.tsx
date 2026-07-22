@@ -75,7 +75,7 @@ export function Pagination({
             >
               {page}
             </PaginationButton>
-          )
+          ),
         )}
 
         <PaginationButton
@@ -119,7 +119,7 @@ function PaginationButton({
         active
           ? "bg-emerald-500/15 text-emerald-400 font-semibold"
           : "text-muted-foreground hover:bg-secondary hover:text-foreground",
-        disabled && "pointer-events-none opacity-30"
+        disabled && "pointer-events-none opacity-30",
       )}
       {...props}
     >

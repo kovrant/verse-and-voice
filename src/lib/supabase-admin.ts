@@ -14,7 +14,7 @@ export function createSupabaseAdminClient() {
 
   if (!url || !serviceKey) {
     throw new Error(
-      "Missing Supabase admin env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)."
+      "Missing Supabase admin env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY).",
     )
   }
 

@@ -11,7 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Pagination } from "@/components/ui/pagination"
-import { SortableHeader, sortData, toggleSort, type SortDirection } from "@/components/ui/sortable-header"
+import {
+  SortableHeader,
+  sortData,
+  toggleSort,
+  type SortDirection,
+} from "@/components/ui/sortable-header"
 import { QuranProgress, getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { Plus, Search, Users, ArrowRight, MapPin, Settings2, Eye, EyeOff } from "lucide-react"
 import { format } from "date-fns"
@@ -41,12 +46,12 @@ interface ColumnConfig {
 }
 
 const ALL_COLUMNS: ColumnConfig[] = [
-  { key: "country",     label: "Country",    sortKey: "country",    default: true },
-  { key: "started_at",  label: "Admission",  sortKey: "started_at", default: true },
-  { key: "fee",         label: "Fee",        sortKey: "fee",        default: true },
-  { key: "class_time",  label: "Class Time", sortKey: "class_time", default: true },
-  { key: "quran_progress", label: "Quran",    sortKey: "quran_progress", default: false },
-  { key: "status",      label: "Status",     sortKey: "status",     default: true },
+  { key: "country", label: "Country", sortKey: "country", default: true },
+  { key: "started_at", label: "Admission", sortKey: "started_at", default: true },
+  { key: "fee", label: "Fee", sortKey: "fee", default: true },
+  { key: "class_time", label: "Class Time", sortKey: "class_time", default: true },
+  { key: "quran_progress", label: "Quran", sortKey: "quran_progress", default: false },
+  { key: "status", label: "Status", sortKey: "status", default: true },
 ]
 
 const STORAGE_KEY = "quran-academy-students-columns"
@@ -54,12 +59,13 @@ const SORT_STORAGE_KEY = "quran-academy-students-sort"
 const FILTER_STORAGE_KEY = "quran-academy-students-filter"
 
 function loadColumns(): Set<ColumnKey> {
-  if (typeof window === "undefined") return new Set(ALL_COLUMNS.filter(c => c.default).map(c => c.key))
+  if (typeof window === "undefined")
+    return new Set(ALL_COLUMNS.filter((c) => c.default).map((c) => c.key))
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) return new Set(JSON.parse(saved) as ColumnKey[])
   } catch {}
-  return new Set(ALL_COLUMNS.filter(c => c.default).map(c => c.key))
+  return new Set(ALL_COLUMNS.filter((c) => c.default).map((c) => c.key))
 }
 
 function loadSort(): { key: string | null; dir: SortDirection } {
@@ -115,7 +121,7 @@ export default function StudentsPage() {
       supabase.from("students").select("*").order("created_at", { ascending: false }),
       // Page past the 1000-row cap so progress data isn't silently dropped.
       fetchAllRows<QuranRound>("quran_rounds", (q) =>
-        q.select("*").order("round_number", { ascending: true })
+        q.select("*").order("round_number", { ascending: true }),
       ),
     ])
     setStudents(studentsRes.data || [])
@@ -131,7 +137,7 @@ export default function StudentsPage() {
   }
 
   function toggleColumn(key: ColumnKey) {
-    setVisibleCols(prev => {
+    setVisibleCols((prev) => {
       const next = new Set(prev)
       if (next.has(key)) {
         next.delete(key)
@@ -189,13 +195,15 @@ export default function StudentsPage() {
   let sorted: Student[]
   if (sortKey === "quran_progress" && sortDir) {
     sorted = [...filtered].sort((a, b) =>
-      sortDir === "asc"
-        ? quranScore(a.id) - quranScore(b.id)
-        : quranScore(b.id) - quranScore(a.id)
+      sortDir === "asc" ? quranScore(a.id) - quranScore(b.id) : quranScore(b.id) - quranScore(a.id),
     )
   } else if (sortKey === "class_time" && sortDir) {
     sorted = [...filtered].sort((a, b) =>
-      compareNullableNumber(classTimeMinutes(a.class_time), classTimeMinutes(b.class_time), sortDir)
+      compareNullableNumber(
+        classTimeMinutes(a.class_time),
+        classTimeMinutes(b.class_time),
+        sortDir,
+      ),
     )
   } else {
     sorted = sortData(filtered, sortKey, sortDir)
@@ -213,7 +221,9 @@ export default function StudentsPage() {
     localStorage.setItem(SORT_STORAGE_KEY, JSON.stringify({ key: newKey, dir: newDir }))
   }
 
-  useEffect(() => { setPage(1) }, [search, statusFilter])
+  useEffect(() => {
+    setPage(1)
+  }, [search, statusFilter])
 
   if (loading) {
     return (
@@ -273,7 +283,10 @@ export default function StudentsPage() {
               <button
                 key={s}
                 type="button"
-                onClick={() => { setStatusFilter(s); localStorage.setItem(FILTER_STORAGE_KEY, s) }}
+                onClick={() => {
+                  setStatusFilter(s)
+                  localStorage.setItem(FILTER_STORAGE_KEY, s)
+                }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                   statusFilter === s
                     ? "bg-secondary text-foreground"
@@ -303,7 +316,9 @@ export default function StudentsPage() {
             {settingsOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-border/50 bg-card shadow-xl shadow-black/20 overflow-hidden z-50 animate-fade-in-up">
                 <div className="px-4 py-3 border-b border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Show Columns</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Show Columns
+                  </p>
                 </div>
                 <div className="p-2">
                   {/* Student column is always visible */}
@@ -325,11 +340,17 @@ export default function StudentsPage() {
                       ) : (
                         <EyeOff className="h-3.5 w-3.5 text-muted-foreground/40" />
                       )}
-                      <span className={`text-sm font-medium ${isVisible(col.key) ? "text-foreground" : "text-muted-foreground/60"}`}>
+                      <span
+                        className={`text-sm font-medium ${isVisible(col.key) ? "text-foreground" : "text-muted-foreground/60"}`}
+                      >
                         {col.label}
                       </span>
-                      <div className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-primary" : "bg-secondary"}`}>
-                        <div className={`h-3 w-3 rounded-full bg-background shadow-sm transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`} />
+                      <div
+                        className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-primary" : "bg-secondary"}`}
+                      >
+                        <div
+                          className={`h-3 w-3 rounded-full bg-background shadow-sm transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`}
+                        />
                       </div>
                     </button>
                   ))}
@@ -349,7 +370,9 @@ export default function StudentsPage() {
             {students.length === 0 ? (
               <>
                 <p className="text-lg font-medium mb-1">No students yet</p>
-                <p className="text-sm text-muted-foreground mb-5">Add your first student to get started</p>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Add your first student to get started
+                </p>
                 <Link href="/students/new">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
@@ -379,11 +402,19 @@ export default function StudentsPage() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
                             <p className="font-semibold text-sm truncate">{student.name}</p>
-                            <Badge variant={statusCfg.variant} className="flex-shrink-0">{statusCfg.label}</Badge>
+                            <Badge variant={statusCfg.variant} className="flex-shrink-0">
+                              {statusCfg.label}
+                            </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">{student.guardian_name}</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {student.guardian_name}
+                          </p>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
-                            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
+                            <FeeDisplay
+                              amount={student.fee}
+                              currency={student.fee_currency}
+                              rates={rates}
+                            />
                             {student.class_time && (
                               <span className="flex items-center gap-1">
                                 <span className="text-muted-foreground/40">&middot;</span>
@@ -414,36 +445,78 @@ export default function StudentsPage() {
                 <thead>
                   <tr className="border-b border-border/50">
                     <th scope="col" className="px-5 py-4 text-left">
-                      <SortableHeader label="Student" sortKey="name" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                      <SortableHeader
+                        label="Student"
+                        sortKey="name"
+                        currentSort={sortKey}
+                        currentDirection={sortDir}
+                        onSort={handleSort}
+                      />
                     </th>
                     {isVisible("country") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Country" sortKey="country" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Country"
+                          sortKey="country"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     {isVisible("started_at") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Admission" sortKey="started_at" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Admission"
+                          sortKey="started_at"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     {isVisible("fee") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Fee" sortKey="fee" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Fee"
+                          sortKey="fee"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     {isVisible("class_time") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Class Time" sortKey="class_time" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Class Time"
+                          sortKey="class_time"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     {isVisible("quran_progress") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Quran" sortKey="quran_progress" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Quran"
+                          sortKey="quran_progress"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     {isVisible("status") && (
                       <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader label="Status" sortKey="status" currentSort={sortKey} currentDirection={sortDir} onSort={handleSort} />
+                        <SortableHeader
+                          label="Status"
+                          sortKey="status"
+                          currentSort={sortKey}
+                          currentDirection={sortDir}
+                          onSort={handleSort}
+                        />
                       </th>
                     )}
                     <th scope="col" className="px-5 py-4"></th>
@@ -464,7 +537,9 @@ export default function StudentsPage() {
                             </div>
                             <div>
                               <p className="font-medium text-sm">{student.name}</p>
-                              <p className="text-xs text-muted-foreground">{student.guardian_name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {student.guardian_name}
+                              </p>
                             </div>
                           </div>
                         </td>
@@ -482,37 +557,45 @@ export default function StudentsPage() {
                         )}
                         {isVisible("started_at") && (
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {format(parseLocalDate(student.started_at) ?? new Date(), "MMM d, yyyy")}
+                            {format(
+                              parseLocalDate(student.started_at) ?? new Date(),
+                              "MMM d, yyyy",
+                            )}
                           </td>
                         )}
                         {isVisible("fee") && (
                           <td className="px-5 py-4">
-                            <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} />
+                            <FeeDisplay
+                              amount={student.fee}
+                              currency={student.fee_currency}
+                              rates={rates}
+                            />
                           </td>
                         )}
                         {isVisible("class_time") && (
                           <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {student.class_time || <span className="text-muted-foreground/40">--</span>}
+                            {student.class_time || (
+                              <span className="text-muted-foreground/40">--</span>
+                            )}
                           </td>
                         )}
                         {isVisible("quran_progress") && (
                           <td className="px-5 py-4">
-                            <QuranProgress
-                              rounds={roundsMap[student.id] || []}
-                              variant="compact"
-                            />
+                            <QuranProgress rounds={roundsMap[student.id] || []} variant="compact" />
                           </td>
                         )}
                         {isVisible("status") && (
                           <td className="px-5 py-4">
-                            <Badge variant={statusCfg.variant}>
-                              {statusCfg.label}
-                            </Badge>
+                            <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
                           </td>
                         )}
                         <td className="px-5 py-4">
                           <Link href={`/students/${student.id}`}>
-                            <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
                               <ArrowRight className="h-4 w-4" />
                             </Button>
                           </Link>
@@ -533,7 +616,10 @@ export default function StudentsPage() {
                 totalItems={sorted.length}
                 pageSize={pageSize}
                 onPageChange={setPage}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(1) }}
+                onPageSizeChange={(s) => {
+                  setPageSize(s)
+                  setPage(1)
+                }}
               />
             </div>
           )}

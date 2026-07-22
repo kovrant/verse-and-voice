@@ -14,13 +14,13 @@ export function createSupabaseServerClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
+              cookieStore.set(name, value, options),
             )
           } catch {
             // Called from a Server Component — ignored when middleware refreshes the session.
           }
         },
       },
-    }
+    },
   )
 }

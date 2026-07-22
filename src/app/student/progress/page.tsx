@@ -57,7 +57,9 @@ export default function StudentProgressPage() {
           <BookOpen className="h-6 w-6" strokeWidth={2.25} />
         </div>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">My Progress</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            My Progress
+          </h1>
           <p className="text-sm text-muted-foreground">Your Quran and Qaida journey ✨</p>
         </div>
       </div>
@@ -83,8 +85,7 @@ export default function StudentProgressPage() {
               const total = r.type === "quran" ? desc + completedFromAsc : 0
               const prog = (total / 30) * 100
               const chronologicalNum = getChronologicalRoundNumber(rounds, r)
-              const Icon =
-                r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
+              const Icon = r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
 
               return (
                 <div

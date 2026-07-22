@@ -21,14 +21,26 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
-import { Upload, Trash2, FileText, Image as ImageIcon, Search, Eye, X, HardDrive, BookOpen, Sparkles, FolderOpen } from "lucide-react"
+import {
+  Upload,
+  Trash2,
+  FileText,
+  Image as ImageIcon,
+  Search,
+  Eye,
+  X,
+  HardDrive,
+  BookOpen,
+  Sparkles,
+  FolderOpen,
+} from "lucide-react"
 import { toast } from "sonner"
 import dynamic from "next/dynamic"
 
 // react-pdf is client-only (uses worker + canvas) — avoid SSR
 const PdfThumbnail = dynamic(
-  () => import("@/components/pdf-thumbnail").then(m => m.PdfThumbnail),
-  { ssr: false }
+  () => import("@/components/pdf-thumbnail").then((m) => m.PdfThumbnail),
+  { ssr: false },
 )
 
 interface MediaItem {
@@ -55,9 +67,9 @@ const DEFAULT_CATEGORIES: Record<string, string[]> = {
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  quran:        { bg: "bg-secondary", text: "text-muted-foreground" },
+  quran: { bg: "bg-secondary", text: "text-muted-foreground" },
   memorization: { bg: "bg-secondary", text: "text-muted-foreground" },
-  general:      { bg: "bg-secondary", text: "text-muted-foreground" },
+  general: { bg: "bg-secondary", text: "text-muted-foreground" },
 }
 
 export default function MediaPage() {
@@ -99,7 +111,9 @@ export default function MediaPage() {
   function getCategories(mediaType: string): string[] {
     const defaults = DEFAULT_CATEGORIES[mediaType] || []
     const custom = customCategories[mediaType] || []
-    const fromItems = Array.from(new Set(items.filter(i => i.type === mediaType).map(i => i.category)))
+    const fromItems = Array.from(
+      new Set(items.filter((i) => i.type === mediaType).map((i) => i.category)),
+    )
     return Array.from(new Set([...defaults, ...custom, ...fromItems]))
   }
 
@@ -108,7 +122,9 @@ export default function MediaPage() {
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, current: "" })
   const bulkFileRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => { loadItems() }, [])
+  useEffect(() => {
+    loadItems()
+  }, [])
 
   async function loadItems() {
     const { data } = await supabase
@@ -189,9 +205,9 @@ export default function MediaPage() {
   function extractParaNumber(filename: string): number | null {
     // Match: "Para 1", "para-01", "para_1", "Para1", "30 para", "30para", "1.pdf", "01.pdf"
     const match =
-      filename.match(/(?:para[\s_-]*)(\d+)/i) ||   // "para 1", "para-01"
-      filename.match(/(\d+)[\s_-]*para/i) ||         // "30 para", "30-para"
-      filename.match(/^(\d+)\./i)                     // "1.pdf", "01.pdf"
+      filename.match(/(?:para[\s_-]*)(\d+)/i) || // "para 1", "para-01"
+      filename.match(/(\d+)[\s_-]*para/i) || // "30 para", "30-para"
+      filename.match(/^(\d+)\./i) // "1.pdf", "01.pdf"
     if (match) {
       const num = parseInt(match[1])
       if (num >= 1 && num <= 30) return num
@@ -200,7 +216,9 @@ export default function MediaPage() {
   }
 
   async function handleBulkUpload(files: FileList) {
-    const pdfFiles = Array.from(files).filter(f => f.type === "application/pdf" || f.name.endsWith(".pdf"))
+    const pdfFiles = Array.from(files).filter(
+      (f) => f.type === "application/pdf" || f.name.endsWith(".pdf"),
+    )
     if (pdfFiles.length === 0) {
       toast.error("No PDF files found in selection.")
       return
@@ -208,7 +226,7 @@ export default function MediaPage() {
 
     // Sort by extracted para number
     const sorted = pdfFiles
-      .map(f => ({ file: f, paraNum: extractParaNumber(f.name) }))
+      .map((f) => ({ file: f, paraNum: extractParaNumber(f.name) }))
       .sort((a, b) => (a.paraNum || 999) - (b.paraNum || 999))
 
     setBulkUploading(true)
@@ -255,7 +273,9 @@ export default function MediaPage() {
     setBulkUploading(false)
 
     if (failed.length > 0) {
-      toast.warning(`Uploaded ${sorted.length - failed.length}/${sorted.length} files. ${failed.length} failed.`)
+      toast.warning(
+        `Uploaded ${sorted.length - failed.length}/${sorted.length} files. ${failed.length} failed.`,
+      )
     } else {
       toast.success(`All ${sorted.length} files uploaded successfully.`)
     }
@@ -286,24 +306,25 @@ export default function MediaPage() {
     await loadItems()
   }
 
-  const filtered = items.filter(item => {
+  const filtered = items.filter((item) => {
     const matchesType = filterType === "All" || item.type === filterType
-    const matchesSearch = item.title.toLowerCase().includes(search.toLowerCase()) ||
+    const matchesSearch =
+      item.title.toLowerCase().includes(search.toLowerCase()) ||
       item.category.toLowerCase().includes(search.toLowerCase())
     return matchesType && matchesSearch
   })
 
   // Group by type
   const grouped: Record<string, MediaItem[]> = {}
-  filtered.forEach(item => {
+  filtered.forEach((item) => {
     if (!grouped[item.type]) grouped[item.type] = []
     grouped[item.type].push(item)
   })
 
   // Stats
   const totalFiles = items.length
-  const totalQuran = items.filter(i => i.type === "quran").length
-  const totalMem = items.filter(i => i.type === "memorization").length
+  const totalQuran = items.filter((i) => i.type === "quran").length
+  const totalMem = items.filter((i) => i.type === "memorization").length
 
   if (loading) {
     return (
@@ -313,10 +334,14 @@ export default function MediaPage() {
           <div className="h-5 w-72 shimmer rounded-lg" />
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
-          {[...Array(3)].map((_, i) => <div key={i} className="h-24 shimmer rounded-2xl" />)}
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 shimmer rounded-2xl" />
+          ))}
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => <div key={i} className="h-40 shimmer rounded-2xl" />)}
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-40 shimmer rounded-2xl" />
+          ))}
         </div>
       </div>
     )
@@ -329,7 +354,9 @@ export default function MediaPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             <span className="text-foreground">Media Library</span>
           </h1>
-          <p className="text-muted-foreground mt-1">Central hub for all uploads — Quran, memorization, and resources</p>
+          <p className="text-muted-foreground mt-1">
+            Central hub for all uploads — Quran, memorization, and resources
+          </p>
         </div>
         <div className="flex gap-2">
           <input
@@ -343,7 +370,11 @@ export default function MediaPage() {
               if (bulkFileRef.current) bulkFileRef.current.value = ""
             }}
           />
-          <Button variant="outline" onClick={() => bulkFileRef.current?.click()} disabled={bulkUploading}>
+          <Button
+            variant="outline"
+            onClick={() => bulkFileRef.current?.click()}
+            disabled={bulkUploading}
+          >
             <Upload className="h-4 w-4 mr-2" />
             Bulk Upload
           </Button>
@@ -397,9 +428,12 @@ export default function MediaPage() {
           <CardContent className="pt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">
-                Uploading <span className="text-foreground font-medium">{bulkProgress.current}</span>
+                Uploading{" "}
+                <span className="text-foreground font-medium">{bulkProgress.current}</span>
               </span>
-              <span className="text-foreground font-medium">{bulkProgress.done}/{bulkProgress.total}</span>
+              <span className="text-foreground font-medium">
+                {bulkProgress.done}/{bulkProgress.total}
+              </span>
             </div>
             <div className="h-2 rounded-full bg-secondary overflow-hidden">
               <div
@@ -423,7 +457,7 @@ export default function MediaPage() {
           />
         </div>
         <div className="flex items-center rounded-xl border border-border/50 bg-card p-1 gap-1">
-          {["All", ...MEDIA_TYPES.map(t => t.value)].map(t => (
+          {["All", ...MEDIA_TYPES.map((t) => t.value)].map((t) => (
             <button
               key={t}
               type="button"
@@ -434,7 +468,7 @@ export default function MediaPage() {
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
-              {t === "All" ? "All" : MEDIA_TYPES.find(mt => mt.value === t)?.label || t}
+              {t === "All" ? "All" : MEDIA_TYPES.find((mt) => mt.value === t)?.label || t}
             </button>
           ))}
         </div>
@@ -460,12 +494,20 @@ export default function MediaPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Type *</Label>
-                <Select value={type} onValueChange={(v) => { setType(v); setCategory(getCategories(v)[0] || "general"); setAddingCategory(false); setNewCategoryInput("") }}>
+                <Select
+                  value={type}
+                  onValueChange={(v) => {
+                    setType(v)
+                    setCategory(getCategories(v)[0] || "general")
+                    setAddingCategory(false)
+                    setNewCategoryInput("")
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {MEDIA_TYPES.map(t => (
+                    {MEDIA_TYPES.map((t) => (
                       <SelectItem key={t.value} value={t.value}>
                         {t.icon} {t.label}
                       </SelectItem>
@@ -485,7 +527,7 @@ export default function MediaPage() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && newCategoryInput.trim()) {
                           const name = newCategoryInput.trim()
-                          setCustomCategories(prev => ({
+                          setCustomCategories((prev) => ({
                             ...prev,
                             [type]: [...(prev[type] || []), name],
                           }))
@@ -506,7 +548,7 @@ export default function MediaPage() {
                       onClick={() => {
                         const name = newCategoryInput.trim()
                         if (!name) return
-                        setCustomCategories(prev => ({
+                        setCustomCategories((prev) => ({
                           ...prev,
                           [type]: [...(prev[type] || []), name],
                         }))
@@ -517,24 +559,36 @@ export default function MediaPage() {
                     >
                       Add
                     </Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setAddingCategory(false); setNewCategoryInput("") }}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setAddingCategory(false)
+                        setNewCategoryInput("")
+                      }}
+                    >
                       <X className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 ) : (
-                  <Select value={category} onValueChange={(v) => {
-                    if (v === "__add_new__") {
-                      setAddingCategory(true)
-                    } else {
-                      setCategory(v)
-                    }
-                  }}>
+                  <Select
+                    value={category}
+                    onValueChange={(v) => {
+                      if (v === "__add_new__") {
+                        setAddingCategory(true)
+                      } else {
+                        setCategory(v)
+                      }
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {getCategories(type).map(c => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      {getCategories(type).map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
                       ))}
                       <SelectItem value="__add_new__" className="text-primary">
                         + Add New Category
@@ -579,7 +633,9 @@ export default function MediaPage() {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
                   </div>
                   <Button variant="ghost" size="sm" onClick={() => setFile(null)} className="h-7">
                     <X className="h-3 w-3" />
@@ -599,7 +655,11 @@ export default function MediaPage() {
             </div>
 
             <div className="flex gap-3 pt-2">
-              <Button onClick={handleUpload} disabled={uploading || !file || !title.trim()} className="min-w-[120px]">
+              <Button
+                onClick={handleUpload}
+                disabled={uploading || !file || !title.trim()}
+                className="min-w-[120px]"
+              >
                 {uploading ? (
                   <span className="flex items-center gap-2">
                     <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -612,7 +672,15 @@ export default function MediaPage() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={() => { setUploadOpen(false); resetForm() }}>Cancel</Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUploadOpen(false)
+                  resetForm()
+                }}
+              >
+                Cancel
+              </Button>
             </div>
           </div>
         </DialogContent>
@@ -620,16 +688,29 @@ export default function MediaPage() {
 
       {/* Preview modal */}
       {previewItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm" onClick={() => setPreviewItem(null)}>
-          <div className="relative max-w-4xl w-full max-h-[90vh] m-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setPreviewItem(null)}
+        >
+          <div
+            className="relative max-w-4xl w-full max-h-[90vh] m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-2xl">
               <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
                 <div>
                   <p className="font-semibold">{previewItem.title}</p>
-                  <p className="text-xs text-muted-foreground">{previewItem.type} &middot; {previewItem.category}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {previewItem.type} &middot; {previewItem.category}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" onClick={() => deleteItem(previewItem)} className="text-destructive hover:text-destructive/80">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteItem(previewItem)}
+                    className="text-destructive hover:text-destructive/80"
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => setPreviewItem(null)}>
@@ -667,7 +748,9 @@ export default function MediaPage() {
             {items.length === 0 ? (
               <>
                 <p className="text-lg font-medium mb-1">No files yet</p>
-                <p className="text-sm text-muted-foreground mb-5">Upload your first file to get started</p>
+                <p className="text-sm text-muted-foreground mb-5">
+                  Upload your first file to get started
+                </p>
                 <Button onClick={() => setUploadOpen(true)}>
                   <Upload className="h-4 w-4 mr-2" />
                   Upload
@@ -681,7 +764,7 @@ export default function MediaPage() {
       ) : (
         Object.entries(grouped).map(([groupType, groupItems]) => {
           const colors = TYPE_COLORS[groupType] || TYPE_COLORS.general
-          const typeLabel = MEDIA_TYPES.find(t => t.value === groupType)?.label || groupType
+          const typeLabel = MEDIA_TYPES.find((t) => t.value === groupType)?.label || groupType
           return (
             <div key={groupType} className="space-y-3">
               <div className="flex items-center gap-2">
@@ -689,7 +772,7 @@ export default function MediaPage() {
                 <span className="text-sm text-muted-foreground">{groupItems.length} files</span>
               </div>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                {groupItems.map(item => (
+                {groupItems.map((item) => (
                   <button
                     key={item.id}
                     type="button"
@@ -714,8 +797,12 @@ export default function MediaPage() {
                             <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
                               {item.meta?.para_number ? (
                                 <div className="relative flex flex-col items-center gap-1">
-                                  <span className="text-3xl font-bold text-primary/30">{item.meta.para_number}</span>
-                                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">Para</span>
+                                  <span className="text-3xl font-bold text-primary/30">
+                                    {item.meta.para_number}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+                                    Para
+                                  </span>
                                 </div>
                               ) : (
                                 <FileText className="h-10 w-10 text-muted-foreground/20 relative" />
@@ -733,7 +820,9 @@ export default function MediaPage() {
                         )}
                         {/* PDF tag (bottom-right) */}
                         <div className="absolute bottom-1 right-1 z-10">
-                          <span className="px-1.5 py-0.5 rounded bg-black/50 text-[9px] font-medium text-white backdrop-blur-sm uppercase">PDF</span>
+                          <span className="px-1.5 py-0.5 rounded bg-black/50 text-[9px] font-medium text-white backdrop-blur-sm uppercase">
+                            PDF
+                          </span>
                         </div>
                       </div>
                     )}
@@ -742,9 +831,13 @@ export default function MediaPage() {
                     <div className="p-3">
                       <p className="text-sm font-medium truncate">{item.title}</p>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge className={`${colors.bg} ${colors.text} border-0 text-[10px] py-0`}>{item.category}</Badge>
+                        <Badge className={`${colors.bg} ${colors.text} border-0 text-[10px] py-0`}>
+                          {item.category}
+                        </Badge>
                         {item.meta?.para_number && (
-                          <span className="text-[10px] text-muted-foreground">Para {item.meta.para_number}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            Para {item.meta.para_number}
+                          </span>
                         )}
                       </div>
                     </div>

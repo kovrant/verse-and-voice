@@ -57,7 +57,9 @@ function AdminLoginForm() {
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <BookAudio className="h-5 w-5" />
           </div>
-          <h1 className="text-lg font-semibold tracking-tight text-foreground"><Brand /></h1>
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            <Brand />
+          </h1>
           <p className="text-xs text-muted-foreground mt-0.5">Admin sign in</p>
         </div>
 
@@ -110,13 +112,21 @@ function AdminLoginForm() {
             </div>
 
             {error && (
-              <p role="alert" aria-live="polite" className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              <p
+                role="alert"
+                aria-live="polite"
+                className="rounded-lg border border-destructive/25 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              >
                 {error}
               </p>
             )}
 
             <Button type="submit" disabled={loading} className="w-full">
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : "Sign in"}
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                "Sign in"
+              )}
             </Button>
           </form>
         </div>

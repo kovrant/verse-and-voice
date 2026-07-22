@@ -125,9 +125,7 @@ function CredentialDialog({
         toast.error(data?.error || "Something went wrong")
         return
       }
-      toast.success(
-        data.created ? "Login created" : "Login updated",
-      )
+      toast.success(data.created ? "Login created" : "Login updated")
       onSaved(data.username)
       onOpenChange(false)
     } catch (e: any) {

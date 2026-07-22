@@ -50,9 +50,7 @@ export function StudentTopBar() {
               </span>
               <div className="min-w-0">
                 <p className="text-sm font-bold text-foreground truncate">{name}</p>
-                {username && (
-                  <p className="text-xs text-muted-foreground truncate">@{username}</p>
-                )}
+                {username && <p className="text-xs text-muted-foreground truncate">@{username}</p>}
                 <span className="mt-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
                   Student
                 </span>

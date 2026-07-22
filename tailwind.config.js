@@ -95,9 +95,9 @@ const config = {
         arabic: ["var(--font-arabic)", "Amiri", "serif"],
       },
       borderRadius: {
-        lg: "var(--radius-card)",       /* 16px — cards */
-        md: "var(--radius-button)",     /* 12px — buttons */
-        sm: "var(--radius-input)",      /* 10px — inputs */
+        lg: "var(--radius-card)" /* 16px — cards */,
+        md: "var(--radius-button)" /* 12px — buttons */,
+        sm: "var(--radius-input)" /* 10px — inputs */,
         xl: "calc(var(--radius-card) + 4px)",
         "2xl": "calc(var(--radius-card) + 8px)",
         button: "var(--radius-button)",

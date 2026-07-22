@@ -52,11 +52,7 @@ export const viewport: Viewport = {
   themeColor: "#FEF7EC",
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body className={`${heading.variable} ${body.variable} ${arabic.variable} ${body.className}`}>
@@ -67,9 +63,9 @@ export default function RootLayout({
           }}
         />
         <ThemeProvider>
-        <SidebarVisibilityProvider>
-          <AppShell>{children}</AppShell>
-        </SidebarVisibilityProvider>
+          <SidebarVisibilityProvider>
+            <AppShell>{children}</AppShell>
+          </SidebarVisibilityProvider>
         </ThemeProvider>
         <Toaster
           position="bottom-right"

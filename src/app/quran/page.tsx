@@ -23,7 +23,9 @@ export default function QuranPage() {
   const [search, setSearch] = useState("")
   const [viewingPara, setViewingPara] = useState<QuranPara | null>(null)
 
-  useEffect(() => { loadParas() }, [])
+  useEffect(() => {
+    loadParas()
+  }, [])
 
   async function loadParas() {
     const { data } = await supabase
@@ -43,20 +45,21 @@ export default function QuranPage() {
     setLoading(false)
   }
 
-  const filtered = paras.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    (p.meta?.para_number && `para ${p.meta.para_number}`.includes(search.toLowerCase()))
+  const filtered = paras.filter(
+    (p) =>
+      p.title.toLowerCase().includes(search.toLowerCase()) ||
+      (p.meta?.para_number && `para ${p.meta.para_number}`.includes(search.toLowerCase())),
   )
 
   // Navigate between paras in viewer
   function navigatePara(direction: "prev" | "next") {
     if (!viewingPara) return
-    const idx = paras.findIndex(p => p.id === viewingPara.id)
+    const idx = paras.findIndex((p) => p.id === viewingPara.id)
     if (direction === "prev" && idx > 0) setViewingPara(paras[idx - 1])
     if (direction === "next" && idx < paras.length - 1) setViewingPara(paras[idx + 1])
   }
 
-  const currentIdx = viewingPara ? paras.findIndex(p => p.id === viewingPara.id) : -1
+  const currentIdx = viewingPara ? paras.findIndex((p) => p.id === viewingPara.id) : -1
 
   if (loading) {
     return (
@@ -66,7 +69,9 @@ export default function QuranPage() {
           <div className="h-5 w-72 shimmer rounded-lg" />
         </div>
         <div className="grid gap-3 grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10">
-          {[...Array(30)].map((_, i) => <div key={i} className="aspect-square shimmer rounded-2xl" />)}
+          {[...Array(30)].map((_, i) => (
+            <div key={i} className="aspect-square shimmer rounded-2xl" />
+          ))}
         </div>
       </div>
     )
@@ -87,7 +92,9 @@ export default function QuranPage() {
             <div>
               <p className="text-sm font-semibold">{viewingPara.title}</p>
               {viewingPara.meta?.para_number && (
-                <p className="text-xs text-muted-foreground">Para {viewingPara.meta.para_number} of 30</p>
+                <p className="text-xs text-muted-foreground">
+                  Para {viewingPara.meta.para_number} of 30
+                </p>
               )}
             </div>
           </div>
@@ -177,7 +184,7 @@ export default function QuranPage() {
                 <p className="text-sm text-muted-foreground mb-5">
                   Go to Media Library to upload Quran PDFs
                 </p>
-                <Button variant="outline" onClick={() => window.location.href = "/media"}>
+                <Button variant="outline" onClick={() => (window.location.href = "/media")}>
                   Go to Media Library
                 </Button>
               </>
@@ -188,7 +195,7 @@ export default function QuranPage() {
         </Card>
       ) : (
         <div className="grid gap-3 grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10">
-          {filtered.map(para => (
+          {filtered.map((para) => (
             <button
               key={para.id}
               type="button"
@@ -224,7 +231,9 @@ export default function QuranPage() {
               {/* Hover glow ring — keeps content visible */}
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-border" />
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">Open</span>
+                <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  Open
+                </span>
               </div>
             </button>
           ))}

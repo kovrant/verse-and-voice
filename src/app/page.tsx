@@ -9,7 +9,19 @@ import { FeeDisplay } from "@/components/fee-display"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Users, CreditCard, AlertCircle, UserPlus, ArrowRight, TrendingUp, BookOpen, Upload, BookMarked, Sparkles, ChevronRight } from "lucide-react"
+import {
+  Users,
+  CreditCard,
+  AlertCircle,
+  UserPlus,
+  ArrowRight,
+  TrendingUp,
+  BookOpen,
+  Upload,
+  BookMarked,
+  Sparkles,
+  ChevronRight,
+} from "lucide-react"
 import { format } from "date-fns"
 import { Brand } from "@/components/brand"
 
@@ -57,21 +69,24 @@ export default function Dashboard() {
     if (activeForFees && activeForFees.length > 0) {
       await supabase.from("fee_payments").upsert(
         activeForFees.map((s) => ({ student_id: s.id, month, year })),
-        { onConflict: "student_id,month,year", ignoreDuplicates: true }
+        { onConflict: "student_id,month,year", ignoreDuplicates: true },
       )
     }
 
-    const [
-      { count: total },
-      { count: active },
-      { data: recent },
-      { data: fees },
-    ] = await Promise.all([
-      supabase.from("students").select("*", { count: "exact", head: true }),
-      supabase.from("students").select("*", { count: "exact", head: true }).eq("status", "Reading"),
-      supabase.from("students").select("*").order("created_at", { ascending: false }).limit(5),
-      supabase.from("fee_payments").select("*, students(name, fee, fee_currency, status)").eq("month", month).eq("year", year),
-    ])
+    const [{ count: total }, { count: active }, { data: recent }, { data: fees }] =
+      await Promise.all([
+        supabase.from("students").select("*", { count: "exact", head: true }),
+        supabase
+          .from("students")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "Reading"),
+        supabase.from("students").select("*").order("created_at", { ascending: false }).limit(5),
+        supabase
+          .from("fee_payments")
+          .select("*, students(name, fee, fee_currency, status)")
+          .eq("month", month)
+          .eq("year", year),
+      ])
 
     setTotalStudents(total || 0)
     setActiveStudents(active || 0)
@@ -176,9 +191,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-primary">
-          Dashboard
-        </h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-primary">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
           Welcome to <Brand /> &middot; {currentMonth}
         </p>
@@ -192,7 +205,9 @@ export default function Dashboard() {
               <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-foreground">
                 <Sparkles className="h-7 w-7" />
               </div>
-              <h2 className="text-xl font-bold">Welcome to <Brand /></h2>
+              <h2 className="text-xl font-bold">
+                Welcome to <Brand />
+              </h2>
               <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">
@@ -240,7 +255,11 @@ export default function Dashboard() {
       {/* Stat Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat, i) => (
-          <Card key={i} className="group relative overflow-hidden bg-card border border-border opacity-0 animate-fade-in-up [animation-fill-mode:forwards]" style={{ animationDelay: `${i * 80}ms` }}>
+          <Card
+            key={i}
+            className="group relative overflow-hidden bg-card border border-border opacity-0 animate-fade-in-up [animation-fill-mode:forwards]"
+            style={{ animationDelay: `${i * 80}ms` }}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 {stat.label}
@@ -251,16 +270,23 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="stat-number text-3xl tracking-tight tabular-nums text-foreground">
-                {stat.prefix && <span className="text-lg font-medium text-muted-foreground mr-2">{stat.prefix}</span>}
+                {stat.prefix && (
+                  <span className="text-lg font-medium text-muted-foreground mr-2">
+                    {stat.prefix}
+                  </span>
+                )}
                 {stat.value}
               </div>
               {(stat as any).breakdown && Object.keys((stat as any).breakdown).length > 0 && (
                 <div className="flex flex-wrap gap-x-2 mt-1">
-                  {Object.entries((stat as any).breakdown as Record<string, number>).map(([c, amt]) => (
-                    <span key={c} className="text-[11px] text-muted-foreground">
-                      {CURRENCY_SYMBOLS[c]}{(amt as number).toLocaleString()}
-                    </span>
-                  ))}
+                  {Object.entries((stat as any).breakdown as Record<string, number>).map(
+                    ([c, amt]) => (
+                      <span key={c} className="text-[11px] text-muted-foreground">
+                        {CURRENCY_SYMBOLS[c]}
+                        {(amt as number).toLocaleString()}
+                      </span>
+                    ),
+                  )}
                 </div>
               )}
             </CardContent>
