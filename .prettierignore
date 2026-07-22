@@ -1,0 +1,17 @@
+# Build output & dependencies
+.next/
+node_modules/
+out/
+build/
+
+# Lockfiles & generated
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Assets
+public/
+
+# Markdown/SQL keep their own formatting
+*.md
+supabase/*.sql
