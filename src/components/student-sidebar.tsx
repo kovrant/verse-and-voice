@@ -4,6 +4,7 @@ import {
   BookAudio,
   BookMarked,
   BookOpen,
+  BookText,
   CreditCard,
   History,
   LayoutDashboard,
@@ -24,6 +25,7 @@ const navItems = [
   { href: "/student/classes", label: "Classes", icon: History, exact: false },
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },
+  { href: "/student/quran", label: "Quran", icon: BookText, exact: false },
   { href: "/student/fees", label: "Fees", icon: CreditCard, exact: false },
 ] as const
 
