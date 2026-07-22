@@ -2,7 +2,7 @@
 
 import { format } from "date-fns"
 import { AlertCircle, Check, CheckCircle2, CreditCard, TrendingUp, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { FeeDisplay } from "@/components/fee-display"
@@ -73,11 +73,7 @@ export default function FeesPage() {
   const [pageSize, setPageSize] = useState(10)
   const { rates } = useExchangeRates()
 
-  useEffect(() => {
-    loadFees()
-  }, [month, year])
-
-  async function loadFees() {
+  const loadFees = useCallback(async () => {
     setLoading(true)
 
     const { data: students } = await supabase.from("students").select("id").eq("status", "Reading")
@@ -108,7 +104,11 @@ export default function FeesPage() {
     setFees(activeFees)
     setLoading(false)
     setPage(1)
-  }
+  }, [month, year])
+
+  useEffect(() => {
+    loadFees()
+  }, [loadFees])
 
   async function toggleFee(fee: FeeRecord) {
     const newPaid = !fee.is_paid

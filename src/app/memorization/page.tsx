@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
+
 import * as Popover from "@radix-ui/react-popover"
 import { BookMarked, Eye, ImagePlus, Plus, Search, Trash2, Users, X } from "lucide-react"
 import { useEffect, useRef, useState } from "react"

@@ -76,7 +76,9 @@ export default function ClassPage() {
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [memItems, setMemItems] = useState<MemItem[]>([])
   const [paras, setParas] = useState<QuranPara[]>([])
-  const [sessions, setSessions] = useState<ClassSession[]>([])
+  // Loaded for future session-history UI; the value isn't rendered yet, so only
+  // the setter is bound (keeps the fetch without an unused-variable warning).
+  const [, setSessions] = useState<ClassSession[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
   const [starting, setStarting] = useState(false)

@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect } from "react"
+
 export default function Error({
   error,
   reset,
@@ -7,6 +9,11 @@ export default function Error({
   error: Error & { digest?: string }
   reset: () => void
 }) {
+  // Surface the error to the console/monitoring so failures aren't swallowed.
+  useEffect(() => {
+    console.error(error)
+  }, [error])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in-up">
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">

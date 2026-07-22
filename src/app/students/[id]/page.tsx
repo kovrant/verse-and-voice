@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
+
 import * as Popover from "@radix-ui/react-popover"
 import { differenceInDays, format, formatDistanceToNow } from "date-fns"
 import {
@@ -30,7 +32,6 @@ import { FeeDisplay } from "@/components/fee-display"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
-  getStudentStage,
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
@@ -199,6 +200,10 @@ export default function StudentDetailPage() {
     await ensureFeeRecords(data)
     await Promise.all([loadRounds(), loadFees(), loadMemItems(), loadCatalog(), loadSessions()])
     setLoading(false)
+    // The loaders above only close over params.id (already a dep) and stable
+    // state setters. Adding them to the deps would recreate loadStudent on every
+    // render and re-fire the mount effect in a loop, so they're omitted on purpose.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.id, router])
 
   async function loadRounds() {
@@ -553,7 +558,6 @@ export default function StudentDetailPage() {
   )
   const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
   const activeRound = getActiveRound(rounds)
-  const { completedQuranCount } = getStudentStage(rounds)
   const paidCount = fees.filter((f) => f.is_paid).length
   const unpaidCount = fees.filter((f) => !f.is_paid).length
   const memorizingCount = memItems.filter((m) => m.status === "memorizing").length

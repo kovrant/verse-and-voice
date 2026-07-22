@@ -1,5 +1,7 @@
 "use client"
 
+/* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
+
 import { BookOpen, ChevronLeft, ChevronRight, FileText, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
 

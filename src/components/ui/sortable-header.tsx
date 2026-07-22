@@ -46,10 +46,6 @@ export function SortableHeader({
   )
 }
 
-export function useSorting<T>(data: T[], defaultKey?: string, defaultDirection?: SortDirection) {
-  // This is a utility — use it with useState in the component
-}
-
 export function sortData<T>(data: T[], sortKey: string | null, direction: SortDirection): T[] {
   if (!sortKey || !direction) return data
 
