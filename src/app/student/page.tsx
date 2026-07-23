@@ -11,6 +11,7 @@ import {
 } from "@/components/quran-progress"
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
 import { StudentParaPdf } from "@/components/student-para-pdf"
+import { getHijriToday } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 
@@ -23,6 +24,7 @@ const BAR_HEIGHTS = [
 const QUICK_LINKS = [
   { href: "/student/progress", title: "My Progress", sub: "Quran & Qaida journey", icon: "📊" },
   { href: "/student/memorization", title: "Memorization", sub: "Surahs & duas", icon: "📖" },
+  { href: "/student/history", title: "Islamic History", sub: "Stories & events", icon: "📜" },
   { href: "/student/classes", title: "Classes", sub: "Past sessions", icon: "📚" },
   { href: "/student/fees", title: "Fees", sub: "Payment status", icon: "💳" },
 ]
@@ -76,6 +78,7 @@ export default function StudentDashboardPage() {
   const paraLabel = currentPara ?? done
   const pct = Math.round((done / 30) * 100)
   const initial = student.name.trim().charAt(0).toUpperCase() || "?"
+  const hijri = getHijriToday()
 
   const paras = BAR_HEIGHTS.map((h, i) => {
     const n = i + 1
@@ -106,6 +109,33 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Hijri month strip → Islamic History */}
+      <Link
+        href="/student/history"
+        className="group mb-[26px] flex items-center gap-4 rounded-2xl border border-border bg-[hsl(var(--surface-alt))] p-[18px_22px] transition-colors hover:border-[hsl(var(--border-strong))]"
+      >
+        <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-secondary text-[26px]">
+          🌙
+        </div>
+        <div className="min-w-0 flex-1">
+          <div
+            className="text-[11px] font-semibold uppercase text-muted-foreground"
+            style={{ letterSpacing: "1.2px" }}
+          >
+            Islamic Month · {hijri.monthYear}
+          </div>
+          <div className="font-heading text-[19px] font-bold text-foreground">
+            {hijri.monthInfo.name}
+          </div>
+          <div className="truncate text-[13px] text-muted-foreground">
+            {hijri.monthInfo.significance}
+          </div>
+        </div>
+        <div className="hidden text-[20px] text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 sm:block">
+          →
+        </div>
+      </Link>
 
       {/* Hero — My Quran Journey */}
       <div className="mb-[26px] rounded-2xl border border-border bg-[hsl(var(--surface-alt))] p-[26px_28px_30px]">

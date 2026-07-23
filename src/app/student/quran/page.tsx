@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
+import { logActivity } from "@/lib/activity-log"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
@@ -118,6 +119,24 @@ export default function StudentQuranPage() {
   function openPara(para: number, fileUrl: string) {
     setViewerPage(1)
     setViewing({ para, fileUrl })
+    logActivity({
+      event_type: "para_open",
+      label: `Para ${para} — ${JUZ_NAMES[para - 1]}`,
+      href: fileUrl,
+      meta: { para_number: para, juz_name: JUZ_NAMES[para - 1] },
+    })
+  }
+
+  // Log page turns inside the in-app PDF reader (which para + which page).
+  function handleViewerPageChange(nextPage: number) {
+    setViewerPage(nextPage)
+    if (viewing) {
+      logActivity({
+        event_type: "pdf_page",
+        label: `Para ${viewing.para} — page ${nextPage}`,
+        meta: { para_number: viewing.para, page: nextPage },
+      })
+    }
   }
 
   // Esc closes the reader and returns to the paras list.
@@ -391,7 +410,7 @@ export default function StudentQuranPage() {
           <SyncedPdfViewer
             fileUrl={viewing.fileUrl}
             page={viewerPage}
-            onPageChange={setViewerPage}
+            onPageChange={handleViewerPageChange}
           />
         </div>
       )}

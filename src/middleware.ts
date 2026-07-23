@@ -31,6 +31,11 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
+  // API routes enforce their own auth/role (see /api/**/route.ts), so the
+  // page-level confinement redirects below must not touch them — otherwise a
+  // student's fetch/sendBeacon to /api/activity gets 307-redirected to /student
+  // and the request body is dropped.
+  const isApi = pathname.startsWith("/api/")
 
   // Role lives in the JWT (app_metadata) so we branch without a DB round-trip.
   // A logged-in user with no role is the original teacher account.
@@ -55,7 +60,8 @@ export async function middleware(request: NextRequest) {
 
   // Unauthenticated: the student login is the default entry for everything.
   // The teacher login lives at /admin and is only reached by going there directly.
-  if (!user && !isPublic) {
+  // API routes are skipped — they return their own 401 rather than an HTML redirect.
+  if (!user && !isPublic && !isApi) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.searchParams.set("redirectTo", pathname)
@@ -68,7 +74,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Students are confined to their portal; teachers may not roam into it.
-  if (user && isStudent && !isStudentArea && !isPublic) {
+  // (API routes are exempt — they authorize themselves.)
+  if (user && isStudent && !isStudentArea && !isPublic && !isApi) {
     return redirectPath("/student")
   }
   if (user && !isStudent && isStudentArea) {

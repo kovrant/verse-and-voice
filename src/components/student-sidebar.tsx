@@ -9,6 +9,7 @@ import {
   History,
   LayoutDashboard,
   Menu,
+  ScrollText,
   X,
 } from "lucide-react"
 import Link from "next/link"
@@ -17,7 +18,6 @@ import { useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useLiveClass } from "@/components/live-class-provider"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { cn } from "@/lib/utils"
 
 const navItems = [
@@ -26,6 +26,7 @@ const navItems = [
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },
   { href: "/student/quran", label: "Quran", icon: BookText, exact: false },
+  { href: "/student/history", label: "Islamic History", icon: ScrollText, exact: false },
   { href: "/student/fees", label: "Fees", icon: CreditCard, exact: false },
 ] as const
 
@@ -127,9 +128,6 @@ export function StudentSidebar() {
             )
           })}
         </nav>
-
-        {/* Theme toggle */}
-        <ThemeToggle />
       </aside>
     </>
   )

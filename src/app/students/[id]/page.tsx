@@ -5,6 +5,7 @@
 import * as Popover from "@radix-ui/react-popover"
 import { differenceInDays, format, formatDistanceToNow } from "date-fns"
 import {
+  Activity,
   ArrowLeft,
   BookMarked,
   BookOpen,
@@ -12,8 +13,11 @@ import {
   Check,
   Clock,
   CreditCard,
+  ExternalLink,
+  FileText,
   History,
   MapPin,
+  MousePointerClick,
   Pencil,
   Play,
   Plus,
@@ -29,6 +33,7 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { FeeDisplay } from "@/components/fee-display"
+import { QuranJourney } from "@/components/quran-journey"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
@@ -50,7 +55,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Pagination } from "@/components/ui/pagination"
-import { Progress } from "@/components/ui/progress"
 import {
   Select,
   SelectContent,
@@ -119,6 +123,16 @@ interface ClassSession {
   notes: string | null
 }
 
+interface ActivityLog {
+  id: string
+  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page"
+  path: string | null
+  label: string | null
+  href: string | null
+  meta: Record<string, unknown> | null
+  occurred_at: string
+}
+
 export default function StudentDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -140,6 +154,9 @@ export default function StudentDetailPage() {
   const [deletingSession, setDeletingSession] = useState(false)
   const [sessionPage, setSessionPage] = useState(1)
   const SESSION_PAGE_SIZE = 10
+  const [activity, setActivity] = useState<ActivityLog[]>([])
+  const [activityLoading, setActivityLoading] = useState(false)
+  const [activityLoaded, setActivityLoaded] = useState(false)
 
   // Edit form (non-quran fields)
   const [editForm, setEditForm] = useState({
@@ -151,9 +168,9 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
-  const [activeTab, setActiveTab] = useState<"journey" | "sessions" | "memorization" | "fees">(
-    "journey",
-  )
+  const [activeTab, setActiveTab] = useState<
+    "journey" | "sessions" | "memorization" | "fees" | "activity"
+  >("journey")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -222,6 +239,23 @@ export default function StudentDetailPage() {
     )
     setSessions(data)
   }
+
+  const loadActivity = useCallback(async () => {
+    setActivityLoading(true)
+    // Most recent 500 interactions — plenty for reviewing a child's session,
+    // and capped so a chatty log never floods the page.
+    const { data } = await supabase
+      .from("activity_logs")
+      .select("id, event_type, path, label, href, meta, occurred_at")
+      .eq("student_id", params.id)
+      .order("occurred_at", { ascending: false })
+      .limit(500)
+    // Query pulls the 500 most-recent events (desc + limit); reverse so the feed
+    // reads chronologically — oldest at the top, newest at the bottom.
+    setActivity(((data as ActivityLog[]) || []).reverse())
+    setActivityLoading(false)
+    setActivityLoaded(true)
+  }, [params.id])
 
   async function deleteSession() {
     if (!sessionToDelete) return
@@ -532,6 +566,13 @@ export default function StudentDetailPage() {
     if (activeTab === "sessions") setSessionPage(1)
   }, [activeTab])
 
+  // Lazy-load the activity feed the first time the tab is opened.
+  useEffect(() => {
+    if (activeTab === "activity" && !activityLoaded && !activityLoading) {
+      loadActivity()
+    }
+  }, [activeTab, activityLoaded, activityLoading, loadActivity])
+
   if (loading || !student) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
@@ -573,6 +614,7 @@ export default function StudentDetailPage() {
       count: memorizingCount + memorizedCount,
     },
     { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
+    { id: "activity" as const, label: "Activity", icon: Activity },
   ]
 
   return (
@@ -588,36 +630,45 @@ export default function StudentDetailPage() {
         <span className="text-muted-foreground/40">/</span>
         <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
       </nav>
-      {/* Compact Header */}
-      <div className="flex items-center gap-3 mb-5">
+      {/* Header */}
+      <div className="flex items-center gap-4 mb-6">
         <Link href="/students">
-          <Button variant="outline" size="icon" className="rounded-xl h-9 w-9">
+          <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 text-lg font-bold flex-shrink-0">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
           {student.name.charAt(0)}
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight truncate">{student.name}</h1>
+          <div className="flex items-center gap-2.5">
+            <h1 className="font-heading text-3xl font-bold tracking-tight truncate leading-none">
+              {student.name}
+            </h1>
             <Badge variant={statusCfg.variant} className="flex-shrink-0">
               {statusCfg.label}
             </Badge>
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground mt-1.5">
             <span>{student.guardian_name}</span>
             {student.country && (
-              <span className="flex items-center gap-1">
-                <MapPin className="h-3 w-3" />
-                {student.country}
-              </span>
+              <>
+                <span className="text-muted-foreground/40">&middot;</span>
+                <span className="flex items-center gap-1">
+                  <MapPin className="h-3.5 w-3.5" />
+                  {student.country}
+                </span>
+              </>
             )}
+            <span className="text-muted-foreground/40">&middot;</span>
             <span>{daysSinceStart} days enrolled</span>
             {student.ended_at && (
-              <span>
-                Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
-              </span>
+              <>
+                <span className="text-muted-foreground/40">&middot;</span>
+                <span>
+                  Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -733,10 +784,12 @@ export default function StudentDetailPage() {
         </Dialog>
       </div>
 
-      {/* Quick Stats Bar */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
-        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
-          <CreditCard className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+      {/* Stat bar — one segmented card */}
+      <div className="mb-5 flex flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row">
+        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+            <CreditCard className="h-4 w-4" />
+          </span>
           <div className="min-w-0">
             <FeeDisplay
               amount={student.fee}
@@ -746,54 +799,75 @@ export default function StudentDetailPage() {
             />
           </div>
         </div>
-        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
-          <BookOpen className="h-4 w-4 text-amber-400 flex-shrink-0" />
-          <QuranProgress rounds={rounds} variant="compact" />
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
-          <Clock className="h-4 w-4 text-blue-400 flex-shrink-0" />
-          <span className="text-sm font-semibold">{student.class_time || "No time set"}</span>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3">
-          <CalendarDays className="h-4 w-4 text-purple-400 flex-shrink-0" />
-          <span className="text-sm">
-            <span className="font-semibold">{daysSinceStart}</span>{" "}
-            <span className="text-muted-foreground">days</span>
+        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
+            <BookOpen className="h-4 w-4" />
           </span>
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-foreground">
+              <QuranProgress rounds={rounds} variant="compact" />
+            </div>
+            <p className="text-[11px] text-muted-foreground">Progress</p>
+          </div>
+        </div>
+        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
+            <Clock className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-foreground">
+              {student.class_time || "No time set"}
+            </p>
+            <p className="text-[11px] text-muted-foreground">Class time</p>
+          </div>
+        </div>
+        <div className="flex flex-1 items-center gap-3 px-5 py-4">
+          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
+            <CalendarDays className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              <span className="tabular-nums">{daysSinceStart}</span> days
+            </p>
+            <p className="text-[11px] text-muted-foreground">Enrolled</p>
+          </div>
         </div>
       </div>
 
       {/* Portal Access */}
       <StudentPortalAccess studentId={student.id} />
 
-      {/* Tab Navigation */}
-      <div className="flex items-center gap-1 rounded-xl border border-border/50 bg-card p-1 mb-4">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              activeTab === tab.id
-                ? "bg-secondary text-foreground"
-                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-          >
-            <tab.icon className="h-4 w-4" />
-            <span className="hidden sm:inline">{tab.label}</span>
-            {tab.count != null && tab.count > 0 && (
-              <span
-                className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  activeTab === tab.id
-                    ? "bg-emerald-500/10 text-emerald-500"
-                    : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
+      {/* Tab Navigation — underline style */}
+      <div className="mb-5 flex items-center gap-6 overflow-x-auto border-b border-border">
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`group relative -mb-px flex items-center gap-2 whitespace-nowrap border-b-2 pb-3 pt-1 text-sm transition-colors ${
+                isActive
+                  ? "border-foreground font-bold text-foreground"
+                  : "border-transparent font-medium text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <tab.icon className="h-4 w-4" />
+              <span>{tab.label}</span>
+              {tab.count != null && tab.count > 0 && (
+                <span
+                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                    isActive
+                      ? "bg-emerald-500/10 text-emerald-600"
+                      : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  {tab.count}
+                </span>
+              )}
+            </button>
+          )
+        })}
       </div>
 
       {/* Tab Content */}
@@ -834,136 +908,8 @@ export default function StudentDetailPage() {
             </Button>
           </div>
 
-          {/* Current progress */}
-          <QuranProgress rounds={rounds} variant="full" />
-
-          {/* Rounds list */}
-          {rounds.length > 0 && (
-            <div className="space-y-3">
-              <p
-                className="text-[11px] font-semibold uppercase text-muted-foreground"
-                style={{ letterSpacing: "0.08em" }}
-              >
-                All Rounds
-              </p>
-              <div className="space-y-2">
-                {(() => {
-                  // Active rounds first, then by started_at descending
-                  const sorted = [...rounds].sort((a, b) => {
-                    const aActive = !a.completed_at ? 1 : 0
-                    const bActive = !b.completed_at ? 1 : 0
-                    if (aActive !== bActive) return bActive - aActive
-                    return b.started_at.localeCompare(a.started_at)
-                  })
-                  return sorted.map((r) => {
-                    const isActive = !r.completed_at
-                    const desc = r.desc_completed
-                    const asc = r.asc_completed
-                    const completedFromAsc = asc > 0 ? asc - 1 : 0
-                    const total = r.type === "quran" ? desc + completedFromAsc : 0
-                    const prog = (total / 30) * 100
-                    const chronologicalNum = getChronologicalRoundNumber(rounds, r)
-                    const Icon =
-                      r.type === "qaida" ? BookMarked : r.completed_at ? Trophy : BookOpen
-
-                    return (
-                      <div
-                        key={r.id}
-                        className={`group flex items-center gap-3 rounded-[14px] border px-4 py-3 transition-all hover:-translate-y-px bg-card ${
-                          isActive ? "border-primary/30" : "border-border"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-9 w-9 items-center justify-center rounded-xl shrink-0 ${
-                            r.type === "qaida"
-                              ? "bg-secondary"
-                              : isActive
-                                ? "bg-emerald-500/10"
-                                : "bg-secondary"
-                          }`}
-                        >
-                          <Icon
-                            className={`h-[16px] w-[16px] ${
-                              r.type === "qaida" ? "text-amber-600" : "text-primary"
-                            }`}
-                            strokeWidth={2.25}
-                          />
-                        </span>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[14px] font-bold text-foreground">
-                              {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
-                            </span>
-                            {isActive && (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary bg-emerald-500/10">
-                                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                                Active
-                              </span>
-                            )}
-                            {r.type === "quran" && (
-                              <span
-                                className={`text-[11px] font-semibold tabular-nums ${
-                                  isActive ? "text-primary" : "text-muted-foreground"
-                                }`}
-                              >
-                                {total}/30
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[12px] mt-0.5 text-muted-foreground">
-                            {format(parseLocalDate(r.started_at) ?? new Date(), "MMM yyyy")} →{" "}
-                            {r.completed_at
-                              ? format(parseLocalDate(r.completed_at) ?? new Date(), "MMM yyyy")
-                              : "Now"}
-                          </p>
-                        </div>
-
-                        {r.type === "quran" && (
-                          <div className="w-20 shrink-0">
-                            <Progress value={prog} />
-                          </div>
-                        )}
-
-                        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditRound(r)}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
-                          >
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => deleteRound(r.id)}
-                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    )
-                  })
-                })()}
-              </div>
-            </div>
-          )}
-
-          {rounds.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-                  <BookOpen className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="font-medium mb-1">No rounds yet</p>
-                <p className="text-sm text-muted-foreground">
-                  Click &ldquo;Add Round&rdquo; to start tracking progress
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          {/* Hero progress + journey stats + timeline */}
+          <QuranJourney rounds={rounds} onEditRound={openEditRound} onDeleteRound={deleteRound} />
         </div>
       )}
 
@@ -1322,6 +1268,26 @@ export default function StudentDetailPage() {
         </div>
       )}
 
+      {activeTab === "activity" && (
+        <div className="animate-fade-in-up">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-muted-foreground">
+              Every page, link and para this student opened — in order, oldest first.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadActivity}
+              disabled={activityLoading}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              Refresh
+            </Button>
+          </div>
+          <ActivityFeed logs={activity} loading={activityLoading} />
+        </div>
+      )}
+
       {/* Update Progress Dialog */}
       <Dialog open={roundEditOpen} onOpenChange={setRoundEditOpen}>
         <DialogContent className="max-w-sm">
@@ -1627,6 +1593,104 @@ export default function StudentDetailPage() {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+const EVENT_STYLES: Record<
+  ActivityLog["event_type"],
+  { icon: typeof Activity; tint: string; verb: string }
+> = {
+  page_view: { icon: FileText, tint: "text-blue-400 bg-blue-500/10", verb: "Viewed page" },
+  para_open: { icon: BookOpen, tint: "text-emerald-400 bg-emerald-500/10", verb: "Opened" },
+  pdf_page: { icon: FileText, tint: "text-amber-400 bg-amber-500/10", verb: "Turned to" },
+  link_click: { icon: ExternalLink, tint: "text-purple-400 bg-purple-500/10", verb: "Clicked link" },
+  click: { icon: MousePointerClick, tint: "text-muted-foreground bg-secondary", verb: "Clicked" },
+}
+
+function activityPrimaryText(log: ActivityLog): string {
+  const style = EVENT_STYLES[log.event_type]
+  const detail = log.label || log.href || log.path || "—"
+  return `${style.verb} ${detail}`.trim()
+}
+
+function ActivityFeed({ logs, loading }: { logs: ActivityLog[]; loading: boolean }) {
+  if (loading && logs.length === 0) {
+    return (
+      <div className="space-y-2">
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="h-14 shimmer rounded-xl" />
+        ))}
+      </div>
+    )
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="py-16 text-center bg-card rounded-[16px] border border-border">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
+          <Activity className="h-6 w-6 text-primary" />
+        </div>
+        <p className="text-base font-semibold text-foreground mb-1">No activity yet</p>
+        <p className="text-sm text-muted-foreground">
+          Clicks and page opens will appear here once the student uses the portal.
+        </p>
+      </div>
+    )
+  }
+
+  // Group by calendar day for a scannable timeline.
+  const groups: { day: string; items: ActivityLog[] }[] = []
+  for (const log of logs) {
+    const day = format(new Date(log.occurred_at), "EEEE, MMM d, yyyy")
+    const last = groups[groups.length - 1]
+    if (last && last.day === day) last.items.push(log)
+    else groups.push({ day, items: [log] })
+  }
+
+  return (
+    <div className="space-y-6">
+      {groups.map((group) => (
+        <div key={group.day}>
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
+            {group.day}
+          </p>
+          <div className="bg-card rounded-[16px] border border-border overflow-hidden">
+            {group.items.map((log, i) => {
+              const style = EVENT_STYLES[log.event_type]
+              const Icon = style.icon
+              return (
+                <div
+                  key={log.id}
+                  className={`flex items-center gap-3 px-4 py-3 ${
+                    i < group.items.length - 1 ? "border-b border-border" : ""
+                  }`}
+                >
+                  <div
+                    className={`flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 ${style.tint}`}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {activityPrimaryText(log)}
+                    </p>
+                    {log.path && (
+                      <p className="text-[11px] text-muted-foreground truncate">{log.path}</p>
+                    )}
+                  </div>
+                  <span
+                    className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums"
+                    title={format(new Date(log.occurred_at), "MMM d, yyyy h:mm:ss a")}
+                  >
+                    {format(new Date(log.occurred_at), "h:mm a")}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

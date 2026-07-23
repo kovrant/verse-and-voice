@@ -10,6 +10,7 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  ScrollText,
   Upload,
   Users,
   X,
@@ -39,6 +40,7 @@ const navSections = [
       { href: "/class", label: "Class Session", icon: BookOpen },
       { href: "/memorization", label: "Memorization", icon: BookMarked },
       { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
+      { href: "/history", label: "Islamic History", icon: ScrollText },
     ],
   },
   {

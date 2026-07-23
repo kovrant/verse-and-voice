@@ -51,4 +51,15 @@ describe("middleware auth cookie handling (Bug 8)", () => {
     const res = await middleware(new NextRequest(new URL("http://localhost/students")))
     expect(res.headers.get("location")).toBeNull()
   })
+
+  it("does NOT redirect a student's POST to an API route (activity logging)", async () => {
+    // A student is confined to /student/*, but API routes authorize themselves —
+    // redirecting them would drop the request body and break activity logging.
+    state.user = { id: "s1", app_metadata: { role: "student" } } as any
+    state.rotate = false
+    const res = await middleware(
+      new NextRequest(new URL("http://localhost/api/activity"), { method: "POST" }),
+    )
+    expect(res.headers.get("location")).toBeNull()
+  })
 })

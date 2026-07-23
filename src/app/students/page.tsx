@@ -3,6 +3,7 @@
 import { format } from "date-fns"
 import { ArrowRight, Eye, EyeOff, MapPin, Plus, Search, Settings2, Users } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
@@ -88,6 +89,7 @@ function loadFilter(): string {
 }
 
 export default function StudentsPage() {
+  const router = useRouter()
   const [students, setStudents] = useState<Student[]>([])
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>(loadFilter)
@@ -251,10 +253,8 @@ export default function StudentsPage() {
           <h1 className="text-3xl font-bold tracking-tight">
             <span className="text-foreground">Students</span>
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {filtered.length === students.length
-              ? `${students.length} total students enrolled`
-              : `${filtered.length} of ${students.length} students`}
+          <p className="text-muted-foreground mt-1 text-sm">
+            {filtered.length} of {students.length} students
           </p>
         </div>
         <Link href="/students/new">
@@ -397,7 +397,7 @@ export default function StudentsPage() {
                   <Card className="group hover:border-border transition-all">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-secondary text-muted-foreground text-sm font-bold flex-shrink-0">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold flex-shrink-0">
                           {student.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -529,11 +529,12 @@ export default function StudentsPage() {
                     return (
                       <tr
                         key={student.id}
-                        className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group"
+                        onClick={() => router.push(`/students/${student.id}`)}
+                        className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group cursor-pointer"
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground text-sm font-bold flex-shrink-0">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold flex-shrink-0">
                               {student.name.charAt(0)}
                             </div>
                             <div>
@@ -590,15 +591,9 @@ export default function StudentsPage() {
                             <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
                           </td>
                         )}
-                        <td className="px-5 py-4">
-                          <Link href={`/students/${student.id}`}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <ArrowRight className="h-4 w-4" />
-                            </Button>
+                        <td className="px-5 py-4 text-right">
+                          <Link href={`/students/${student.id}`} aria-label={`View ${student.name}`}>
+                            <ArrowRight className="h-4 w-4 inline-block text-muted-foreground/30 group-hover:text-foreground transition-colors" />
                           </Link>
                         </td>
                       </tr>

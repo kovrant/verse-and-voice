@@ -44,20 +44,22 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
   const hasLogin = !!username
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-card px-4 py-3 mb-5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-400 flex-shrink-0">
-        <KeyRound className="h-4 w-4" />
+    <div className="flex items-center gap-3 border-b border-border pb-4 mb-5">
+      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 flex-shrink-0">
+        <KeyRound className="h-3 w-3" />
       </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-xs text-muted-foreground uppercase tracking-wider">Portal Access</p>
+      <div className="flex flex-1 flex-wrap items-center gap-x-2.5 gap-y-0.5 min-w-0">
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Portal Access
+        </span>
         {loading ? (
-          <div className="h-4 w-24 shimmer rounded mt-1" />
+          <div className="h-4 w-28 shimmer rounded" />
         ) : hasLogin ? (
-          <p className="text-sm font-semibold">
-            Username: <span className="font-mono">{username}</span>
-          </p>
+          <span className="text-sm text-muted-foreground">
+            Username: <span className="font-mono font-semibold text-foreground">{username}</span>
+          </span>
         ) : (
-          <p className="text-sm text-muted-foreground">No login created yet</p>
+          <span className="text-sm text-muted-foreground">No login created yet</span>
         )}
       </div>
       <Button variant="outline" size="sm" onClick={() => setOpen(true)}>

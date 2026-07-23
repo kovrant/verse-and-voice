@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
+import { useActivityLogger } from "@/lib/activity-log"
 import { supabase } from "@/lib/supabase"
 
 /**
@@ -13,6 +14,9 @@ import { supabase } from "@/lib/supabase"
  */
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter()
+
+  // Log every page view + click across the student portal.
+  useActivityLogger()
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
