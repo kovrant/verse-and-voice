@@ -3,6 +3,8 @@
 import * as Popover from "@radix-ui/react-popover"
 import { ChevronDown, LogOut } from "lucide-react"
 
+import { NotificationBell } from "@/components/notification-bell"
+import { NotificationCompose } from "@/components/notification-compose"
 import { ThemeSwitch } from "@/components/theme-switch"
 import { useCurrentUser } from "@/lib/use-current-user"
 
@@ -19,8 +21,10 @@ export function TeacherTopBar() {
   const avatarStyle = { background: "hsl(var(--primary))" }
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-3 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
       <ThemeSwitch />
+      <NotificationCompose />
+      <NotificationBell />
 
       <Popover.Root>
         <Popover.Trigger asChild>
