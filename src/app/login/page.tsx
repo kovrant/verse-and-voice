@@ -44,6 +44,8 @@ function StudentLoginForm() {
     }
 
     const role = (data.user?.app_metadata as { role?: string } | null)?.role
+    // Let teachers know a student came online (fire-and-forget).
+    if (role === "student") void fetch("/api/presence", { method: "POST", keepalive: true })
     router.replace(role === "student" ? redirectTo : "/")
     router.refresh()
   }

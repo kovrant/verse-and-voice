@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
 import * as Popover from "@radix-ui/react-popover"
-import { differenceInDays, format, formatDistanceToNow } from "date-fns"
+import { differenceInDays, format, formatDistanceToNow, subMonths } from "date-fns"
 import {
   Activity,
   ArrowLeft,
@@ -16,6 +16,7 @@ import {
   ExternalLink,
   FileText,
   History,
+  KeyRound,
   MapPin,
   MousePointerClick,
   Pencil,
@@ -67,6 +68,7 @@ import { TimePicker } from "@/components/ui/time-picker"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
+  cn,
   COUNTRIES,
   formatLocalDate,
   parseLocalDate,
@@ -152,6 +154,8 @@ export default function StudentDetailPage() {
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
   const [deletingSession, setDeletingSession] = useState(false)
+  const [cleanupOpen, setCleanupOpen] = useState(false)
+  const [cleaningOld, setCleaningOld] = useState(false)
   const [sessionPage, setSessionPage] = useState(1)
   const SESSION_PAGE_SIZE = 10
   const [activity, setActivity] = useState<ActivityLog[]>([])
@@ -169,7 +173,7 @@ export default function StudentDetailPage() {
   })
 
   const [activeTab, setActiveTab] = useState<
-    "journey" | "sessions" | "memorization" | "fees" | "activity"
+    "journey" | "sessions" | "memorization" | "fees" | "activity" | "portal"
   >("journey")
 
   // Round editing
@@ -275,6 +279,26 @@ export default function StudentDetailPage() {
     }
     toast.success("Session deleted")
     setSessionToDelete(null)
+  }
+
+  // Purge sessions older than one month — keeps only the last month on record.
+  async function deleteOldSessions() {
+    setCleaningOld(true)
+    const cutoff = subMonths(new Date(), 1)
+    const { error } = await supabase
+      .from("class_sessions")
+      .delete()
+      .eq("student_id", params.id)
+      .lt("started_at", cutoff.toISOString())
+    setCleaningOld(false)
+    if (error) {
+      toast.error(`Failed to clean up sessions: ${error.message}`)
+      return
+    }
+    setCleanupOpen(false)
+    await loadSessions()
+    setSessionPage(1)
+    toast.success("Removed sessions older than 1 month")
   }
 
   async function ensureFeeRecords(s: Student) {
@@ -615,6 +639,7 @@ export default function StudentDetailPage() {
     },
     { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
     { id: "activity" as const, label: "Activity", icon: Activity },
+    { id: "portal" as const, label: "Portal Access", icon: KeyRound },
   ]
 
   return (
@@ -834,40 +859,41 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
-      {/* Portal Access */}
-      <StudentPortalAccess studentId={student.id} />
-
-      {/* Tab Navigation — underline style */}
-      <div className="mb-5 flex items-center gap-6 overflow-x-auto border-b border-border">
-        {TABS.map((tab) => {
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`group relative -mb-px flex items-center gap-2 whitespace-nowrap border-b-2 pb-3 pt-1 text-sm transition-colors ${
-                isActive
-                  ? "border-foreground font-bold text-foreground"
-                  : "border-transparent font-medium text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-              {tab.count != null && tab.count > 0 && (
-                <span
-                  className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                    isActive
-                      ? "bg-emerald-500/10 text-emerald-600"
-                      : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              )}
-            </button>
-          )
-        })}
+      {/* Tab Navigation — connected segmented control; active segment is raised */}
+      <div className="mb-6 overflow-x-auto pb-1 -mb-1 sm:mb-6">
+        <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-secondary/60 p-1.5">
+          {TABS.map((tab) => {
+            const isActive = activeTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm transition-all duration-200 ${
+                  isActive
+                    ? "bg-card font-semibold text-foreground shadow-soft"
+                    : "font-medium text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <tab.icon
+                  className={`h-4 w-4 flex-shrink-0 ${isActive ? "text-emerald-600" : ""}`}
+                />
+                <span>{tab.label}</span>
+                {tab.count != null && tab.count > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
+                      isActive
+                        ? "bg-emerald-500/15 text-emerald-600"
+                        : "bg-background/60 text-muted-foreground"
+                    }`}
+                  >
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       {/* Tab Content */}
@@ -919,6 +945,17 @@ export default function StudentDetailPage() {
           const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
           const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
           const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
+          const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
+          const now = new Date()
+          const thisMonthCount = sessions.filter((s) => {
+            const d = new Date(s.started_at)
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+          }).length
+          const lastSession = sessions[0]
+          const cleanupCutoff = subMonths(now, 1)
+          const oldSessionsCount = sessions.filter(
+            (s) => new Date(s.started_at) < cleanupCutoff,
+          ).length
           const handlePageChange = (page: number) => {
             setSessionPage(page)
             if (typeof window !== "undefined") {
@@ -931,9 +968,9 @@ export default function StudentDetailPage() {
             }
           }
           return (
-            <div className="animate-fade-in-up">
+            <div className="animate-fade-in-up space-y-5">
               {totalSessions === 0 ? (
-                <div className="py-16 text-center bg-card rounded-[16px] border border-border">
+                <div className="py-16 text-center bg-card rounded-2xl border border-border">
                   <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
                     <Clock className="h-6 w-6 text-primary" />
                   </div>
@@ -943,104 +980,227 @@ export default function StudentDetailPage() {
                   </p>
                 </div>
               ) : (
-                <div id="sessions-list-top">
-                  <div className="bg-card rounded-[16px] border border-border px-5 py-1">
-                    {/* Sort indicator */}
-                    <div className="flex items-center justify-end px-2 py-2 border-b border-border">
-                      <span className="text-[13px] font-medium text-muted-foreground">
-                        Sort: Newest first ↓
+                <>
+                  {/* Summary bar */}
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <SessionStat
+                      icon={History}
+                      tint="text-emerald-600 bg-emerald-500/10"
+                      value={totalSessions}
+                      label="Total sessions"
+                    />
+                    <SessionStat
+                      icon={Clock}
+                      tint="text-blue-500 bg-blue-500/10"
+                      value={formatSessionDuration(totalSeconds)}
+                      label="Time together"
+                    />
+                    <SessionStat
+                      icon={CalendarDays}
+                      tint="text-purple-500 bg-purple-500/10"
+                      value={thisMonthCount}
+                      label="This month"
+                    />
+                    <SessionStat
+                      icon={BookOpen}
+                      tint="text-amber-600 bg-amber-500/10"
+                      value={lastSession ? format(new Date(lastSession.started_at), "MMM d") : "--"}
+                      label="Last class"
+                    />
+                  </div>
+
+                  {/* Cleanup toolbar — only when there are sessions older than 1 month */}
+                  {oldSessionsCount > 0 && (
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/20 px-4 py-2.5">
+                      <p className="text-xs text-muted-foreground">
+                        <span className="font-semibold text-foreground">{oldSessionsCount}</span>{" "}
+                        session{oldSessionsCount === 1 ? "" : "s"} older than 1 month
+                      </p>
+                      <Popover.Root open={cleanupOpen} onOpenChange={setCleanupOpen}>
+                        <Popover.Trigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                          >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                            Clear old sessions
+                          </Button>
+                        </Popover.Trigger>
+                        <Popover.Portal>
+                          <Popover.Content
+                            side="bottom"
+                            align="end"
+                            sideOffset={8}
+                            className="z-50 w-64 rounded-xl border border-border bg-card p-3 shadow-lg"
+                          >
+                            <p className="mb-1 text-sm font-semibold text-foreground">
+                              Delete {oldSessionsCount} old session
+                              {oldSessionsCount === 1 ? "" : "s"}?
+                            </p>
+                            <p className="mb-3 text-xs text-muted-foreground">
+                              This removes every session older than 1 month for {student.name}. Only
+                              the last month is kept. This can&rsquo;t be undone.
+                            </p>
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 flex-1 text-xs"
+                                onClick={() => setCleanupOpen(false)}
+                                disabled={cleaningOld}
+                              >
+                                Cancel
+                              </Button>
+                              <button
+                                type="button"
+                                className="h-7 flex-1 rounded-md text-xs font-semibold bg-destructive text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                                onClick={deleteOldSessions}
+                                disabled={cleaningOld}
+                              >
+                                {cleaningOld ? "Deleting…" : "Delete"}
+                              </button>
+                            </div>
+                            <Popover.Arrow className="fill-border" />
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+                    </div>
+                  )}
+
+                  {/* Sessions table */}
+                  <div
+                    id="sessions-list-top"
+                    className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
+                  >
+                    {/* Header */}
+                    <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-5 py-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        {totalSessions} {totalSessions === 1 ? "Session" : "Sessions"}
+                      </p>
+                      <span className="text-[11px] font-medium text-muted-foreground">
+                        Newest first ↓
                       </span>
                     </div>
 
-                    <div className="max-h-[600px] overflow-y-auto main-scroll -mr-2 pr-2">
-                      {paginatedSessions.map((session, i) => (
-                        <div
-                          key={session.id}
-                          className={`flex items-center gap-3 py-3.5 px-2 -mx-2 rounded-lg cursor-pointer transition-colors hover:bg-muted ${
-                            i < paginatedSessions.length - 1 ? "border-b border-border" : ""
-                          }`}
-                        >
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/50 flex-shrink-0">
-                            <Clock className="h-4 w-4 text-primary" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <p className="text-sm font-semibold text-foreground">
-                                {format(new Date(session.started_at), "MMM d, yyyy")}
-                              </p>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold border border-border bg-card text-muted-foreground">
-                                {Math.floor(session.duration_seconds / 60)}m
+                    <div className="max-h-[620px] overflow-y-auto main-scroll">
+                      {paginatedSessions.map((session, i) => {
+                        const paras = paraSummary(session)
+                        const revised = session.memorization_revised?.length || 0
+                        const started = new Date(session.started_at)
+                        return (
+                          <div
+                            key={session.id}
+                            className={`group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/50 ${
+                              i < paginatedSessions.length - 1 ? "border-b border-border" : ""
+                            }`}
+                          >
+                            {/* Date block */}
+                            <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-secondary/40">
+                              <span className="text-[10px] font-semibold uppercase leading-none text-muted-foreground">
+                                {format(started, "MMM")}
+                              </span>
+                              <span className="font-heading text-lg font-bold leading-tight tabular-nums text-foreground">
+                                {format(started, "d")}
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-[13px] mt-0.5 text-muted-foreground">
-                              {session.paras_covered?.length > 0 && (
-                                <span>Paras: {session.paras_covered.join(", ")}</span>
-                              )}
-                              {session.memorization_revised?.length > 0 && (
-                                <>
-                                  <span>&middot;</span>
-                                  <span>{session.memorization_revised.length} revised</span>
-                                </>
+
+                            {/* Main */}
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <p className="text-sm font-semibold text-foreground">
+                                  {format(started, "EEEE")}
+                                </p>
+                                <span className="text-muted-foreground/40">&middot;</span>
+                                <span className="text-[13px] text-muted-foreground">
+                                  {format(started, "MMM d, yyyy")}
+                                </span>
+                              </div>
+                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                  <Clock className="h-3 w-3" />
+                                  {formatSessionDuration(session.duration_seconds)}
+                                </span>
+                                {paras && (
+                                  <span
+                                    title={paras.title}
+                                    className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600"
+                                  >
+                                    <BookOpen className="h-3 w-3" />
+                                    {paras.label}
+                                  </span>
+                                )}
+                                {revised > 0 && (
+                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600">
+                                    <BookMarked className="h-3 w-3" />
+                                    {revised} revised
+                                  </span>
+                                )}
+                              </div>
+                              {session.notes && (
+                                <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+                                  <FileText className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                                  <span className="truncate">{session.notes}</span>
+                                </p>
                               )}
                             </div>
-                            {session.notes && (
-                              <p className="text-xs mt-1 truncate text-muted-foreground">
-                                {session.notes}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-[11px] flex-shrink-0 text-muted-foreground">
-                            {formatDistanceToNow(new Date(session.started_at), { addSuffix: true })}
-                          </span>
-                          <Popover.Root
-                            open={sessionToDelete?.id === session.id}
-                            onOpenChange={(open) => setSessionToDelete(open ? session : null)}
-                          >
-                            <Popover.Trigger asChild>
-                              <button
-                                type="button"
-                                title="Delete session"
-                                className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0 transition-colors text-muted-foreground hover:text-destructive"
-                                onClick={(e) => e.stopPropagation()}
+
+                            {/* Right — relative time + delete */}
+                            <div className="flex flex-shrink-0 items-center gap-1.5">
+                              <span className="hidden text-[11px] text-muted-foreground sm:block">
+                                {formatDistanceToNow(started, { addSuffix: true })}
+                              </span>
+                              <Popover.Root
+                                open={sessionToDelete?.id === session.id}
+                                onOpenChange={(open) => setSessionToDelete(open ? session : null)}
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
-                            </Popover.Trigger>
-                            <Popover.Portal>
-                              <Popover.Content
-                                side="top"
-                                align="end"
-                                sideOffset={8}
-                                className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
-                              >
-                                <p className="text-xs font-medium mb-2.5 text-foreground">
-                                  Delete this session?
-                                </p>
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-7 flex-1 text-xs"
-                                    onClick={() => setSessionToDelete(null)}
-                                    disabled={deletingSession}
-                                  >
-                                    No
-                                  </Button>
+                                <Popover.Trigger asChild>
                                   <button
                                     type="button"
-                                    className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
-                                    onClick={deleteSession}
-                                    disabled={deletingSession}
+                                    title="Delete session"
+                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100"
+                                    onClick={(e) => e.stopPropagation()}
                                   >
-                                    {deletingSession ? "..." : "Yes"}
+                                    <Trash2 className="h-3.5 w-3.5" />
                                   </button>
-                                </div>
-                                <Popover.Arrow className="fill-border" />
-                              </Popover.Content>
-                            </Popover.Portal>
-                          </Popover.Root>
-                        </div>
-                      ))}
+                                </Popover.Trigger>
+                                <Popover.Portal>
+                                  <Popover.Content
+                                    side="top"
+                                    align="end"
+                                    sideOffset={8}
+                                    className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
+                                  >
+                                    <p className="text-xs font-medium mb-2.5 text-foreground">
+                                      Delete this session?
+                                    </p>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-7 flex-1 text-xs"
+                                        onClick={() => setSessionToDelete(null)}
+                                        disabled={deletingSession}
+                                      >
+                                        No
+                                      </Button>
+                                      <button
+                                        type="button"
+                                        className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+                                        onClick={deleteSession}
+                                        disabled={deletingSession}
+                                      >
+                                        {deletingSession ? "..." : "Yes"}
+                                      </button>
+                                    </div>
+                                    <Popover.Arrow className="fill-border" />
+                                  </Popover.Content>
+                                </Popover.Portal>
+                              </Popover.Root>
+                            </div>
+                          </div>
+                        )
+                      })}
                     </div>
                   </div>
 
@@ -1054,7 +1214,7 @@ export default function StudentDetailPage() {
                       onPageChange={handlePageChange}
                     />
                   )}
-                </div>
+                </>
               )}
             </div>
           )
@@ -1089,7 +1249,7 @@ export default function StudentDetailPage() {
                       key={item.id}
                       type="button"
                       onClick={() => assignItem(item.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-all"
+                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-600 transition-all"
                     >
                       <Plus className="h-3 w-3" />
                       {item.title}
@@ -1102,61 +1262,65 @@ export default function StudentDetailPage() {
             </div>
           )}
 
-          {memItems.filter((m) => m.status === "memorizing").length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" />
-                Currently Memorizing
+          {memorizingCount > 0 && (
+            <div className="space-y-2.5">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-green-600">
+                <Sparkles className="h-3.5 w-3.5" />
+                Currently Memorizing ({memorizingCount})
               </p>
               {memItems
                 .filter((m) => m.status === "memorizing")
                 .map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 group"
+                    className="flex items-center gap-3.5 rounded-2xl border border-green-500/25 bg-gradient-to-r from-green-400/[0.10] to-lime-400/[0.04] p-3 shadow-soft"
                   >
-                    {item.memorization_catalog?.image_url && (
-                      <img
-                        src={item.memorization_catalog.image_url}
-                        alt=""
-                        className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
-                      />
-                    )}
-                    <span className="flex-1 text-sm font-medium text-amber-300">
-                      {item.memorization_catalog?.title}
-                    </span>
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] border-border/30 text-muted-foreground/60"
-                    >
-                      {item.memorization_catalog?.category}
-                    </Badge>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMemStatus(item)}
-                      className="h-7 text-xs text-emerald-400 hover:text-emerald-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Check className="h-3 w-3 mr-1" />
-                      Done
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unassignItem(item.id)}
-                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <MemThumb src={item.memorization_catalog?.image_url} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {item.memorization_catalog?.title}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                          <Sparkles className="h-2.5 w-2.5" />
+                          In progress
+                        </span>
+                        {item.memorization_catalog?.category && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {item.memorization_catalog.category}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => toggleMemStatus(item)}
+                        className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                      >
+                        <Check className="mr-1 h-3.5 w-3.5" />
+                        Mark done
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => unassignItem(item.id)}
+                        aria-label="Remove item"
+                        title="Remove item"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
           )}
 
-          {memItems.filter((m) => m.status === "memorized").length > 0 && (
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-                <Check className="h-3 w-3" />
+          {memorizedCount > 0 && (
+            <div className="space-y-2.5">
+              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
+                <Check className="h-3.5 w-3.5" />
                 Memorized ({memorizedCount})
               </p>
               {memItems
@@ -1164,48 +1328,58 @@ export default function StudentDetailPage() {
                 .map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 group"
+                    className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-3 shadow-soft"
                   >
-                    {item.memorization_catalog?.image_url && (
-                      <img
-                        src={item.memorization_catalog.image_url}
-                        alt=""
-                        className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
-                      />
-                    )}
-                    <span className="flex-1 text-sm text-muted-foreground">
-                      {item.memorization_catalog?.title}
-                    </span>
-                    {item.last_revised_at && (
-                      <span className="text-[10px] text-muted-foreground/60">
-                        Revised {format(new Date(item.last_revised_at), "MMM d")}
-                      </span>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => markRevised(item.id)}
-                      className="h-7 text-xs text-amber-400 hover:text-amber-300 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <RotateCcw className="h-3 w-3 mr-1" />
-                      Revised
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleMemStatus(item)}
-                      className="h-7 text-xs text-muted-foreground hover:text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      Undo
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => unassignItem(item.id)}
-                      className="h-7 text-xs text-muted-foreground hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    <MemThumb src={item.memorization_catalog?.image_url} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {item.memorization_catalog?.title}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                          <Check className="h-2.5 w-2.5" />
+                          Memorized
+                        </span>
+                        {item.memorization_catalog?.category && (
+                          <span className="text-[11px] text-muted-foreground">
+                            {item.memorization_catalog.category}
+                          </span>
+                        )}
+                        {item.last_revised_at && (
+                          <span className="text-[11px] text-muted-foreground">
+                            &middot; Revised {format(new Date(item.last_revised_at), "MMM d")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex flex-shrink-0 items-center gap-1.5">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => markRevised(item.id)}
+                        className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
+                      >
+                        <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                        Revised
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleMemStatus(item)}
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                      >
+                        Undo
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => unassignItem(item.id)}
+                        aria-label="Remove item"
+                        title="Remove item"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
             </div>
@@ -1285,6 +1459,12 @@ export default function StudentDetailPage() {
             </Button>
           </div>
           <ActivityFeed logs={activity} loading={activityLoading} />
+        </div>
+      )}
+
+      {activeTab === "portal" && (
+        <div className="animate-fade-in-up">
+          <StudentPortalAccess studentId={student.id} />
         </div>
       )}
 
@@ -1691,6 +1871,74 @@ function ActivityFeed({ logs, loading }: { logs: ActivityLog[]; loading: boolean
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+function formatSessionDuration(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds || 0))
+  if (s < 60) return `${s}s`
+  const mins = Math.floor(s / 60)
+  if (mins < 60) return `${mins}m`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
+function paraSummary(s: ClassSession): { label: string; title: string } | null {
+  const covered = (s.paras_covered || []).filter((n) => n != null)
+  if (covered.length > 0) {
+    const sorted = [...covered].sort((a, b) => a - b)
+    if (sorted.length === 1) return { label: `Para ${sorted[0]}`, title: `Para ${sorted[0]}` }
+    return { label: `${sorted.length} paras`, title: `Paras ${sorted.join(", ")}` }
+  }
+  if (s.starting_para != null && s.ending_para != null) {
+    const range =
+      s.starting_para === s.ending_para
+        ? `Para ${s.starting_para}`
+        : `Paras ${s.starting_para}–${s.ending_para}`
+    return { label: range, title: range }
+  }
+  return null
+}
+
+function MemThumb({ src }: { src?: string | null }) {
+  if (!src) {
+    return (
+      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
+        <BookMarked className="h-6 w-6 text-muted-foreground" />
+      </div>
+    )
+  }
+  return (
+    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
+      <img src={src} alt="" className="h-full w-full object-contain p-1" />
+    </div>
+  )
+}
+
+function SessionStat({
+  icon: Icon,
+  tint,
+  value,
+  label,
+}: {
+  icon: typeof Clock
+  tint: string
+  value: string | number
+  label: string
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+      <span className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <p className="font-heading text-lg font-bold leading-none tabular-nums text-foreground">
+          {value}
+        </p>
+        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{label}</p>
+      </div>
     </div>
   )
 }

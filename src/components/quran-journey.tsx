@@ -1,16 +1,7 @@
 "use client"
 
 import { differenceInMonths, format } from "date-fns"
-import {
-  BookMarked,
-  BookOpen,
-  CalendarDays,
-  CheckCircle2,
-  Pencil,
-  Sparkles,
-  Trash2,
-  Trophy,
-} from "lucide-react"
+import { BookMarked, BookOpen, CheckCircle2, Pencil, Trash2, Trophy } from "lucide-react"
 
 import {
   computeProgress,
@@ -47,13 +38,6 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
   const activeRound = getActiveRound(rounds)
   const quranRounds = rounds.filter((r) => r.type === "quran")
   const khatms = quranRounds.filter((r) => r.completed_at).length
-
-  // Journey start = earliest round we have on record.
-  const startDates = rounds
-    .map((r) => parseLocalDate(r.started_at))
-    .filter((d): d is Date => d !== null)
-    .sort((a, b) => a.getTime() - b.getTime())
-  const journeyStart = startDates[0] ?? null
 
   // ── Hero state ──────────────────────────────────────────────────────────
   const activeIsQaida = activeRound?.type === "qaida"
@@ -195,28 +179,6 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
             </p>
           )}
         </div>
-      </div>
-
-      {/* ── Journey stats strip ──────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatChip
-          icon={Trophy}
-          tint="text-amber-600 bg-amber-500/10"
-          value={khatms}
-          label={khatms === 1 ? "Khatm completed" : "Khatms completed"}
-        />
-        <StatChip
-          icon={CalendarDays}
-          tint="text-blue-500 bg-blue-500/10"
-          value={journeyStart ? format(journeyStart, "yyyy") : "--"}
-          label="Reading since"
-        />
-        <StatChip
-          icon={Sparkles}
-          tint="text-purple-500 bg-purple-500/10"
-          value={activeIsQaida ? "Qaida" : allQuranDone ? "Done" : `Round ${activeRoundNum}`}
-          label="Current stage"
-        />
       </div>
 
       {/* ── Timeline ─────────────────────────────────────────────────────── */}
@@ -366,28 +328,3 @@ function LegendDot({ className, label }: { className: string; label: string }) {
   )
 }
 
-function StatChip({
-  icon: Icon,
-  tint,
-  value,
-  label,
-}: {
-  icon: typeof Trophy
-  tint: string
-  value: string | number
-  label: string
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <span className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}>
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0">
-        <p className="font-heading text-lg font-bold leading-none tabular-nums text-foreground">
-          {value}
-        </p>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  )
-}

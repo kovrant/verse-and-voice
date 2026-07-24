@@ -44,27 +44,55 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
   const hasLogin = !!username
 
   return (
-    <div className="flex items-center gap-3 border-b border-border pb-4 mb-5">
-      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 flex-shrink-0">
-        <KeyRound className="h-3 w-3" />
-      </div>
-      <div className="flex flex-1 flex-wrap items-center gap-x-2.5 gap-y-0.5 min-w-0">
-        <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Portal Access
-        </span>
-        {loading ? (
-          <div className="h-4 w-28 shimmer rounded" />
-        ) : hasLogin ? (
-          <span className="text-sm text-muted-foreground">
-            Username: <span className="font-mono font-semibold text-foreground">{username}</span>
+    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4 min-w-0">
+          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600">
+            <KeyRound className="h-5 w-5" />
           </span>
-        ) : (
-          <span className="text-sm text-muted-foreground">No login created yet</span>
-        )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="text-sm font-semibold text-foreground">Portal Access</p>
+              {!loading && (
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                    hasLogin
+                      ? "bg-emerald-500/15 text-emerald-600"
+                      : "bg-secondary text-muted-foreground"
+                  }`}
+                >
+                  <span
+                    className={`h-1.5 w-1.5 rounded-full ${
+                      hasLogin ? "bg-emerald-500" : "bg-muted-foreground/50"
+                    }`}
+                  />
+                  {hasLogin ? "Active" : "Not set"}
+                </span>
+              )}
+            </div>
+            {loading ? (
+              <div className="mt-1.5 h-4 w-40 shimmer rounded" />
+            ) : hasLogin ? (
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                Username:{" "}
+                <span className="font-mono font-semibold text-foreground">{username}</span>
+              </p>
+            ) : (
+              <p className="mt-0.5 text-sm text-muted-foreground">
+                No login created yet — create one so the student can sign in.
+              </p>
+            )}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className="flex-shrink-0"
+        >
+          {hasLogin ? "Reset password" : "Create login"}
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        {hasLogin ? "Reset password" : "Create login"}
-      </Button>
 
       <CredentialDialog
         studentId={studentId}

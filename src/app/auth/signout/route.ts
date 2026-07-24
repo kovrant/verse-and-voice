@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
+import { notifyTeachersOfStudentPresence } from "@/lib/notify"
+
 // Where each portal's sign-out should land. Passed explicitly via ?next= so we
 // don't depend on reading the (about-to-be-cleared) session's role here.
 const ALLOWED_NEXT = new Set(["/login", "/admin"])
@@ -34,6 +36,12 @@ export async function POST(request: Request) {
       },
     },
   )
+
+  // Announce a student going offline before we clear their session.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (user) await notifyTeachersOfStudentPresence(user.id, "logout")
 
   await supabase.auth.signOut()
 
