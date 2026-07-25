@@ -130,9 +130,12 @@ export const Sidebar = memo(function Sidebar() {
           >
             <div
               className={cn(
-                "flex items-center justify-center rounded-lg bg-primary text-primary-foreground flex-shrink-0 transition-all duration-300",
+                "flex items-center justify-center rounded-xl text-primary-foreground flex-shrink-0 shadow-soft ring-1 ring-white/10 transition-all duration-300",
                 collapsed ? "lg:h-9 lg:w-9 h-10 w-10" : "h-10 w-10",
               )}
+              style={{
+                background: "linear-gradient(135deg, hsl(var(--c-p-500)), hsl(var(--c-a-500)))",
+              }}
             >
               <BookAudio className="h-5 w-5" />
             </div>
@@ -169,24 +172,7 @@ export const Sidebar = memo(function Sidebar() {
           )}
         >
           {navSections.map((section, si) => (
-            <div key={si} className={si > 0 ? "mt-6" : ""}>
-              {section.label && (
-                <div
-                  className={cn(
-                    "pb-1.5 transition-all duration-300",
-                    collapsed ? "lg:px-0" : "px-3",
-                  )}
-                >
-                  <p
-                    className={cn(
-                      "text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 whitespace-nowrap",
-                      collapsed && "lg:hidden",
-                    )}
-                  >
-                    {section.label}
-                  </p>
-                </div>
-              )}
+            <div key={si} className={si > 0 ? "mt-2" : ""}>
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const isActive =
@@ -198,20 +184,27 @@ export const Sidebar = memo(function Sidebar() {
                       onClick={() => setMobileOpen(false)}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "group relative flex items-center rounded-lg text-sm font-medium transition-colors duration-150",
+                        "group relative flex items-center rounded-xl text-sm font-medium transition-all duration-150",
                         collapsed
                           ? "lg:justify-center lg:px-0 lg:py-2.5 gap-3 px-3 py-2"
                           : "gap-3 px-3 py-2",
                         isActive
-                          ? "bg-secondary text-foreground"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                          ? "bg-accent/10 text-accent font-semibold"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5",
                       )}
                     >
+                      {/* Active indicator bar */}
+                      <span
+                        className={cn(
+                          "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent transition-opacity duration-200",
+                          isActive ? "opacity-100" : "opacity-0",
+                        )}
+                      />
                       <item.icon
                         className={cn(
                           "h-[18px] w-[18px] transition-colors flex-shrink-0",
                           isActive
-                            ? "text-foreground"
+                            ? "text-accent"
                             : "text-muted-foreground group-hover:text-foreground",
                         )}
                       />
