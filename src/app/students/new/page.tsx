@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
 
+import { ClassDaysPicker } from "@/components/class-days-picker"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -32,6 +33,7 @@ export default function NewStudentPage() {
     fee: "",
     fee_currency: "GBP",
     class_time: "",
+    class_days: [] as number[],
     // Initial round
     round_type: "qaida" as "qaida" | "quran",
     desc_completed: "0",
@@ -56,6 +58,7 @@ export default function NewStudentPage() {
         desc_completed: form.round_type === "quran" ? parseInt(form.desc_completed) || 0 : 0,
         asc_completed: form.round_type === "quran" ? parseInt(form.asc_completed) || 0 : 0,
         class_time: form.class_time || null,
+        class_days: form.class_days.length > 0 ? form.class_days : null,
         status: "Reading",
       })
       .select("id")
@@ -209,6 +212,17 @@ export default function NewStudentPage() {
                     placeholder="Select class time"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Class Days</Label>
+                <ClassDaysPicker
+                  value={form.class_days}
+                  onChange={(class_days) => setForm({ ...form, class_days })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Pick the days this student has class. Needed for their daily streak.
+                </p>
               </div>
 
               <div className="grid gap-5 sm:grid-cols-3">

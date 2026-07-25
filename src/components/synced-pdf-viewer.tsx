@@ -7,6 +7,8 @@ import { ChevronLeft, ChevronRight, Loader2, Maximize2, ZoomIn, ZoomOut } from "
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Document, Page, pdfjs } from "react-pdf"
 
+import { ratioFromScrollTop, scrollTopFromRatio } from "@/lib/scroll-sync"
+
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 interface SyncedPdfViewerProps {
@@ -17,6 +19,10 @@ interface SyncedPdfViewerProps {
   onPageChange: (page: number) => void
   /** Optional label shown in the toolbar, e.g. "Following teacher". */
   followingLabel?: string | null
+  /** Called (throttled) with the current in-page scroll ratio (0..1) as the user scrolls. */
+  onScrollRatio?: (ratio: number) => void
+  /** A remote scroll position to apply. A new object identity each time re-applies it. */
+  remoteScroll?: { ratio: number } | null
 }
 
 /**
@@ -29,6 +35,8 @@ export function SyncedPdfViewer({
   page,
   onPageChange,
   followingLabel,
+  onScrollRatio,
+  remoteScroll,
 }: SyncedPdfViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [numPages, setNumPages] = useState(0)
@@ -66,6 +74,46 @@ export function SyncedPdfViewer({
   useEffect(() => {
     if (numPages > 0 && page > numPages) onPageChange(numPages)
   }, [numPages, page, onPageChange])
+
+  // Broadcast our scroll position (throttled) so the other side can follow.
+  // Suppressed while we're programmatically applying a remote scroll, so a
+  // follower never echoes the leader's position back.
+  const onScrollRatioRef = useRef(onScrollRatio)
+  onScrollRatioRef.current = onScrollRatio
+  const applyingRemote = useRef(false)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !onScrollRatio) return
+    let last = 0
+    let trailing: ReturnType<typeof setTimeout> | null = null
+    const emit = () => {
+      last = performance.now()
+      onScrollRatioRef.current?.(ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight))
+    }
+    const handler = () => {
+      if (applyingRemote.current) return
+      if (trailing) clearTimeout(trailing)
+      if (performance.now() - last >= 90) emit()
+      else trailing = setTimeout(emit, 90)
+    }
+    el.addEventListener("scroll", handler, { passive: true })
+    return () => {
+      el.removeEventListener("scroll", handler)
+      if (trailing) clearTimeout(trailing)
+    }
+  }, [onScrollRatio])
+
+  // Apply an incoming remote scroll position (follower side). New object identity
+  // each broadcast so repeated identical ratios still re-sync us.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el || !remoteScroll) return
+    applyingRemote.current = true
+    el.scrollTop = scrollTopFromRatio(remoteScroll.ratio, el.scrollHeight, el.clientHeight)
+    // Release the guard after the resulting scroll event has fired.
+    const t = setTimeout(() => (applyingRemote.current = false), 0)
+    return () => clearTimeout(t)
+  }, [remoteScroll])
 
   // Arrow keys turn PDF pages (ignored while typing).
   useEffect(() => {

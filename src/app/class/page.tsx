@@ -21,6 +21,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
+import { OnlineDot } from "@/components/online-dot"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
@@ -31,6 +32,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
+import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate } from "@/lib/utils"
 
 interface Student {
@@ -84,6 +86,7 @@ export default function ClassPage() {
   const [starting, setStarting] = useState(false)
   const [search, setSearch] = useState("")
   const [quickPickOpen, setQuickPickOpen] = useState(false)
+  const onlineStudents = useOnlineStudents()
   // Monotonic token so a slow load for an earlier selection can't overwrite a
   // newer one (clicking A then B quickly).
   const selectSeq = useRef(0)
@@ -727,12 +730,16 @@ export default function ClassPage() {
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary/60 text-primary text-xl font-bold">
                     {s.name.charAt(0).toUpperCase()}
                   </span>
-                  {s.class_time && (
-                    <span
-                      aria-hidden
-                      className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500"
-                      title={`Class at ${s.class_time}`}
-                    />
+                  {onlineStudents.has(s.id) ? (
+                    <OnlineDot className="absolute top-3 right-3" />
+                  ) : (
+                    s.class_time && (
+                      <span
+                        aria-hidden
+                        className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500"
+                        title={`Class at ${s.class_time}`}
+                      />
+                    )
                   )}
                   <span className="w-full">
                     <span className="block text-sm font-semibold truncate">{s.name}</span>

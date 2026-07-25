@@ -46,3 +46,51 @@ export async function notifyTeachersOfStudentPresence(
     })),
   )
 }
+
+/**
+ * Notify a student that their teacher just started the live class. No-op if the
+ * student has no portal account yet.
+ */
+export async function notifyStudentClassLive(studentId: string): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("student_id", studentId)
+    .maybeSingle()
+  if (!profile?.id) return
+
+  await admin.from("notifications").insert({
+    recipient_id: profile.id,
+    type: "live_class",
+    title: "Your class is live",
+    body: "Your teacher started the class — tap to join.",
+    link: "/student/classes",
+    priority: "high",
+  })
+}
+
+/**
+ * Notify the hosting teacher that the student has joined the live class. Targets
+ * the calling teacher directly (reliable even for the original no-profile admin).
+ */
+export async function notifyTeacherStudentJoined(
+  teacherUserId: string,
+  studentId: string,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { data: student } = await admin
+    .from("students")
+    .select("name")
+    .eq("id", studentId)
+    .maybeSingle()
+
+  await admin.from("notifications").insert({
+    recipient_id: teacherUserId,
+    type: "live_class",
+    title: `${student?.name || "The student"} joined the class`,
+    link: `/students/${studentId}`,
+    priority: "normal",
+    created_by: teacherUserId,
+  })
+}

@@ -27,10 +27,11 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, sendNav, subscribeNav, leave } = useLiveClass()
+  const { peerNav, sendNav, subscribeNav, subscribeScroll, leave } = useLiveClass()
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
+  const [remoteScroll, setRemoteScroll] = useState<{ ratio: number } | null>(null)
   const [synced, setSynced] = useState(false)
   const [mediaMap, setMediaMap] = useState<Record<number, string>>({})
   const [mediaLoaded, setMediaLoaded] = useState(false)
@@ -58,6 +59,10 @@ export function StudentLiveClass() {
       }),
     [subscribeNav],
   )
+
+  // Follow the teacher's in-page scrolling (teacher leads). New object identity
+  // each time so identical ratios still re-apply after the student scrolls away.
+  useEffect(() => subscribeScroll((ratio) => setRemoteScroll({ ratio })), [subscribeScroll])
 
   // Fallback: if the teacher hasn't pushed a position within 2.5s (e.g. flaky
   // network), proceed with the presence hint so we don't hang on "Connecting…".
@@ -151,6 +156,7 @@ export function StudentLiveClass() {
           page={page}
           onPageChange={setPage}
           followingLabel="Synced with teacher"
+          remoteScroll={remoteScroll}
         />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">

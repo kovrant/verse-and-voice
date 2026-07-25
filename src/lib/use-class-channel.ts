@@ -27,6 +27,8 @@ interface UseClassChannelOptions {
   present?: boolean
   /** Fired when the *other* party navigates (para/page). Echoes are filtered. */
   onNav?: (nav: NavState) => void
+  /** Fired when the other party scrolls within the page (0..1 ratio). Echoes filtered. */
+  onScroll?: (ratio: number) => void
   /** Fired when the other party explicitly ends the class. */
   onEnd?: () => void
   /** Fired when the other role newly joins (presence join) — e.g. so the
@@ -41,6 +43,8 @@ interface ClassChannel {
   peerNav: NavState | null
   /** Broadcast this client's position + update its presence. */
   sendNav: (nav: NavState) => void
+  /** Broadcast this client's in-page scroll ratio (0..1). Lightweight — no presence write. */
+  sendScroll: (ratio: number) => void
   /** Broadcast an explicit "class ended" signal to the other party. */
   endClass: () => void
 }
@@ -70,6 +74,7 @@ export function useClassChannel({
   enabled = true,
   present = true,
   onNav,
+  onScroll,
   onEnd,
   onPeerJoin,
 }: UseClassChannelOptions): ClassChannel {
@@ -80,6 +85,7 @@ export function useClassChannel({
   const subscribedRef = useRef(false)
   const presentRef = useRef(present)
   const onNavRef = useRef(onNav)
+  const onScrollRef = useRef(onScroll)
   const onEndRef = useRef(onEnd)
   const onPeerJoinRef = useRef(onPeerJoin)
   // After an explicit end, ignore the other side's (stale) presence briefly so
@@ -88,9 +94,10 @@ export function useClassChannel({
 
   useEffect(() => {
     onNavRef.current = onNav
+    onScrollRef.current = onScroll
     onEndRef.current = onEnd
     onPeerJoinRef.current = onPeerJoin
-  }, [onNav, onEnd, onPeerJoin])
+  }, [onNav, onScroll, onEnd, onPeerJoin])
 
   // Channel lifecycle — deliberately does NOT depend on `present` so joining
   // (track) doesn't tear down and rebuild the channel.
@@ -143,6 +150,11 @@ export function useClassChannel({
         if (typeof paraNumber === "number" && typeof page === "number") {
           onNavRef.current?.({ paraNumber, page })
         }
+      })
+      .on("broadcast", { event: "scroll" }, ({ payload }) => {
+        if (!payload || (payload as { by?: string }).by === clientId) return
+        const { ratio } = payload as { ratio?: number }
+        if (typeof ratio === "number") onScrollRef.current?.(ratio)
       })
       .on("broadcast", { event: "end" }, ({ payload }) => {
         if (payload && (payload as { by?: string }).by === clientId) return
@@ -206,11 +218,20 @@ export function useClassChannel({
     [clientId, role],
   )
 
+  const sendScroll = useCallback(
+    (ratio: number) => {
+      const ch = channelRef.current
+      if (!ch || !subscribedRef.current) return
+      ch.send({ type: "broadcast", event: "scroll", payload: { ratio, by: clientId } })
+    },
+    [clientId],
+  )
+
   const endClass = useCallback(() => {
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
     ch.send({ type: "broadcast", event: "end", payload: { by: clientId } })
   }, [clientId])
 
-  return { live, peerNav, sendNav, endClass }
+  return { live, peerNav, sendNav, sendScroll, endClass }
 }

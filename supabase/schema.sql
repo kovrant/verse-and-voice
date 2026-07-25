@@ -19,6 +19,9 @@ CREATE TABLE students (
   asc_completed integer NOT NULL DEFAULT 0 CHECK (asc_completed >= 0 AND asc_completed <= 30),
 
   class_time text,
+  -- Days of week the student has class: 0=Sun … 6=Sat (JS Date.getDay()).
+  -- Empty/null = teacher hasn't configured days yet.
+  class_days smallint[],
   created_at timestamptz DEFAULT now()
 );
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
+import { OnlineDot } from "@/components/online-dot"
 import { getActiveRound, QuranProgress, type QuranRound } from "@/components/quran-progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -21,6 +22,7 @@ import {
 } from "@/components/ui/sortable-header"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows, supabase } from "@/lib/supabase"
+import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
 
 interface Student {
@@ -99,6 +101,7 @@ export default function StudentsPage() {
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const { rates } = useExchangeRates()
+  const onlineStudents = useOnlineStudents()
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(loadColumns)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settingsRef = useRef<HTMLDivElement>(null)
@@ -397,8 +400,13 @@ export default function StudentsPage() {
                   <Card className="group hover:border-border transition-all">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold flex-shrink-0">
-                          {student.name.charAt(0)}
+                        <div className="relative flex-shrink-0">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold">
+                            {student.name.charAt(0)}
+                          </div>
+                          {onlineStudents.has(student.id) && (
+                            <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
@@ -534,8 +542,13 @@ export default function StudentsPage() {
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold flex-shrink-0">
-                              {student.name.charAt(0)}
+                            <div className="relative flex-shrink-0">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold">
+                                {student.name.charAt(0)}
+                              </div>
+                              {onlineStudents.has(student.id) && (
+                                <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
+                              )}
                             </div>
                             <div>
                               <p className="font-medium text-sm">{student.name}</p>

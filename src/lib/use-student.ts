@@ -17,6 +17,8 @@ export interface StudentRecord {
   fee: number
   fee_currency: string
   class_time: string | null
+  /** 0=Sun … 6=Sat. Empty/null = teacher hasn't configured days yet. */
+  class_days: number[] | null
   created_at: string
 }
 

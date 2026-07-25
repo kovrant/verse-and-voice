@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Bell,
   BookAudio,
   BookMarked,
   BookOpen,
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/student/notifications", label: "Notifications", icon: Bell, exact: false },
   { href: "/student/classes", label: "Classes", icon: History, exact: false },
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },

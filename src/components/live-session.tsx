@@ -177,9 +177,13 @@ export default function LiveSession({
   // Echo guard by VALUE: remember the last position the student pushed us to and
   // only broadcast when ours differs — immune to duplicate/no-op broadcasts.
   const lastRemote = useRef<{ paraNumber: number; page: number } | null>(null)
+  // Notify the teacher's bell about the join only once per session (presence can
+  // flap / re-fire). The in-session "Student joined" pill updates regardless.
+  const joinNotifiedRef = useRef(false)
   const {
     live: studentJoined,
     sendNav,
+    sendScroll,
     endClass,
   } = useClassChannel({
     studentId: student.id,
@@ -193,9 +197,28 @@ export default function LiveSession({
       lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
       setPdfPage(nav.page)
     },
-    // A student just joined → push our authoritative position so they land here.
-    onPeerJoin: () => sendNav({ paraNumber: currentParaNumber, page: pdfPage }),
+    // A student just joined → push our authoritative position so they land here,
+    // and record a one-time "student joined" notification for the teacher.
+    onPeerJoin: () => {
+      sendNav({ paraNumber: currentParaNumber, page: pdfPage })
+      if (joinNotifiedRef.current) return
+      joinNotifiedRef.current = true
+      void fetch("/api/live-class/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "joined", student_id: student.id }),
+      }).catch(() => {})
+    },
   })
+
+  // Announce the class going live to the student (durable notification) once.
+  useEffect(() => {
+    void fetch("/api/live-class/notify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "started", student_id: student.id }),
+    }).catch(() => {})
+  }, [student.id])
 
   // Broadcast the teacher's position on every local change (skip our own echoes).
   useEffect(() => {
@@ -664,6 +687,7 @@ export default function LiveSession({
                 fileUrl={currentPara.file_url}
                 page={pdfPage}
                 onPageChange={setPdfPage}
+                onScrollRatio={sendScroll}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center overflow-auto p-4">

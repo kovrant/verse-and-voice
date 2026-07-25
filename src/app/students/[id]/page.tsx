@@ -33,7 +33,15 @@ import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
+import { ClassDaysPicker } from "@/components/class-days-picker"
 import { FeeDisplay } from "@/components/fee-display"
+import {
+  ChunkChecklist,
+  loadChunksFor,
+  loadMemorizedChunkIds,
+  type MemChunk,
+  setChunkMemorized,
+} from "@/components/memorization-chunks"
 import { QuranJourney } from "@/components/quran-journey"
 import {
   getActiveRound,
@@ -87,6 +95,7 @@ interface Student {
   fee: number
   fee_currency: string
   class_time: string | null
+  class_days: number[] | null
   created_at: string
 }
 
@@ -150,6 +159,8 @@ export default function StudentDetailPage() {
   const { rates } = useExchangeRates()
   const [memItems, setMemItems] = useState<StudentMemItem[]>([])
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
+  const [chunksByItem, setChunksByItem] = useState<Record<string, MemChunk[]>>({})
+  const [memorizedChunkIds, setMemorizedChunkIds] = useState<Set<string>>(new Set())
   const [assignOpen, setAssignOpen] = useState(false)
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
@@ -167,6 +178,7 @@ export default function StudentDetailPage() {
     fee: "",
     fee_currency: "GBP",
     class_time: "",
+    class_days: [] as number[],
     country: "",
     status: "Reading" as StudentStatus,
     ended_at: "",
@@ -213,6 +225,7 @@ export default function StudentDetailPage() {
       fee: data.fee.toString(),
       fee_currency: data.fee_currency,
       class_time: data.class_time || "",
+      class_days: Array.isArray(data.class_days) ? data.class_days : [],
       country: data.country || "",
       status: data.status || "Reading",
       ended_at: data.ended_at || "",
@@ -348,7 +361,32 @@ export default function StudentDetailPage() {
       .select("*, memorization_catalog(id, title, category, image_url)")
       .eq("student_id", params.id)
       .order("created_at", { ascending: false })
-    setMemItems((data as any) || [])
+    const items = ((data as any) || []) as StudentMemItem[]
+    setMemItems(items)
+
+    const catalogIds = items.map((m) => m.catalog_id)
+    const [chunks, memorizedIds] = await Promise.all([
+      loadChunksFor(catalogIds),
+      loadMemorizedChunkIds(params.id as string),
+    ])
+    setChunksByItem(chunks)
+    setMemorizedChunkIds(memorizedIds)
+  }
+
+  async function toggleChunk(chunk: MemChunk, memorized: boolean) {
+    // Optimistic: update the local set so the checklist responds instantly.
+    setMemorizedChunkIds((prev) => {
+      const next = new Set(prev)
+      if (memorized) next.add(chunk.id)
+      else next.delete(chunk.id)
+      return next
+    })
+    const { error } = await setChunkMemorized(params.id as string, chunk.id, memorized)
+    if (error) {
+      toast.error(`Couldn't update part: ${error.message}`)
+    }
+    // Reload so the DB-derived item status (memorizing ↔ memorized) is reflected.
+    await loadMemItems()
   }
 
   async function loadCatalog() {
@@ -433,6 +471,7 @@ export default function StudentDetailPage() {
         fee,
         fee_currency: editForm.fee_currency,
         class_time: editForm.class_time || null,
+        class_days: editForm.class_days.length > 0 ? editForm.class_days : null,
         country: editForm.country || null,
         status: editForm.status,
         // "Reading" students have no end date — clear any stale value left over
@@ -740,6 +779,16 @@ export default function StudentDetailPage() {
                   />
                 </div>
               </div>
+              <div className="space-y-2">
+                <Label>Class Days</Label>
+                <ClassDaysPicker
+                  value={editForm.class_days}
+                  onChange={(class_days) => setEditForm({ ...editForm, class_days })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Days this student has class — drives their daily streak.
+                </p>
+              </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Monthly Fee</Label>
@@ -843,7 +892,15 @@ export default function StudentDetailPage() {
             <p className="truncate text-sm font-semibold text-foreground">
               {student.class_time || "No time set"}
             </p>
-            <p className="text-[11px] text-muted-foreground">Class time</p>
+            <p className="text-[11px] text-muted-foreground">
+              {student.class_days && student.class_days.length > 0
+                ? student.class_days
+                    .slice()
+                    .sort((a, b) => a - b)
+                    .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+                    .join(" · ")
+                : "No days set"}
+            </p>
           </div>
         </div>
         <div className="flex flex-1 items-center gap-3 px-5 py-4">
@@ -1270,50 +1327,68 @@ export default function StudentDetailPage() {
               </p>
               {memItems
                 .filter((m) => m.status === "memorizing")
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3.5 rounded-2xl border border-green-500/25 bg-gradient-to-r from-green-400/[0.10] to-lime-400/[0.04] p-3 shadow-soft"
-                  >
-                    <MemThumb src={item.memorization_catalog?.image_url} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">
-                        {item.memorization_catalog?.title}
-                      </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                          <Sparkles className="h-2.5 w-2.5" />
-                          In progress
-                        </span>
-                        {item.memorization_catalog?.category && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {item.memorization_catalog.category}
-                          </span>
-                        )}
+                .map((item) => {
+                  const chunks = chunksByItem[item.catalog_id] || []
+                  const hasChunks = chunks.length > 0
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-green-500/25 bg-gradient-to-r from-green-400/[0.10] to-lime-400/[0.04] p-3 shadow-soft"
+                    >
+                      <div className="flex items-center gap-3.5">
+                        <MemThumb src={item.memorization_catalog?.image_url} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {item.memorization_catalog?.title}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
+                              <Sparkles className="h-2.5 w-2.5" />
+                              In progress
+                            </span>
+                            {item.memorization_catalog?.category && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {item.memorization_catalog.category}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-shrink-0 items-center gap-1.5">
+                          {!hasChunks && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => toggleMemStatus(item)}
+                              className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                            >
+                              <Check className="mr-1 h-3.5 w-3.5" />
+                              Mark done
+                            </Button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => unassignItem(item.id)}
+                            aria-label="Remove item"
+                            title="Remove item"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+                      {hasChunks && (
+                        <div className="mt-3 border-t border-green-500/15 pt-3">
+                          <ChunkChecklist
+                            chunks={chunks}
+                            memorizedIds={memorizedChunkIds}
+                            editable
+                            onToggle={toggleChunk}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => toggleMemStatus(item)}
-                        className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
-                      >
-                        <Check className="mr-1 h-3.5 w-3.5" />
-                        Mark done
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => unassignItem(item.id)}
-                        aria-label="Remove item"
-                        title="Remove item"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
             </div>
           )}
 
@@ -1325,63 +1400,81 @@ export default function StudentDetailPage() {
               </p>
               {memItems
                 .filter((m) => m.status === "memorized")
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-3.5 rounded-2xl border border-border bg-card p-3 shadow-soft"
-                  >
-                    <MemThumb src={item.memorization_catalog?.image_url} />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">
-                        {item.memorization_catalog?.title}
-                      </p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                          <Check className="h-2.5 w-2.5" />
-                          Memorized
-                        </span>
-                        {item.memorization_catalog?.category && (
-                          <span className="text-[11px] text-muted-foreground">
-                            {item.memorization_catalog.category}
-                          </span>
-                        )}
-                        {item.last_revised_at && (
-                          <span className="text-[11px] text-muted-foreground">
-                            &middot; Revised {format(new Date(item.last_revised_at), "MMM d")}
-                          </span>
-                        )}
+                .map((item) => {
+                  const chunks = chunksByItem[item.catalog_id] || []
+                  const hasChunks = chunks.length > 0
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-border bg-card p-3 shadow-soft"
+                    >
+                      <div className="flex items-center gap-3.5">
+                        <MemThumb src={item.memorization_catalog?.image_url} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {item.memorization_catalog?.title}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                              <Check className="h-2.5 w-2.5" />
+                              Memorized
+                            </span>
+                            {item.memorization_catalog?.category && (
+                              <span className="text-[11px] text-muted-foreground">
+                                {item.memorization_catalog.category}
+                              </span>
+                            )}
+                            {item.last_revised_at && (
+                              <span className="text-[11px] text-muted-foreground">
+                                &middot; Revised {format(new Date(item.last_revised_at), "MMM d")}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-shrink-0 items-center gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => markRevised(item.id)}
+                            className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
+                          >
+                            <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                            Revised
+                          </Button>
+                          {!hasChunks && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => toggleMemStatus(item)}
+                              className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                            >
+                              Undo
+                            </Button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => unassignItem(item.id)}
+                            aria-label="Remove item"
+                            title="Remove item"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+                      {hasChunks && (
+                        <div className="mt-3 border-t border-border pt-3">
+                          <ChunkChecklist
+                            chunks={chunks}
+                            memorizedIds={memorizedChunkIds}
+                            editable
+                            onToggle={toggleChunk}
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex flex-shrink-0 items-center gap-1.5">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => markRevised(item.id)}
-                        className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
-                      >
-                        <RotateCcw className="mr-1 h-3.5 w-3.5" />
-                        Revised
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleMemStatus(item)}
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                      >
-                        Undo
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => unassignItem(item.id)}
-                        aria-label="Remove item"
-                        title="Remove item"
-                        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
             </div>
           )}
 

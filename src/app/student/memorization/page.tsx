@@ -6,10 +6,17 @@ import { format } from "date-fns"
 import { BookMarked, Check, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import {
+  ChunkChecklist,
+  loadChunksFor,
+  loadMemorizedChunkIds,
+  type MemChunk,
+} from "@/components/memorization-chunks"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
+import { cn } from "@/lib/utils"
 
 interface CatalogItem {
   id: string
@@ -29,20 +36,50 @@ interface StudentMemItem {
 export default function StudentMemorizationPage() {
   const { student, loading } = useStudent()
   const [items, setItems] = useState<StudentMemItem[]>([])
+  const [chunksByItem, setChunksByItem] = useState<Record<string, MemChunk[]>>({})
+  const [memorizedChunkIds, setMemorizedChunkIds] = useState<Set<string>>(new Set())
   const [loadingItems, setLoadingItems] = useState(true)
+  const [highlightId, setHighlightId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!student) return
-    supabase
-      .from("student_memorization")
-      .select("*, memorization_catalog(id, title, category, image_url)")
-      .eq("student_id", student.id)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        setItems((data as any) || [])
-        setLoadingItems(false)
-      })
+    let active = true
+    ;(async () => {
+      const { data } = await supabase
+        .from("student_memorization")
+        .select("*, memorization_catalog(id, title, category, image_url)")
+        .eq("student_id", student.id)
+        .order("created_at", { ascending: false })
+      const list = ((data as any) || []) as StudentMemItem[]
+      const [chunks, memorizedIds] = await Promise.all([
+        loadChunksFor(list.map((m) => m.catalog_id)),
+        loadMemorizedChunkIds(student.id),
+      ])
+      if (!active) return
+      setItems(list)
+      setChunksByItem(chunks)
+      setMemorizedChunkIds(memorizedIds)
+      setLoadingItems(false)
+    })()
+    return () => {
+      active = false
+    }
   }, [student])
+
+  // Deep link from Classes: /student/memorization#mem-<id>
+  useEffect(() => {
+    if (loadingItems) return
+    const hash = typeof window !== "undefined" ? window.location.hash : ""
+    const match = hash.match(/^#mem-(.+)$/)
+    if (!match) return
+    const id = match[1]
+    const el = document.getElementById(`mem-${id}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: "smooth", block: "center" })
+    setHighlightId(id)
+    const t = setTimeout(() => setHighlightId(null), 2000)
+    return () => clearTimeout(t)
+  }, [loadingItems, items])
 
   if (loading || loadingItems) {
     return (
@@ -79,29 +116,43 @@ export default function StudentMemorizationPage() {
             <Sparkles className="h-3 w-3" />
             Currently Memorizing
           </p>
-          {memorizing.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5"
-            >
-              {item.memorization_catalog?.image_url && (
-                <img
-                  src={item.memorization_catalog.image_url}
-                  alt=""
-                  className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
-                />
-              )}
-              <span className="flex-1 text-sm font-medium text-amber-300">
-                {item.memorization_catalog?.title}
-              </span>
-              <Badge
-                variant="outline"
-                className="text-[10px] border-border/30 text-muted-foreground/60"
+          {memorizing.map((item) => {
+            const chunks = chunksByItem[item.catalog_id] || []
+            return (
+              <div
+                key={item.id}
+                id={`mem-${item.id}`}
+                className={cn(
+                  "rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 scroll-mt-24 transition-shadow",
+                  highlightId === item.id && "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
+                )}
               >
-                {item.memorization_catalog?.category}
-              </Badge>
-            </div>
-          ))}
+                <div className="flex items-center gap-3">
+                  {item.memorization_catalog?.image_url && (
+                    <img
+                      src={item.memorization_catalog.image_url}
+                      alt=""
+                      className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                    />
+                  )}
+                  <span className="flex-1 text-sm font-medium text-amber-300">
+                    {item.memorization_catalog?.title}
+                  </span>
+                  <Badge
+                    variant="outline"
+                    className="text-[10px] border-border/30 text-muted-foreground/60"
+                  >
+                    {item.memorization_catalog?.category}
+                  </Badge>
+                </div>
+                {chunks.length > 0 && (
+                  <div className="mt-3 border-t border-amber-500/15 pt-3">
+                    <ChunkChecklist chunks={chunks} memorizedIds={memorizedChunkIds} />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -114,7 +165,11 @@ export default function StudentMemorizationPage() {
           {memorized.map((item) => (
             <div
               key={item.id}
-              className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5"
+              id={`mem-${item.id}`}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 scroll-mt-24 transition-shadow",
+                highlightId === item.id && "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
+              )}
             >
               {item.memorization_catalog?.image_url && (
                 <img

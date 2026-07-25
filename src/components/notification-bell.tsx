@@ -3,7 +3,8 @@
 import * as Popover from "@radix-ui/react-popover"
 import { formatDistanceToNow } from "date-fns"
 import { Bell, CheckCheck } from "lucide-react"
-import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 
 import { type NotificationRow, useNotifications } from "@/lib/use-notifications"
 import { cn } from "@/lib/utils"
@@ -11,6 +12,8 @@ import { cn } from "@/lib/utils"
 /** Bell trigger + live dropdown feed, shared by the teacher and student top bars. */
 export function NotificationBell() {
   const router = useRouter()
+  const pathname = usePathname()
+  const allHref = pathname.startsWith("/student") ? "/student/notifications" : "/notifications"
   const { items, unread, loading, markRead, markAllRead } = useNotifications()
 
   function open(n: NotificationRow) {
@@ -113,6 +116,17 @@ export function NotificationBell() {
                 ))}
               </ul>
             )}
+          </div>
+
+          <div className="border-t border-border p-1.5">
+            <Popover.Close asChild>
+              <Link
+                href={allHref}
+                className="flex w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold text-primary transition-colors hover:bg-muted"
+              >
+                See all notifications
+              </Link>
+            </Popover.Close>
           </div>
         </Popover.Content>
       </Popover.Portal>

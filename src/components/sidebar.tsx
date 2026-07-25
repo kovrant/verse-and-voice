@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Bell,
   BookAudio,
   BookMarked,
   BookOpen,
@@ -31,7 +32,10 @@ export const useSidebarState = () => useContext(SidebarContext)
 
 const navSections = [
   {
-    items: [{ href: "/", label: "Dashboard", icon: LayoutDashboard }],
+    items: [
+      { href: "/", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/notifications", label: "Notifications", icon: Bell },
+    ],
   },
   {
     label: "Academics",

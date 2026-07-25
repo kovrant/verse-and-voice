@@ -11,6 +11,7 @@ import {
 } from "@/components/quran-progress"
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
 import { StudentParaPdf } from "@/components/student-para-pdf"
+import { StudentStreakCard } from "@/components/student-streak-card"
 import { getHijriToday } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
@@ -25,7 +26,7 @@ const QUICK_LINKS = [
   { href: "/student/progress", title: "My Progress", sub: "Quran & Qaida journey", icon: "📊" },
   { href: "/student/memorization", title: "Memorization", sub: "Surahs & duas", icon: "📖" },
   { href: "/student/history", title: "Islamic History", sub: "Stories & events", icon: "📜" },
-  { href: "/student/classes", title: "Classes", sub: "Past sessions", icon: "📚" },
+  { href: "/student/classes", title: "Classes", sub: "Get ready for class", icon: "📚" },
   { href: "/student/fees", title: "Fees", sub: "Payment status", icon: "💳" },
 ]
 
@@ -109,6 +110,14 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Daily streak — hidden until teacher sets class_days */}
+      <StudentStreakCard
+        studentId={student.id}
+        classDays={student.class_days}
+        classTime={student.class_time}
+        variant="hero"
+      />
 
       {/* Hijri month strip → Islamic History */}
       <Link
@@ -261,9 +270,12 @@ export default function StudentDashboardPage() {
                   {30 - done} to go
                 </div>
               </div>
-              <div className="flex items-center gap-[8px] rounded-full bg-secondary px-[15px] py-[8px] text-[13px] font-semibold text-foreground">
-                🔥 12-day streak
-              </div>
+              <StudentStreakCard
+                studentId={student.id}
+                classDays={student.class_days}
+                classTime={student.class_time}
+                variant="pill"
+              />
             </div>
           </div>
         </div>

@@ -3,13 +3,21 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
 import * as Popover from "@radix-ui/react-popover"
-import { BookMarked, Eye, ImagePlus, Plus, Search, Trash2, Users, X } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { BookMarked, Eye, ImagePlus, Layers, Plus, Search, Trash2, Users, X } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
+import { labelFor, loadChunksFor,type MemChunk } from "@/components/memorization-chunks"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -55,6 +63,8 @@ export default function MemorizationPage() {
   const [uploadingFor, setUploadingFor] = useState<string | null>(null)
   const [itemToDelete, setItemToDelete] = useState<CatalogItem | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [chunkCounts, setChunkCounts] = useState<Record<string, number>>({})
+  const [manageItem, setManageItem] = useState<CatalogItem | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
 
@@ -96,6 +106,14 @@ export default function MemorizationPage() {
     ;(counts || []).forEach((c: any) => {
       countMap[c.catalog_id] = (countMap[c.catalog_id] || 0) + 1
     })
+
+    // Load chunk (part) counts so cards can show "N parts"
+    const { data: chunkRows } = await supabase.from("memorization_chunks").select("catalog_id")
+    const chunkMap: Record<string, number> = {}
+    ;(chunkRows || []).forEach((c: any) => {
+      chunkMap[c.catalog_id] = (chunkMap[c.catalog_id] || 0) + 1
+    })
+    setChunkCounts(chunkMap)
 
     // Map catalog items
     const catalogItems: CatalogItem[] = (catalog || []).map((item) => ({
@@ -187,6 +205,15 @@ export default function MemorizationPage() {
     setDeleting(true)
     if (itemToDelete.image_url) {
       await deleteImage(itemToDelete.image_url)
+    }
+    // Remove the item's chunk images folder (rows cascade-delete via FK).
+    const { data: chunkFiles } = await supabase.storage
+      .from("memorization-images")
+      .list(`chunks/${itemToDelete.id}`)
+    if (chunkFiles && chunkFiles.length > 0) {
+      await supabase.storage
+        .from("memorization-images")
+        .remove(chunkFiles.map((f) => `chunks/${itemToDelete.id}/${f.name}`))
     }
     await supabase.from("memorization_catalog").delete().eq("id", itemToDelete.id)
     const title = itemToDelete.title
@@ -521,6 +548,18 @@ export default function MemorizationPage() {
                             {category}
                           </Badge>
                         </div>
+                        {!isMedia && (
+                          <button
+                            type="button"
+                            onClick={() => setManageItem(item)}
+                            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-secondary/40 px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                          >
+                            <Layers className="h-3.5 w-3.5" />
+                            {chunkCounts[item.id]
+                              ? `${chunkCounts[item.id]} part${chunkCounts[item.id] > 1 ? "s" : ""}`
+                              : "Add parts"}
+                          </button>
+                        )}
                       </div>
 
                       {/* Hover actions overlay */}
@@ -642,6 +681,163 @@ export default function MemorizationPage() {
           )
         })
       )}
+
+      {/* Manage parts (chunks) */}
+      <Dialog open={!!manageItem} onOpenChange={(open) => !open && setManageItem(null)}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Parts — {manageItem?.title}</DialogTitle>
+            <DialogDescription>
+              Break this into ordered pieces students memorize one at a time. A student only shows as
+              fully memorized once every part is done.
+            </DialogDescription>
+          </DialogHeader>
+          {manageItem && (
+            <ChunkManager
+              item={manageItem}
+              onChanged={(count) =>
+                setChunkCounts((prev) => ({ ...prev, [manageItem.id]: count }))
+              }
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function ChunkManager({
+  item,
+  onChanged,
+}: {
+  item: CatalogItem
+  onChanged: (count: number) => void
+}) {
+  const [chunks, setChunks] = useState<MemChunk[]>([])
+  const [loading, setLoading] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const load = useCallback(async () => {
+    const map = await loadChunksFor([item.id])
+    const list = map[item.id] || []
+    setChunks(list)
+    setLoading(false)
+    onChanged(list.length)
+    // onChanged is a stable-enough setter wrapper; excluding it avoids a reload loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item.id])
+
+  useEffect(() => {
+    load()
+  }, [load])
+
+  async function addFiles(files: FileList) {
+    setUploading(true)
+    let nextIndex =
+      chunks.length > 0 ? Math.max(...chunks.map((c) => c.order_index)) + 1 : 0
+    const rows: { catalog_id: string; order_index: number; image_url: string }[] = []
+    for (const file of Array.from(files)) {
+      const idx = nextIndex
+      const ext = file.name.split(".").pop()
+      // Structured key: chunks/<catalog_id>/<order>-<random>.<ext>
+      const path = `chunks/${item.id}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from("memorization-images")
+        .upload(path, file, { cacheControl: "3600", upsert: false })
+      if (upErr) {
+        toast.error(upErr.message)
+        continue
+      }
+      const { data } = supabase.storage.from("memorization-images").getPublicUrl(path)
+      rows.push({ catalog_id: item.id, order_index: idx, image_url: data.publicUrl })
+      nextIndex++
+    }
+    if (rows.length > 0) {
+      const { error } = await supabase.from("memorization_chunks").insert(rows)
+      if (error) toast.error(error.message)
+      else toast.success(`Added ${rows.length} part${rows.length > 1 ? "s" : ""}`)
+    }
+    setUploading(false)
+    await load()
+  }
+
+  async function remove(chunk: MemChunk) {
+    const { error } = await supabase.from("memorization_chunks").delete().eq("id", chunk.id)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    const path = chunk.image_url.split("/memorization-images/").pop()
+    if (path) await supabase.storage.from("memorization-images").remove([path])
+    await load()
+  }
+
+  return (
+    <div className="space-y-4 pt-1">
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={(e) => {
+          if (e.target.files?.length) addFiles(e.target.files)
+          if (inputRef.current) inputRef.current.value = ""
+        }}
+      />
+
+      {loading ? (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="shimmer aspect-[3/2] rounded-xl" />
+          ))}
+        </div>
+      ) : chunks.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border bg-secondary/20 py-10 text-center">
+          <Layers className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" />
+          <p className="text-sm font-medium">No parts yet</p>
+          <p className="text-xs text-muted-foreground">
+            Upload chunk images in the order they should be learned.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          {chunks.map((c, i) => (
+            <div
+              key={c.id}
+              className="group relative overflow-hidden rounded-xl border border-border bg-white"
+            >
+              <img
+                src={c.image_url}
+                alt={labelFor(c, i)}
+                className="aspect-[3/2] w-full object-contain p-1.5"
+              />
+              <div className="border-t border-border/60 px-2 py-1.5 text-[11px] font-medium text-foreground">
+                {labelFor(c, i)}
+              </div>
+              <button
+                type="button"
+                onClick={() => remove(c)}
+                title="Delete part"
+                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/80 group-hover:opacity-100"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Button
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="w-full"
+        variant="outline"
+      >
+        <ImagePlus className="mr-1.5 h-4 w-4" />
+        {uploading ? "Uploading…" : "Add part images"}
+      </Button>
     </div>
   )
 }

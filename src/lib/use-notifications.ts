@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
+import { retentionCutoffIso } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser } from "@/lib/use-current-user"
 
@@ -51,6 +52,7 @@ export function useNotifications() {
     void supabase
       .from("notifications")
       .select(COLUMNS)
+      .gte("created_at", retentionCutoffIso())
       .order("created_at", { ascending: false })
       .limit(FEED_LIMIT)
       .then(({ data }) => {
@@ -70,7 +72,9 @@ export function useNotifications() {
           setItems((prev) =>
             prev.some((p) => p.id === n.id) ? prev : [n, ...prev].slice(0, FEED_LIMIT),
           )
-          toast(n.title, { description: n.body ?? undefined })
+          // Live-class events surface via the dedicated join modal / in-session
+          // pill — skip the corner toast so we don't double-alert.
+          if (n.type !== "live_class") toast(n.title, { description: n.body ?? undefined })
         },
       )
       .on(
