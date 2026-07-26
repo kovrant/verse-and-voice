@@ -5,8 +5,7 @@ import { usePathname } from "next/navigation"
 import { LiveClassProvider } from "@/components/live-class-provider"
 import { Sidebar } from "@/components/sidebar"
 import { StudentSidebar } from "@/components/student-sidebar"
-import { StudentTopBar } from "@/components/student-topbar"
-import { TeacherTopBar } from "@/components/teacher-topbar"
+import { StudentTopBar, TeacherTopBar } from "@/components/topbar"
 
 /**
  * Chooses the navigation shell + ambient background by route. The student

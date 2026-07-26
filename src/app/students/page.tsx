@@ -23,22 +23,7 @@ import {
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
-import { parseLocalDate, STATUS_CONFIG, type StudentStatus } from "@/lib/utils"
-
-interface Student {
-  id: string
-  name: string
-  guardian_name: string
-  country: string | null
-  started_at: string
-  status: StudentStatus
-  fee: number
-  fee_currency: string
-  is_qaida: boolean
-  desc_completed: number
-  asc_completed: number
-  class_time: string | null
-}
+import { parseLocalDate, STATUS_CONFIG, type Student, type StudentStatus } from "@/lib/utils"
 
 type ColumnKey = "country" | "started_at" | "fee" | "class_time" | "quran_progress" | "status"
 

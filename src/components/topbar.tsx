@@ -2,28 +2,35 @@
 
 import * as Popover from "@radix-ui/react-popover"
 import { ChevronDown, LogOut } from "lucide-react"
+import type { ReactNode } from "react"
 
 import { NotificationBell } from "@/components/notification-bell"
 import { NotificationCompose } from "@/components/notification-compose"
 import { ThemeSwitch } from "@/components/theme-switch"
 import { useCurrentUser } from "@/lib/use-current-user"
+import { useStudent } from "@/lib/use-student"
 
-/**
- * Sticky top bar for the teacher/admin portal. Mirrors the student top bar:
- * a single avatar trigger that opens a dropdown menu (identity + sign-out),
- * rather than a cluster of controls in the bar itself.
- */
-export function TeacherTopBar() {
-  const user = useCurrentUser()
-  const email = user?.email || "—"
-  const initial = (user?.email?.[0] || "?").toUpperCase()
+const avatarStyle = { background: "hsl(var(--primary))" }
 
-  const avatarStyle = { background: "hsl(var(--primary))" }
-
+function PortalTopBar({
+  initial,
+  title,
+  subtitle,
+  role,
+  signOutNext,
+  actions,
+}: {
+  initial: string
+  title: string
+  subtitle?: string | null
+  role: string
+  signOutNext: string
+  actions?: ReactNode
+}) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
       <ThemeSwitch />
-      <NotificationCompose />
+      {actions}
       <NotificationBell />
 
       <Popover.Root>
@@ -48,7 +55,6 @@ export function TeacherTopBar() {
             sideOffset={10}
             className="z-50 w-64 rounded-2xl border border-border bg-card p-1.5 shadow-soft-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1"
           >
-            {/* Identity header */}
             <div className="flex items-center gap-3 px-2.5 py-2.5">
               <span
                 className="flex h-11 w-11 items-center justify-center rounded-2xl text-base font-bold text-primary-foreground ring-2 ring-white/70 shadow-sm flex-shrink-0"
@@ -57,17 +63,19 @@ export function TeacherTopBar() {
                 {initial}
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{email}</p>
+                <p className="text-sm font-bold text-foreground truncate">{title}</p>
+                {subtitle ? (
+                  <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
+                ) : null}
                 <span className="mt-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                  Teacher
+                  {role}
                 </span>
               </div>
             </div>
 
             <div className="my-1 h-px bg-border" />
 
-            {/* Sign out */}
-            <form action="/auth/signout?next=/admin" method="post">
+            <form action={`/auth/signout?next=${signOutNext}`} method="post">
               <button
                 type="submit"
                 className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
@@ -80,5 +88,33 @@ export function TeacherTopBar() {
         </Popover.Portal>
       </Popover.Root>
     </header>
+  )
+}
+
+export function TeacherTopBar() {
+  const user = useCurrentUser()
+  const email = user?.email || "—"
+  return (
+    <PortalTopBar
+      initial={(user?.email?.[0] || "?").toUpperCase()}
+      title={email}
+      role="Teacher"
+      signOutNext="/admin"
+      actions={<NotificationCompose />}
+    />
+  )
+}
+
+export function StudentTopBar() {
+  const { student, username } = useStudent()
+  const name = student?.name || username || "Student"
+  return (
+    <PortalTopBar
+      initial={(name[0] || "?").toUpperCase()}
+      title={name}
+      subtitle={username ? `@${username}` : null}
+      role="Student"
+      signOutNext="/login"
+    />
   )
 }

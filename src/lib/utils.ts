@@ -64,3 +64,40 @@ export const STATUS_CONFIG: Record<
   Completed: { label: "Completed", variant: "secondary" },
   "Left Uncompleted": { label: "Left Uncompleted", variant: "warning" },
 }
+
+/** Full `students` row. */
+export interface Student {
+  id: string
+  name: string
+  guardian_name: string
+  country: string | null
+  started_at: string
+  ended_at: string | null
+  status: StudentStatus
+  fee: number
+  fee_currency: string
+  class_time: string | null
+  /** 0=Sun … 6=Sat. Empty/null = teacher hasn't configured days yet. */
+  class_days: number[] | null
+  created_at: string
+}
+
+/** Full `fee_payments` row. */
+export interface FeePayment {
+  id: string
+  student_id: string
+  month: number
+  year: number
+  is_paid: boolean
+  paid_at: string | null
+}
+
+/** Fee row with the joined student fields used by dashboard / fees admin. */
+export type FeePaymentWithStudent = FeePayment & {
+  students: {
+    name: string
+    fee: number
+    fee_currency: string
+    status: string
+  }
+}

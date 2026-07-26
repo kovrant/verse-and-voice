@@ -4,26 +4,10 @@ import { useEffect, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser } from "@/lib/use-current-user"
-import type { StudentStatus } from "@/lib/utils"
-
-export interface StudentRecord {
-  id: string
-  name: string
-  guardian_name: string
-  country: string | null
-  started_at: string
-  ended_at: string | null
-  status: StudentStatus
-  fee: number
-  fee_currency: string
-  class_time: string | null
-  /** 0=Sun … 6=Sat. Empty/null = teacher hasn't configured days yet. */
-  class_days: number[] | null
-  created_at: string
-}
+import type { Student } from "@/lib/utils"
 
 interface StudentContext {
-  student: StudentRecord | null
+  student: Student | null
   username: string | null
   loading: boolean
   error: string | null
@@ -79,7 +63,7 @@ export function useStudent(): StudentContext {
 
       if (active)
         setState({
-          student: (student as StudentRecord) ?? null,
+          student: (student as Student) ?? null,
           username: profile.username ?? null,
           loading: false,
           error: error?.message ?? null,

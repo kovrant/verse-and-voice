@@ -10,14 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
-
-interface FeePayment {
-  id: string
-  month: number
-  year: number
-  is_paid: boolean
-  paid_at: string | null
-}
+import type { FeePayment } from "@/lib/utils"
 
 export default function StudentFeesPage() {
   const { student, loading } = useStudent()

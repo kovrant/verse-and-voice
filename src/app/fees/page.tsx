@@ -20,25 +20,10 @@ import {
 import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS } from "@/lib/utils"
-
-interface FeeRecord {
-  id: string
-  student_id: string
-  month: number
-  year: number
-  is_paid: boolean
-  paid_at: string | null
-  students: {
-    name: string
-    fee: number
-    fee_currency: string
-    status: string
-  }
-}
+import { CURRENCY_SYMBOLS, type FeePaymentWithStudent } from "@/lib/utils"
 
 // Helper to get a nested sort value
-function getFeeValue(fee: FeeRecord, key: string): any {
+function getFeeValue(fee: FeePaymentWithStudent, key: string): any {
   if (key === "student_name") return fee.students?.name
   if (key === "fee_amount") return fee.students?.fee
   if (key === "is_paid") return fee.is_paid ? 1 : 0
@@ -50,7 +35,7 @@ export default function FeesPage() {
   const now = new Date()
   const [month, setMonth] = useState(now.getMonth() + 1)
   const [year, setYear] = useState(now.getFullYear())
-  const [fees, setFees] = useState<FeeRecord[]>([])
+  const [fees, setFees] = useState<FeePaymentWithStudent[]>([])
   const [loading, setLoading] = useState(true)
   const [sortKey, setSortKey] = useState<string | null>(null)
   const [sortDir, setSortDir] = useState<SortDirection>(null)
@@ -84,7 +69,7 @@ export default function FeesPage() {
 
     const activeFees = (data || []).filter(
       (f: any) => f.students?.status === "Reading",
-    ) as FeeRecord[]
+    ) as FeePaymentWithStudent[]
 
     setFees(activeFees)
     setLoading(false)
@@ -95,7 +80,7 @@ export default function FeesPage() {
     loadFees()
   }, [loadFees])
 
-  async function toggleFee(fee: FeeRecord) {
+  async function toggleFee(fee: FeePaymentWithStudent) {
     const newPaid = !fee.is_paid
     const paidAt = newPaid ? new Date().toISOString() : null
 
@@ -157,7 +142,7 @@ export default function FeesPage() {
     return convertToPKR(fee, currency, rates)
   }
 
-  const sumPKR = (list: FeeRecord[]) =>
+  const sumPKR = (list: FeePaymentWithStudent[]) =>
     list.reduce((sum, f) => {
       const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
       return v == null ? sum : sum + v
@@ -167,7 +152,7 @@ export default function FeesPage() {
   const totalPendingPKR = sumPKR(fees.filter((f) => !f.is_paid))
 
   // Per-currency breakdown for collected
-  function currencyBreakdown(items: FeeRecord[]) {
+  function currencyBreakdown(items: FeePaymentWithStudent[]) {
     const map: Record<string, number> = {}
     items.forEach((f) => {
       const c = f.students?.fee_currency || "PKR"

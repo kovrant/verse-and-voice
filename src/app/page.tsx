@@ -23,30 +23,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
-import { CURRENCY_SYMBOLS } from "@/lib/utils"
-
-interface Student {
-  id: string
-  name: string
-  guardian_name: string
-  fee: number
-  fee_currency: string
-  created_at: string
-}
-
-interface FeePayment {
-  id: string
-  student_id: string
-  is_paid: boolean
-  students: { name: string; fee: number; fee_currency: string; status: string }
-}
+import { CURRENCY_SYMBOLS, type FeePaymentWithStudent, type Student } from "@/lib/utils"
 
 export default function Dashboard() {
   const [totalStudents, setTotalStudents] = useState(0)
   const [activeStudents, setActiveStudents] = useState(0)
   const [recentStudents, setRecentStudents] = useState<Student[]>([])
-  const [paidFees, setPaidFees] = useState<FeePayment[]>([])
-  const [unpaidFees, setUnpaidFees] = useState<FeePayment[]>([])
+  const [paidFees, setPaidFees] = useState<FeePaymentWithStudent[]>([])
+  const [unpaidFees, setUnpaidFees] = useState<FeePaymentWithStudent[]>([])
   const [loading, setLoading] = useState(true)
   const { rates } = useExchangeRates()
 
@@ -98,8 +82,8 @@ export default function Dashboard() {
     const paid = activeFees.filter((f: any) => f.is_paid)
     const unpaid = activeFees.filter((f: any) => !f.is_paid)
 
-    setPaidFees(paid as any)
-    setUnpaidFees(unpaid as any)
+    setPaidFees(paid as FeePaymentWithStudent[])
+    setUnpaidFees(unpaid as FeePaymentWithStudent[])
     setLoading(false)
   }
 
@@ -133,8 +117,8 @@ export default function Dashboard() {
     return convertToPKR(fee, currency, rates)
   }
 
-  const sumPKR = (list: FeePayment[]) =>
-    list.reduce((sum, f: any) => {
+  const sumPKR = (list: FeePaymentWithStudent[]) =>
+    list.reduce((sum, f) => {
       const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
       return v == null ? sum : sum + v
     }, 0)
@@ -142,9 +126,9 @@ export default function Dashboard() {
   const feesCollected = sumPKR(paidFees)
   const feesPending = sumPKR(unpaidFees)
 
-  function currencyBreakdown(items: FeePayment[]) {
+  function currencyBreakdown(items: FeePaymentWithStudent[]) {
     const map: Record<string, number> = {}
-    items.forEach((f: any) => {
+    items.forEach((f) => {
       const c = f.students?.fee_currency || "PKR"
       map[c] = (map[c] || 0) + (f.students?.fee || 0)
     })

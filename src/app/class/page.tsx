@@ -33,15 +33,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
-import { parseLocalDate } from "@/lib/utils"
+import { parseLocalDate, type Student } from "@/lib/utils"
 
-interface Student {
-  id: string
-  name: string
-  guardian_name: string
-  started_at: string
-  class_time: string | null
-}
+type ClassStudent = Pick<Student, "id" | "name" | "guardian_name" | "started_at" | "class_time">
 
 interface MemItem {
   id: string
@@ -73,8 +67,8 @@ interface ClassSession {
 type SessionMode = "landing" | "live"
 
 export default function ClassPage() {
-  const [students, setStudents] = useState<Student[]>([])
-  const [selected, setSelected] = useState<Student | null>(null)
+  const [students, setStudents] = useState<ClassStudent[]>([])
+  const [selected, setSelected] = useState<ClassStudent | null>(null)
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [memItems, setMemItems] = useState<MemItem[]>([])
   const [paras, setParas] = useState<QuranPara[]>([])

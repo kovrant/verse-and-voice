@@ -13,12 +13,10 @@ import {
   Check,
   Clock,
   CreditCard,
-  ExternalLink,
   FileText,
   History,
   KeyRound,
   MapPin,
-  MousePointerClick,
   Pencil,
   Play,
   Plus,
@@ -49,7 +47,16 @@ import {
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
+import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
+import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentPortalAccess } from "@/components/student-portal-access"
+import {
+  type ClassSession,
+  formatSessionDuration,
+  MemThumb,
+  paraSummary,
+  SessionStat,
+} from "@/components/student-session-bits"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -71,34 +78,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
+import { type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { chunkProgress } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
-  cn,
   COUNTRIES,
   formatLocalDate,
   parseLocalDate,
   STATUS_CONFIG,
+  type FeePayment,
+  type Student,
   type StudentStatus,
 } from "@/lib/utils"
-
-interface Student {
-  id: string
-  name: string
-  guardian_name: string
-  country: string | null
-  started_at: string
-  ended_at: string | null
-  status: StudentStatus
-  fee: number
-  fee_currency: string
-  class_time: string | null
-  class_days: number[] | null
-  created_at: string
-}
 
 interface CatalogItem {
   id: string
@@ -113,36 +106,6 @@ interface StudentMemItem {
   status: "memorizing" | "memorized"
   last_revised_at: string | null
   memorization_catalog: CatalogItem
-}
-
-interface FeePayment {
-  id: string
-  month: number
-  year: number
-  is_paid: boolean
-  paid_at: string | null
-}
-
-interface ClassSession {
-  id: string
-  started_at: string
-  ended_at: string
-  duration_seconds: number
-  starting_para: number | null
-  ending_para: number | null
-  paras_covered: number[]
-  memorization_revised: string[]
-  notes: string | null
-}
-
-interface ActivityLog {
-  id: string
-  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page"
-  path: string | null
-  label: string | null
-  href: string | null
-  meta: Record<string, unknown> | null
-  occurred_at: string
 }
 
 export default function StudentDetailPage() {
@@ -1884,332 +1847,5 @@ export default function StudentDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
-
-const EVENT_STYLES: Record<
-  ActivityLog["event_type"],
-  { icon: typeof Activity; tint: string; verb: string }
-> = {
-  page_view: { icon: FileText, tint: "text-blue-400 bg-blue-500/10", verb: "Viewed page" },
-  para_open: { icon: BookOpen, tint: "text-emerald-400 bg-emerald-500/10", verb: "Opened" },
-  pdf_page: { icon: FileText, tint: "text-amber-400 bg-amber-500/10", verb: "Turned to" },
-  link_click: { icon: ExternalLink, tint: "text-purple-400 bg-purple-500/10", verb: "Clicked link" },
-  click: { icon: MousePointerClick, tint: "text-muted-foreground bg-secondary", verb: "Clicked" },
-}
-
-function activityPrimaryText(log: ActivityLog): string {
-  const style = EVENT_STYLES[log.event_type]
-  const detail = log.label || log.href || log.path || "—"
-  return `${style.verb} ${detail}`.trim()
-}
-
-function ActivityFeed({ logs, loading }: { logs: ActivityLog[]; loading: boolean }) {
-  if (loading && logs.length === 0) {
-    return (
-      <div className="space-y-2">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="h-14 shimmer rounded-xl" />
-        ))}
-      </div>
-    )
-  }
-
-  if (logs.length === 0) {
-    return (
-      <div className="py-16 text-center bg-card rounded-[16px] border border-border">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
-          <Activity className="h-6 w-6 text-primary" />
-        </div>
-        <p className="text-base font-semibold text-foreground mb-1">No activity yet</p>
-        <p className="text-sm text-muted-foreground">
-          Clicks and page opens will appear here once the student uses the portal.
-        </p>
-      </div>
-    )
-  }
-
-  // Group by calendar day for a scannable timeline.
-  const groups: { day: string; items: ActivityLog[] }[] = []
-  for (const log of logs) {
-    const day = format(new Date(log.occurred_at), "EEEE, MMM d, yyyy")
-    const last = groups[groups.length - 1]
-    if (last && last.day === day) last.items.push(log)
-    else groups.push({ day, items: [log] })
-  }
-
-  return (
-    <div className="space-y-6">
-      {groups.map((group) => (
-        <div key={group.day}>
-          <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-1">
-            {group.day}
-          </p>
-          <div className="bg-card rounded-[16px] border border-border overflow-hidden">
-            {group.items.map((log, i) => {
-              const style = EVENT_STYLES[log.event_type]
-              const Icon = style.icon
-              return (
-                <div
-                  key={log.id}
-                  className={`flex items-center gap-3 px-4 py-3 ${
-                    i < group.items.length - 1 ? "border-b border-border" : ""
-                  }`}
-                >
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 ${style.tint}`}
-                  >
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {activityPrimaryText(log)}
-                    </p>
-                    {log.path && (
-                      <p className="text-[11px] text-muted-foreground truncate">{log.path}</p>
-                    )}
-                  </div>
-                  <span
-                    className="text-[11px] text-muted-foreground flex-shrink-0 tabular-nums"
-                    title={format(new Date(log.occurred_at), "MMM d, yyyy h:mm:ss a")}
-                  >
-                    {format(new Date(log.occurred_at), "h:mm a")}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function formatSessionDuration(seconds: number): string {
-  const s = Math.max(0, Math.round(seconds || 0))
-  if (s < 60) return `${s}s`
-  const mins = Math.floor(s / 60)
-  if (mins < 60) return `${mins}m`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
-
-function paraSummary(s: ClassSession): { label: string; title: string } | null {
-  const covered = (s.paras_covered || []).filter((n) => n != null)
-  if (covered.length > 0) {
-    const sorted = [...covered].sort((a, b) => a - b)
-    if (sorted.length === 1) return { label: `Para ${sorted[0]}`, title: `Para ${sorted[0]}` }
-    return { label: `${sorted.length} paras`, title: `Paras ${sorted.join(", ")}` }
-  }
-  if (s.starting_para != null && s.ending_para != null) {
-    const range =
-      s.starting_para === s.ending_para
-        ? `Para ${s.starting_para}`
-        : `Paras ${s.starting_para}–${s.ending_para}`
-    return { label: range, title: range }
-  }
-  return null
-}
-
-function MemThumb({ src }: { src?: string | null }) {
-  if (!src) {
-    return (
-      <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl border border-border bg-secondary">
-        <BookMarked className="h-6 w-6 text-muted-foreground" />
-      </div>
-    )
-  }
-  return (
-    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
-      <img src={src} alt="" className="h-full w-full object-contain p-1" />
-    </div>
-  )
-}
-
-function SessionStat({
-  icon: Icon,
-  tint,
-  value,
-  label,
-}: {
-  icon: typeof Clock
-  tint: string
-  value: string | number
-  label: string
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <span className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}>
-        <Icon className="h-4 w-4" />
-      </span>
-      <div className="min-w-0">
-        <p className="font-heading text-lg font-bold leading-none tabular-nums text-foreground">
-          {value}
-        </p>
-        <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{label}</p>
-      </div>
-    </div>
-  )
-}
-
-function FeeHistoryTable({
-  fees,
-  sortKey,
-  sortDir,
-  page,
-  pageSize,
-  onSort,
-  onPageChange,
-  onToggleFee,
-}: {
-  fees: FeePayment[]
-  sortKey: string | null
-  sortDir: SortDirection
-  page: number
-  pageSize: number
-  onSort: (key: string) => void
-  onPageChange: (page: number) => void
-  onToggleFee: (fee: FeePayment) => void
-}) {
-  function getFeeSort(fee: FeePayment, key: string): any {
-    if (key === "month_year") return fee.year * 100 + fee.month
-    if (key === "is_paid") return fee.is_paid ? 1 : 0
-    if (key === "paid_at") return fee.paid_at || ""
-    return (fee as any)[key]
-  }
-
-  const sorted =
-    sortKey && sortDir
-      ? [...fees].sort((a, b) => {
-          const aVal = getFeeSort(a, sortKey)
-          const bVal = getFeeSort(b, sortKey)
-          if (aVal == null && bVal == null) return 0
-          if (aVal == null) return sortDir === "asc" ? -1 : 1
-          if (bVal == null) return sortDir === "asc" ? 1 : -1
-          if (typeof aVal === "number" && typeof bVal === "number") {
-            return sortDir === "asc" ? aVal - bVal : bVal - aVal
-          }
-          const cmp = String(aVal).localeCompare(String(bVal))
-          return sortDir === "asc" ? cmp : -cmp
-        })
-      : fees
-
-  const totalPages = Math.ceil(sorted.length / pageSize)
-  const paginated = sorted.slice((page - 1) * pageSize, page * pageSize)
-
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4 text-emerald-400" />
-          <CardTitle>Fee Payment History</CardTitle>
-        </div>
-      </CardHeader>
-      <CardContent>
-        {fees.length === 0 ? (
-          <div className="text-center py-10">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-              <CreditCard className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="text-muted-foreground">No fee records yet</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader
-                        label="Month"
-                        sortKey="month_year"
-                        currentSort={sortKey}
-                        currentDirection={sortDir}
-                        onSort={onSort}
-                      />
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader
-                        label="Status"
-                        sortKey="is_paid"
-                        currentSort={sortKey}
-                        currentDirection={sortDir}
-                        onSort={onSort}
-                      />
-                    </th>
-                    <th scope="col" className="px-5 py-3 text-left">
-                      <SortableHeader
-                        label="Paid Date"
-                        sortKey="paid_at"
-                        currentSort={sortKey}
-                        currentDirection={sortDir}
-                        onSort={onSort}
-                      />
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                    >
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.map((fee) => (
-                    <tr
-                      key={fee.id}
-                      className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
-                    >
-                      <td className="px-5 py-3.5 font-medium text-sm">
-                        {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Badge variant={fee.is_paid ? "success" : "warning"}>
-                          {fee.is_paid ? "Paid" : "Unpaid"}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                        {fee.paid_at ? format(new Date(fee.paid_at), "MMM d, yyyy h:mm a") : "--"}
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <Button
-                          size="sm"
-                          variant={fee.is_paid ? "outline" : "default"}
-                          onClick={() => onToggleFee(fee)}
-                        >
-                          {fee.is_paid ? (
-                            <>
-                              <X className="h-3 w-3 mr-1" />
-                              Unpaid
-                            </>
-                          ) : (
-                            <>
-                              <Check className="h-3 w-3 mr-1" />
-                              Mark Paid
-                            </>
-                          )}
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {sorted.length > pageSize && (
-              <div className="pt-4 border-t border-border/50">
-                <Pagination
-                  currentPage={page}
-                  totalPages={totalPages}
-                  totalItems={sorted.length}
-                  pageSize={pageSize}
-                  onPageChange={onPageChange}
-                />
-              </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
   )
 }
