@@ -20,6 +20,7 @@ import {
   type SortDirection,
   toggleSort,
 } from "@/components/ui/sortable-header"
+import { classTimeToMinutes } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
@@ -162,20 +163,6 @@ export default function StudentsPage() {
     return completedQuran * 30 + desc + (asc > 0 ? asc - 1 : 0)
   }
 
-  // Parse "h:mm AM/PM …" to minutes since midnight for correct chronological
-  // sorting (lexical sort puts "10:00 AM" before "9:00 AM").
-  function classTimeMinutes(timeStr: string | null): number | null {
-    if (!timeStr) return null
-    const m = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
-    if (!m) return null
-    let h = parseInt(m[1], 10)
-    const min = parseInt(m[2], 10)
-    const period = m[3].toUpperCase()
-    if (period === "PM" && h !== 12) h += 12
-    if (period === "AM" && h === 12) h = 0
-    return h * 60 + min
-  }
-
   function compareNullableNumber(a: number | null, b: number | null, dir: SortDirection): number {
     if (a == null && b == null) return 0
     if (a == null) return dir === "asc" ? 1 : -1 // missing values sink to the bottom
@@ -191,8 +178,8 @@ export default function StudentsPage() {
   } else if (sortKey === "class_time" && sortDir) {
     sorted = [...filtered].sort((a, b) =>
       compareNullableNumber(
-        classTimeMinutes(a.class_time),
-        classTimeMinutes(b.class_time),
+        classTimeToMinutes(a.class_time),
+        classTimeToMinutes(b.class_time),
         sortDir,
       ),
     )

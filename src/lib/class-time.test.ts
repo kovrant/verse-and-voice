@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  classTimeToMinutes,
   formatClassTimeLocal,
   formatCountdown,
   msUntilNextClass,
@@ -31,6 +32,17 @@ describe("toPktClassTime / toInputTime", () => {
     expect(toInputTime("8:00 AM PKT")).toBe("08:00")
     expect(toInputTime("5:15 PM PKT")).toBe("17:15")
     expect(toInputTime("")).toBe("")
+  })
+})
+
+describe("classTimeToMinutes", () => {
+  it("converts 12h PKT strings to minutes since midnight", () => {
+    expect(classTimeToMinutes("12:00 AM PKT")).toBe(0)
+    expect(classTimeToMinutes("8:00 AM PKT")).toBe(8 * 60)
+    expect(classTimeToMinutes("12:00 PM PKT")).toBe(12 * 60)
+    expect(classTimeToMinutes("5:15 PM PKT")).toBe(17 * 60 + 15)
+    expect(classTimeToMinutes(null)).toBeNull()
+    expect(classTimeToMinutes("whenever")).toBeNull()
   })
 })
 

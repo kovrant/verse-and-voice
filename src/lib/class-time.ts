@@ -32,6 +32,17 @@ export function toInputTime(pkt: string): string {
   return `${String(h).padStart(2, "0")}:${minute}`
 }
 
+/** Minutes since midnight (PKT wall clock). Null if missing/unparseable. */
+export function classTimeToMinutes(classTime: string | null): number | null {
+  const { hour, minute, period } = parseTime(classTime || "")
+  if (!hour || !minute || !period) return null
+  let h = Number(hour)
+  const min = Number(minute)
+  if (period === "PM" && h !== 12) h += 12
+  if (period === "AM" && h === 12) h = 0
+  return h * 60 + min
+}
+
 function pktParts(now: Date): { y: number; m: number; d: number; dow: number } {
   const pkt = new Date(now.getTime() + PKT_OFFSET_MIN * 60_000)
   return {

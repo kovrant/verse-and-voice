@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { classTimeToMinutes } from "@/lib/class-time"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, type Student } from "@/lib/utils"
@@ -235,20 +236,6 @@ export default function ClassPage() {
         <div className="h-80 shimmer rounded-2xl max-w-2xl mx-auto" />
       </div>
     )
-  }
-
-  // Parse "10:15 PM PKT" / "5:30 AM PKT" → minutes since midnight.
-  // Returns null for missing/unparseable times.
-  function classTimeToMinutes(timeStr: string | null): number | null {
-    if (!timeStr) return null
-    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
-    if (!match) return null
-    let hours = parseInt(match[1], 10)
-    const minutes = parseInt(match[2], 10)
-    const period = match[3].toUpperCase()
-    if (period === "PM" && hours !== 12) hours += 12
-    if (period === "AM" && hours === 12) hours = 0
-    return hours * 60 + minutes
   }
 
   // Sort by class time ascending. AM slots before 6:00 are treated as next-day
