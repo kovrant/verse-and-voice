@@ -22,21 +22,6 @@ import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS } from "@/lib/utils"
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]
-
 interface FeeRecord {
   id: string
   student_id: string
@@ -213,9 +198,9 @@ export default function FeesPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {MONTH_NAMES.map((m, i) => (
+            {Array.from({ length: 12 }, (_, i) => (
               <SelectItem key={i} value={(i + 1).toString()}>
-                {m}
+                {format(new Date(2000, i, 1), "MMMM")}
               </SelectItem>
             ))}
           </SelectContent>
@@ -355,7 +340,7 @@ export default function FeesPage() {
             </div>
             <p className="text-lg font-medium mb-1">No fee records</p>
             <p className="text-sm text-muted-foreground">
-              No active students found for {MONTH_NAMES[month - 1]} {year}
+              No active students found for {format(new Date(year, month - 1, 1), "MMMM yyyy")}
             </p>
           </CardContent>
         </Card>

@@ -19,21 +19,6 @@ interface FeePayment {
   paid_at: string | null
 }
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]
-
 export default function StudentFeesPage() {
   const { student, loading } = useStudent()
   const { rates } = useExchangeRates()
@@ -139,7 +124,7 @@ export default function StudentFeesPage() {
                   {fees.map((fee) => (
                     <tr key={fee.id} className="border-b border-border/30 last:border-0">
                       <td className="px-5 py-3.5 font-medium text-sm">
-                        {MONTH_NAMES[fee.month - 1]} {fee.year}
+                        {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
                       </td>
                       <td className="px-5 py-3.5">
                         <Badge variant={fee.is_paid ? "success" : "warning"}>

@@ -2053,21 +2053,6 @@ function SessionStat({
   )
 }
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-]
-
 function FeeHistoryTable({
   fees,
   sortKey,
@@ -2177,7 +2162,7 @@ function FeeHistoryTable({
                       className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
                     >
                       <td className="px-5 py-3.5 font-medium text-sm">
-                        {MONTH_NAMES[fee.month - 1]} {fee.year}
+                        {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
                       </td>
                       <td className="px-5 py-3.5">
                         <Badge variant={fee.is_paid ? "success" : "warning"}>
