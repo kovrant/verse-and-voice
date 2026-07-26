@@ -1,8 +1,36 @@
-import { parseTime } from "@/components/ui/time-picker"
-
-// class_time is authored in PKT (the time picker always tags values "… PKT").
-// Asia/Karachi is a fixed UTC+5 with no DST, so we can treat it as a constant offset.
+// class_time is stored as "h:mm AM/PM PKT" (Asia/Karachi, fixed UTC+5, no DST).
 const PKT_OFFSET_MIN = 5 * 60
+
+/** Parse stored class_time ("8:00 AM PKT") into 12h parts. Empty/invalid → blanks. */
+export function parseTime(val: string): { hour: string; minute: string; period: string } {
+  if (!val) return { hour: "", minute: "", period: "" }
+  const match = val.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i)
+  if (match) {
+    return { hour: match[1], minute: match[2], period: match[3].toUpperCase() }
+  }
+  return { hour: "", minute: "", period: "" }
+}
+
+/** Native `<input type="time">` value ("HH:mm") → stored "h:mm AM/PM PKT". */
+export function toPktClassTime(hhmm: string): string {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim())
+  if (!m) return ""
+  const h24 = Number(m[1])
+  const min = m[2]
+  if (h24 < 0 || h24 > 23) return ""
+  const period = h24 >= 12 ? "PM" : "AM"
+  const hour12 = h24 % 12 || 12
+  return `${hour12}:${min} ${period} PKT`
+}
+
+/** Stored "h:mm AM/PM PKT" → native `<input type="time">` value ("HH:mm"). */
+export function toInputTime(pkt: string): string {
+  const { hour, minute, period } = parseTime(pkt)
+  if (!hour || !minute || !period) return ""
+  let h = Number(hour) % 12
+  if (period === "PM") h += 12
+  return `${String(h).padStart(2, "0")}:${minute}`
+}
 
 function pktParts(now: Date): { y: number; m: number; d: number; dow: number } {
   const pkt = new Date(now.getTime() + PKT_OFFSET_MIN * 60_000)

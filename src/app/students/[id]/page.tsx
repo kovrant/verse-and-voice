@@ -72,7 +72,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
-import { TimePicker } from "@/components/ui/time-picker"
+import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { chunkProgress } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
@@ -772,11 +772,17 @@ export default function StudentDetailPage() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Class Time</Label>
-                  <TimePicker
-                    value={editForm.class_time}
-                    onChange={(val) => setEditForm({ ...editForm, class_time: val })}
-                    placeholder="Select class time"
+                  <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
+                  <Input
+                    id="edit_class_time"
+                    type="time"
+                    value={toInputTime(editForm.class_time)}
+                    onChange={(e) =>
+                      setEditForm({
+                        ...editForm,
+                        class_time: e.target.value ? toPktClassTime(e.target.value) : "",
+                      })
+                    }
                   />
                 </div>
               </div>

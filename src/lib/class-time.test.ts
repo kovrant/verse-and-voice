@@ -1,6 +1,38 @@
 import { describe, expect, it } from "vitest"
 
-import { formatClassTimeLocal, formatCountdown, msUntilNextClass } from "./class-time"
+import {
+  formatClassTimeLocal,
+  formatCountdown,
+  msUntilNextClass,
+  parseTime,
+  toInputTime,
+  toPktClassTime,
+} from "./class-time"
+
+describe("parseTime", () => {
+  it("returns empty parts for empty or unparseable input", () => {
+    expect(parseTime("")).toEqual({ hour: "", minute: "", period: "" })
+    expect(parseTime("nonsense")).toEqual({ hour: "", minute: "", period: "" })
+  })
+
+  it("parses 'h:mm AM/PM PKT' and without the timezone label", () => {
+    expect(parseTime("8:00 AM PKT")).toEqual({ hour: "8", minute: "00", period: "AM" })
+    expect(parseTime("10:15 PM PKT")).toEqual({ hour: "10", minute: "15", period: "PM" })
+    expect(parseTime("5:30 pm")).toEqual({ hour: "5", minute: "30", period: "PM" })
+  })
+})
+
+describe("toPktClassTime / toInputTime", () => {
+  it("round-trips through native HH:mm", () => {
+    expect(toPktClassTime("08:00")).toBe("8:00 AM PKT")
+    expect(toPktClassTime("17:15")).toBe("5:15 PM PKT")
+    expect(toPktClassTime("00:00")).toBe("12:00 AM PKT")
+    expect(toPktClassTime("12:00")).toBe("12:00 PM PKT")
+    expect(toInputTime("8:00 AM PKT")).toBe("08:00")
+    expect(toInputTime("5:15 PM PKT")).toBe("17:15")
+    expect(toInputTime("")).toBe("")
+  })
+})
 
 // class_time is PKT (UTC+5). Tests use absolute UTC instants so they pass
 // regardless of the machine's local timezone.

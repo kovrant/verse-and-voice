@@ -18,7 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { TimePicker } from "@/components/ui/time-picker"
+import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { supabase } from "@/lib/supabase"
 import { COUNTRIES, formatLocalDate } from "@/lib/utils"
 
@@ -205,11 +205,17 @@ export default function NewStudentPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="class_time">Class Time</Label>
-                  <TimePicker
-                    value={form.class_time}
-                    onChange={(val) => setForm({ ...form, class_time: val })}
-                    placeholder="Select class time"
+                  <Label htmlFor="class_time">Class Time (PKT)</Label>
+                  <Input
+                    id="class_time"
+                    type="time"
+                    value={toInputTime(form.class_time)}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        class_time: e.target.value ? toPktClassTime(e.target.value) : "",
+                      })
+                    }
                   />
                 </div>
               </div>
