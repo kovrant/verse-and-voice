@@ -36,10 +36,10 @@ import { toast } from "sonner"
 import { ClassDaysPicker } from "@/components/class-days-picker"
 import { FeeDisplay } from "@/components/fee-display"
 import {
-  ChunkChecklist,
   loadChunksFor,
   loadMemorizedChunkIds,
   type MemChunk,
+  MemPartWorkspace,
   setChunkMemorized,
 } from "@/components/memorization-chunks"
 import { QuranJourney } from "@/components/quran-journey"
@@ -74,6 +74,7 @@ import {
 import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import { TimePicker } from "@/components/ui/time-picker"
 import { useExchangeRates } from "@/lib/exchange-rates"
+import { chunkProgress } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
   cn,
@@ -1330,12 +1331,13 @@ export default function StudentDetailPage() {
                 .map((item) => {
                   const chunks = chunksByItem[item.catalog_id] || []
                   const hasChunks = chunks.length > 0
+                  const progress = chunkProgress(chunks, memorizedChunkIds)
                   return (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-green-500/25 bg-gradient-to-r from-green-400/[0.10] to-lime-400/[0.04] p-3 shadow-soft"
+                      className="overflow-hidden rounded-2xl border border-green-500/25 bg-card shadow-soft"
                     >
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3.5 border-b border-green-500/10 bg-gradient-to-r from-green-400/[0.10] to-transparent p-3">
                         <MemThumb src={item.memorization_catalog?.image_url} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-foreground">
@@ -1346,6 +1348,11 @@ export default function StudentDetailPage() {
                               <Sparkles className="h-2.5 w-2.5" />
                               In progress
                             </span>
+                            {hasChunks && (
+                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                                {progress.done}/{progress.total} parts
+                              </span>
+                            )}
                             {item.memorization_catalog?.category && (
                               <span className="text-[11px] text-muted-foreground">
                                 {item.memorization_catalog.category}
@@ -1377,11 +1384,10 @@ export default function StudentDetailPage() {
                         </div>
                       </div>
                       {hasChunks && (
-                        <div className="mt-3 border-t border-green-500/15 pt-3">
-                          <ChunkChecklist
+                        <div className="p-3">
+                          <MemPartWorkspace
                             chunks={chunks}
                             memorizedIds={memorizedChunkIds}
-                            editable
                             onToggle={toggleChunk}
                           />
                         </div>
@@ -1403,12 +1409,13 @@ export default function StudentDetailPage() {
                 .map((item) => {
                   const chunks = chunksByItem[item.catalog_id] || []
                   const hasChunks = chunks.length > 0
+                  const progress = chunkProgress(chunks, memorizedChunkIds)
                   return (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-border bg-card p-3 shadow-soft"
+                      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
                     >
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3.5 border-b border-border/50 p-3">
                         <MemThumb src={item.memorization_catalog?.image_url} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-semibold text-foreground">
@@ -1419,6 +1426,11 @@ export default function StudentDetailPage() {
                               <Check className="h-2.5 w-2.5" />
                               Memorized
                             </span>
+                            {hasChunks && (
+                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
+                                {progress.done}/{progress.total} parts
+                              </span>
+                            )}
                             {item.memorization_catalog?.category && (
                               <span className="text-[11px] text-muted-foreground">
                                 {item.memorization_catalog.category}
@@ -1463,11 +1475,10 @@ export default function StudentDetailPage() {
                         </div>
                       </div>
                       {hasChunks && (
-                        <div className="mt-3 border-t border-border pt-3">
-                          <ChunkChecklist
+                        <div className="p-3">
+                          <MemPartWorkspace
                             chunks={chunks}
                             memorizedIds={memorizedChunkIds}
-                            editable
                             onToggle={toggleChunk}
                           />
                         </div>

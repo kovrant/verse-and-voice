@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { chunkProgress, labelFor, type MemChunk } from "@/lib/memorization"
+import { chunkProgress, currentChunkIndex, labelFor, type MemChunk } from "@/lib/memorization"
 
 function chunk(p: Partial<MemChunk>): MemChunk {
   return {
@@ -57,5 +57,26 @@ describe("chunkProgress", () => {
       total: 2,
       isMemorized: false,
     })
+  })
+})
+
+describe("currentChunkIndex", () => {
+  it("returns -1 when there are no parts", () => {
+    expect(currentChunkIndex([], new Set())).toBe(-1)
+  })
+
+  it("points at the first unmemorized part", () => {
+    const a = chunk({ id: "a" })
+    const b = chunk({ id: "b" })
+    const c = chunk({ id: "c" })
+    expect(currentChunkIndex([a, b, c], new Set())).toBe(0)
+    expect(currentChunkIndex([a, b, c], new Set(["a"]))).toBe(1)
+    expect(currentChunkIndex([a, b, c], new Set(["a", "b"]))).toBe(2)
+  })
+
+  it("returns -1 when every part is memorized", () => {
+    const a = chunk({ id: "a" })
+    const b = chunk({ id: "b" })
+    expect(currentChunkIndex([a, b], new Set(["a", "b"]))).toBe(-1)
   })
 })

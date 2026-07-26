@@ -3,7 +3,19 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
 import * as Popover from "@radix-ui/react-popover"
-import { BookMarked, Eye, ImagePlus, Layers, Plus, Search, Trash2, Users, X } from "lucide-react"
+import {
+  BookMarked,
+  Eye,
+  ImagePlus,
+  Layers,
+  Loader2,
+  Plus,
+  Search,
+  Trash2,
+  Upload,
+  Users,
+  X,
+} from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -716,7 +728,10 @@ function ChunkManager({
   const [chunks, setChunks] = useState<MemChunk[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState({ done: 0, total: 0 })
+  const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dragDepth = useRef(0)
 
   const load = useCallback(async () => {
     const map = await loadChunksFor([item.id])
@@ -732,12 +747,18 @@ function ChunkManager({
     load()
   }, [load])
 
-  async function addFiles(files: FileList) {
+  async function addFiles(fileList: FileList | File[]) {
+    const images = Array.from(fileList).filter((f) => f.type.startsWith("image/"))
+    if (images.length === 0) {
+      toast.error("Drop image files only (PNG, JPG, WebP…)")
+      return
+    }
     setUploading(true)
+    setUploadProgress({ done: 0, total: images.length })
     let nextIndex =
       chunks.length > 0 ? Math.max(...chunks.map((c) => c.order_index)) + 1 : 0
     const rows: { catalog_id: string; order_index: number; image_url: string }[] = []
-    for (const file of Array.from(files)) {
+    for (const file of images) {
       const idx = nextIndex
       const ext = file.name.split(".").pop()
       // Structured key: chunks/<catalog_id>/<order>-<random>.<ext>
@@ -747,11 +768,13 @@ function ChunkManager({
         .upload(path, file, { cacheControl: "3600", upsert: false })
       if (upErr) {
         toast.error(upErr.message)
+        setUploadProgress((p) => ({ ...p, done: p.done + 1 }))
         continue
       }
       const { data } = supabase.storage.from("memorization-images").getPublicUrl(path)
       rows.push({ catalog_id: item.id, order_index: idx, image_url: data.publicUrl })
       nextIndex++
+      setUploadProgress((p) => ({ ...p, done: p.done + 1 }))
     }
     if (rows.length > 0) {
       const { error } = await supabase.from("memorization_chunks").insert(rows)
@@ -759,6 +782,7 @@ function ChunkManager({
       else toast.success(`Added ${rows.length} part${rows.length > 1 ? "s" : ""}`)
     }
     setUploading(false)
+    setUploadProgress({ done: 0, total: 0 })
     await load()
   }
 
@@ -772,6 +796,39 @@ function ChunkManager({
     if (path) await supabase.storage.from("memorization-images").remove([path])
     await load()
   }
+
+  function onDragEnter(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragDepth.current += 1
+    setDragging(true)
+  }
+  function onDragLeave(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragDepth.current -= 1
+    if (dragDepth.current <= 0) {
+      dragDepth.current = 0
+      setDragging(false)
+    }
+  }
+  function onDragOver(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    dragDepth.current = 0
+    setDragging(false)
+    if (uploading) return
+    if (e.dataTransfer.files?.length) addFiles(e.dataTransfer.files)
+  }
+
+  const pct =
+    uploadProgress.total > 0
+      ? Math.round((uploadProgress.done / uploadProgress.total) * 100)
+      : 0
 
   return (
     <div className="space-y-4 pt-1">
@@ -787,6 +844,65 @@ function ChunkManager({
         }}
       />
 
+      {/* Drop zone */}
+      <button
+        type="button"
+        disabled={uploading}
+        onClick={() => inputRef.current?.click()}
+        onDragEnter={onDragEnter}
+        onDragLeave={onDragLeave}
+        onDragOver={onDragOver}
+        onDrop={onDrop}
+        className={`relative w-full overflow-hidden rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
+          dragging
+            ? "border-emerald-500 bg-emerald-500/10 scale-[1.01]"
+            : uploading
+              ? "cursor-wait border-border bg-secondary/30"
+              : "border-border/80 bg-gradient-to-b from-secondary/40 to-secondary/10 hover:border-emerald-500/50 hover:from-emerald-500/5 hover:to-emerald-500/[0.02]"
+        }`}
+      >
+        <div
+          className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+            dragging
+              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
+              : "bg-card text-emerald-600 ring-1 ring-border shadow-soft"
+          }`}
+        >
+          {uploading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : dragging ? (
+            <Upload className="h-5 w-5" />
+          ) : (
+            <ImagePlus className="h-5 w-5" />
+          )}
+        </div>
+        {uploading ? (
+          <>
+            <p className="text-sm font-semibold text-foreground">
+              Uploading {uploadProgress.done} of {uploadProgress.total}…
+            </p>
+            <div className="mx-auto mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </>
+        ) : dragging ? (
+          <p className="text-sm font-semibold text-emerald-600">Drop images to add as parts</p>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-foreground">
+              Drag &amp; drop part images here
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              or click to browse · PNG, JPG, WebP · order matters
+            </p>
+          </>
+        )}
+      </button>
+
+      {/* Parts grid */}
       {loading ? (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {[...Array(3)].map((_, i) => (
@@ -794,50 +910,51 @@ function ChunkManager({
           ))}
         </div>
       ) : chunks.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-secondary/20 py-10 text-center">
-          <Layers className="mx-auto mb-2 h-7 w-7 text-muted-foreground/50" />
-          <p className="text-sm font-medium">No parts yet</p>
+        <div className="rounded-xl border border-border/50 bg-secondary/10 px-4 py-6 text-center">
+          <Layers className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
           <p className="text-xs text-muted-foreground">
-            Upload chunk images in the order they should be learned.
+            No parts yet — upload the first chunk above (e.g. the first two words).
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {chunks.map((c, i) => (
-            <div
-              key={c.id}
-              className="group relative overflow-hidden rounded-xl border border-border bg-white"
-            >
-              <img
-                src={c.image_url}
-                alt={labelFor(c, i)}
-                className="aspect-[3/2] w-full object-contain p-1.5"
-              />
-              <div className="border-t border-border/60 px-2 py-1.5 text-[11px] font-medium text-foreground">
-                {labelFor(c, i)}
-              </div>
-              <button
-                type="button"
-                onClick={() => remove(c)}
-                title="Delete part"
-                className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive opacity-0 backdrop-blur-sm transition-opacity hover:bg-black/80 group-hover:opacity-100"
+        <div className="space-y-2">
+          <div className="flex items-center justify-between px-0.5">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {chunks.length} part{chunks.length === 1 ? "" : "s"}
+            </p>
+            <p className="text-[11px] text-muted-foreground/70">Learned in this order →</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {chunks.map((c, i) => (
+              <div
+                key={c.id}
+                className="group relative overflow-hidden rounded-xl border border-border bg-white shadow-soft transition-all hover:border-emerald-500/40 hover:shadow-md"
               >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          ))}
+                <span className="absolute left-2 top-2 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white shadow-sm">
+                  {i + 1}
+                </span>
+                <img
+                  src={c.image_url}
+                  alt={labelFor(c, i)}
+                  className="aspect-[3/2] w-full object-contain p-2 pt-8"
+                />
+                <div className="border-t border-border/60 bg-secondary/20 px-2.5 py-1.5 text-[11px] font-medium text-foreground">
+                  {labelFor(c, i)}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => remove(c)}
+                  title="Delete part"
+                  aria-label={`Delete ${labelFor(c, i)}`}
+                  className="absolute right-1.5 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg bg-black/55 text-white opacity-0 backdrop-blur-sm transition-opacity hover:bg-destructive group-hover:opacity-100 focus:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       )}
-
-      <Button
-        onClick={() => inputRef.current?.click()}
-        disabled={uploading}
-        className="w-full"
-        variant="outline"
-      >
-        <ImagePlus className="mr-1.5 h-4 w-4" />
-        {uploading ? "Uploading…" : "Add part images"}
-      </Button>
     </div>
   )
 }

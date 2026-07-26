@@ -7,13 +7,14 @@ import { BookMarked, Check, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import {
-  ChunkChecklist,
   loadChunksFor,
   loadMemorizedChunkIds,
   type MemChunk,
+  MemStudentLesson,
 } from "@/components/memorization-chunks"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
+import { chunkProgress } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
@@ -40,6 +41,7 @@ export default function StudentMemorizationPage() {
   const [memorizedChunkIds, setMemorizedChunkIds] = useState<Set<string>>(new Set())
   const [loadingItems, setLoadingItems] = useState(true)
   const [highlightId, setHighlightId] = useState<string | null>(null)
+  const [expandedMemorized, setExpandedMemorized] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     if (!student) return
@@ -85,14 +87,23 @@ export default function StudentMemorizationPage() {
     return (
       <div className="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
         <div className="h-8 w-48 shimmer rounded-lg" />
-        <div className="h-24 shimmer rounded-2xl" />
-        <div className="h-24 shimmer rounded-2xl" />
+        <div className="h-48 shimmer rounded-2xl" />
+        <div className="h-48 shimmer rounded-2xl" />
       </div>
     )
   }
 
   const memorizing = items.filter((m) => m.status === "memorizing")
   const memorized = items.filter((m) => m.status === "memorized")
+
+  function toggleExpanded(id: string) {
+    setExpandedMemorized((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
@@ -105,51 +116,75 @@ export default function StudentMemorizationPage() {
             Memorization
           </h1>
           <p className="text-sm text-muted-foreground">
-            Surahs, duas and more you&apos;re learning 🌙
+            Surahs, duas and more you&apos;re learning
           </p>
         </div>
       </div>
 
       {memorizing.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="space-y-4">
+          <p className="text-xs font-semibold text-amber-500 uppercase tracking-wider flex items-center gap-1.5">
             <Sparkles className="h-3 w-3" />
             Currently Memorizing
           </p>
           {memorizing.map((item) => {
             const chunks = chunksByItem[item.catalog_id] || []
+            const title = item.memorization_catalog?.title || "Lesson"
+            const progress = chunkProgress(chunks, memorizedChunkIds)
             return (
               <div
                 key={item.id}
                 id={`mem-${item.id}`}
                 className={cn(
-                  "rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-2.5 scroll-mt-24 transition-shadow",
-                  highlightId === item.id && "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
+                  "overflow-hidden rounded-2xl border border-amber-500/25 bg-card shadow-soft scroll-mt-24 transition-shadow",
+                  highlightId === item.id &&
+                    "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
                 )}
               >
-                <div className="flex items-center gap-3">
-                  {item.memorization_catalog?.image_url && (
+                <div className="flex items-center gap-3 border-b border-border/50 bg-gradient-to-r from-amber-500/10 to-transparent px-4 py-3">
+                  {item.memorization_catalog?.image_url ? (
                     <img
                       src={item.memorization_catalog.image_url}
                       alt=""
-                      className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                      className="h-11 w-11 rounded-xl border border-border bg-white object-contain p-0.5 flex-shrink-0"
                     />
+                  ) : (
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 flex-shrink-0">
+                      <BookMarked className="h-5 w-5" />
+                    </div>
                   )}
-                  <span className="flex-1 text-sm font-medium text-amber-300">
-                    {item.memorization_catalog?.title}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className="text-[10px] border-border/30 text-muted-foreground/60"
-                  >
-                    {item.memorization_catalog?.category}
-                  </Badge>
-                </div>
-                {chunks.length > 0 && (
-                  <div className="mt-3 border-t border-amber-500/15 pt-3">
-                    <ChunkChecklist chunks={chunks} memorizedIds={memorizedChunkIds} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-base font-bold text-foreground">{title}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] border-border/40 text-muted-foreground"
+                      >
+                        {item.memorization_catalog?.category}
+                      </Badge>
+                      {chunks.length > 0 && (
+                        <span className="text-[11px] font-semibold text-amber-600 tabular-nums">
+                          {progress.done}/{progress.total} parts
+                        </span>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
+
+                <div className="p-4">
+                  {chunks.length > 0 ? (
+                    <MemStudentLesson
+                      chunks={chunks}
+                      memorizedIds={memorizedChunkIds}
+                      overviewUrl={item.memorization_catalog?.image_url}
+                      title={title}
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-2">
+                      Keep practicing — your teacher will mark this when you&apos;re ready.
+                    </p>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -157,37 +192,72 @@ export default function StudentMemorizationPage() {
       )}
 
       {memorized.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+        <div className="space-y-3">
+          <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
             <Check className="h-3 w-3" />
             Memorized ({memorized.length})
           </p>
-          {memorized.map((item) => (
-            <div
-              key={item.id}
-              id={`mem-${item.id}`}
-              className={cn(
-                "flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/20 px-4 py-2.5 scroll-mt-24 transition-shadow",
-                highlightId === item.id && "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
-              )}
-            >
-              {item.memorization_catalog?.image_url && (
-                <img
-                  src={item.memorization_catalog.image_url}
-                  alt=""
-                  className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
-                />
-              )}
-              <span className="flex-1 text-sm text-muted-foreground">
-                {item.memorization_catalog?.title}
-              </span>
-              {item.last_revised_at && (
-                <span className="text-[10px] text-muted-foreground/60">
-                  Revised {format(new Date(item.last_revised_at), "MMM d")}
-                </span>
-              )}
-            </div>
-          ))}
+          {memorized.map((item) => {
+            const chunks = chunksByItem[item.catalog_id] || []
+            const title = item.memorization_catalog?.title || "Lesson"
+            const open = expandedMemorized.has(item.id)
+            return (
+              <div
+                key={item.id}
+                id={`mem-${item.id}`}
+                className={cn(
+                  "overflow-hidden rounded-2xl border border-border/60 bg-card scroll-mt-24 transition-shadow",
+                  highlightId === item.id &&
+                    "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => chunks.length > 0 && toggleExpanded(item.id)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-secondary/30 transition-colors"
+                >
+                  {item.memorization_catalog?.image_url ? (
+                    <img
+                      src={item.memorization_catalog.image_url}
+                      alt=""
+                      className="h-10 w-10 rounded-xl border border-border bg-white object-contain p-0.5 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 flex-shrink-0">
+                      <Check className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 font-semibold text-emerald-600">
+                        <Check className="h-3 w-3" />
+                        Memorized
+                      </span>
+                      {item.last_revised_at && (
+                        <span>Revised {format(new Date(item.last_revised_at), "MMM d")}</span>
+                      )}
+                      {chunks.length > 0 && (
+                        <span className="text-muted-foreground/70">
+                          {open ? "Hide parts" : "Show parts"}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+                {open && chunks.length > 0 && (
+                  <div className="border-t border-border/50 px-4 py-4">
+                    <MemStudentLesson
+                      chunks={chunks}
+                      memorizedIds={memorizedChunkIds}
+                      overviewUrl={item.memorization_catalog?.image_url}
+                      title={title}
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 

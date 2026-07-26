@@ -27,3 +27,12 @@ export function chunkProgress(
   const done = chunks.filter((c) => memorizedIds.has(c.id)).length
   return { done, total, isMemorized: total > 0 && done === total }
 }
+
+/**
+ * Index of the first unmemorized chunk (today's lesson). Returns -1 when there
+ * are no parts, or when every part is already memorized.
+ */
+export function currentChunkIndex(chunks: MemChunk[], memorizedIds: Set<string>): number {
+  if (chunks.length === 0) return -1
+  return chunks.findIndex((c) => !memorizedIds.has(c.id))
+}
