@@ -1,15 +1,9 @@
 "use client"
 
-import dynamic from "next/dynamic"
+import { FileText } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
-
-// react-pdf renders client-side only.
-const PdfThumbnail = dynamic(
-  () => import("@/components/pdf-thumbnail").then((m) => m.PdfThumbnail),
-  { ssr: false, loading: () => null },
-)
 
 interface ParaMedia {
   id: string
@@ -17,11 +11,22 @@ interface ParaMedia {
   file_url: string
 }
 
+// Standard Madani mushaf (604 pages) — first page of each juz (index = juz no.).
+const JUZ_START = [
+  0, 1, 22, 42, 62, 82, 102, 121, 142, 162, 182, 202, 222, 242, 262, 282, 302, 322, 342, 362, 382,
+  402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+]
+function juzPages(n: number): string {
+  if (n < 1 || n > 30) return ""
+  const start = JUZ_START[n]
+  const end = n < 30 ? JUZ_START[n + 1] - 1 : 604
+  return `${start}\u2013${end}`
+}
+
 /**
- * Dashboard card that surfaces the PDF for the student's *current* para (juz),
- * pulled from the shared media_library (type=quran, meta.para_number). Renders
- * a first-page preview that opens the full PDF, with graceful empty/loading
- * states. Renders nothing when there is no current para.
+ * Dashboard "Current Para" card — surfaces the PDF for the student's current
+ * para (juz) from the shared media_library (type=quran, meta.para_number) and
+ * opens it. Renders nothing when there is no current para.
  */
 export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
   const [item, setItem] = useState<ParaMedia | null>(null)
@@ -55,91 +60,81 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
 
   if (!paraNumber) return null
 
-  const card =
-    "flex flex-col gap-[22px] rounded-2xl border border-border bg-card p-[24px_26px] shadow-soft sm:flex-row sm:items-center"
+  const card = "flex flex-col rounded-2xl border border-border bg-card p-[22px_24px] shadow-soft"
 
   if (loading) {
     return (
       <div className={card}>
-        <div className="h-[168px] w-[126px] shrink-0 shimmer rounded-xl" />
-        <div className="flex-1 space-y-2">
-          <div className="h-3 w-24 shimmer rounded" />
-          <div className="h-6 w-40 shimmer rounded-lg" />
-          <div className="h-3 w-56 shimmer rounded" />
+        <div className="mb-4 h-3 w-24 shimmer rounded" />
+        <div className="flex items-center gap-4">
+          <div className="h-32 w-24 shrink-0 shimmer rounded-[6px_12px_12px_6px]" />
+          <div className="flex-1 space-y-2">
+            <div className="h-6 w-40 shimmer rounded-lg" />
+            <div className="h-3 w-24 shimmer rounded" />
+            <div className="h-6 w-28 shimmer rounded-lg" />
+          </div>
         </div>
+        <div className="mt-5 h-12 w-full shimmer rounded-[14px]" />
       </div>
     )
   }
 
   return (
     <div className={card}>
-      {/* PDF preview (page 1) */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="text-[11px] font-extrabold tracking-[1.2px] text-muted-foreground">
+          CURRENT PARA
+        </div>
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--surface-alt))] px-[11px] py-[5px] text-[11.5px] font-extrabold text-[hsl(var(--sage))]">
+          <span className="h-[7px] w-[7px] rounded-full bg-[hsl(var(--sage))]" />
+          Reading now
+        </span>
+      </div>
+
+      <div className="mb-5 flex items-center gap-4">
+        {/* Mushaf cover */}
+        <div className="relative flex h-32 w-24 flex-shrink-0 flex-col items-center justify-center overflow-hidden rounded-[6px_12px_12px_6px] bg-gradient-to-br from-primary to-[hsl(var(--sage))] shadow-[0_10px_22px_-8px_hsl(var(--primary)/0.55)]">
+          <div className="absolute inset-y-0 left-0 w-2 bg-black/20" />
+          <div
+            className="absolute rounded-md border-[1.5px]"
+            style={{ inset: "9px 9px 9px 15px", borderColor: "rgba(246,196,106,.6)" }}
+          />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="#f6c46a" className="mb-1" aria-hidden>
+            <path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z" />
+          </svg>
+          <div className="font-heading text-[13px] font-bold tracking-[1px] text-white/85">PARA</div>
+          <div className="font-heading text-[38px] font-bold leading-[0.9] text-primary-foreground">
+            {paraNumber}
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <div className="font-heading text-[22px] font-bold leading-[1.15] text-foreground">
+            {item?.title || `Para ${paraNumber}`}
+          </div>
+          <div className="mt-0.5 text-[13px] text-muted-foreground">Juz {paraNumber} of 30</div>
+          <div className="mt-3 flex flex-wrap gap-[7px]">
+            <span className="rounded-[9px] bg-[hsl(var(--surface-alt))] px-[10px] py-[5px] text-[12px] font-bold text-foreground">
+              Pages {juzPages(paraNumber)}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {item ? (
         <a
           href={item.file_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative block h-[168px] w-[126px] shrink-0 overflow-hidden rounded-xl border border-border transition-transform hover:scale-[1.02]"
-          aria-label={`Open Para ${paraNumber} PDF`}
+          className="mt-auto flex h-12 w-full items-center justify-center gap-2 rounded-[14px] bg-primary text-[14px] font-extrabold capitalize text-primary-foreground transition-colors hover:bg-[hsl(var(--primary-hover))]"
         >
-          <PdfThumbnail
-            fileUrl={item.file_url}
-            width={126}
-            fallback={
-              <div className="flex h-full items-center justify-center bg-secondary text-3xl">
-                📄
-              </div>
-            }
-          />
+          <FileText className="h-[18px] w-[18px]" /> Open PDF
         </a>
       ) : (
-        <div className="flex h-[168px] w-[126px] shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-muted text-3xl">
-          📄
+        <div className="mt-auto flex h-12 w-full items-center justify-center rounded-[14px] border border-border bg-[hsl(var(--surface-alt))] text-[14px] font-bold text-muted-foreground">
+          PDF coming soon
         </div>
       )}
-
-      {/* Details */}
-      <div className="min-w-0 flex-1">
-        <div
-          className="text-[12px] font-semibold text-muted-foreground"
-          style={{ letterSpacing: "1.4px" }}
-        >
-          CURRENT PARA
-        </div>
-        <div className="font-heading text-[22px] font-bold text-foreground">
-          Para {paraNumber}
-          <span className="text-[15px] font-semibold text-muted-foreground"> · PDF</span>
-        </div>
-
-        {item ? (
-          <>
-            <div className="mt-1 text-[13px] text-muted-foreground">
-              Open your current juz to read along.
-            </div>
-            <div className="mt-[16px] flex flex-wrap gap-[10px]">
-              <a
-                href={item.file_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-lg bg-primary px-[18px] py-[9px] text-[14px] font-semibold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary-hover))]"
-              >
-                Open PDF ↗
-              </a>
-              <a
-                href={item.file_url}
-                download
-                className="rounded-lg border border-border bg-card px-[18px] py-[9px] text-[14px] font-semibold text-foreground transition-colors hover:bg-secondary"
-              >
-                Download
-              </a>
-            </div>
-          </>
-        ) : (
-          <div className="mt-1 text-[13px] text-muted-foreground">
-            Para {paraNumber} isn&apos;t available yet — check back soon.
-          </div>
-        )}
-      </div>
     </div>
   )
 }

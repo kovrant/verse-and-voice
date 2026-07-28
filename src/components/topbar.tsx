@@ -1,7 +1,7 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { ChevronDown, LogOut } from "lucide-react"
+import { ChevronDown, LogOut, Menu } from "lucide-react"
 import type { ReactNode } from "react"
 
 import { NotificationBell } from "@/components/notification-bell"
@@ -19,6 +19,7 @@ function PortalTopBar({
   role,
   signOutNext,
   actions,
+  onToggleSidebar,
 }: {
   initial: string
   title: string
@@ -26,12 +27,28 @@ function PortalTopBar({
   role: string
   signOutNext: string
   actions?: ReactNode
+  onToggleSidebar?: () => void
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-end gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
-      <ThemeSwitch />
-      {actions}
-      <NotificationBell />
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
+      {onToggleSidebar ? (
+        <button
+          type="button"
+          onClick={onToggleSidebar}
+          aria-label="Collapse or expand sidebar"
+          title="Collapse / expand menu"
+          className="hidden h-10 w-10 items-center justify-center rounded-xl border border-border bg-card text-foreground transition-colors hover:bg-secondary lg:flex"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+      ) : (
+        <span />
+      )}
+
+      <div className="ml-auto flex items-center gap-1.5">
+        <ThemeSwitch />
+        {actions}
+        <NotificationBell />
 
       <Popover.Root>
         <Popover.Trigger asChild>
@@ -87,6 +104,7 @@ function PortalTopBar({
           </Popover.Content>
         </Popover.Portal>
       </Popover.Root>
+      </div>
     </header>
   )
 }
@@ -105,7 +123,7 @@ export function TeacherTopBar() {
   )
 }
 
-export function StudentTopBar() {
+export function StudentTopBar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
   const { student, username } = useStudent()
   const name = student?.name || username || "Student"
   return (
@@ -115,6 +133,7 @@ export function StudentTopBar() {
       subtitle={username ? `@${username}` : null}
       role="Student"
       signOutNext="/login"
+      onToggleSidebar={onToggleSidebar}
     />
   )
 }

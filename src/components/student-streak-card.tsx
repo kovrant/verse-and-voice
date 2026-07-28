@@ -1,5 +1,6 @@
 "use client"
 
+import { Flame as FlameIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -8,7 +9,6 @@ import { formatClassTimeLocal } from "@/lib/class-time"
 import {
   computeStreak,
   milestoneStorageKey,
-  nextMilestone,
   pendingMilestones,
   type StreakInfo,
   type WeekDayStatus,
@@ -24,43 +24,20 @@ interface StudentStreakCardProps {
   variant?: "hero" | "pill"
 }
 
-function weekDotClass(status: WeekDayStatus): string {
+/** Week-dot styling on the forest hero background. */
+function heroDot(status: WeekDayStatus): string {
   switch (status) {
     case "done":
-      return "bg-orange-500 text-white shadow-[0_0_10px_-2px_rgba(249,115,22,0.7)]"
+      return "bg-white text-primary"
     case "today":
-      return "bg-orange-500/20 text-orange-600 ring-2 ring-orange-500 animate-pulse"
+      return "bg-white/25 ring-2 ring-white/70"
     case "missed":
-      return "bg-secondary text-muted-foreground/40 line-through"
     case "upcoming":
-      return "border border-border/60 bg-transparent text-muted-foreground/50"
+      return "bg-white/12 text-white/45"
     case "off":
     default:
-      return "bg-transparent text-muted-foreground/25"
+      return "bg-white/5 text-white/25"
   }
-}
-
-function Flame({ intensity }: { intensity: number }) {
-  // 0 = cold, 1–2 calm, 3–6 warm, 7+ hot
-  const scale = intensity >= 30 ? 1.25 : intensity >= 7 ? 1.15 : intensity >= 3 ? 1.05 : 1
-  const glow =
-    intensity >= 30
-      ? "drop-shadow-[0_0_16px_rgba(249,115,22,0.85)]"
-      : intensity >= 7
-        ? "drop-shadow-[0_0_12px_rgba(249,115,22,0.65)]"
-        : intensity >= 3
-          ? "drop-shadow-[0_0_8px_rgba(249,115,22,0.45)]"
-          : ""
-
-  return (
-    <span
-      className={cn("inline-block select-none transition-transform", glow)}
-      style={{ fontSize: intensity >= 7 ? 42 : 36, transform: `scale(${scale})` }}
-      aria-hidden
-    >
-      {intensity >= 1 ? "🔥" : "🕯️"}
-    </span>
-  )
 }
 
 function useStreak(studentId: string, classDays: number[] | null): {
@@ -164,55 +141,44 @@ export function StudentStreakCard({
     )
   }
 
-  const milestone = nextMilestone(info.current)
-
   return (
-    <div
-      className={cn(
-        "relative mb-[26px] overflow-hidden rounded-2xl border p-5 sm:p-6",
-        info.current > 0
-          ? "border-orange-500/25 bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-transparent"
-          : "border-border bg-[hsl(var(--surface-alt))]",
-        info.todayScheduled && !info.todayDone && "ring-1 ring-orange-500/30",
-      )}
-    >
-      <div className="flex items-start gap-4">
-        <Flame intensity={info.current} />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-2">
-            <span className="font-heading text-4xl font-extrabold tabular-nums tracking-tight text-foreground">
-              {info.current}
-            </span>
-            <span className="text-sm font-semibold text-muted-foreground">day streak</span>
+    <div className="relative mb-[26px] overflow-hidden rounded-2xl bg-primary p-6 text-primary-foreground sm:p-7">
+      <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-5">
+        <div className="flex items-center gap-[18px]">
+          <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl bg-white/15">
+            <FlameIcon className="h-8 w-8" style={{ color: "#f6c46a" }} fill="#f6c46a" aria-hidden />
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">{subline(info, classTime, classDays)}</p>
-          {info.best > 0 && (
-            <p className="mt-0.5 text-[11px] text-muted-foreground/70">
-              Best: {info.best} day{info.best === 1 ? "" : "s"}
-              {milestone ? ` · Next goal: ${milestone}` : ""}
-            </p>
-          )}
+          <div className="min-w-0">
+            <div className="text-[13px] font-bold uppercase tracking-[0.08em] opacity-75">
+              Daily Streak
+            </div>
+            <div className="font-heading text-[26px] font-bold leading-tight sm:text-[30px]">
+              {info.current > 0
+                ? `${info.current} day${info.current === 1 ? "" : "s"} in a row`
+                : "Start your streak"}
+            </div>
+            <div className="mt-0.5 text-[13.5px] opacity-80">
+              {subline(info, classTime, classDays)}
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Week strip — Sun→Sat; off days stay dim so 3-day students aren't scared */}
-      <div className="mt-5 flex justify-between gap-1.5">
-        {info.week.map((status, i) => (
-          <div key={i} className="flex flex-1 flex-col items-center gap-1.5">
-            <span
-              className={cn(
-                "flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold",
-                weekDotClass(status),
-                status === "off" && "opacity-40",
-              )}
-            >
-              {status === "done" ? "✓" : DAY_LABELS[i]}
-            </span>
-            <span className="text-[10px] font-medium text-muted-foreground/60">
-              {DAY_LABELS[i]}
-            </span>
-          </div>
-        ))}
+        {/* Week strip — Sun→Sat; off days stay dim so 3-day students aren't scared */}
+        <div className="flex gap-[9px]">
+          {info.week.map((status, i) => (
+            <div key={i} className="flex flex-col items-center gap-[7px]">
+              <span className="text-[12px] font-bold opacity-70">{DAY_LABELS[i]}</span>
+              <span
+                className={cn(
+                  "flex h-[30px] w-[30px] items-center justify-center rounded-[10px] text-[13px] font-bold",
+                  heroDot(status),
+                )}
+              >
+                {status === "done" ? "✓" : ""}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

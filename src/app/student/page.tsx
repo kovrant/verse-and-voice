@@ -1,6 +1,6 @@
 "use client"
 
-import Link from "next/link"
+import { BookOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import {
@@ -12,26 +12,166 @@ import {
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
 import { StudentParaPdf } from "@/components/student-para-pdf"
 import { StudentStreakCard } from "@/components/student-streak-card"
-import { getHijriToday } from "@/lib/hijri"
+import { journeyStops } from "@/lib/journey"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 
-/** Bar heights for the 30-para tracker. */
-const BAR_HEIGHTS = [
-  56, 62, 50, 68, 58, 66, 54, 60, 64, 52, 66, 58, 70, 56, 62, 68, 54, 64, 60, 66, 58, 52, 64, 44,
-  40, 42, 38, 44, 40, 46,
-]
+/**
+ * Winding "journey" path through the 30 paras. `done` is the student's current
+ * position (para they're on); nodes before it read as completed, the node at it
+ * is "You are here", and the rest are upcoming milestones ending in a trophy.
+ */
+/**
+ * Tasbih (prayer beads) mark for the greeting tile — an inline SVG so it always
+ * renders, unlike the 📿 emoji which is missing from many system fonts.
+ */
+function TasbihIcon({ className }: { className?: string }) {
+  const cx = 12
+  const cy = 10.2
+  const r = 6.3
+  const count = 9
+  const gap = 60 // open degrees at the bottom, where the tassel hangs
+  const span = 360 - gap
+  const start = 270 + gap / 2
+  const beads = Array.from({ length: count }, (_, i) => {
+    const a = ((start + (span * i) / (count - 1)) * Math.PI) / 180
+    return { x: cx + r * Math.cos(a), y: cy - r * Math.sin(a) }
+  })
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.2}
+      strokeLinecap="round"
+      className={className}
+      aria-hidden
+    >
+      {beads.map((b, i) => (
+        <circle key={i} cx={b.x} cy={b.y} r={1.5} />
+      ))}
+      {/* Imam bead + tassel */}
+      <path d="M10.5 15.3 H13.5" />
+      <path d="M10.6 15.4 C10.9 18.2 13.1 18.2 13.4 15.4" />
+    </svg>
+  )
+}
 
-const QUICK_LINKS = [
-  { href: "/student/progress", title: "My Progress", sub: "Quran & Qaida journey", icon: "📊" },
-  { href: "/student/memorization", title: "Memorization", sub: "Surahs & duas", icon: "📖" },
-  { href: "/student/history", title: "Islamic History", sub: "Stories & events", icon: "📜" },
-  { href: "/student/classes", title: "Classes", sub: "Get ready for class", icon: "📚" },
-  { href: "/student/fees", title: "Fees", sub: "Payment status", icon: "💳" },
-]
+function JourneyPath({ done, total = 30 }: { done: number; total?: number }) {
+  const ns = journeyStops(done, total)
+
+  // Lay the stops out evenly across the canvas with an alternating (wave) y.
+  const W = 1010
+  const H = 176
+  const MX = 70
+  const step = ns.length > 1 ? (W - MX * 2) / (ns.length - 1) : 0
+  const nodes = ns.map((n, i) => ({ n, x: MX + i * step, y: i % 2 === 0 ? 68 : 122 }))
+
+  const thru = (pts: { x: number; y: number }[]) => {
+    if (pts.length < 2) return ""
+    let d = `M${pts[0].x},${pts[0].y}`
+    for (let i = 1; i < pts.length; i++) {
+      const a = pts[i - 1]
+      const b = pts[i]
+      const dx = (b.x - a.x) * 0.5
+      d += ` C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`
+    }
+    return d
+  }
+  const donePts = nodes.filter((p) => p.n <= done)
+  const remPts = nodes.filter((p) => p.n >= done)
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="auto" role="img" aria-label="Quran journey">
+      <path d={thru(remPts)} fill="none" stroke="hsl(var(--secondary))" strokeWidth={7} strokeLinecap="round" />
+      <path d={thru(donePts)} fill="none" stroke="hsl(var(--primary))" strokeWidth={7} strokeLinecap="round" />
+      {nodes.map((p) => {
+        const isFinish = p.n === total
+        const isCurrent = p.n === done && !isFinish
+        const isDone = p.n < done
+
+        // Finish trophy — filled once the whole Quran is done, dashed otherwise.
+        if (isFinish) {
+          const reached = done >= total
+          return (
+            <g key={`fin-${p.n}`}>
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={21}
+                fill={reached ? "hsl(var(--primary))" : "hsl(var(--secondary))"}
+                stroke={reached ? "hsl(var(--primary))" : "hsl(var(--taupe))"}
+                strokeWidth={2}
+                strokeDasharray={reached ? undefined : "4 3"}
+              />
+              <text x={p.x} y={p.y + 5} textAnchor="middle" fontSize={16}>
+                🏆
+              </text>
+              <text x={p.x} y={p.y + 42} textAnchor="middle" fontSize={12} fontWeight={700} fill="hsl(var(--muted-foreground))">
+                Finish
+              </text>
+            </g>
+          )
+        }
+
+        if (isCurrent)
+          return (
+            <g key={`cur-${p.n}`}>
+              <circle cx={p.x} cy={p.y} r={30} fill="hsl(var(--sage) / 0.28)" />
+              <circle cx={p.x} cy={p.y} r={22} fill="hsl(var(--primary))" stroke="hsl(var(--sage))" strokeWidth={3} />
+              <g transform={`translate(${p.x - 9},${p.y - 9})`}>
+                <BookOpen size={18} color="hsl(var(--primary-foreground))" />
+              </g>
+              <text x={p.x} y={p.y + 46} textAnchor="middle" fontSize={12} fontWeight={800} fill="hsl(var(--primary))">
+                You are here
+              </text>
+            </g>
+          )
+
+        if (isDone)
+          return (
+            <g key={`done-${p.n}`}>
+              <circle cx={p.x} cy={p.y} r={19} fill="hsl(var(--primary))" />
+              <path
+                d={`M${p.x - 6} ${p.y} l4 4 l8 -8`}
+                fill="none"
+                stroke="hsl(var(--primary-foreground))"
+                strokeWidth={3}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <text x={p.x} y={p.y + 40} textAnchor="middle" fontSize={12} fontWeight={700} fill="hsl(var(--muted-foreground))">
+                Para {p.n}
+              </text>
+            </g>
+          )
+
+        return (
+          <g key={`todo-${p.n}`}>
+            <circle cx={p.x} cy={p.y} r={19} fill="hsl(var(--card))" stroke="hsl(var(--secondary))" strokeWidth={2} />
+            <text
+              x={p.x}
+              y={p.y + 5}
+              textAnchor="middle"
+              className="font-heading"
+              fontSize={15}
+              fontWeight={700}
+              fill="hsl(var(--muted-foreground))"
+            >
+              {p.n}
+            </text>
+            <text x={p.x} y={p.y + 40} textAnchor="middle" fontSize={12} fontWeight={700} fill="hsl(var(--muted-foreground))">
+              Para {p.n}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
 
 export default function StudentDashboardPage() {
-  const { student, username, loading, error } = useStudent()
+  const { student, loading, error } = useStudent()
   const [rounds, setRounds] = useState<QuranRound[]>([])
 
   useEffect(() => {
@@ -78,27 +218,13 @@ export default function StudentDashboardPage() {
   const done = total // paras memorized (0–30)
   const paraLabel = currentPara ?? done
   const pct = Math.round((done / 30) * 100)
-  const initial = student.name.trim().charAt(0).toUpperCase() || "?"
-  const hijri = getHijriToday()
-
-  const paras = BAR_HEIGHTS.map((h, i) => {
-    const n = i + 1
-    const isDone = n <= done
-    const isCurrent = done > 0 && n === done
-    return {
-      n,
-      h: `${h}%`,
-      bg: isDone ? "hsl(var(--primary))" : "hsl(var(--border))",
-      shadow: isCurrent ? "0 4px 10px -3px hsl(var(--primary) / 0.55)" : "none",
-    }
-  })
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-in-up text-foreground">
       {/* Greeting */}
       <div className="mb-[30px] flex items-center gap-5">
-        <div className="flex h-[78px] w-[78px] flex-shrink-0 items-center justify-center rounded-2xl bg-secondary text-[38px]">
-          🌙
+        <div className="flex h-[78px] w-[78px] flex-shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
+          <TasbihIcon className="h-11 w-11" />
         </div>
         <div>
           <div className="text-[18px] font-medium text-muted-foreground">Assalamu Alaikum</div>
@@ -119,200 +245,49 @@ export default function StudentDashboardPage() {
         variant="hero"
       />
 
-      {/* Hijri month strip → Islamic History */}
-      <Link
-        href="/student/history"
-        className="group mb-[26px] flex items-center gap-4 rounded-2xl border border-border bg-[hsl(var(--surface-alt))] p-[18px_22px] transition-colors hover:border-[hsl(var(--border-strong))]"
-      >
-        <div className="flex h-[52px] w-[52px] flex-shrink-0 items-center justify-center rounded-xl bg-secondary text-[26px]">
-          🌙
-        </div>
-        <div className="min-w-0 flex-1">
-          <div
-            className="text-[11px] font-semibold uppercase text-muted-foreground"
-            style={{ letterSpacing: "1.2px" }}
-          >
-            Islamic Month · {hijri.monthYear}
-          </div>
-          <div className="font-heading text-[19px] font-bold text-foreground">
-            {hijri.monthInfo.name}
-          </div>
-          <div className="truncate text-[13px] text-muted-foreground">
-            {hijri.monthInfo.significance}
-          </div>
-        </div>
-        <div className="hidden text-[20px] text-muted-foreground/60 transition-transform group-hover:translate-x-0.5 sm:block">
-          →
-        </div>
-      </Link>
-
-      {/* Hero — My Quran Journey */}
-      <div className="mb-[26px] rounded-2xl border border-border bg-[hsl(var(--surface-alt))] p-[26px_28px_30px]">
-        <div className="mb-[22px] flex items-center gap-[9px]">
-          <span className="text-[19px]">✨</span>
-          <span className="font-heading text-[19px] font-bold text-foreground">
-            My Quran Journey
-          </span>
-        </div>
-
-        <div
-          className="grid items-stretch gap-[22px]"
-          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))" }}
-        >
-          {/* Student card */}
-          <div className="relative flex flex-col items-center overflow-hidden rounded-2xl border border-border bg-card p-[24px_22px_22px] shadow-soft">
-            <div className="absolute inset-x-0 top-0 h-[92px] bg-secondary" />
-
-            {/* Avatar with progress ring */}
-            <div className="relative mt-[18px] h-[138px] w-[138px]">
+      {/* Quran progress + winding journey path */}
+      <div className="mb-[26px] rounded-2xl border border-border bg-card p-[24px_26px] shadow-soft">
+        <div className="mb-[22px] flex flex-wrap items-start justify-between gap-[14px]">
+          <div className="flex items-center gap-[14px]">
+            <div className="flex h-[50px] w-[50px] items-center justify-center rounded-xl bg-secondary text-[24px]">
+              📖
+            </div>
+            <div>
               <div
-                className="absolute rounded-full"
-                style={{
-                  inset: "-7px",
-                  background: `conic-gradient(from -90deg, hsl(var(--primary)) 0%, hsl(var(--primary)) ${pct}%, hsl(var(--border)) ${pct}%)`,
-                }}
-              />
-              <div className="absolute inset-0 rounded-full bg-card" />
-              <div className="absolute inset-[5px] flex items-center justify-center overflow-hidden rounded-full bg-secondary">
-                <span
-                  className="font-heading text-foreground font-extrabold"
-                  style={{ fontSize: "74px", letterSpacing: "-2px" }}
-                >
-                  {initial}
-                </span>
+                className="text-[12px] font-semibold text-muted-foreground"
+                style={{ letterSpacing: "1.4px" }}
+              >
+                QURAN PROGRESS
               </div>
-              <div className="absolute bottom-[-6px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border-2 border-card bg-primary px-[13px] py-[5px] text-[12px] font-bold text-primary-foreground">
-                🏅 Round {roundNum}
-              </div>
-            </div>
-
-            <div className="font-heading mt-[22px] text-[23px] font-bold text-foreground">
-              {student.name}
-            </div>
-            <div className="mb-[16px] text-[13px] text-muted-foreground">
-              @{username ?? "student"} · Age 9
-            </div>
-
-            {/* Mini stats */}
-            <div className="flex w-full gap-[10px]">
-              <div className="flex-1 rounded-xl bg-secondary p-[10px_6px] text-center">
-                <div className="text-[19px] font-bold text-foreground">{done}</div>
-                <div className="text-[11px] font-medium text-muted-foreground">Paras</div>
-              </div>
-              <div className="flex-1 rounded-xl bg-secondary p-[10px_6px] text-center">
-                <div className="text-[19px] font-bold text-foreground">
-                  {stage.completedQuranCount}
-                </div>
-                <div className="text-[11px] font-medium text-muted-foreground">Rounds</div>
-              </div>
-              <div className="flex-1 rounded-xl bg-secondary p-[10px_6px] text-center">
-                <div className="text-[19px] font-bold text-foreground">12</div>
-                <div className="text-[11px] font-medium text-muted-foreground">Surahs</div>
+              <div className="font-heading text-[21px] font-bold text-foreground">
+                Round {roundNum} · In progress
               </div>
             </div>
           </div>
+          <div className="text-right">
+            <div className="font-heading text-[34px] font-extrabold leading-none tracking-tight text-foreground">
+              Para {paraLabel}
+              <span className="text-[19px] font-semibold text-muted-foreground"> / 30</span>
+            </div>
+            <div className="mt-[4px] text-[13px] text-muted-foreground">{pct}% of the Quran</div>
+          </div>
+        </div>
 
-          {/* Progress panel */}
-          <div className="flex flex-col rounded-2xl border border-border bg-card p-[26px_30px] shadow-soft">
-            <div className="mb-[22px] flex flex-wrap items-start justify-between gap-[14px]">
-              <div className="flex items-center gap-[14px]">
-                <div className="flex h-[50px] w-[50px] items-center justify-center rounded-xl bg-secondary text-[24px]">
-                  📖
-                </div>
-                <div>
-                  <div
-                    className="text-[12px] font-semibold text-muted-foreground"
-                    style={{ letterSpacing: "1.4px" }}
-                  >
-                    QURAN PROGRESS
-                  </div>
-                  <div className="font-heading text-[21px] font-bold text-foreground">
-                    Round {roundNum} · In progress
-                  </div>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="font-heading text-[34px] font-extrabold leading-none tracking-tight text-foreground">
-                  Para {paraLabel}
-                  <span className="text-[19px] font-semibold text-muted-foreground"> / 30</span>
-                </div>
-                <div className="mt-[4px] text-[13px] text-muted-foreground">
-                  {pct}% of the Quran
-                </div>
-              </div>
-            </div>
-
-            {/* Segmented para tracker */}
-            <div className="mb-[12px] flex h-[66px] items-end gap-[4px]">
-              {paras.map((p) => (
-                <div
-                  key={p.n}
-                  title={`Para ${p.n}`}
-                  className="flex-1 rounded-[5px]"
-                  style={{ height: p.h, background: p.bg, boxShadow: p.shadow }}
-                />
-              ))}
-            </div>
-            <div className="mb-[20px] flex justify-between text-[11px] font-medium text-muted-foreground">
-              <span>Para 1</span>
-              <span>Para 30</span>
-            </div>
-
-            {/* Legend + streak */}
-            <div className="mt-auto flex items-center justify-between border-t border-border pt-[18px]">
-              <div className="flex gap-[18px]">
-                <div className="flex items-center gap-[7px] text-[13px] font-medium text-muted-foreground">
-                  <span className="h-[12px] w-[12px] rounded-[4px] bg-primary" />
-                  {done} memorized
-                </div>
-                <div className="flex items-center gap-[7px] text-[13px] font-medium text-muted-foreground">
-                  <span className="h-[12px] w-[12px] rounded-[4px] bg-border" />
-                  {30 - done} to go
-                </div>
-              </div>
-              <StudentStreakCard
-                studentId={student.id}
-                classDays={student.class_days}
-                classTime={student.class_time}
-                variant="pill"
-              />
-            </div>
+        {/* Winding journey path */}
+        <div className="overflow-x-auto rounded-2xl bg-[hsl(var(--surface-alt))] px-4 pb-2 pt-4">
+          <div className="min-w-[520px]">
+            <JourneyPath done={paraLabel} total={30} />
           </div>
         </div>
       </div>
 
       {/* Current para PDF + current memorization */}
       <div
-        className="mb-[26px] grid items-stretch gap-[22px]"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))" }}
+        className="grid items-stretch gap-[20px]"
+        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))" }}
       >
         <StudentParaPdf paraNumber={paraLabel > 0 ? paraLabel : null} />
         <StudentMemorizationCard studentId={student.id} />
-      </div>
-
-      {/* Quick links */}
-      <div
-        className="grid gap-[22px]"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 260px), 1fr))" }}
-      >
-        {QUICK_LINKS.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="group flex items-center gap-[18px] rounded-2xl border border-border bg-card p-[22px_24px] shadow-soft transition-colors hover:border-[hsl(var(--border-strong))]"
-          >
-            <div className="flex h-[56px] w-[56px] items-center justify-center rounded-xl bg-secondary text-[25px]">
-              {l.icon}
-            </div>
-            <div className="flex-1">
-              <div className="font-heading text-[19px] font-bold text-foreground">{l.title}</div>
-              <div className="text-[14px] text-muted-foreground">{l.sub}</div>
-            </div>
-            <div className="text-[20px] text-muted-foreground/60 transition-transform group-hover:translate-x-0.5">
-              →
-            </div>
-          </Link>
-        ))}
       </div>
     </div>
   )

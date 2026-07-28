@@ -1,6 +1,7 @@
 "use client"
 
 import { usePathname } from "next/navigation"
+import { useState } from "react"
 
 import { LiveClassProvider } from "@/components/live-class-provider"
 import { Sidebar } from "@/components/sidebar"
@@ -17,10 +18,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
   // Auth/entry pages hide the chrome (matches Sidebar returning null there).
   const isAuthArea = pathname === "/login" || pathname === "/admin"
+  const [collapsed, setCollapsed] = useState(false)
 
   const shell = (
     <div className="flex h-screen overflow-hidden bg-background">
-      {isStudentArea ? <StudentSidebar /> : <Sidebar />}
+      {isStudentArea ? <StudentSidebar collapsed={collapsed} /> : <Sidebar />}
       <main
         className="flex-1 min-w-0 h-screen overflow-y-auto main-scroll"
         style={{ contain: "layout style" }}
@@ -55,7 +57,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           // Admin — clean, minimal.
           <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
         )}
-        {isStudentArea ? <StudentTopBar /> : !isAuthArea && <TeacherTopBar />}
+        {isStudentArea ? (
+          <StudentTopBar onToggleSidebar={() => setCollapsed((c) => !c)} />
+        ) : (
+          !isAuthArea && <TeacherTopBar />
+        )}
         <div className="relative p-4 lg:p-8">{children}</div>
       </main>
     </div>

@@ -157,145 +157,155 @@
     --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
   }
 
-  /* ── STUDENT — Graphite Minimal (TEMPORARY) ──
-   * Neutral black/white, identical to the teacher portal, while functionality
-   * is built out. To give the student portal its own colours later, just edit
-   * the values in this block — the components read these tokens, so nothing
-   * else needs to change. */
+  /* ── STUDENT — Forest Green (earthy) — light ──
+   * Warm parchment surfaces + deep forest primary. Every student component
+   * reads these tokens, so this block alone themes the whole portal.
+   * Extra earthy accents (--sage / --taupe) power bespoke pieces like the
+   * dashboard journey path. */
   [data-portal="student"] {
-    --background: 220 16% 98%;
-    --foreground: 220 18% 12%;
+    --background: 42 33% 93%; /* #f3efe6 */
+    --foreground: 48 9% 15%; /* #2b2a24 ink */
     --card: 0 0% 100%;
-    --card-foreground: 220 18% 12%;
-    --surface-alt: 220 14% 96%;
+    --card-foreground: 48 9% 15%;
+    --surface-alt: 40 33% 94%; /* #f7f2e9 soft */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 18% 12%;
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 16% 22%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
-    --destructive: 0 72% 51%;
+    --popover-foreground: 48 9% 15%;
+    --secondary: 39 37% 83%; /* #e4d9c4 beige */
+    --secondary-foreground: 145 22% 24%;
+    --muted: 40 33% 94%;
+    --muted-foreground: 35 11% 53%; /* #94897a */
+    --destructive: 8 55% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --border-strong: 220 13% 82%;
-    --input: 220 13% 91%;
+    --border: 40 20% 85%;
+    --border-strong: 40 16% 76%;
+    --input: 40 20% 85%;
     --radius: 0.75rem;
 
-    /* Primary = graphite (near-black) */
-    --primary: 220 16% 16%;
-    --primary-hover: 220 12% 26%;
-    --primary-foreground: 0 0% 100%;
-    --ring: 187 62% 40%;
+    /* Primary = deep forest */
+    --primary: 145 22% 24%; /* #2f4a3a forest */
+    --primary-hover: 145 24% 30%;
+    --primary-foreground: 37 37% 89%; /* #ede5d8 cream */
+    --ring: 145 22% 34%;
 
-    /* Accent = single restrained teal */
-    --accent: 187 62% 40%;
-    --accent-soft: 187 45% 88%;
-    --accent-foreground: 0 0% 100%;
-    --gold: 187 62% 40%;
+    /* Accent = forest, soft fill = beige */
+    --accent: 145 22% 24%;
+    --accent-soft: 39 37% 83%;
+    --accent-foreground: 37 37% 89%;
+    --gold: 36 55% 45%;
     --gold-foreground: 0 0% 100%;
 
-    /* Brand accent — deep teal (shared) */
-    --brand: 175 68% 22%;
-    --brand-soft: 40 83% 71%;
+    /* Earthy secondary accents */
+    --sage: 91 12% 43%; /* #6e7c61 */
+    --taupe: 35 14% 54%; /* #9b8d7a */
 
-    --success: 150 55% 40%;
-    --warning: 36 80% 48%;
-    --error: 0 72% 51%;
+    /* Brand accent — forest + warm sand */
+    --brand: 145 28% 26%;
+    --brand-soft: 39 42% 70%;
 
-    --c-p-300: 187 45% 58%;
-    --c-p-400: 187 55% 47%;
-    --c-p-500: 187 62% 40%;
-    --c-p-600: 188 66% 31%;
-    --c-p-900: 190 60% 16%;
-    --c-s-300: 210 16% 90%;
-    --c-s-400: 210 13% 82%;
-    --c-s-500: 210 11% 72%;
-    --c-s-600: 210 9% 54%;
-    --c-s-900: 214 16% 26%;
-    --c-a-300: 40 62% 74%;
-    --c-a-400: 38 66% 58%;
-    --c-a-500: 36 70% 48%;
-    --c-a-600: 34 72% 40%;
-    --c-y-300: 44 70% 74%;
-    --c-y-400: 42 72% 60%;
-    --c-g-600: 150 55% 40%;
-    --c-o-600: 14 72% 52%;
-    --c-p-rgb: 37 137 155;
-    --c-p-light-rgb: 150 200 210;
-    --c-a-rgb: 196 150 70;
-    --c-p-bg-glow: 210 16% 92%;
+    --success: 145 40% 34%;
+    --warning: 36 70% 46%;
+    --error: 8 55% 52%;
+
+    /* Primary scale = greens (drives emerald-* accent classes + glows) */
+    --c-p-300: 145 18% 46%;
+    --c-p-400: 145 20% 38%;
+    --c-p-500: 145 22% 30%;
+    --c-p-600: 145 24% 24%;
+    --c-p-900: 145 28% 14%;
+    /* Secondary scale = sage */
+    --c-s-300: 90 12% 72%;
+    --c-s-400: 90 12% 60%;
+    --c-s-500: 91 12% 50%;
+    --c-s-600: 91 12% 40%;
+    --c-s-900: 91 14% 24%;
+    /* Accent scale = warm ochre (earthy amber) */
+    --c-a-300: 40 55% 72%;
+    --c-a-400: 38 58% 58%;
+    --c-a-500: 36 60% 48%;
+    --c-a-600: 34 62% 40%;
+    --c-y-300: 44 62% 72%;
+    --c-y-400: 42 64% 58%;
+    --c-g-600: 145 40% 34%;
+    --c-o-600: 14 66% 52%;
+    --c-p-rgb: 47 74 58;
+    --c-p-light-rgb: 110 124 97;
+    --c-a-rgb: 176 132 66;
+    --c-p-bg-glow: 145 20% 88%;
     --c-a-bg-glow: 40 40% 90%;
 
-    --shadow-soft: 0 1px 2px rgba(20, 24, 33, 0.06), 0 1px 3px rgba(20, 24, 33, 0.05);
-    --shadow-soft-md: 0 2px 6px rgba(20, 24, 33, 0.07);
-    --shadow-soft-lg: 0 8px 24px rgba(20, 24, 33, 0.1);
+    --shadow-soft: 0 1px 2px rgba(40, 35, 25, 0.06), 0 1px 3px rgba(40, 35, 25, 0.05);
+    --shadow-soft-md: 0 2px 6px rgba(40, 35, 25, 0.08);
+    --shadow-soft-lg: 0 8px 24px rgba(40, 35, 25, 0.12);
 
     --radius-button: 0.5rem; /* 8px */
     --radius-card: 0.75rem; /* 12px */
     --radius-input: 0.5rem; /* 8px */
   }
 
-  /* ── STUDENT — Graphite Minimal (dark) ── */
+  /* ── STUDENT — Forest Green (earthy) — dark ── */
   [data-portal="student"].dark {
-    --background: 220 18% 8%;
-    --foreground: 210 16% 92%;
-    --card: 220 16% 11%;
-    --card-foreground: 210 16% 92%;
-    --surface-alt: 220 14% 14%;
-    --popover: 220 16% 11%;
-    --popover-foreground: 210 16% 92%;
-    --secondary: 220 12% 18%;
-    --secondary-foreground: 210 16% 88%;
-    --muted: 220 12% 16%;
-    --muted-foreground: 220 8% 60%;
-    --destructive: 0 66% 56%;
+    --background: 48 14% 7%; /* #14130f */
+    --foreground: 40 41% 91%; /* #f2ece0 */
+    --card: 38 13% 12%; /* #221f1a */
+    --card-foreground: 40 41% 91%;
+    --surface-alt: 40 16% 15%; /* #2c2820 */
+    --popover: 38 13% 12%;
+    --popover-foreground: 40 41% 91%;
+    --secondary: 40 15% 20%; /* #3a352b beige */
+    --secondary-foreground: 40 41% 91%;
+    --muted: 40 16% 15%;
+    --muted-foreground: 39 14% 60%; /* #a89e8c */
+    --destructive: 8 58% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 12% 20%;
-    --border-strong: 220 12% 30%;
-    --input: 220 12% 22%;
+    --border: 40 10% 24%;
+    --border-strong: 40 10% 32%;
+    --input: 40 10% 24%;
 
-    /* In dark, primary flips to near-white with dark text */
-    --primary: 210 16% 92%;
-    --primary-hover: 210 16% 84%;
-    --primary-foreground: 220 18% 12%;
-    --ring: 187 66% 50%;
+    /* Primary = lighter forest that reads on dark surfaces */
+    --primary: 145 23% 39%; /* #4c7a5f */
+    --primary-hover: 145 23% 45%;
+    --primary-foreground: 41 32% 85%; /* #e4dccb cream */
+    --ring: 145 23% 50%;
 
-    --accent: 187 66% 50%;
-    --accent-soft: 190 40% 22%;
-    --accent-foreground: 220 18% 10%;
-    --gold: 187 66% 50%;
-    --gold-foreground: 220 18% 10%;
+    --accent: 145 23% 39%;
+    --accent-soft: 40 15% 22%;
+    --accent-foreground: 41 32% 85%;
+    --gold: 36 60% 55%;
+    --gold-foreground: 40 20% 10%;
 
-    --brand: 173 55% 48%;
-    --brand-soft: 40 78% 66%;
+    --sage: 94 14% 56%; /* #8ea080 */
+    --taupe: 37 19% 63%; /* #b3a58f */
 
-    --success: 150 52% 48%;
-    --warning: 38 82% 56%;
-    --error: 0 66% 56%;
+    --brand: 145 30% 55%;
+    --brand-soft: 40 42% 66%;
 
-    --c-p-300: 187 50% 70%;
-    --c-p-400: 187 58% 58%;
-    --c-p-500: 187 66% 50%;
-    --c-p-600: 188 66% 42%;
-    --c-p-900: 190 55% 24%;
-    --c-s-300: 214 12% 60%;
-    --c-s-400: 214 12% 46%;
-    --c-s-500: 214 12% 36%;
-    --c-s-600: 214 12% 28%;
-    --c-s-900: 214 16% 82%;
-    --c-a-300: 40 70% 70%;
-    --c-a-400: 38 74% 60%;
-    --c-a-500: 36 78% 52%;
-    --c-a-600: 34 78% 44%;
-    --c-y-300: 44 78% 70%;
-    --c-y-400: 42 80% 60%;
-    --c-g-600: 150 52% 48%;
-    --c-o-600: 14 76% 58%;
-    --c-p-rgb: 60 175 195;
-    --c-p-light-rgb: 120 200 215;
-    --c-a-rgb: 220 170 80;
-    --c-p-bg-glow: 200 20% 16%;
-    --c-a-bg-glow: 40 30% 16%;
+    --success: 145 40% 50%;
+    --warning: 38 72% 56%;
+    --error: 8 58% 58%;
+
+    --c-p-300: 145 22% 62%;
+    --c-p-400: 145 22% 52%;
+    --c-p-500: 145 23% 44%;
+    --c-p-600: 145 24% 36%;
+    --c-p-900: 145 26% 22%;
+    --c-s-300: 94 12% 60%;
+    --c-s-400: 94 12% 48%;
+    --c-s-500: 94 12% 40%;
+    --c-s-600: 94 12% 30%;
+    --c-s-900: 94 14% 80%;
+    --c-a-300: 40 62% 70%;
+    --c-a-400: 38 66% 60%;
+    --c-a-500: 36 68% 52%;
+    --c-a-600: 34 68% 44%;
+    --c-y-300: 44 68% 70%;
+    --c-y-400: 42 70% 60%;
+    --c-g-600: 145 40% 50%;
+    --c-o-600: 14 68% 58%;
+    --c-p-rgb: 76 122 95;
+    --c-p-light-rgb: 142 160 128;
+    --c-a-rgb: 210 165 92;
+    --c-p-bg-glow: 145 18% 16%;
+    --c-a-bg-glow: 40 24% 16%;
 
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.45);
@@ -851,4 +861,12 @@
   .sparkle-twinkle {
     animation: none !important;
   }
+}
+
+/* Student login — warm forest stage behind the card */
+[data-portal="student"] .vv-login-stage {
+  background: linear-gradient(160deg, #e9eee7 0%, #dfe7db 100%);
+}
+[data-portal="student"].dark .vv-login-stage {
+  background: linear-gradient(160deg, #121a15 0%, #0f1512 100%);
 }
