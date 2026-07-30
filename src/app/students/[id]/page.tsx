@@ -24,7 +24,6 @@ import {
   Sparkles,
   Trash2,
   Trophy,
-  X,
 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
@@ -53,14 +52,13 @@ import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentPortalAccess } from "@/components/student-portal-access"
 import {
   type ClassSession,
-  formatSessionDuration,
   MemThumb,
   paraSummary,
   SessionStat,
 } from "@/components/student-session-bits"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -86,10 +84,11 @@ import { chunkProgress } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
   COUNTRIES,
+  type FeePayment,
   formatLocalDate,
+  formatSessionDuration,
   parseLocalDate,
   STATUS_CONFIG,
-  type FeePayment,
   type Student,
   type StudentStatus,
 } from "@/lib/utils"

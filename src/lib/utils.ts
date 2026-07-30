@@ -34,6 +34,17 @@ export function formatLocalDate(date: Date = new Date()): string {
   return `${y}-${m}-${d}`
 }
 
+/** Human-readable class-session length: "45s", "12m", "1h", "2h 15m". */
+export function formatSessionDuration(seconds: number): string {
+  const s = Math.max(0, Math.round(seconds || 0))
+  if (s < 60) return `${s}s`
+  const mins = Math.floor(s / 60)
+  if (mins < 60) return `${mins}m`
+  const h = Math.floor(mins / 60)
+  const m = mins % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
+}
+
 export const CURRENCY_SYMBOLS: Record<string, string> = {
   PKR: "Rs",
   USD: "$",

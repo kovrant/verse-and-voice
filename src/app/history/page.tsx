@@ -37,35 +37,8 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { getHijriMonthInfo, HIJRI_MONTHS } from "@/lib/hijri"
+import { CATEGORIES, CATEGORY_ICON, type HistoryStory } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
-
-interface HistoryStory {
-  id: string
-  title: string
-  arabic_title: string | null
-  summary: string | null
-  content: string | null
-  category: string
-  hijri_month: number | null
-  cover_image_url: string | null
-  file_url: string | null
-  file_type: string | null
-  is_published: boolean
-  sort_order: number
-  created_at: string
-  updated_at: string
-}
-
-const CATEGORIES = ["Prophets", "Companions", "Battles", "Events", "Places", "Other"] as const
-
-const CATEGORY_ICON: Record<string, string> = {
-  Prophets: "🕌",
-  Companions: "🤝",
-  Battles: "⚔️",
-  Events: "📅",
-  Places: "🕋",
-  Other: "📜",
-}
 
 type FormState = {
   title: string

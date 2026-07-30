@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
-import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
+import { feeCurrencyBreakdown, sumFeesPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS, type FeePaymentWithStudent } from "@/lib/utils"
 
@@ -134,34 +134,14 @@ export default function FeesPage() {
 
   const paidCount = fees.filter((f) => f.is_paid).length
 
-  // Convert a fee to PKR. Returns null when conversion isn't possible yet
-  // (rates still loading / unknown currency) so we don't add a foreign amount
-  // as if it were raw PKR (e.g. £35 counted as Rs 35).
-  function toPKR(fee: number, currency: string): number | null {
-    if (currency === "PKR") return fee
-    return convertToPKR(fee, currency, rates)
-  }
+  const paidFees = fees.filter((f) => f.is_paid)
+  const unpaidFees = fees.filter((f) => !f.is_paid)
 
-  const sumPKR = (list: FeePaymentWithStudent[]) =>
-    list.reduce((sum, f) => {
-      const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
-      return v == null ? sum : sum + v
-    }, 0)
+  const totalCollectedPKR = sumFeesPKR(paidFees, rates)
+  const totalPendingPKR = sumFeesPKR(unpaidFees, rates)
 
-  const totalCollectedPKR = sumPKR(fees.filter((f) => f.is_paid))
-  const totalPendingPKR = sumPKR(fees.filter((f) => !f.is_paid))
-
-  // Per-currency breakdown for collected
-  function currencyBreakdown(items: FeePaymentWithStudent[]) {
-    const map: Record<string, number> = {}
-    items.forEach((f) => {
-      const c = f.students?.fee_currency || "PKR"
-      map[c] = (map[c] || 0) + (f.students?.fee || 0)
-    })
-    return map
-  }
-  const collectedByCurrency = currencyBreakdown(fees.filter((f) => f.is_paid))
-  const pendingByCurrency = currencyBreakdown(fees.filter((f) => !f.is_paid))
+  const collectedByCurrency = feeCurrencyBreakdown(paidFees)
+  const pendingByCurrency = feeCurrencyBreakdown(unpaidFees)
 
   const years = []
   for (let y = now.getFullYear() - 2; y <= now.getFullYear() + 1; y++) {

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react"
 
+import type { FeePaymentWithStudent } from "@/lib/utils"
+
 interface Rates {
   [currency: string]: number
 }
@@ -60,6 +62,26 @@ export function useExchangeRates() {
   return { rates, loading }
 }
 
-export function formatPKR(amount: number): string {
-  return `Rs${amount.toLocaleString()}`
+/**
+ * Sum joined student fees in PKR. Rows that can't convert yet (rates still
+ * loading / unknown currency) are skipped rather than added as raw PKR —
+ * otherwise £35 would be counted as Rs 35.
+ */
+export function sumFeesPKR(items: FeePaymentWithStudent[], rates: Rates | null): number {
+  return items.reduce((sum, f) => {
+    const amount = f.students?.fee || 0
+    const currency = f.students?.fee_currency || "PKR"
+    const pkr = currency === "PKR" ? amount : convertToPKR(amount, currency, rates)
+    return pkr == null ? sum : sum + pkr
+  }, 0)
+}
+
+/** Per-currency fee totals, in each fee's original currency. */
+export function feeCurrencyBreakdown(items: FeePaymentWithStudent[]): Record<string, number> {
+  const map: Record<string, number> = {}
+  for (const f of items) {
+    const c = f.students?.fee_currency || "PKR"
+    map[c] = (map[c] || 0) + (f.students?.fee || 0)
+  }
+  return map
 }

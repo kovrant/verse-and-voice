@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { formatLocalDate, parseLocalDate } from "./utils"
+import { formatLocalDate, formatSessionDuration, parseLocalDate } from "./utils"
 
 // Bug 15 — date-only strings must be parsed/formatted in LOCAL time, not UTC.
 describe("parseLocalDate", () => {
@@ -25,6 +25,22 @@ describe("parseLocalDate", () => {
 
   it("returns null for unparseable input", () => {
     expect(parseLocalDate("not-a-date")).toBeNull()
+  })
+})
+
+describe("formatSessionDuration", () => {
+  it("shows seconds under a minute, then minutes, then hours", () => {
+    expect(formatSessionDuration(0)).toBe("0s")
+    expect(formatSessionDuration(45)).toBe("45s")
+    expect(formatSessionDuration(60)).toBe("1m")
+    expect(formatSessionDuration(59 * 60)).toBe("59m")
+    expect(formatSessionDuration(3600)).toBe("1h")
+    expect(formatSessionDuration(2 * 3600 + 15 * 60)).toBe("2h 15m")
+  })
+
+  it("clamps negative / missing input", () => {
+    expect(formatSessionDuration(-5)).toBe("0s")
+    expect(formatSessionDuration(NaN)).toBe("0s")
   })
 })
 

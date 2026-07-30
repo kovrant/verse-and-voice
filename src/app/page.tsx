@@ -21,7 +21,7 @@ import { FeeDisplay } from "@/components/fee-display"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
+import { feeCurrencyBreakdown, sumFeesPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { CURRENCY_SYMBOLS, type FeePaymentWithStudent, type Student } from "@/lib/utils"
 
@@ -110,32 +110,11 @@ export default function Dashboard() {
   const now = new Date()
   const currentMonth = format(now, "MMMM yyyy")
 
-  // Returns null when conversion isn't possible yet (rates loading / unknown
-  // currency), so foreign amounts aren't added as raw PKR before rates resolve.
-  function toPKR(fee: number, currency: string): number | null {
-    if (currency === "PKR") return fee
-    return convertToPKR(fee, currency, rates)
-  }
+  const feesCollected = sumFeesPKR(paidFees, rates)
+  const feesPending = sumFeesPKR(unpaidFees, rates)
 
-  const sumPKR = (list: FeePaymentWithStudent[]) =>
-    list.reduce((sum, f) => {
-      const v = toPKR(f.students?.fee || 0, f.students?.fee_currency || "PKR")
-      return v == null ? sum : sum + v
-    }, 0)
-
-  const feesCollected = sumPKR(paidFees)
-  const feesPending = sumPKR(unpaidFees)
-
-  function currencyBreakdown(items: FeePaymentWithStudent[]) {
-    const map: Record<string, number> = {}
-    items.forEach((f) => {
-      const c = f.students?.fee_currency || "PKR"
-      map[c] = (map[c] || 0) + (f.students?.fee || 0)
-    })
-    return map
-  }
-  const collectedByCurrency = currencyBreakdown(paidFees)
-  const pendingByCurrency = currencyBreakdown(unpaidFees)
+  const collectedByCurrency = feeCurrencyBreakdown(paidFees)
+  const pendingByCurrency = feeCurrencyBreakdown(unpaidFees)
 
   const statCards = [
     {

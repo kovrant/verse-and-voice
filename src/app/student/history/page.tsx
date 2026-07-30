@@ -8,30 +8,22 @@ import { useEffect, useMemo, useState } from "react"
 
 import { ArabicText } from "@/components/arabic-text"
 import { getHijriMonthInfo, getHijriToday } from "@/lib/hijri"
+import { CATEGORIES, CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
 
-interface HistoryStory {
-  id: string
-  title: string
-  arabic_title: string | null
-  summary: string | null
-  category: string
-  hijri_month: number | null
-  cover_image_url: string | null
-  file_url: string | null
-  file_type: string | null
-}
-
-const CATEGORIES = ["Prophets", "Companions", "Battles", "Events", "Places", "Other"] as const
-
-const CATEGORY_ICON: Record<string, string> = {
-  Prophets: "🕌",
-  Companions: "🤝",
-  Battles: "⚔️",
-  Events: "📅",
-  Places: "🕋",
-  Other: "📜",
-}
+// The listing selects a subset of columns — keep the type honest about that.
+type HistoryStory = Pick<
+  HistoryRow,
+  | "id"
+  | "title"
+  | "arabic_title"
+  | "summary"
+  | "category"
+  | "hijri_month"
+  | "cover_image_url"
+  | "file_url"
+  | "file_type"
+>
 
 export default function StudentHistoryPage() {
   const [stories, setStories] = useState<HistoryStory[]>([])

@@ -18,16 +18,6 @@ export interface ClassSession {
   notes: string | null
 }
 
-export function formatSessionDuration(seconds: number): string {
-  const s = Math.max(0, Math.round(seconds || 0))
-  if (s < 60) return `${s}s`
-  const mins = Math.floor(s / 60)
-  if (mins < 60) return `${mins}m`
-  const h = Math.floor(mins / 60)
-  const m = mins % 60
-  return m > 0 ? `${h}h ${m}m` : `${h}h`
-}
-
 export function paraSummary(s: ClassSession): { label: string; title: string } | null {
   const covered = (s.paras_covered || []).filter((n) => n != null)
   if (covered.length > 0) {

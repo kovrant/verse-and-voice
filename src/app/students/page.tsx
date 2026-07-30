@@ -24,7 +24,7 @@ import { classTimeToMinutes } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
-import { parseLocalDate, STATUS_CONFIG, type Student, type StudentStatus } from "@/lib/utils"
+import { parseLocalDate, STATUS_CONFIG, type Student } from "@/lib/utils"
 
 type ColumnKey = "country" | "started_at" | "fee" | "class_time" | "quran_progress" | "status"
 

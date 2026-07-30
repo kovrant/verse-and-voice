@@ -38,7 +38,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
-import { formatLocalDate } from "@/lib/utils"
+import { formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.
 const SyncedPdfViewer = dynamic(
@@ -98,14 +98,6 @@ function formatTimer(seconds: number): string {
   const s = seconds % 60
   const pad = (n: number) => n.toString().padStart(2, "0")
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
-}
-
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0 && m > 0) return `${h}h ${m}m`
-  if (h > 0) return `${h}h`
-  return `${m}m`
 }
 
 export default function LiveSession({
@@ -740,7 +732,7 @@ export default function LiveSession({
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-foreground tabular-nums">
-                  {formatDuration(elapsed)}
+                  {formatSessionDuration(elapsed)}
                 </div>
               </div>
               <div>

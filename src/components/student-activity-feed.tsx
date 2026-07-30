@@ -6,8 +6,8 @@ import {
   BookOpen,
   ExternalLink,
   FileText,
-  MousePointerClick,
   type LucideIcon,
+  MousePointerClick,
 } from "lucide-react"
 
 export interface ActivityLog {
