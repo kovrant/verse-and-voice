@@ -5,6 +5,7 @@ import { useEffect } from "react"
 
 import { useActivityLogger } from "@/lib/activity-log"
 import { supabase } from "@/lib/supabase"
+import { useSessionTimeout } from "@/lib/use-session-timeout"
 
 /**
  * Client-side auth guard for the student portal. The middleware already sends
@@ -17,6 +18,9 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // Log every page view + click across the student portal.
   useActivityLogger()
+
+  // Force a sign-out 3 hours after login, regardless of token refresh.
+  useSessionTimeout()
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {

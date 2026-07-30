@@ -49,6 +49,7 @@ import {
 } from "@/components/quran-progress"
 import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
 import { FeeHistoryTable } from "@/components/student-fee-history"
+import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentPortalAccess } from "@/components/student-portal-access"
 import {
   type ClassSession,
@@ -1536,8 +1537,9 @@ export default function StudentDetailPage() {
       )}
 
       {activeTab === "portal" && (
-        <div className="animate-fade-in-up">
+        <div className="animate-fade-in-up space-y-4">
           <StudentPortalAccess studentId={student.id} />
+          <StudentForceSignOut studentId={student.id} />
         </div>
       )}
 
