@@ -11,17 +11,25 @@ import { Pagination } from "@/components/ui/pagination"
 import { retentionCutoffIso, sanitizeSearchTerm } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser } from "@/lib/use-current-user"
-import type { NotificationRow } from "@/lib/use-notifications"
+import {
+  markAllNotificationsRead,
+  markNotificationRead,
+  NOTIFICATION_COLUMNS,
+  type NotificationRow,
+} from "@/lib/use-notifications"
 import { cn } from "@/lib/utils"
 
-const COLUMNS = "id, type, title, body, link, priority, read_at, created_at"
 const PAGE_SIZE_OPTIONS = [15, 30, 50]
 
 /**
  * Full notifications feed — descending order, type-to-search, and pagination.
- * RLS scopes every row to the current user, so the same view serves both the
+ * Rows are scoped to the signed-in recipient, so the same view serves both the
  * teacher and student portals. Only the last two months are shown (older rows
  * are purged by the pg_cron job in migration_notifications_retention.sql).
+ *
+ * Reads and writes share the helpers in use-notifications.ts — this page used
+ * to carry its own copies, and they drifted until "mark all read" here was
+ * clearing every recipient's rows instead of just this user's.
  */
 export function NotificationsView() {
   const router = useRouter()
@@ -49,11 +57,13 @@ export function NotificationsView() {
   }, [searchInput])
 
   const load = useCallback(async () => {
+    if (!userId) return
     setLoading(true)
     const from = (page - 1) * pageSize
     let query = supabase
       .from("notifications")
-      .select(COLUMNS, { count: "exact" })
+      .select(NOTIFICATION_COLUMNS, { count: "exact" })
+      .eq("recipient_id", userId)
       .gte("created_at", retentionCutoffIso())
       .order("created_at", { ascending: false })
     if (search) query = query.or(`title.ilike.%${search}%,body.ilike.%${search}%`)
@@ -62,7 +72,7 @@ export function NotificationsView() {
     setItems((data as NotificationRow[] | null) ?? [])
     setTotal(count ?? 0)
     setLoading(false)
-  }, [page, pageSize, search])
+  }, [page, pageSize, search, userId])
 
   useEffect(() => {
     void load()
@@ -82,7 +92,11 @@ export function NotificationsView() {
     }
     const channel = supabase
       .channel(`notif-page:${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications", filter }, refresh)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "notifications", filter },
+        refresh,
+      )
     void supabase.realtime.setAuth().finally(() => channel.subscribe())
     return () => {
       if (t) clearTimeout(t)
@@ -94,23 +108,20 @@ export function NotificationsView() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
   async function open(n: NotificationRow) {
-    if (!n.read_at) {
+    if (!n.read_at && userId) {
       setItems((prev) =>
         prev.map((p) => (p.id === n.id ? { ...p, read_at: new Date().toISOString() } : p)),
       )
-      await supabase
-        .from("notifications")
-        .update({ read_at: new Date().toISOString() })
-        .eq("id", n.id)
-        .is("read_at", null)
+      await markNotificationRead(n.id, userId)
     }
     if (n.link) router.push(n.link)
   }
 
   async function markAllRead() {
+    if (!userId) return
     const now = new Date().toISOString()
     setItems((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: now })))
-    await supabase.from("notifications").update({ read_at: now }).is("read_at", null)
+    await markAllNotificationsRead(userId)
   }
 
   return (

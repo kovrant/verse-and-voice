@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 
+import { requireTeacher } from "@/lib/api-auth"
 import { isValidUsername, normalizeUsername, usernameToEmail } from "@/lib/student-auth"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
-import { createSupabaseServerClient } from "@/lib/supabase-server"
 
 // POST /api/students/:id/credentials
 // Teacher-only. Creates a login for the student, or resets the password /
@@ -11,17 +11,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const studentId = params.id
 
   // 1. Authenticate the caller and confirm they are a teacher.
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-  if ((user.app_metadata as { role?: string } | null)?.role !== "teacher") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const { denied } = await requireTeacher()
+  if (denied) return denied
 
   // 2. Validate input.
   let body: { username?: unknown; password?: unknown }
@@ -136,17 +127,8 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
 // GET /api/students/:id/credentials → { username } | { username: null }
 export async function GET(_request: Request, { params }: { params: { id: string } }) {
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
-  }
-  if ((user.app_metadata as { role?: string } | null)?.role !== "teacher") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const { denied } = await requireTeacher()
+  if (denied) return denied
 
   const admin = createSupabaseAdminClient()
   const { data } = await admin

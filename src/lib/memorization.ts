@@ -1,5 +1,49 @@
-// Pure memorization-chunk helpers (no Supabase import) so they're unit-testable
-// without env/config. Data-loading lives in components/memorization-chunks.tsx.
+// Pure memorization types and chunk helpers (no Supabase import) so they're
+// unit-testable without env/config. Data-loading lives in
+// components/memorization-chunks.tsx.
+
+// ── Catalog + assignment shapes ──────────────────────────────────────────────
+// These were copy-pasted into five pages. The copies were still identical, but
+// the select strings feeding them lived in those same files and had to be kept
+// in sync by hand, so the selects live here next to the types they produce.
+
+/** A catalog entry as embedded in a student's assignment row. */
+export interface CatalogItem {
+  id: string
+  title: string
+  category: string
+  image_url: string | null
+}
+
+/**
+ * The embedded-catalog select. Kept beside CatalogItem so the two can't drift —
+ * a field added to the interface but not to this string types a column that
+ * PostgREST never returns.
+ */
+export const CATALOG_SELECT = "memorization_catalog(id, title, category, image_url)"
+
+/** One catalog item assigned to a student (a `student_memorization` row). */
+export interface StudentMemItem {
+  id: string
+  catalog_id: string
+  status: "memorizing" | "memorized"
+  last_revised_at: string | null
+  memorization_catalog: CatalogItem
+}
+
+/** Select for a full StudentMemItem — `*` is what supplies catalog_id. */
+export const STUDENT_MEM_SELECT = `*, ${CATALOG_SELECT}`
+
+/**
+ * The live-class shape: the same row minus catalog_id, which the class queries
+ * don't select because nothing in the session needs it.
+ */
+export type MemItem = Omit<StudentMemItem, "catalog_id">
+
+/** Select for a MemItem — mirrors the Omit above, so the type matches the row. */
+export const MEM_ITEM_SELECT = `id, status, last_revised_at, ${CATALOG_SELECT}`
+
+// ── Chunk helpers ────────────────────────────────────────────────────────────
 
 export interface MemChunk {
   id: string

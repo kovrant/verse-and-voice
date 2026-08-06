@@ -32,18 +32,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { classTimeToMinutes } from "@/lib/class-time"
+import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, type Student } from "@/lib/utils"
 
 type ClassStudent = Pick<Student, "id" | "name" | "guardian_name" | "started_at" | "class_time">
-
-interface MemItem {
-  id: string
-  status: "memorizing" | "memorized"
-  last_revised_at: string | null
-  memorization_catalog: { id: string; title: string; category: string; image_url: string | null }
-}
 
 interface QuranPara {
   id: string
@@ -124,9 +118,7 @@ export default function ClassPage() {
       const [memResult, roundsResult, sessionsResult] = await Promise.all([
         supabase
           .from("student_memorization")
-          .select(
-            "id, status, last_revised_at, memorization_catalog(id, title, category, image_url)",
-          )
+          .select(MEM_ITEM_SELECT)
           .eq("student_id", student.id)
           .order("created_at", { ascending: false }),
         supabase

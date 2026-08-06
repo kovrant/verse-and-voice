@@ -56,6 +56,7 @@ import {
   paraSummary,
   SessionStat,
 } from "@/components/student-session-bits"
+import { StudentSignInAccess } from "@/components/student-signin-access"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -80,7 +81,12 @@ import {
 import { type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
-import { chunkProgress } from "@/lib/memorization"
+import {
+  type CatalogItem,
+  chunkProgress,
+  STUDENT_MEM_SELECT,
+  type StudentMemItem,
+} from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
   COUNTRIES,
@@ -92,21 +98,6 @@ import {
   type Student,
   type StudentStatus,
 } from "@/lib/utils"
-
-interface CatalogItem {
-  id: string
-  title: string
-  category: string
-  image_url: string | null
-}
-
-interface StudentMemItem {
-  id: string
-  catalog_id: string
-  status: "memorizing" | "memorized"
-  last_revised_at: string | null
-  memorization_catalog: CatalogItem
-}
 
 export default function StudentDetailPage() {
   const params = useParams()
@@ -322,7 +313,7 @@ export default function StudentDetailPage() {
   async function loadMemItems() {
     const { data } = await supabase
       .from("student_memorization")
-      .select("*, memorization_catalog(id, title, category, image_url)")
+      .select(STUDENT_MEM_SELECT)
       .eq("student_id", params.id)
       .order("created_at", { ascending: false })
     const items = ((data as any) || []) as StudentMemItem[]
@@ -1538,6 +1529,7 @@ export default function StudentDetailPage() {
       {activeTab === "portal" && (
         <div className="animate-fade-in-up space-y-4">
           <StudentPortalAccess studentId={student.id} />
+          <StudentSignInAccess studentId={student.id} />
           <StudentForceSignOut studentId={student.id} />
         </div>
       )}

@@ -7,9 +7,9 @@
 --   * The recipient's browser reads them live via Realtime Postgres Changes
 --     (filtered to recipient_id), so they appear instantly and survive reloads
 --     (unlike the ephemeral Broadcast used for live classes).
---   * Everyone reads + marks-read only their OWN rows (RLS). Teachers may create
---     notifications for anyone. Programmatic senders (/api/notifications) use the
---     service-role key, which bypasses RLS — same trust model as /api/activity.
+--   * Everyone — teacher or student — reads and marks-read only their OWN rows
+--     (RLS). Senders (/api/notifications, src/lib/notify.ts) use the service-role
+--     key, which bypasses RLS — same trust model as /api/activity.
 
 CREATE TABLE IF NOT EXISTS notifications (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -38,11 +38,11 @@ CREATE POLICY "Update own notifications"
   ON notifications FOR UPDATE TO authenticated
   USING (recipient_id = auth.uid()) WITH CHECK (recipient_id = auth.uid());
 
--- Teachers can create/manage any notification (compose announcements).
-DROP POLICY IF EXISTS "Teacher manage notifications" ON notifications;
-CREATE POLICY "Teacher manage notifications"
-  ON notifications FOR ALL TO authenticated
-  USING (is_teacher()) WITH CHECK (is_teacher());
+-- No policy grants access to anyone else's rows — not even teachers. Every
+-- insert is made with the service-role key (src/lib/notify.ts and the
+-- /api/notifications route), which bypasses RLS, so a teacher-wide policy would
+-- buy nothing and would leak every recipient's feed to every teacher.
+-- See migration_notifications_rls_fix.sql for the incident this replaced.
 
 CREATE INDEX IF NOT EXISTS idx_notifications_recipient_time
   ON notifications(recipient_id, created_at DESC);

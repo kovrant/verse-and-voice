@@ -5,7 +5,10 @@
  * (commas separate conditions; parens group them; % / _ are ilike wildcards).
  */
 export function sanitizeSearchTerm(input: string): string {
-  return input.replace(/[,()%_]/g, " ").replace(/\s+/g, " ").trim()
+  return input
+    .replace(/[,()%_]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 /**
@@ -17,4 +20,16 @@ export function retentionCutoffIso(now: Date = new Date()): string {
   const d = new Date(now)
   d.setMonth(d.getMonth() - 2)
   return d.toISOString()
+}
+
+/**
+ * How long an identical notification is suppressed for. Triggers fire from
+ * component mounts and login redirects, which repeat on StrictMode double
+ * mounts, back-navigation, HMR reloads and multi-tab sign-ins.
+ */
+export const DEDUPE_WINDOW_MINUTES = 5
+
+/** ISO timestamp marking the start of the dedupe window (see notify.ts). */
+export function dedupeCutoffIso(now: Date = new Date()): string {
+  return new Date(now.getTime() - DEDUPE_WINDOW_MINUTES * 60_000).toISOString()
 }

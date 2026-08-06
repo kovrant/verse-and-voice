@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
+import { requireTeacher } from "@/lib/api-auth"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
-import { createSupabaseServerClient } from "@/lib/supabase-server"
 
 // POST /api/notifications — teacher-only.
 // Composes a notification and fans it out to one student or every student.
@@ -17,17 +17,10 @@ function str(v: unknown, max: number): string | null {
 }
 
 export async function POST(request: Request) {
-  const supabase = createSupabaseServerClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Not signed in" }, { status: 401 })
+  const { user, denied } = await requireTeacher()
+  if (denied) return denied
 
   const admin = createSupabaseAdminClient()
-  const { data: me } = await admin.from("profiles").select("role").eq("id", user.id).maybeSingle()
-  // A logged-in account with no profile row is the original teacher account.
-  if ((me?.role ?? "teacher") !== "teacher")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
 
   let body: Record<string, unknown>
   try {

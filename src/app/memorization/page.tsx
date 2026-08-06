@@ -38,13 +38,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { type CatalogItem } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 
-interface CatalogItem {
-  id: string
-  title: string
-  category: string
-  image_url: string | null
+/**
+ * The catalog admin view: a shared catalog entry plus the fields only this page
+ * needs — media-library provenance and the assignment count it tallies itself.
+ */
+interface CatalogRow extends CatalogItem {
   file_url?: string | null
   file_type?: string | null
   source?: "catalog" | "media"
@@ -62,7 +63,7 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 export default function MemorizationPage() {
-  const [items, setItems] = useState<CatalogItem[]>([])
+  const [items, setItems] = useState<CatalogRow[]>([])
   const [loading, setLoading] = useState(true)
   const [newTitle, setNewTitle] = useState("")
   const [newCategory, setNewCategory] = useState("General")
@@ -73,10 +74,10 @@ export default function MemorizationPage() {
   const [filterCat, setFilterCat] = useState("All")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploadingFor, setUploadingFor] = useState<string | null>(null)
-  const [itemToDelete, setItemToDelete] = useState<CatalogItem | null>(null)
+  const [itemToDelete, setItemToDelete] = useState<CatalogRow | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [chunkCounts, setChunkCounts] = useState<Record<string, number>>({})
-  const [manageItem, setManageItem] = useState<CatalogItem | null>(null)
+  const [manageItem, setManageItem] = useState<CatalogRow | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
 
@@ -128,7 +129,7 @@ export default function MemorizationPage() {
     setChunkCounts(chunkMap)
 
     // Map catalog items
-    const catalogItems: CatalogItem[] = (catalog || []).map((item) => ({
+    const catalogItems: CatalogRow[] = (catalog || []).map((item) => ({
       ...item,
       source: "catalog" as const,
       assignment_count: countMap[item.id] || 0,
@@ -138,7 +139,7 @@ export default function MemorizationPage() {
     const existingKeys = new Set(
       catalogItems.map((i) => `${i.title.toLowerCase()}|${i.category.toLowerCase()}`),
     )
-    const mediaAsCatalog: CatalogItem[] = (mediaItems || [])
+    const mediaAsCatalog: CatalogRow[] = (mediaItems || [])
       .filter((m) => !existingKeys.has(`${m.title.toLowerCase()}|${m.category.toLowerCase()}`))
       .map((m) => ({
         id: m.id,
@@ -284,7 +285,7 @@ export default function MemorizationPage() {
     return matchesCat && matchesSearch
   })
 
-  const grouped: Record<string, CatalogItem[]> = {}
+  const grouped: Record<string, CatalogRow[]> = {}
   filtered.forEach((item) => {
     if (!grouped[item.category]) grouped[item.category] = []
     grouped[item.category].push(item)
@@ -722,7 +723,7 @@ function ChunkManager({
   item,
   onChanged,
 }: {
-  item: CatalogItem
+  item: CatalogRow
   onChanged: (count: number) => void
 }) {
   const [chunks, setChunks] = useState<MemChunk[]>([])

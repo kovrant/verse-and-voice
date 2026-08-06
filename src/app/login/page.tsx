@@ -6,8 +6,11 @@ import { Suspense, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useTheme } from "@/components/theme-provider"
-import { resolveLoginEmail } from "@/lib/student-auth"
+import { isLoginDisabled, resolveLoginEmail } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
+
+// Friendly, non-punitive message shown when a teacher has turned off sign-in.
+const CONTACT_TEACHER_MESSAGE = "To access the portal, please contact your teacher."
 
 export default function StudentLoginPage() {
   return (
@@ -26,7 +29,11 @@ function StudentLoginForm() {
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  // Middleware bounces a disabled session here with ?blocked=1 — show the same
+  // friendly message on load.
+  const [error, setError] = useState<string | null>(
+    searchParams.get("blocked") ? CONTACT_TEACHER_MESSAGE : null,
+  )
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -39,6 +46,15 @@ function StudentLoginForm() {
 
     if (error) {
       setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    // signInWithPassword returns current app_metadata, so a teacher's "sign-in
+    // off" is enforced even on an otherwise-valid password.
+    if (isLoginDisabled(data.user?.app_metadata as { login_disabled?: boolean })) {
+      await supabase.auth.signOut()
+      setError(CONTACT_TEACHER_MESSAGE)
       setLoading(false)
       return
     }

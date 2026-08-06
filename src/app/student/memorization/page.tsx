@@ -14,25 +14,10 @@ import {
 } from "@/components/memorization-chunks"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { chunkProgress } from "@/lib/memorization"
+import { chunkProgress, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
-
-interface CatalogItem {
-  id: string
-  title: string
-  category: string
-  image_url: string | null
-}
-
-interface StudentMemItem {
-  id: string
-  catalog_id: string
-  status: "memorizing" | "memorized"
-  last_revised_at: string | null
-  memorization_catalog: CatalogItem
-}
 
 export default function StudentMemorizationPage() {
   const { student, loading } = useStudent()
@@ -49,7 +34,7 @@ export default function StudentMemorizationPage() {
     ;(async () => {
       const { data } = await supabase
         .from("student_memorization")
-        .select("*, memorization_catalog(id, title, category, image_url)")
+        .select(STUDENT_MEM_SELECT)
         .eq("student_id", student.id)
         .order("created_at", { ascending: false })
       const list = ((data as any) || []) as StudentMemItem[]

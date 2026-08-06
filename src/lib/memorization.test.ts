@@ -1,6 +1,16 @@
 import { describe, expect, it } from "vitest"
 
-import { chunkProgress, currentChunkIndex, labelFor, type MemChunk } from "@/lib/memorization"
+import {
+  CATALOG_SELECT,
+  type CatalogItem,
+  chunkProgress,
+  currentChunkIndex,
+  labelFor,
+  MEM_ITEM_SELECT,
+  type MemChunk,
+  type MemItem,
+  STUDENT_MEM_SELECT,
+} from "@/lib/memorization"
 
 function chunk(p: Partial<MemChunk>): MemChunk {
   return {
@@ -12,6 +22,51 @@ function chunk(p: Partial<MemChunk>): MemChunk {
     ...p,
   }
 }
+
+// The selects and the interfaces have to agree: a field the type declares but
+// the select omits is `undefined` at runtime while TypeScript swears it's there.
+// These Records are keyed by the interfaces themselves, so adding a field to
+// CatalogItem or MemItem stops this file compiling until it's listed — and then
+// the assertions below fail until it's in the select string too.
+const CATALOG_FIELDS: Record<keyof CatalogItem, true> = {
+  id: true,
+  title: true,
+  category: true,
+  image_url: true,
+}
+
+const MEM_ITEM_FIELDS: Record<keyof MemItem, true> = {
+  id: true,
+  status: true,
+  last_revised_at: true,
+  memorization_catalog: true,
+}
+
+describe("select strings", () => {
+  it("CATALOG_SELECT requests every field CatalogItem declares", () => {
+    for (const field of Object.keys(CATALOG_FIELDS)) {
+      expect(CATALOG_SELECT).toContain(field)
+    }
+  })
+
+  it("MEM_ITEM_SELECT requests every scalar field MemItem declares", () => {
+    for (const field of Object.keys(MEM_ITEM_FIELDS)) {
+      expect(MEM_ITEM_SELECT).toContain(field)
+    }
+  })
+
+  it("embeds the catalog in both row selects", () => {
+    expect(MEM_ITEM_SELECT).toContain(CATALOG_SELECT)
+    expect(STUDENT_MEM_SELECT).toContain(CATALOG_SELECT)
+  })
+
+  // MemItem is StudentMemItem minus catalog_id, so its select must not ask for
+  // it; the full row gets catalog_id from the leading `*`.
+  it("only the full row select supplies catalog_id", () => {
+    expect(MEM_ITEM_SELECT).not.toContain("catalog_id")
+    expect(STUDENT_MEM_SELECT.startsWith("*,")).toBe(true)
+  })
+})
 
 describe("labelFor", () => {
   it("auto-numbers as 'Part N' (1-indexed) when no custom label", () => {

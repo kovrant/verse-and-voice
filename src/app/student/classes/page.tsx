@@ -10,24 +10,10 @@ import { useLiveClass } from "@/components/live-class-provider"
 import { StudentLiveClass } from "@/components/student-live-class"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatClassTimeLocal, formatCountdown, msUntilNextClass } from "@/lib/class-time"
+import { STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { computeStreak } from "@/lib/streak"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
-
-interface CatalogItem {
-  id: string
-  title: string
-  category: string
-  image_url: string | null
-}
-
-interface StudentMemItem {
-  id: string
-  catalog_id: string
-  status: "memorizing" | "memorized"
-  last_revised_at: string | null
-  memorization_catalog: CatalogItem
-}
 
 export default function StudentClassesPage() {
   const { student, loading } = useStudent()
@@ -48,7 +34,7 @@ export default function StudentClassesPage() {
     Promise.all([
       supabase
         .from("student_memorization")
-        .select("*, memorization_catalog(id, title, category, image_url)")
+        .select(STUDENT_MEM_SELECT)
         .eq("student_id", student.id)
         .eq("status", "memorizing"),
       supabase.from("class_sessions").select("started_at").eq("student_id", student.id),

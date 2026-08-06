@@ -1,6 +1,8 @@
 import { createServerClient } from "@supabase/ssr"
 import { type NextRequest, NextResponse } from "next/server"
 
+import { isLoginDisabled } from "@/lib/student-auth"
+
 const PUBLIC_PATHS = ["/login", "/admin", "/auth"]
 
 export async function middleware(request: NextRequest) {
@@ -55,6 +57,22 @@ export async function middleware(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = path
     url.search = ""
+    return redirectTo(url)
+  }
+
+  // Teacher turned this student's sign-in off. getUser() returns the CURRENT
+  // app_metadata (not the stale JWT), so this catches a lingering session that
+  // the live force-signout broadcast never reached (e.g. student was offline).
+  // Sign out first — that writes session-clearing cookies onto `response` via
+  // setAll — then carry them onto the redirect so /login lands unauthenticated
+  // (no logged-in-user-bounced-off-/login loop). API routes are exempt: they
+  // enforce their own auth and a redirect would drop the request body.
+  if (user && !isApi && isLoginDisabled(user.app_metadata as { login_disabled?: boolean })) {
+    await supabase.auth.signOut()
+    const url = request.nextUrl.clone()
+    url.pathname = "/login"
+    url.search = ""
+    url.searchParams.set("blocked", "1")
     return redirectTo(url)
   }
 

@@ -35,6 +35,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
 import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
@@ -59,13 +60,6 @@ interface QuranPara {
   file_url: string
   file_type: string
   meta: Record<string, any>
-}
-
-interface MemItem {
-  id: string
-  status: "memorizing" | "memorized"
-  last_revised_at: string | null
-  memorization_catalog: { id: string; title: string; category: string; image_url: string | null }
 }
 
 interface LiveSessionProps {
@@ -204,7 +198,12 @@ export default function LiveSession({
   })
 
   // Announce the class going live to the student (durable notification) once.
+  // The ref only skips the round-trip within one mount — StrictMode, HMR and
+  // back-navigation all remount and reset it, so the server dedupes too.
+  const liveNotifiedRef = useRef<string | null>(null)
   useEffect(() => {
+    if (liveNotifiedRef.current === student.id) return
+    liveNotifiedRef.current = student.id
     void fetch("/api/live-class/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -281,7 +280,7 @@ export default function LiveSession({
 
     const { data } = await supabase
       .from("student_memorization")
-      .select("id, status, last_revised_at, memorization_catalog(id, title, category, image_url)")
+      .select(MEM_ITEM_SELECT)
       .eq("student_id", student.id)
       .order("created_at", { ascending: false })
     onMemItemsChange((data as any) || [])

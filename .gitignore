@@ -23,4 +23,7 @@ skills-lock.json
 # Cursor local config
 .cursor/
 
+# Generated Arabic memorization cards (regenerate with .scratch-arabic/render.py)
+.scratch-arabic/
+
 ponytail
