@@ -823,6 +823,35 @@
   animation: wiggle 0.6s ease-in-out;
 }
 
+/* Friendly "locked" rattle: mostly still, with a brief gentle shake every cycle. */
+@keyframes lock-shake {
+  0%,
+  55%,
+  100% {
+    transform: rotate(0deg);
+  }
+  65% {
+    transform: rotate(-9deg);
+  }
+  75% {
+    transform: rotate(9deg);
+  }
+  85% {
+    transform: rotate(-5deg);
+  }
+}
+
+.animate-lock-shake {
+  animation: lock-shake 2.2s ease-in-out infinite;
+  transform-origin: 50% 35%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-lock-shake {
+    animation: none;
+  }
+}
+
 /* ── Start-class transition: book opens with sparkles ──────────────── */
 @keyframes book-open {
   0% {

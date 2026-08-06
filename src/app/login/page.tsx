@@ -149,13 +149,20 @@ function StudentLoginForm() {
             </label>
 
             {error && (
-              <p
+              <div
                 role="alert"
                 aria-live="polite"
-                className="rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+                className="flex items-center gap-3 rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
               >
-                {error}
-              </p>
+                {error === CONTACT_TEACHER_MESSAGE && (
+                  <Lock
+                    className="h-5 w-5 flex-shrink-0 animate-lock-shake"
+                    strokeWidth={2.25}
+                    aria-hidden="true"
+                  />
+                )}
+                <span>{error}</span>
+              </div>
             )}
 
             <button
