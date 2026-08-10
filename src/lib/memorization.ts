@@ -80,3 +80,64 @@ export function currentChunkIndex(chunks: MemChunk[], memorizedIds: Set<string>)
   if (chunks.length === 0) return -1
   return chunks.findIndex((c) => !memorizedIds.has(c.id))
 }
+
+// ── Achievement celebrations ─────────────────────────────────────────────────
+// Parts are marked by the teacher, so a win can land while the student isn't
+// looking — or between visits. We keep a record of what's already been
+// celebrated per student, so the moment survives a missed realtime event
+// without ever firing twice.
+
+/** What this student has already been shown a celebration for. */
+export interface CelebratedState {
+  chunkIds: string[]
+  lessonIds: string[]
+}
+
+export function celebrationStorageKey(studentId: string): string {
+  return `mem-celebrated-${studentId}`
+}
+
+/** A memorized part, with the lesson it belongs to. */
+export interface MemorizedChunkRef {
+  chunkId: string
+  catalogId: string
+}
+
+/**
+ * Achievements earned since this student last saw one.
+ *
+ * `seen` is null only on a student's very first visit — everything already
+ * memorized by then is history, not something to throw confetti at, so nothing
+ * is returned and the current state is simply recorded as the baseline.
+ *
+ * A finished lesson swallows the part that finished it: earning the last part
+ * of Ayat al-Kursi should show one big "lesson complete", not that plus a
+ * smaller "part 18 done" for the same moment.
+ *
+ * `next` records only what is currently true, so a part the teacher undoes
+ * drops out of the record and can be celebrated again when it's re-earned.
+ */
+export function pendingCelebrations(
+  memorized: MemorizedChunkRef[],
+  completedLessonIds: string[],
+  seen: CelebratedState | null,
+): { chunkIds: string[]; lessonIds: string[]; next: CelebratedState } {
+  const next: CelebratedState = {
+    chunkIds: memorized.map((m) => m.chunkId),
+    lessonIds: [...completedLessonIds],
+  }
+  if (!seen) return { chunkIds: [], lessonIds: [], next }
+
+  const seenChunks = new Set(seen.chunkIds)
+  const seenLessons = new Set(seen.lessonIds)
+  const newLessons = completedLessonIds.filter((id) => !seenLessons.has(id))
+  const newLessonSet = new Set(newLessons)
+
+  return {
+    chunkIds: memorized
+      .filter((m) => !seenChunks.has(m.chunkId) && !newLessonSet.has(m.catalogId))
+      .map((m) => m.chunkId),
+    lessonIds: newLessons,
+    next,
+  }
+}

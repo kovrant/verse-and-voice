@@ -4,6 +4,7 @@ import {
   computeProgress,
   getActiveRound,
   getChronologicalRoundNumber,
+  getDashboardProgress,
   getStudentStage,
   type QuranRound,
 } from "./quran-progress"
@@ -100,6 +101,37 @@ describe("getStudentStage", () => {
     expect(stage.completedQaidaCount).toBe(1)
     expect(stage.activeRound?.round_number).toBe(3)
     expect(stage.isQaida).toBe(false)
+  })
+})
+
+// The student dashboard used to read the active round's para math no matter the
+// stage, so a new Qaida student saw "Para 0 / 30 · 0% of the Quran".
+describe("getDashboardProgress", () => {
+  it("flags a Qaida student and claims no para", () => {
+    const p = getDashboardProgress([round({ type: "qaida" })])
+    expect(p.isQaida).toBe(true)
+    expect(p.paraLabel).toBe(0)
+    expect(p.heroPara).toBe(0)
+  })
+
+  it("reports the current para mid-round", () => {
+    const p = getDashboardProgress([round({ desc_completed: 5, asc_completed: 20 })])
+    expect(p.isQaida).toBe(false)
+    expect(p.heroPara).toBe(20)
+    expect(p.heroTotal).toBe(24)
+  })
+
+  it("stays at 30/30 between rounds instead of falling back to zero", () => {
+    const p = getDashboardProgress([
+      round({ type: "qaida", completed_at: "2020-06-01" }),
+      round({ desc_completed: 30, completed_at: "2022-06-01", started_at: "2020-07-01" }),
+    ])
+    expect(p.allQuranDone).toBe(true)
+    expect(p.khatms).toBe(1)
+    expect(p.heroPara).toBe(30)
+    expect(p.heroTotal).toBe(30)
+    // No active para, so the "Current Para" PDF card stays hidden.
+    expect(p.paraLabel).toBe(0)
   })
 })
 

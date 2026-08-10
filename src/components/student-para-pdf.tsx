@@ -91,9 +91,11 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
         </span>
       </div>
 
-      <div className="mb-5 flex items-center gap-4">
+      {/* Tall viewports stack the cover over the text so the taller card reads
+          as full rather than padded; everywhere else they sit side by side. */}
+      <div className="mb-5 flex grow items-center gap-4 tall:flex-col tall:justify-center tall:gap-5 tall:text-center">
         {/* Mushaf cover */}
-        <div className="relative flex h-32 w-24 flex-shrink-0 flex-col items-center justify-center overflow-hidden rounded-[6px_12px_12px_6px] bg-gradient-to-br from-primary to-[hsl(var(--sage))] shadow-[0_10px_22px_-8px_hsl(var(--primary)/0.55)]">
+        <div className="relative flex h-32 w-24 flex-shrink-0 flex-col items-center justify-center overflow-hidden rounded-[6px_12px_12px_6px] bg-gradient-to-br from-primary to-[hsl(var(--sage))] shadow-[0_10px_22px_-8px_hsl(var(--primary)/0.55)] tall:h-40 tall:w-32">
           <div className="absolute inset-y-0 left-0 w-2 bg-black/20" />
           <div
             className="absolute rounded-md border-[1.5px]"
@@ -102,8 +104,10 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
           <svg width="20" height="20" viewBox="0 0 24 24" fill="#f6c46a" className="mb-1" aria-hidden>
             <path d="M12 2l1.6 6.4L20 10l-6.4 1.6L12 18l-1.6-6.4L4 10l6.4-1.6z" />
           </svg>
-          <div className="font-heading text-[13px] font-bold tracking-[1px] text-white/85">PARA</div>
-          <div className="font-heading text-[38px] font-bold leading-[0.9] text-primary-foreground">
+          <div className="font-heading text-[13px] font-bold tracking-[1px] text-white/85 tall:text-[15px]">
+            PARA
+          </div>
+          <div className="font-heading text-[38px] font-bold leading-[0.9] text-primary-foreground tall:text-[46px]">
             {paraNumber}
           </div>
         </div>
@@ -113,7 +117,7 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
             {item?.title || `Para ${paraNumber}`}
           </div>
           <div className="mt-0.5 text-[13px] text-muted-foreground">Juz {paraNumber} of 30</div>
-          <div className="mt-3 flex flex-wrap gap-[7px]">
+          <div className="mt-3 flex flex-wrap gap-[7px] tall:justify-center">
             <span className="rounded-[9px] bg-[hsl(var(--surface-alt))] px-[10px] py-[5px] text-[12px] font-bold text-foreground">
               Pages {juzPages(paraNumber)}
             </span>

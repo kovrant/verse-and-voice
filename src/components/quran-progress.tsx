@@ -87,6 +87,37 @@ export function getChronologicalRoundNumber(rounds: QuranRound[], round: QuranRo
 }
 
 /**
+ * Everything the student dashboard's progress card needs, in one place.
+ *
+ * Two states have no para number of their own and must not read as "Para 0":
+ * a Qaida student hasn't started the Quran yet, and a student between rounds
+ * (all 30 done, nothing active) has finished it.
+ */
+export function getDashboardProgress(rounds: QuranRound[]) {
+  const { isQaida, activeRound, completedQuranCount } = getStudentStage(rounds)
+  const { currentPara, total } = computeProgress(
+    activeRound?.desc_completed || 0,
+    activeRound?.asc_completed || 0,
+  )
+  const allQuranDone = !activeRound && completedQuranCount > 0
+  const paraLabel = currentPara ?? total
+
+  return {
+    isQaida,
+    allQuranDone,
+    khatms: completedQuranCount,
+    roundNum: activeRound
+      ? getChronologicalRoundNumber(rounds, activeRound)
+      : completedQuranCount || 1,
+    /** Current para, or 0 when there isn't one — drives the "Current Para" PDF. */
+    paraLabel,
+    /** What the card headline and the journey path show. */
+    heroPara: allQuranDone ? 30 : paraLabel,
+    heroTotal: allQuranDone ? 30 : total,
+  }
+}
+
+/**
  * Compute current para and total from desc/asc progress.
  */
 export function computeProgress(desc: number, asc: number) {

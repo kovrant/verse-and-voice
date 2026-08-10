@@ -80,7 +80,7 @@ export function NotificationCompose() {
       setForm(EMPTY)
       setOpen(false)
     } catch {
-      toast.error("Network error — please try again.")
+      toast.error("Network error. Please try again.")
     } finally {
       setSending(false)
     }

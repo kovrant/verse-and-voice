@@ -90,6 +90,8 @@ export interface Student {
   class_time: string | null
   /** 0=Sun … 6=Sat. Empty/null = teacher hasn't configured days yet. */
   class_days: number[] | null
+  /** Assigned Qaida (media_library id), or null if none. */
+  qaida_media_id?: string | null
   created_at: string
 }
 

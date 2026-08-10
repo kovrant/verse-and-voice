@@ -4,8 +4,12 @@
 
 import { format } from "date-fns"
 import { BookMarked, Check, Sparkles } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
+import {
+  type Celebration,
+  MemCelebration,
+} from "@/components/memorization-celebration"
 import {
   loadChunksFor,
   loadMemorizedChunkIds,
@@ -14,10 +18,105 @@ import {
 } from "@/components/memorization-chunks"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { chunkProgress, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
+import {
+  type CelebratedState,
+  celebrationStorageKey,
+  chunkProgress,
+  labelFor,
+  type MemorizedChunkRef,
+  pendingCelebrations,
+  STUDENT_MEM_SELECT,
+  type StudentMemItem,
+} from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
+
+function readCelebrated(studentId: string): CelebratedState | null {
+  try {
+    const raw = localStorage.getItem(celebrationStorageKey(studentId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<CelebratedState>
+    return { chunkIds: parsed.chunkIds ?? [], lessonIds: parsed.lessonIds ?? [] }
+  } catch {
+    // Unreadable or disabled storage just means we celebrate nothing this time,
+    // which is far better than crashing the page a child came here to use.
+    return null
+  }
+}
+
+function writeCelebrated(studentId: string, state: CelebratedState) {
+  try {
+    localStorage.setItem(celebrationStorageKey(studentId), JSON.stringify(state))
+  } catch {
+    /* private mode / quota — nothing we can do, and nothing worth breaking for */
+  }
+}
+
+/**
+ * Turn the freshly loaded progress into the wins this student hasn't seen yet,
+ * recording the new baseline as we go.
+ */
+function newCelebrations(
+  studentId: string,
+  items: StudentMemItem[],
+  chunksByCatalog: Record<string, MemChunk[]>,
+  memorizedIds: Set<string>,
+): Celebration[] {
+  const memorized: MemorizedChunkRef[] = []
+  const completedLessonIds: string[] = []
+
+  for (const item of items) {
+    const chunks = chunksByCatalog[item.catalog_id] || []
+    if (chunks.length === 0) continue
+    for (const c of chunks) {
+      if (memorizedIds.has(c.id)) memorized.push({ chunkId: c.id, catalogId: item.catalog_id })
+    }
+    if (chunkProgress(chunks, memorizedIds).isMemorized) completedLessonIds.push(item.catalog_id)
+  }
+
+  const { chunkIds, lessonIds, next } = pendingCelebrations(
+    memorized,
+    completedLessonIds,
+    readCelebrated(studentId),
+  )
+  writeCelebrated(studentId, next)
+  if (chunkIds.length === 0 && lessonIds.length === 0) return []
+
+  const newChunks = new Set(chunkIds)
+  const newLessons = new Set(lessonIds)
+  const out: Celebration[] = []
+
+  for (const item of items) {
+    const chunks = chunksByCatalog[item.catalog_id] || []
+    const title = item.memorization_catalog?.title || "Lesson"
+    if (newLessons.has(item.catalog_id)) {
+      out.push({
+        kind: "lesson",
+        id: item.catalog_id,
+        title,
+        imageUrl: item.memorization_catalog?.image_url ?? null,
+        total: chunks.length,
+      })
+    }
+    const { done, total } = chunkProgress(chunks, memorizedIds)
+    chunks.forEach((c, i) => {
+      if (!newChunks.has(c.id)) return
+      out.push({
+        kind: "part",
+        id: c.id,
+        label: labelFor(c, i),
+        imageUrl: c.image_url,
+        lessonTitle: title,
+        done,
+        total,
+      })
+    })
+  }
+
+  // A finished lesson goes first — the big moment shouldn't wait behind cheers.
+  return out.sort((a, b) => (a.kind === b.kind ? 0 : a.kind === "lesson" ? -1 : 1))
+}
 
 export default function StudentMemorizationPage() {
   const { student, loading } = useStudent()
@@ -27,31 +126,66 @@ export default function StudentMemorizationPage() {
   const [loadingItems, setLoadingItems] = useState(true)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [expandedMemorized, setExpandedMemorized] = useState<Set<string>>(new Set())
+  const [queue, setQueue] = useState<Celebration[]>([])
+  const studentId = student?.id ?? null
+
+  const load = useCallback(async () => {
+    if (!studentId) return
+    const { data } = await supabase
+      .from("student_memorization")
+      .select(STUDENT_MEM_SELECT)
+      .eq("student_id", studentId)
+      .order("created_at", { ascending: false })
+    const list = ((data as any) || []) as StudentMemItem[]
+    const [chunks, memorizedIds] = await Promise.all([
+      loadChunksFor(list.map((m) => m.catalog_id)),
+      loadMemorizedChunkIds(studentId),
+    ])
+    setItems(list)
+    setChunksByItem(chunks)
+    setMemorizedChunkIds(memorizedIds)
+    setLoadingItems(false)
+
+    const fresh = newCelebrations(studentId, list, chunks, memorizedIds)
+    if (fresh.length === 0) return
+    setQueue((prev) => {
+      const queued = new Set(prev.map((c) => c.id))
+      return [...prev, ...fresh.filter((c) => !queued.has(c.id))]
+    })
+  }, [studentId])
 
   useEffect(() => {
-    if (!student) return
-    let active = true
-    ;(async () => {
-      const { data } = await supabase
-        .from("student_memorization")
-        .select(STUDENT_MEM_SELECT)
-        .eq("student_id", student.id)
-        .order("created_at", { ascending: false })
-      const list = ((data as any) || []) as StudentMemItem[]
-      const [chunks, memorizedIds] = await Promise.all([
-        loadChunksFor(list.map((m) => m.catalog_id)),
-        loadMemorizedChunkIds(student.id),
-      ])
-      if (!active) return
-      setItems(list)
-      setChunksByItem(chunks)
-      setMemorizedChunkIds(memorizedIds)
-      setLoadingItems(false)
-    })()
-    return () => {
-      active = false
+    void load()
+  }, [load])
+
+  // Parts are marked by the teacher, so the win arrives from another device.
+  // Without this the pill would just be quietly green on some later refresh.
+  useEffect(() => {
+    if (!studentId) return
+    let t: ReturnType<typeof setTimeout> | undefined
+    const refresh = () => {
+      if (t) clearTimeout(t)
+      t = setTimeout(() => void load(), 400)
     }
-  }, [student])
+    const channel = supabase.channel(`mem-chunks:${studentId}`).on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "student_memorization_chunks",
+        filter: `student_id=eq.${studentId}`,
+      },
+      refresh,
+    )
+    // RLS on postgres_changes is evaluated with the user's JWT — attach it first.
+    void supabase.realtime.setAuth().finally(() => channel.subscribe())
+    return () => {
+      if (t) clearTimeout(t)
+      supabase.removeChannel(channel)
+    }
+  }, [studentId, load])
+
+  const dismissCelebration = useCallback(() => setQueue((q) => q.slice(1)), [])
 
   // Deep link from Classes: /student/memorization#mem-<id>
   useEffect(() => {
@@ -80,6 +214,8 @@ export default function StudentMemorizationPage() {
 
   const memorizing = items.filter((m) => m.status === "memorizing")
   const memorized = items.filter((m) => m.status === "memorized")
+  const celebration = queue[0] ?? null
+  const celebratingId = celebration?.kind === "part" ? celebration.id : null
 
   function toggleExpanded(id: string) {
     setExpandedMemorized((prev) => {
@@ -163,6 +299,7 @@ export default function StudentMemorizationPage() {
                       memorizedIds={memorizedChunkIds}
                       overviewUrl={item.memorization_catalog?.image_url}
                       title={title}
+                      celebratingId={celebratingId}
                     />
                   ) : (
                     <p className="text-sm text-muted-foreground py-2">
@@ -259,6 +396,8 @@ export default function StudentMemorizationPage() {
           </CardContent>
         </Card>
       )}
+
+      <MemCelebration current={celebration} onDismiss={dismissCelebration} />
     </div>
   )
 }

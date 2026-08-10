@@ -59,18 +59,21 @@ interface MediaItem {
 const MEDIA_TYPES = [
   { value: "quran", label: "Quran", icon: "📖" },
   { value: "memorization", label: "Memorization", icon: "🕌" },
+  { value: "qaida", label: "Qaida", icon: "🔤" },
   { value: "general", label: "General", icon: "📁" },
 ]
 
 const DEFAULT_CATEGORIES: Record<string, string[]> = {
   quran: ["Para"],
   memorization: ["Surah", "Dua", "Namaz", "General"],
+  qaida: ["Noorani", "Baghdadi", "Madani"],
   general: ["Document", "Resource", "Other"],
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   quran: { bg: "bg-secondary", text: "text-muted-foreground" },
   memorization: { bg: "bg-secondary", text: "text-muted-foreground" },
+  qaida: { bg: "bg-secondary", text: "text-muted-foreground" },
   general: { bg: "bg-secondary", text: "text-muted-foreground" },
 }
 

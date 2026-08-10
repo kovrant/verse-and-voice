@@ -117,7 +117,7 @@ export async function notifyStudentClassLive(studentId: string): Promise<void> {
     recipient_id: profile.id,
     type: "live_class",
     title,
-    body: "Your teacher started the class — tap to join.",
+    body: "Your teacher started the class. Tap to join.",
     link: "/student/classes",
     priority: "high",
   })

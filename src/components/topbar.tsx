@@ -30,7 +30,7 @@ function PortalTopBar({
   onToggleSidebar?: () => void
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
       {onToggleSidebar ? (
         <button
           type="button"

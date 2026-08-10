@@ -2,9 +2,16 @@
 
 /* eslint-disable @next/next/no-img-element -- remote Supabase URLs; next/image isn't worth it here */
 
-import { Check, Sparkles, X } from "lucide-react"
+import { Check, ChevronLeft, ChevronRight, Sparkles } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import {
   chunkProgress,
   currentChunkIndex,
@@ -60,28 +67,147 @@ export async function setChunkMemorized(studentId: string, chunkId: string, memo
     .eq("chunk_id", chunkId)
 }
 
-function ImageLightbox({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+/** One page in the viewer — a lesson overview, or a single part. */
+export interface ViewerPage {
+  src: string
+  label: string
+  /** Compact label for the thumbnail strip ("All", "3"). */
+  short: string
+  done?: boolean
+}
+
+function ViewerArrow({
+  side,
+  disabled,
+  onClick,
+}: {
+  side: "prev" | "next"
+  disabled: boolean
+  onClick: () => void
+}) {
+  const Icon = side === "prev" ? ChevronLeft : ChevronRight
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
-      onClick={onClose}
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={side === "prev" ? "Previous page" : "Next page"}
+      className={cn(
+        "absolute top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full",
+        "border border-border bg-card/95 text-foreground shadow-soft backdrop-blur transition-all",
+        "hover:bg-secondary disabled:pointer-events-none disabled:opacity-0",
+        side === "prev" ? "left-2" : "right-2",
+      )}
     >
-      <div className="relative max-h-[85vh] w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
-        <img
-          src={src}
-          alt={alt}
-          className="mx-auto max-h-[85vh] rounded-2xl bg-white object-contain p-3"
-        />
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Close preview"
-          className="absolute right-0 top-0 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-foreground hover:bg-secondary"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
+      <Icon className="h-6 w-6" />
+    </button>
+  )
+}
+
+/**
+ * Full-screen page viewer. Built on the shared Dialog so it gets Escape, focus
+ * trapping and restore, scroll lock and the app's open/close animation — the
+ * hand-rolled overlay this replaced had none of them.
+ *
+ * It also moves between pages, so a child comparing part 3 with part 4 doesn't
+ * have to close and reopen it once per page.
+ */
+function MemPageViewer({
+  pages,
+  index,
+  onIndexChange,
+  onClose,
+}: {
+  pages: ViewerPage[]
+  index: number
+  onIndexChange: (index: number) => void
+  onClose: () => void
+}) {
+  const page = pages[index]
+  if (!page) return null
+
+  const many = pages.length > 1
+  const go = (delta: number) => {
+    const next = index + delta
+    if (next >= 0 && next < pages.length) onIndexChange(next)
+  }
+
+  return (
+    <Dialog open onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className="max-w-4xl gap-3 p-4 sm:p-5"
+        onKeyDown={(e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault()
+            go(-1)
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault()
+            go(1)
+          }
+        }}
+      >
+        <DialogHeader className="pr-10 text-left sm:text-left">
+          <DialogTitle className="flex flex-wrap items-center gap-2 text-base">
+            {page.label}
+            {page.done && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+                <Check className="h-3 w-3" />
+                Memorized
+              </span>
+            )}
+          </DialogTitle>
+          <DialogDescription>
+            {many
+              ? `Page ${index + 1} of ${pages.length} — use the arrows to move between pages`
+              : "Press Escape or tap outside to close"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="relative flex items-center justify-center overflow-hidden rounded-2xl bg-white">
+          <img
+            src={page.src}
+            alt={page.label}
+            className="max-h-[66vh] w-full object-contain p-3"
+          />
+          {many && (
+            <>
+              <ViewerArrow side="prev" disabled={index === 0} onClick={() => go(-1)} />
+              <ViewerArrow
+                side="next"
+                disabled={index === pages.length - 1}
+                onClick={() => go(1)}
+              />
+            </>
+          )}
+        </div>
+
+        {many && (
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 main-scroll">
+            {pages.map((p, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => onIndexChange(i)}
+                aria-label={p.label}
+                aria-current={i === index ? "true" : undefined}
+                className={cn(
+                  "flex h-8 min-w-8 flex-shrink-0 items-center justify-center gap-1 rounded-lg px-2",
+                  "text-xs font-bold tabular-nums transition-all",
+                  i === index
+                    ? "bg-foreground text-background"
+                    : p.done
+                      ? "bg-emerald-500/15 text-emerald-600 hover:bg-emerald-500/25 dark:text-emerald-400"
+                      : "bg-secondary text-muted-foreground hover:bg-muted",
+                )}
+              >
+                {p.done && i !== index && <Check className="h-3 w-3" />}
+                {p.short}
+              </button>
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -100,11 +226,14 @@ export function MemPartPath({
   memorizedIds,
   selectedIndex,
   onSelect,
+  celebratingId,
 }: {
   chunks: MemChunk[]
   memorizedIds: Set<string>
   selectedIndex?: number
   onSelect?: (index: number) => void
+  /** Part being celebrated right now — pops so the eye lands on it. */
+  celebratingId?: string | null
 }) {
   const currentIdx = currentChunkIndex(chunks, memorizedIds)
   if (chunks.length === 0) return null
@@ -130,6 +259,8 @@ export function MemPartPath({
               state === "upcoming" &&
                 "bg-secondary text-muted-foreground ring-1 ring-border hover:bg-muted",
               selected && state !== "current" && "ring-2 ring-foreground/20",
+              celebratingId === c.id &&
+                "celebrate-pop ring-4 ring-amber-300 shadow-lg shadow-emerald-500/40",
             )}
           >
             {state === "done" ? <Check className="h-3.5 w-3.5" /> : null}
@@ -184,7 +315,12 @@ export function MemPartHero({
         </span>
       </button>
       {preview && (
-        <ImageLightbox src={chunk.image_url} alt={title} onClose={() => setPreview(false)} />
+        <MemPageViewer
+          pages={[{ src: chunk.image_url, label: title, short: String(index + 1) }]}
+          index={0}
+          onIndexChange={() => {}}
+          onClose={() => setPreview(false)}
+        />
       )}
     </div>
   )
@@ -297,11 +433,13 @@ export function MemStudentLesson({
   memorizedIds,
   overviewUrl,
   title,
+  celebratingId,
 }: {
   chunks: MemChunk[]
   memorizedIds: Set<string>
   overviewUrl?: string | null
   title: string
+  celebratingId?: string | null
 }) {
   const { done, total, isMemorized } = chunkProgress(chunks, memorizedIds)
   const currentIdx = currentChunkIndex(chunks, memorizedIds)
@@ -313,12 +451,25 @@ export function MemStudentLesson({
   const hero = chunks[heroIdx]
   const pct = Math.round((done / total) * 100)
 
+  // One viewer over the whole lesson: the overview first (when there is one),
+  // then every part, so a child can page through all of it in one go.
+  const pages: ViewerPage[] = [
+    ...(overviewUrl ? [{ src: overviewUrl, label: `Full ${title}`, short: "All" }] : []),
+    ...chunks.map((c, i) => ({
+      src: c.image_url,
+      label: labelFor(c, i),
+      short: String(i + 1),
+      done: memorizedIds.has(c.id),
+    })),
+  ]
+  const chunkPageOffset = overviewUrl ? 1 : 0
+
   return (
     <div className="space-y-4">
       {overviewUrl && (
         <button
           type="button"
-          onClick={() => setPreviewIdx(-1)}
+          onClick={() => setPreviewIdx(0)}
           className="block w-full overflow-hidden rounded-xl border border-border/60 bg-white"
           aria-label={`View full ${title}`}
         >
@@ -360,7 +511,8 @@ export function MemStudentLesson({
         chunks={chunks}
         memorizedIds={memorizedIds}
         selectedIndex={heroIdx}
-        onSelect={(i) => setPreviewIdx(i)}
+        onSelect={(i) => setPreviewIdx(i + chunkPageOffset)}
+        celebratingId={celebratingId}
       />
 
       {!isMemorized && (
@@ -386,17 +538,11 @@ export function MemStudentLesson({
         </div>
       )}
 
-      {previewIdx === -1 && overviewUrl && (
-        <ImageLightbox
-          src={overviewUrl}
-          alt={`Full ${title}`}
-          onClose={() => setPreviewIdx(null)}
-        />
-      )}
-      {previewIdx != null && previewIdx >= 0 && chunks[previewIdx] && (
-        <ImageLightbox
-          src={chunks[previewIdx].image_url}
-          alt={labelFor(chunks[previewIdx], previewIdx)}
+      {previewIdx != null && (
+        <MemPageViewer
+          pages={pages}
+          index={Math.min(previewIdx, pages.length - 1)}
+          onIndexChange={setPreviewIdx}
           onClose={() => setPreviewIdx(null)}
         />
       )}

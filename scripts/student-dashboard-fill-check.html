@@ -1,0 +1,202 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>student shell layout check</title>
+<!--
+  Two things this guards:
+
+  1. The dashboard fills tall viewports (tablets in portrait) without leaving a
+     bottom void, and nothing is squashed or clipped on short ones.
+  2. Ordinary `mx-auto max-w-*` pages (notifications, history, quran) still span
+     the full content width. They collapsed to fit-content once, when the shell
+     wrapper was a flex column — flex items with auto cross-axis margins do not
+     stretch. That is why the wrapper is a block that grows, not a flex column.
+
+  Open in a browser and read the PASS/FAIL line. The CSS is a hand-copy of the
+  layout properties in app-shell.tsx, topbar.tsx, student/page.tsx and the two
+  dashboard cards — mirror any change to those classes here, or this check
+  silently stops meaning anything. `tall` mirrors the min-height:1100px screen
+  in tailwind.config.js.
+-->
+<body style="font:12px system-ui;background:#eef1f6">
+<div id="out">running…</div>
+<script>
+const SHELL_CSS = `
+* { box-sizing: border-box; margin: 0; }
+
+/* --- mirrors src/components/app-shell.tsx + topbar.tsx --- */
+.shell   { display: flex; height: 100vh; overflow: hidden; }
+.sidebar { width: 288px; flex-shrink: 0; background: #1d2a22; }
+.main    { display: flex; height: 100vh; min-width: 0; flex: 1 1 0%;
+           flex-direction: column; overflow-y: auto; }
+.topbar  { position: sticky; top: 0; display: flex; height: 64px;
+           flex-shrink: 0; background: #fff; }                  /* h-16 shrink-0 */
+/* block, not a flex column — see note at the top of this file */
+.content { position: relative; flex: 1 0 auto; padding: 16px; } /* shrink-0 grow p-4 */
+@media (min-width: 1024px) { .content { padding: 32px; } }      /* lg:p-8 */
+/* below lg the sidebar is an off-canvas drawer, not part of the flex row */
+@media (max-width: 1023.98px) { .sidebar { display: none; } }
+`
+
+const DASHBOARD_CSS = `
+/* --- mirrors src/app/student/page.tsx --- */
+.page     { margin: 0 auto; display: flex; width: 100%; max-width: 64rem;
+            min-height: 100%; flex-direction: column; }
+.greeting { height: 81px;  margin-bottom: 30px; flex-shrink: 0; background: #dfe6e0; }
+.streak   { height: 144px; margin-bottom: 26px; flex-shrink: 0; background: #22402f; }
+/* progress card is content-sized: it grows only because the wave inside it does */
+.progress { margin-bottom: 26px; flex-shrink: 0; background: #fff; padding: 24px 26px; }
+.prog-hd  { height: 72px; margin-bottom: 22px; background: #eee; }
+.journey  { overflow-x: auto; background: #f2f1ea; padding: 16px 16px 8px; }
+.journey .inner { min-width: 520px; }
+.journey svg { width: 100%; height: auto; display: block; }
+.wave-tall { display: none; }
+.grid     { display: grid; flex: 1 0 auto; align-items: stretch; gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); }
+
+/* --- mirrors student-para-pdf.tsx / student-memorization-card.tsx --- */
+.card     { display: flex; flex-direction: column; background: #fff; padding: 22px 24px; }
+.card-hd  { height: 20px; margin-bottom: 16px; flex-shrink: 0; background: #eee; }
+.card-bd  { display: flex; flex: 1 0 auto; align-items: center; gap: 16px;
+            margin-bottom: 20px; }
+.card-ico { width: 96px; height: 128px; flex-shrink: 0; background: #22402f; }
+.card-txt { height: 96px; min-width: 0; background: #f4f4f0; flex: 1; }
+.card-cta { margin-top: auto; height: 48px; flex-shrink: 0; background: #22402f; }
+
+/* --- the tall: screen --- */
+@media (min-height: 1100px) {
+  .wave-short { display: none; }
+  .wave-tall  { display: block; }
+  .card-bd    { flex-direction: column; justify-content: center; gap: 20px; }
+  .card-ico   { width: 128px; height: 160px; }
+  .card-txt   { width: 100%; flex: 0 0 auto; }
+  @media (min-width: 1024px) { .grid { max-height: 460px; } }  /* tall:lg:max-h */
+}
+`
+
+// mirrors src/components/notifications-view.tsx (and the history / quran pages)
+const FEED_CSS = `.feed { margin: 0 auto; max-width: 48rem; }
+.feed-row { height: 64px; border-bottom: 1px solid #eee; background: #fff; }`
+
+const DASHBOARD_BODY = `
+  <div class="page">
+    <div class="greeting"></div>
+    <div class="streak"></div>
+    <div class="progress">
+      <div class="prog-hd"></div>
+      <div class="journey"><div class="inner">
+        <div class="wave-short"><svg viewBox="0 0 1010 176"></svg></div>
+        <div class="wave-tall"><svg viewBox="0 0 1010 340"></svg></div>
+      </div></div>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="card-hd"></div><div class="card-bd"><div class="card-ico"></div><div class="card-txt"></div></div><div class="card-cta"></div></div>
+      <div class="card"><div class="card-hd"></div><div class="card-bd"><div class="card-ico"></div><div class="card-txt"></div></div><div class="card-cta"></div></div>
+    </div>
+  </div>`
+
+const FEED_BODY = `
+  <div class="feed">
+    ${'<div class="feed-row"></div>'.repeat(8)}
+  </div>`
+
+const doc = (css, body) => `<!doctype html><meta charset="utf-8">
+<style>${SHELL_CSS}${css}</style>
+<div class="shell">
+  <div class="sidebar"></div>
+  <div class="main">
+    <div class="topbar"></div>
+    <div class="content">${body}</div>
+  </div>
+</div>`
+
+// Each case renders in an iframe so media queries and 100vh resolve against
+// that viewport, the way they do on the real device.
+function render(w, h, css, body, measure) {
+  return new Promise((resolve) => {
+    const f = document.createElement('iframe')
+    f.style.cssText = `width:${w}px;height:${h}px;border:0;position:absolute;left:-99999px`
+    f.onload = () => {
+      resolve(measure(f.contentDocument, w, h))
+      f.remove()
+    }
+    f.srcdoc = doc(css, body)
+    document.body.append(f)
+  })
+}
+
+const measureDashboard = (d, w, h) => {
+  const q = (s) => d.querySelector(s)
+  const main = q('.main'), grid = q('.grid'), prog = q('.progress'), card = q('.card')
+  const pad = w >= 1024 ? 32 : 16
+  return {
+    viewport: `${w}x${h}`,
+    topbar: q('.topbar').getBoundingClientRect().height,
+    pageWidth: Math.round(q('.page').getBoundingClientRect().width),
+    progress: Math.round(prog.getBoundingClientRect().height),
+    grid: Math.round(grid.getBoundingClientRect().height),
+    card: Math.round(card.getBoundingClientRect().height),
+    // unused space between the last card and the bottom of the padded area
+    voidBelow: Math.round(
+      main.getBoundingClientRect().bottom - grid.getBoundingClientRect().bottom - pad
+    ),
+    scrolls: main.scrollHeight > main.clientHeight,
+    // a box shorter than its own content means we clipped something
+    gridClipped: grid.scrollHeight > grid.clientHeight + 1,
+    cardClipped: [...d.querySelectorAll('.card')].some((c) => c.scrollHeight > c.clientHeight + 1),
+  }
+}
+
+const measureFeed = (d, w, h) => {
+  const pad = w >= 1024 ? 32 : 16
+  const available = d.querySelector('.main').clientWidth - pad * 2
+  return {
+    viewport: `${w}x${h}`,
+    feedWidth: Math.round(d.querySelector('.feed').getBoundingClientRect().width),
+    expected: Math.min(available, 768), // max-w-3xl, else fill the content area
+  }
+}
+
+const CASES = [
+  [1152, 1536], // iPad Pro M4 portrait — the tall case
+  [1024, 1366], // iPad Pro 12.9 portrait
+  [ 834, 1194], // iPad Air portrait (below lg: drawer sidebar, cards still 2-up)
+  [1512,  982], // MacBook Pro 14
+  [1440,  900], // laptop — content taller than viewport, must just scroll
+  [ 390,  844], // phone — cards stack, tall: must not apply
+  [ 390, 1200], // narrow *and* tall — cards stack while tall: is active
+  [1200, 2400], // absurdly tall — cap must hold, no ballooning
+]
+
+;(async () => {
+  const dash = [], feed = [], fail = []
+  for (const [w, h] of CASES) {
+    dash.push(await render(w, h, DASHBOARD_CSS, DASHBOARD_BODY, measureDashboard))
+    feed.push(await render(w, h, FEED_CSS, FEED_BODY, measureFeed))
+  }
+
+  for (const r of dash) {
+    if (r.topbar !== 64) fail.push(`${r.viewport}: topbar squashed to ${r.topbar}px`)
+    if (r.gridClipped) fail.push(`${r.viewport}: card grid clips its content`)
+    if (r.cardClipped) fail.push(`${r.viewport}: a card clips its own content`)
+    // Boxes big enough to look empty are the thing we're avoiding, and they
+    // are why the caps exist — so past a certain viewport height we accept
+    // leftover space instead of stretching the cards to swallow it.
+    if (r.card > 480) fail.push(`${r.viewport}: card ballooned to ${r.card}px`)
+    // The original bug: spare height dumped below the page as a void.
+    const h = Number(r.viewport.split('x')[1])
+    if (!r.scrolls && h <= 1600 && r.voidBelow > 260)
+      fail.push(`${r.viewport}: ${r.voidBelow}px void below content`)
+  }
+  for (const r of feed) {
+    if (r.feedWidth !== r.expected)
+      fail.push(`${r.viewport}: feed page is ${r.feedWidth}px, expected ${r.expected}px `
+        + `(a page root collapsed to fit-content)`)
+  }
+
+  document.getElementById('out').innerHTML =
+    '<h3>dashboard</h3><pre>' + JSON.stringify(dash, null, 1) + '</pre>' +
+    '<h3>mx-auto max-w-3xl page (notifications / history / quran)</h3><pre>' +
+    JSON.stringify(feed, null, 1) + '</pre>' +
+    '<pre id="verdict">' + (fail.length ? 'FAIL\n' + fail.join('\n') : 'PASS') + '</pre>'
+})()
+</script>

@@ -50,6 +50,7 @@ import { ActivityFeed, type ActivityLog } from "@/components/student-activity-fe
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentPortalAccess } from "@/components/student-portal-access"
+import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import {
   type ClassSession,
   MemThumb,
@@ -1530,6 +1531,7 @@ export default function StudentDetailPage() {
         <div className="animate-fade-in-up space-y-4">
           <StudentPortalAccess studentId={student.id} />
           <StudentSignInAccess studentId={student.id} />
+          <StudentQaidaAssign studentId={student.id} qaidaMediaId={student.qaida_media_id} />
           <StudentForceSignOut studentId={student.id} />
         </div>
       )}

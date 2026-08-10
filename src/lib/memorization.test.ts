@@ -3,12 +3,14 @@ import { describe, expect, it } from "vitest"
 import {
   CATALOG_SELECT,
   type CatalogItem,
+  type CelebratedState,
   chunkProgress,
   currentChunkIndex,
   labelFor,
   MEM_ITEM_SELECT,
   type MemChunk,
   type MemItem,
+  pendingCelebrations,
   STUDENT_MEM_SELECT,
 } from "@/lib/memorization"
 
@@ -133,5 +135,62 @@ describe("currentChunkIndex", () => {
     const a = chunk({ id: "a" })
     const b = chunk({ id: "b" })
     expect(currentChunkIndex([a, b], new Set(["a", "b"]))).toBe(-1)
+  })
+})
+
+const ref = (chunkId: string, catalogId = "surah-a") => ({ chunkId, catalogId })
+const seen = (chunkIds: string[], lessonIds: string[] = []): CelebratedState => ({
+  chunkIds,
+  lessonIds,
+})
+
+describe("pendingCelebrations", () => {
+  it("celebrates nothing on a student's first ever visit, but records the baseline", () => {
+    const r = pendingCelebrations([ref("c1"), ref("c2")], [], null)
+    expect(r.chunkIds).toEqual([])
+    expect(r.lessonIds).toEqual([])
+    expect(r.next.chunkIds).toEqual(["c1", "c2"])
+  })
+
+  it("celebrates only parts earned since the last visit", () => {
+    const r = pendingCelebrations([ref("c1"), ref("c2"), ref("c3")], [], seen(["c1"]))
+    expect(r.chunkIds).toEqual(["c2", "c3"])
+  })
+
+  it("celebrates nothing when nothing changed", () => {
+    const r = pendingCelebrations([ref("c1"), ref("c2")], [], seen(["c1", "c2"]))
+    expect(r.chunkIds).toEqual([])
+    expect(r.lessonIds).toEqual([])
+  })
+
+  it("lets a finished lesson swallow the part that finished it", () => {
+    const r = pendingCelebrations([ref("c1"), ref("c2")], ["surah-a"], seen(["c1"]))
+    expect(r.lessonIds).toEqual(["surah-a"])
+    // c2 completed the lesson, so it must not also fire its own part win.
+    expect(r.chunkIds).toEqual([])
+  })
+
+  it("still celebrates parts of other lessons alongside a finished one", () => {
+    const r = pendingCelebrations(
+      [ref("c1"), ref("c2"), ref("d1", "surah-b")],
+      ["surah-a"],
+      seen(["c1"]),
+    )
+    expect(r.lessonIds).toEqual(["surah-a"])
+    expect(r.chunkIds).toEqual(["d1"])
+  })
+
+  it("does not re-celebrate a lesson that was already celebrated", () => {
+    const r = pendingCelebrations([ref("c1")], ["surah-a"], seen(["c1"], ["surah-a"]))
+    expect(r.lessonIds).toEqual([])
+  })
+
+  it("forgets a part the teacher undid, so re-earning it celebrates again", () => {
+    // Teacher undoes c2: it drops out of the record...
+    const undone = pendingCelebrations([ref("c1")], [], seen(["c1", "c2"]))
+    expect(undone.next.chunkIds).toEqual(["c1"])
+    // ...so when the student earns it back, it counts as new.
+    const reearned = pendingCelebrations([ref("c1"), ref("c2")], [], undone.next)
+    expect(reearned.chunkIds).toEqual(["c2"])
   })
 })

@@ -82,13 +82,17 @@ CREATE TABLE quran_rounds (
 CREATE TABLE media_library (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   title text NOT NULL,
-  type text NOT NULL CHECK (type IN ('quran', 'memorization', 'general')),
+  type text NOT NULL CHECK (type IN ('quran', 'memorization', 'general', 'qaida')),
   category text NOT NULL DEFAULT 'general',
   file_url text NOT NULL,
   file_type text NOT NULL CHECK (file_type IN ('pdf', 'image', 'audio', 'video')),
   meta jsonb DEFAULT '{}',
   created_at timestamptz DEFAULT now()
 );
+
+-- One assigned qaida per student (declared here since it references media_library).
+ALTER TABLE students
+  ADD COLUMN IF NOT EXISTS qaida_media_id uuid REFERENCES media_library(id) ON DELETE SET NULL;
 
 -- Class sessions (one row per completed live class)
 CREATE TABLE class_sessions (

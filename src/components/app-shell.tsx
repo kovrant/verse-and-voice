@@ -24,7 +24,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-screen overflow-hidden bg-background">
       {isStudentArea ? <StudentSidebar collapsed={collapsed} /> : <Sidebar />}
       <main
-        className="flex-1 min-w-0 h-screen overflow-y-auto main-scroll"
+        className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll"
         style={{ contain: "layout style" }}
       >
         {isStudentArea ? (
@@ -62,7 +62,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ) : (
           !isAuthArea && <TeacherTopBar />
         )}
-        <div className="relative p-4 lg:p-8">{children}</div>
+        {/* Grows to fill the height under the top bar so a page can `min-h-full`
+            into the leftover space on tall viewports (tablets in portrait)
+            instead of leaving a bottom void. Deliberately still a block, not a
+            flex column: flex items with auto cross-axis margins don't stretch,
+            which would collapse every `mx-auto max-w-*` page to fit-content. */}
+        <div className="relative shrink-0 grow p-4 lg:p-8">{children}</div>
       </main>
     </div>
   )

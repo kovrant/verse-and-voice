@@ -8,6 +8,12 @@ const config = {
   ],
   theme: {
     extend: {
+      screens: {
+        /* Viewports with vertical room to spare — tablets in portrait. Layouts
+           that spread out to fill the height key off this, so laptops and
+           phones (which are never this tall) keep their compact arrangement. */
+        tall: { raw: "(min-height: 1100px)" },
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

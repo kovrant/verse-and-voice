@@ -892,6 +892,112 @@
   }
 }
 
+/* ── Memorization achievements ─────────────────────────────────────────
+   A part or a whole lesson landing should feel earned. Decorative pieces
+   (stars, confetti) are hidden outright under reduced motion; the parts that
+   carry meaning — the card, the medal, the tick — stay put and simply appear. */
+@keyframes celebrate-pop {
+  0% {
+    opacity: 0;
+    transform: translateY(16px) scale(0.86);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.04);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Flies outward along a per-star vector set inline as --burst-x/--burst-y. */
+@keyframes star-burst {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.3);
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--burst-x, 0), var(--burst-y, 0)) scale(1);
+  }
+}
+
+@keyframes check-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes medal-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-40px) scale(0.4) rotate(-20deg);
+  }
+  55% {
+    opacity: 1;
+    transform: translateY(6px) scale(1.12) rotate(6deg);
+  }
+  78% {
+    transform: translateY(-3px) scale(0.98) rotate(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    opacity: 0;
+    transform: translateY(-12vh) rotate(0deg);
+  }
+  8% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(104vh) rotate(var(--spin, 540deg));
+  }
+}
+
+.celebrate-pop {
+  animation: celebrate-pop 520ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.star-burst {
+  animation: star-burst 900ms ease-out forwards;
+}
+.check-draw {
+  stroke-dasharray: 26;
+  stroke-dashoffset: 26;
+  animation: check-draw 420ms 140ms ease-out forwards;
+}
+.medal-drop {
+  animation: medal-drop 720ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.confetti-piece {
+  animation: confetti-fall var(--fall, 3s) linear var(--delay, 0s) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebrate-pop,
+  .medal-drop {
+    animation: none;
+  }
+  /* Without the draw-on, the tick must not stay invisible. */
+  .check-draw {
+    stroke-dashoffset: 0;
+    animation: none;
+  }
+  .star-burst,
+  .confetti-piece {
+    display: none;
+  }
+}
+
 /* Student login — warm forest stage behind the card */
 [data-portal="student"] .vv-login-stage {
   background: linear-gradient(160deg, #e9eee7 0%, #dfe7db 100%);

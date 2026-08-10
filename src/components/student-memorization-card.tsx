@@ -131,11 +131,13 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
         </span>
       </div>
 
-      <div className="mb-5 flex items-center gap-[18px]">
-        <div className="relative h-[104px] w-[104px] flex-shrink-0">
+      {/* Tall viewports stack the ring over the text so the taller card reads
+          as full rather than padded; everywhere else they sit side by side. */}
+      <div className="mb-5 flex grow items-center gap-[18px] tall:flex-col tall:justify-center tall:gap-5 tall:text-center">
+        <div className="relative h-[104px] w-[104px] flex-shrink-0 tall:h-[132px] tall:w-[132px]">
           {hasChunks ? (
             <>
-              <svg width="104" height="104" viewBox="0 0 120 120" className="-rotate-90">
+              <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
                 <circle cx="60" cy="60" r={R} fill="none" stroke="hsl(var(--surface-alt))" strokeWidth={13} />
                 <circle
                   cx="60"
@@ -150,7 +152,7 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="font-heading text-[26px] font-bold leading-none text-foreground">
+                <div className="font-heading text-[26px] font-bold leading-none text-foreground tall:text-[32px]">
                   {pct}%
                 </div>
                 <div className="text-[11px] font-bold text-muted-foreground">
@@ -173,7 +175,7 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
             {hasChunks ? `Part ${Math.min(done + 1, total)} of ${total}` : "In progress"}
           </div>
           {hasChunks && (
-            <div className="mt-3 flex flex-col gap-[5px]">
+            <div className="mt-3 flex flex-col gap-[5px] tall:items-center">
               <span className="flex items-center gap-2 text-[12.5px] font-bold text-foreground">
                 <span className="h-[9px] w-[9px] rounded-[3px] bg-[hsl(var(--sage))]" />
                 {done} parts done
