@@ -50,6 +50,8 @@ migration_class_days.sql
 migration_memorization_chunks.sql
 migration_notifications_retention.sql
 migration_notifications_rls_fix.sql
+migration_qaida.sql
+migration_qaida_live_class.sql     # allows para_number = 0 (the Qaida sentinel)
 ```
 
 `backfill_old_fees_paid.sql` and `backfill_notification_copy.sql` are one-off data
