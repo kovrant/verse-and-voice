@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { FeeDisplay } from "@/components/fee-display"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -292,11 +293,7 @@ export default function FeesPage() {
 
       {/* Fee Records */}
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-16 shimmer rounded-2xl" />
-          ))}
-        </div>
+        <PageLoading variant="rows" count={4} />
       ) : fees.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">

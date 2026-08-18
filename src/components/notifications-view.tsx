@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { PageLoading } from "@/components/page-loading"
 import { Pagination } from "@/components/ui/pagination"
 import { retentionCutoffIso, sanitizeSearchTerm } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
@@ -161,11 +162,7 @@ export function NotificationsView() {
       </div>
 
       {loading ? (
-        <div className="space-y-2">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-16 shimmer rounded-2xl" />
-          ))}
-        </div>
+        <PageLoading variant="rows" count={6} />
       ) : items.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">

@@ -5,6 +5,7 @@ import { CreditCard } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useExchangeRates } from "@/lib/exchange-rates"
@@ -32,15 +33,7 @@ export default function StudentFeesPage() {
       })
   }, [student])
 
-  if (loading || loadingFees || !student) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
-        <div className="h-8 w-40 shimmer rounded-lg" />
-        <div className="h-16 shimmer rounded-2xl" />
-        <div className="h-64 shimmer rounded-2xl" />
-      </div>
-    )
-  }
+  if (loading || loadingFees || !student) return <PageLoading variant="student-simple" student />
 
   const paidCount = fees.filter((f) => f.is_paid).length
   const unpaidCount = fees.filter((f) => !f.is_paid).length

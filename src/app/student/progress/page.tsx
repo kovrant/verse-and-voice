@@ -9,6 +9,7 @@ import {
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
+import { PageLoading } from "@/components/page-loading"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { supabase } from "@/lib/supabase"
@@ -33,15 +34,7 @@ export default function StudentProgressPage() {
       })
   }, [student])
 
-  if (loading || loadingRounds) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
-        <div className="h-8 w-48 shimmer rounded-lg" />
-        <div className="h-40 shimmer rounded-2xl" />
-        <div className="h-64 shimmer rounded-2xl" />
-      </div>
-    )
-  }
+  if (loading || loadingRounds) return <PageLoading variant="student-simple" student />
 
   // Active rounds first, then most recent.
   const sorted = [...rounds].sort((a, b) => {

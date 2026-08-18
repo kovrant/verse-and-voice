@@ -151,3 +151,10 @@ export function toHijri(date: Date = new Date()): HijriDate {
 export function getHijriToday(): HijriDate {
   return toHijri(new Date())
 }
+
+/** `ordinalDay(1) → "1st"` — English ordinal for the Hijri day. */
+export function ordinalDay(n: number): string {
+  const s = ["th", "st", "nd", "rd"]
+  const v = n % 100
+  return n + (s[(v - 20) % 10] || s[v] || s[0])
+}

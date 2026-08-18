@@ -10,6 +10,7 @@ import {
   type Celebration,
   MemCelebration,
 } from "@/components/memorization-celebration"
+import { PageLoading } from "@/components/page-loading"
 import {
   loadChunksFor,
   loadMemorizedChunkIds,
@@ -202,15 +203,7 @@ export default function StudentMemorizationPage() {
     return () => clearTimeout(t)
   }, [loadingItems, items])
 
-  if (loading || loadingItems) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
-        <div className="h-8 w-48 shimmer rounded-lg" />
-        <div className="h-48 shimmer rounded-2xl" />
-        <div className="h-48 shimmer rounded-2xl" />
-      </div>
-    )
-  }
+  if (loading || loadingItems) return <PageLoading variant="student-simple" student />
 
   const memorizing = items.filter((m) => m.status === "memorizing")
   const memorized = items.filter((m) => m.status === "memorized")

@@ -3,6 +3,7 @@
 import { FileText } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { PageLoading } from "@/components/page-loading"
 import { supabase } from "@/lib/supabase"
 
 interface ParaMedia {
@@ -62,22 +63,7 @@ export function StudentParaPdf({ paraNumber }: { paraNumber: number | null }) {
 
   const card = "flex flex-col rounded-2xl border border-border bg-card p-[22px_24px] shadow-soft"
 
-  if (loading) {
-    return (
-      <div className={card}>
-        <div className="mb-4 h-3 w-24 shimmer rounded" />
-        <div className="flex items-center gap-4">
-          <div className="h-32 w-24 shrink-0 shimmer rounded-[6px_12px_12px_6px]" />
-          <div className="flex-1 space-y-2">
-            <div className="h-6 w-40 shimmer rounded-lg" />
-            <div className="h-3 w-24 shimmer rounded" />
-            <div className="h-6 w-28 shimmer rounded-lg" />
-          </div>
-        </div>
-        <div className="mt-5 h-12 w-full shimmer rounded-[14px]" />
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="widget-book" />
 
   return (
     <div className={card}>

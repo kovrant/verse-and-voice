@@ -1,9 +1,9 @@
 "use client"
 
-import { Loader2 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 
+import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { type QaidaItem, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
@@ -13,11 +13,7 @@ const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    ),
+    loading: () => <InlineLoader label="Opening Qaida…" />,
   },
 )
 
@@ -51,14 +47,7 @@ export default function StudentQaidaPage() {
 
   const assigned = resolveAssignedQaida(items, qaidaMediaId)
 
-  if (studentLoading || !mediaLoaded) {
-    return (
-      <div className="mx-auto max-w-4xl animate-fade-in-up space-y-6">
-        <div className="h-11 w-48 shimmer rounded-xl" />
-        <div className="h-[70vh] shimmer rounded-2xl" />
-      </div>
-    )
-  }
+  if (studentLoading || !mediaLoaded) return <PageLoading variant="pdf" student />
 
   if (error || !student) {
     return (

@@ -9,9 +9,11 @@ import {
   CreditCard,
   LayoutDashboard,
   Menu,
+  Moon,
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
+  SpellCheck,
   Upload,
   Users,
   X,
@@ -22,6 +24,7 @@ import { createContext, memo, useContext, useEffect, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { cn } from "@/lib/utils"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
@@ -44,6 +47,7 @@ const navSections = [
       { href: "/class", label: "Class Session", icon: BookOpen },
       { href: "/memorization", label: "Memorization", icon: BookMarked },
       { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
+      { href: "/qaida", label: "Qaida", icon: SpellCheck },
       { href: "/history", label: "Islamic History", icon: ScrollText },
     ],
   },
@@ -70,6 +74,9 @@ export const Sidebar = memo(function Sidebar() {
   }, [])
 
   if (pathname === "/login" || pathname === "/admin") return null
+
+  const hijri = getHijriToday()
+  const hideOnCollapse = collapsed ? "lg:hidden" : ""
 
   function toggleCollapsed() {
     const next = !collapsed
@@ -167,6 +174,34 @@ export const Sidebar = memo(function Sidebar() {
             <X className="h-4 w-4" />
           </button>
         </div>
+
+        {/* Islamic month card → Islamic History.
+            Don't copy the student --primary/--sage classes: admin has no --sage
+            and inverts --primary in dark mode, which made this white-on-white. */}
+        <Link
+          href="/history"
+          title={`${ordinalDay(hijri.day)} ${hijri.monthInfo.name} ${hijri.year} AH`}
+          onClick={() => setMobileOpen(false)}
+          className={cn(
+            "relative mb-2 flex items-center overflow-hidden bg-gradient-to-br from-[hsl(var(--c-p-900))] to-[hsl(var(--c-p-500))] px-5 py-3 text-white shadow-[0_8px_20px_-10px_hsl(var(--c-p-500)/0.55)]",
+            collapsed ? "lg:justify-center lg:px-0" : "justify-start",
+          )}
+        >
+          <span
+            aria-hidden
+            className="absolute -right-3.5 -top-5 h-20 w-20 rounded-full"
+            style={{
+              background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.45), transparent 70%)",
+            }}
+          />
+          <Moon className={cn("relative h-[22px] w-[22px]", collapsed ? "hidden lg:block" : "hidden")} />
+          <span className={cn("relative", hideOnCollapse)}>
+            <span className="font-heading text-[22px] font-bold leading-tight">
+              {ordinalDay(hijri.day)} {hijri.monthInfo.name}
+            </span>{" "}
+            <span className="text-sm font-semibold opacity-80">{hijri.year} AH</span>
+          </span>
+        </Link>
 
         {/* Nav */}
         <nav

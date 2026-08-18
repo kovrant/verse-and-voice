@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 
 import { useLiveClass } from "@/components/live-class-provider"
+import { PageLoading } from "@/components/page-loading"
 import { StudentLiveClass } from "@/components/student-live-class"
 import { Card, CardContent } from "@/components/ui/card"
 import { formatClassTimeLocal, formatCountdown, msUntilNextClass } from "@/lib/class-time"
@@ -55,15 +56,7 @@ export default function StudentClassesPage() {
     return <StudentLiveClass />
   }
 
-  if (loading || loadingItems) {
-    return (
-      <div className="max-w-3xl mx-auto space-y-4 animate-fade-in-up">
-        <div className="h-8 w-40 shimmer rounded-lg" />
-        <div className="h-40 shimmer rounded-2xl" />
-        <div className="h-24 shimmer rounded-2xl" />
-      </div>
-    )
-  }
+  if (loading || loadingItems) return <PageLoading variant="student-simple" student />
 
   const classDays = student?.class_days ?? null
   const classTime = student?.class_time ?? null

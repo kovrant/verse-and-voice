@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { ArabicText } from "@/components/arabic-text"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -250,22 +251,7 @@ export default function HistoryAdminPage() {
     return matchesCat && matchesSearch
   })
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-56 shimmer rounded-lg" />
-          <div className="h-5 w-80 shimmer rounded-lg" />
-        </div>
-        <div className="h-14 shimmer rounded-2xl" />
-        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-56 shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="grid-cards" count={6} />
 
   return (
     <div className="space-y-6 animate-fade-in-up">

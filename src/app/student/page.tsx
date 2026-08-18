@@ -4,6 +4,7 @@ import { BookMarked, BookOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { getDashboardProgress, type QuranRound } from "@/components/quran-progress"
+import { PageLoading } from "@/components/page-loading"
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
 import { StudentParaPdf } from "@/components/student-para-pdf"
 import { StudentStreakCard } from "@/components/student-streak-card"
@@ -284,19 +285,7 @@ export default function StudentDashboardPage() {
       .then(({ data }) => setRounds((data as QuranRound[]) || []))
   }, [student])
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-6 animate-fade-in-up">
-        <div className="h-11 w-64 shimmer rounded-xl" />
-        <div className="h-80 shimmer rounded-2xl" />
-        <div className="grid gap-[22px] sm:grid-cols-2">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-24 shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="student-home" student />
 
   if (error || !student) {
     return (

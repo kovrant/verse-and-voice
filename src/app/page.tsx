@@ -18,6 +18,7 @@ import { useEffect, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { FeeDisplay } from "@/components/fee-display"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,25 +88,7 @@ export default function Dashboard() {
     setLoading(false)
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-8 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-48 shimmer rounded-lg" />
-          <div className="h-5 w-72 shimmer rounded-lg" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 shimmer rounded-2xl" />
-          ))}
-        </div>
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="h-64 shimmer rounded-2xl" />
-          <div className="h-64 shimmer rounded-2xl" />
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="dashboard" />
 
   const now = new Date()
   const currentMonth = format(now, "MMMM yyyy")

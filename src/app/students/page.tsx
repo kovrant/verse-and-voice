@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
 import { OnlineDot } from "@/components/online-dot"
+import { PageLoading } from "@/components/page-loading"
 import { getActiveRound, QuranProgress, type QuranRound } from "@/components/quran-progress"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -203,23 +204,7 @@ export default function StudentsPage() {
     setPage(1)
   }, [search, statusFilter])
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="flex justify-between items-center">
-          <div className="space-y-2">
-            <div className="h-8 w-32 shimmer rounded-lg" />
-            <div className="h-5 w-48 shimmer rounded-lg" />
-          </div>
-          <div className="h-11 w-36 shimmer rounded-xl" />
-        </div>
-        <div className="h-11 w-80 shimmer rounded-xl" />
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-16 shimmer rounded-2xl" />
-        ))}
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="list" />
 
   return (
     <div className="space-y-6 animate-fade-in-up">

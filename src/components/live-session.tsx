@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
+import { InlineLoader } from "@/components/page-loading"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { Button } from "@/components/ui/button"
 import {
@@ -46,11 +47,7 @@ const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    ),
+    loading: () => <InlineLoader label="Opening document…" />,
   },
 )
 

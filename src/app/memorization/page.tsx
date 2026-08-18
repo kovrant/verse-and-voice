@@ -20,6 +20,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import { labelFor, loadChunksFor,type MemChunk } from "@/components/memorization-chunks"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -62,6 +63,43 @@ const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
   General: { bg: "bg-secondary", text: "text-muted-foreground" },
 }
 
+/** Upload ordered part images for a catalog item. Returns how many rows landed. */
+async function uploadChunkImages(
+  catalogId: string,
+  files: File[],
+  startIndex: number,
+  onEach?: (done: number, total: number) => void,
+): Promise<number> {
+  const images = files.filter((f) => f.type.startsWith("image/"))
+  const rows: { catalog_id: string; order_index: number; image_url: string }[] = []
+  let nextIndex = startIndex
+  for (let i = 0; i < images.length; i++) {
+    const file = images[i]
+    const idx = nextIndex
+    const ext = file.name.split(".").pop()
+    const path = `chunks/${catalogId}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
+    const { error: upErr } = await supabase.storage
+      .from("memorization-images")
+      .upload(path, file, { cacheControl: "3600", upsert: false })
+    if (upErr) {
+      toast.error(upErr.message)
+    } else {
+      const { data } = supabase.storage.from("memorization-images").getPublicUrl(path)
+      rows.push({ catalog_id: catalogId, order_index: idx, image_url: data.publicUrl })
+      nextIndex++
+    }
+    onEach?.(i + 1, images.length)
+  }
+  if (rows.length > 0) {
+    const { error } = await supabase.from("memorization_chunks").insert(rows)
+    if (error) {
+      toast.error(error.message)
+      return 0
+    }
+  }
+  return rows.length
+}
+
 export default function MemorizationPage() {
   const [items, setItems] = useState<CatalogRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -69,6 +107,8 @@ export default function MemorizationPage() {
   const [newCategory, setNewCategory] = useState("General")
   const [newImage, setNewImage] = useState<File | null>(null)
   const [newImagePreview, setNewImagePreview] = useState<string | null>(null)
+  const [newParts, setNewParts] = useState<File[]>([])
+  const [newPartPreviews, setNewPartPreviews] = useState<string[]>([])
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
@@ -79,6 +119,7 @@ export default function MemorizationPage() {
   const [chunkCounts, setChunkCounts] = useState<Record<string, number>>({})
   const [manageItem, setManageItem] = useState<CatalogRow | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const partsInputRef = useRef<HTMLInputElement>(null)
   const editFileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -95,6 +136,12 @@ export default function MemorizationPage() {
     }
     setNewImagePreview(null)
   }, [newImage])
+
+  useEffect(() => {
+    const urls = newParts.map((f) => URL.createObjectURL(f))
+    setNewPartPreviews(urls)
+    return () => urls.forEach((u) => URL.revokeObjectURL(u))
+  }, [newParts])
 
   async function loadItems() {
     // Load from memorization_catalog
@@ -191,11 +238,15 @@ export default function MemorizationPage() {
       imageUrl = await uploadImage(newImage)
     }
 
-    const { error } = await supabase.from("memorization_catalog").insert({
-      title: newTitle.trim(),
-      category: newCategory,
-      image_url: imageUrl,
-    })
+    const { data, error } = await supabase
+      .from("memorization_catalog")
+      .insert({
+        title: newTitle.trim(),
+        category: newCategory,
+        image_url: imageUrl,
+      })
+      .select("id")
+      .single()
     if (error) {
       if (error.code === "23505") {
         toast.error("This item already exists in the catalog.")
@@ -205,12 +256,21 @@ export default function MemorizationPage() {
       setAdding(false)
       return
     }
+
+    const partsCount =
+      newParts.length > 0 && data?.id ? await uploadChunkImages(data.id, newParts, 0) : 0
+
     const addedTitle = newTitle.trim()
     setNewTitle("")
     setNewImage(null)
+    setNewParts([])
     setAdding(false)
     await loadItems()
-    toast.success(`"${addedTitle}" added to catalog`)
+    toast.success(
+      partsCount > 0
+        ? `"${addedTitle}" added with ${partsCount} part${partsCount === 1 ? "" : "s"}`
+        : `"${addedTitle}" added to catalog`,
+    )
   }
 
   async function confirmDeleteItem() {
@@ -270,6 +330,18 @@ export default function MemorizationPage() {
     await loadItems()
   }
 
+  async function changeCategory(item: CatalogRow, category: string) {
+    if (category === item.category) return
+    const table = item.source === "media" ? "media_library" : "memorization_catalog"
+    const { error } = await supabase.from(table).update({ category }).eq("id", item.id)
+    if (error) {
+      toast.error(`Couldn't change category: ${error.message}`)
+      return
+    }
+    await loadItems()
+    toast.success(`"${item.title}" moved to ${category}`)
+  }
+
   async function removeImage(itemId: string) {
     const item = items.find((i) => i.id === itemId)
     if (item?.image_url) {
@@ -291,20 +363,7 @@ export default function MemorizationPage() {
     grouped[item.category].push(item)
   })
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-48 shimmer rounded-lg" />
-          <div className="h-5 w-72 shimmer rounded-lg" />
-        </div>
-        <div className="h-24 shimmer rounded-2xl" />
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-32 shimmer rounded-2xl" />
-        ))}
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="stacked" count={3} />
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -325,7 +384,7 @@ export default function MemorizationPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="e.g. Surah Baqarah, Dua for Rain..."
-              onKeyDown={(e) => e.key === "Enter" && !newImage && addItem()}
+              onKeyDown={(e) => e.key === "Enter" && addItem()}
               className="flex-1"
             />
             <Select value={newCategory} onValueChange={setNewCategory}>
@@ -348,6 +407,21 @@ export default function MemorizationPage() {
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) setNewImage(file)
+                if (fileInputRef.current) fileInputRef.current.value = ""
+              }}
+            />
+            <input
+              ref={partsInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []).filter((f) =>
+                  f.type.startsWith("image/"),
+                )
+                if (files.length) setNewParts((prev) => [...prev, ...files])
+                if (partsInputRef.current) partsInputRef.current.value = ""
               }}
             />
             <Button
@@ -356,24 +430,67 @@ export default function MemorizationPage() {
               className="gap-1.5"
             >
               <ImagePlus className="h-4 w-4" />
-              {newImage ? "Change" : "Image"}
+              {newImage ? "Cover ✓" : "Cover"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => partsInputRef.current?.click()}
+              className="gap-1.5"
+            >
+              <Layers className="h-4 w-4" />
+              {newParts.length > 0 ? `${newParts.length} parts` : "Parts"}
             </Button>
             <Button onClick={addItem} disabled={adding || !newTitle.trim()}>
               <Plus className="h-4 w-4 mr-1" />
               Add
             </Button>
           </div>
-          {newImage && newImagePreview && (
-            <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-3">
-              <img
-                src={newImagePreview}
-                alt="Preview"
-                className="h-12 w-12 rounded-lg object-cover"
-              />
-              <span className="text-sm text-muted-foreground flex-1 truncate">{newImage.name}</span>
-              <Button variant="ghost" size="sm" onClick={() => setNewImage(null)} className="h-7">
-                <X className="h-3 w-3" />
-              </Button>
+          <p className="text-xs text-muted-foreground">
+            Cover is the full dua. Parts are the pieces kids memorize one at a time, in the order
+            you pick them.
+          </p>
+          {(newImage || newParts.length > 0) && (
+            <div className="flex flex-wrap items-end gap-3">
+              {newImage && newImagePreview && (
+                <div className="relative">
+                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Cover
+                  </p>
+                  <img
+                    src={newImagePreview}
+                    alt="Cover"
+                    className="h-16 w-16 rounded-lg object-cover border border-border/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNewImage(null)}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground"
+                    aria-label="Remove cover"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              )}
+              {newParts.map((file, i) => (
+                <div key={`${file.name}-${i}`} className="relative">
+                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Part {i + 1}
+                  </p>
+                  <img
+                    src={newPartPreviews[i]}
+                    alt={`Part ${i + 1}`}
+                    className="h-16 w-16 rounded-lg object-cover border border-border/50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setNewParts((prev) => prev.filter((_, j) => j !== i))}
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground"
+                    aria-label={`Remove part ${i + 1}`}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>
@@ -555,11 +672,24 @@ export default function MemorizationPage() {
                           ) : (
                             <span className="text-xs text-muted-foreground/40">No assignments</span>
                           )}
-                          <Badge
-                            className={`${colors.bg} ${colors.text} border-0 text-[10px] py-0`}
+                          <Select
+                            value={item.category}
+                            onValueChange={(v) => changeCategory(item, v)}
                           >
-                            {category}
-                          </Badge>
+                            <SelectTrigger
+                              className="h-6 w-auto gap-1 border-0 bg-secondary px-2 text-[10px] font-medium text-muted-foreground shadow-none"
+                              aria-label={`Category for ${item.title}`}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[...new Set([...CATEGORIES, item.category])].map((c) => (
+                                <SelectItem key={c} value={c}>
+                                  {c}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                         {!isMedia && (
                           <button
@@ -756,32 +886,11 @@ function ChunkManager({
     }
     setUploading(true)
     setUploadProgress({ done: 0, total: images.length })
-    let nextIndex =
-      chunks.length > 0 ? Math.max(...chunks.map((c) => c.order_index)) + 1 : 0
-    const rows: { catalog_id: string; order_index: number; image_url: string }[] = []
-    for (const file of images) {
-      const idx = nextIndex
-      const ext = file.name.split(".").pop()
-      // Structured key: chunks/<catalog_id>/<order>-<random>.<ext>
-      const path = `chunks/${item.id}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
-      const { error: upErr } = await supabase.storage
-        .from("memorization-images")
-        .upload(path, file, { cacheControl: "3600", upsert: false })
-      if (upErr) {
-        toast.error(upErr.message)
-        setUploadProgress((p) => ({ ...p, done: p.done + 1 }))
-        continue
-      }
-      const { data } = supabase.storage.from("memorization-images").getPublicUrl(path)
-      rows.push({ catalog_id: item.id, order_index: idx, image_url: data.publicUrl })
-      nextIndex++
-      setUploadProgress((p) => ({ ...p, done: p.done + 1 }))
-    }
-    if (rows.length > 0) {
-      const { error } = await supabase.from("memorization_chunks").insert(rows)
-      if (error) toast.error(error.message)
-      else toast.success(`Added ${rows.length} part${rows.length > 1 ? "s" : ""}`)
-    }
+    const startIndex = chunks.length > 0 ? Math.max(...chunks.map((c) => c.order_index)) + 1 : 0
+    const added = await uploadChunkImages(item.id, images, startIndex, (done, total) =>
+      setUploadProgress({ done, total }),
+    )
+    if (added > 0) toast.success(`Added ${added} part${added > 1 ? "s" : ""}`)
     setUploading(false)
     setUploadProgress({ done: 0, total: 0 })
     await load()

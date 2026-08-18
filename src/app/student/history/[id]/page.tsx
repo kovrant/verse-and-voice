@@ -8,6 +8,7 @@ import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { ArabicText } from "@/components/arabic-text"
+import { PageLoading } from "@/components/page-loading"
 import { Markdown } from "@/components/markdown"
 import { logActivity } from "@/lib/activity-log"
 import { getHijriMonthInfo } from "@/lib/hijri"
@@ -69,20 +70,7 @@ export default function StudentHistoryReaderPage() {
     }
   }, [id])
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-3xl space-y-6 animate-fade-in-up">
-        <div className="h-6 w-24 shimmer rounded-lg" />
-        <div className="h-64 shimmer rounded-2xl" />
-        <div className="h-10 w-2/3 shimmer rounded-xl" />
-        <div className="space-y-2">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-4 w-full shimmer rounded" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="student-article" student />
 
   if (notFound || !story) {
     return (

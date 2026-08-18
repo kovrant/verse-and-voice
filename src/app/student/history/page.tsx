@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 import { ArabicText } from "@/components/arabic-text"
+import { PageLoading } from "@/components/page-loading"
 import { getHijriMonthInfo, getHijriToday } from "@/lib/hijri"
 import { CATEGORIES, CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
@@ -59,19 +60,7 @@ export default function StudentHistoryPage() {
     return matchesCat && matchesSearch
   })
 
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-5xl space-y-6 animate-fade-in-up">
-        <div className="h-10 w-56 shimmer rounded-xl" />
-        <div className="h-40 shimmer rounded-2xl" />
-        <div className="grid gap-[22px] sm:grid-cols-2 lg:grid-cols-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-64 shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="grid-cards" student count={6} />
 
   return (
     <div className="mx-auto max-w-5xl animate-fade-in-up text-foreground">

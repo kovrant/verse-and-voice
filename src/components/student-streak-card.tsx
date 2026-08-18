@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
 import { DAY_LABELS } from "@/components/class-days-picker"
+import { Skeleton } from "@/components/page-loading"
 import { formatClassTimeLocal } from "@/lib/class-time"
 import {
   computeStreak,
@@ -115,9 +116,9 @@ export function StudentStreakCard({
 
   if (loading) {
     return variant === "pill" ? (
-      <div className="h-8 w-28 shimmer rounded-full" />
+      <Skeleton className="h-8 w-28 rounded-full" />
     ) : (
-      <div className="h-40 shimmer rounded-2xl" />
+      <Skeleton className="h-40 w-full rounded-2xl" />
     )
   }
 

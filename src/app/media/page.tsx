@@ -4,6 +4,7 @@
 
 import {
   BookOpen,
+  Check,
   Eye,
   FileText,
   FolderOpen,
@@ -21,6 +22,7 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import { PageLoading } from "@/components/page-loading"
 import {
   Dialog,
   DialogContent,
@@ -37,6 +39,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  extractParaNumber,
+  fileTypeOf,
+  isBulkMediaFile,
+  storagePathFromPublicUrl,
+  titleFromFilename,
+} from "@/lib/media-upload"
 import { supabase } from "@/lib/supabase"
 
 // react-pdf is client-only (uses worker + canvas) — avoid SSR
@@ -84,6 +93,9 @@ export default function MediaPage() {
   const [search, setSearch] = useState("")
   const [filterType, setFilterType] = useState("All")
   const [previewItem, setPreviewItem] = useState<MediaItem | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<MediaItem[]>([])
+  const [deleting, setDeleting] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
 
   // Upload form
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -123,6 +135,9 @@ export default function MediaPage() {
   }
 
   // Bulk upload
+  const [bulkOpen, setBulkOpen] = useState(false)
+  const [bulkType, setBulkType] = useState("memorization")
+  const [bulkCategory, setBulkCategory] = useState("General")
   const [bulkUploading, setBulkUploading] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, current: "" })
   const bulkFileRef = useRef<HTMLInputElement>(null)
@@ -165,7 +180,7 @@ export default function MediaPage() {
     setUploading(true)
 
     const ext = file.name.split(".").pop()
-    const fileType = file.type.startsWith("image/") ? "image" : "pdf"
+    const fileType = fileTypeOf(file)
     const folder = type
     const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
@@ -207,51 +222,42 @@ export default function MediaPage() {
     await loadItems()
   }
 
-  function extractParaNumber(filename: string): number | null {
-    // Match: "Para 1", "para-01", "para_1", "Para1", "30 para", "30para", "1.pdf", "01.pdf"
-    const match =
-      filename.match(/(?:para[\s_-]*)(\d+)/i) || // "para 1", "para-01"
-      filename.match(/(\d+)[\s_-]*para/i) || // "30 para", "30-para"
-      filename.match(/^(\d+)\./i) // "1.pdf", "01.pdf"
-    if (match) {
-      const num = parseInt(match[1])
-      if (num >= 1 && num <= 30) return num
-    }
-    return null
-  }
-
   async function handleBulkUpload(files: FileList) {
-    const pdfFiles = Array.from(files).filter(
-      (f) => f.type === "application/pdf" || f.name.endsWith(".pdf"),
-    )
-    if (pdfFiles.length === 0) {
-      toast.error("No PDF files found in selection.")
+    const list = Array.from(files).filter(isBulkMediaFile)
+    if (list.length === 0) {
+      toast.error("No image or PDF files found in selection.")
       return
     }
 
-    // Sort by extracted para number
-    const sorted = pdfFiles
-      .map((f) => ({ file: f, paraNum: extractParaNumber(f.name) }))
-      .sort((a, b) => (a.paraNum || 999) - (b.paraNum || 999))
+    const prepared = list.map((f) => {
+      const fileType = fileTypeOf(f)
+      const paraNum =
+        bulkType === "quran" && fileType === "pdf" ? extractParaNumber(f.name) : null
+      const title = paraNum ? `Para ${paraNum}` : titleFromFilename(f.name)
+      return { file: f, fileType, paraNum, title }
+    })
+    if (bulkType === "quran") {
+      prepared.sort((a, b) => (a.paraNum || 999) - (b.paraNum || 999))
+    }
 
+    setBulkOpen(false)
     setBulkUploading(true)
-    setBulkProgress({ done: 0, total: sorted.length, current: "" })
-    let failed: string[] = []
+    setBulkProgress({ done: 0, total: prepared.length, current: "" })
+    const failed: string[] = []
 
-    for (let i = 0; i < sorted.length; i++) {
-      const { file, paraNum } = sorted[i]
-      const paraLabel = paraNum ? `Para ${paraNum}` : file.name.replace(/\.[^.]+$/, "")
-      setBulkProgress({ done: i, total: sorted.length, current: paraLabel })
+    for (let i = 0; i < prepared.length; i++) {
+      const { file, fileType, paraNum, title } = prepared[i]
+      setBulkProgress({ done: i, total: prepared.length, current: title })
 
       const ext = file.name.split(".").pop()
-      const fileName = `quran/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const fileName = `${bulkType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
       const { error: uploadError } = await supabase.storage
         .from("media")
         .upload(fileName, file, { cacheControl: "3600" })
 
       if (uploadError) {
-        failed.push(`${paraLabel}: ${uploadError.message}`)
+        failed.push(`${title}: ${uploadError.message}`)
         continue
       }
 
@@ -261,54 +267,87 @@ export default function MediaPage() {
       if (paraNum) meta.para_number = paraNum
 
       const { error: dbError } = await supabase.from("media_library").insert({
-        title: paraLabel,
-        type: "quran",
-        category: "Para",
+        title,
+        type: bulkType,
+        category: bulkCategory,
         file_url: urlData.publicUrl,
-        file_type: "pdf",
+        file_type: fileType,
         meta,
       })
 
       if (dbError) {
-        failed.push(`${paraLabel}: ${dbError.message}`)
+        failed.push(`${title}: ${dbError.message}`)
       }
     }
 
-    setBulkProgress({ done: sorted.length, total: sorted.length, current: "" })
+    setBulkProgress({ done: prepared.length, total: prepared.length, current: "" })
     setBulkUploading(false)
 
     if (failed.length > 0) {
       toast.warning(
-        `Uploaded ${sorted.length - failed.length}/${sorted.length} files. ${failed.length} failed.`,
+        `Uploaded ${prepared.length - failed.length}/${prepared.length} files. ${failed.length} failed.`,
       )
     } else {
-      toast.success(`All ${sorted.length} files uploaded successfully.`)
+      toast.success(`All ${prepared.length} files uploaded successfully.`)
     }
 
     await loadItems()
   }
 
-  async function deleteItem(item: MediaItem) {
-    // Delete the DB row first — that's the source of truth. Only report success
-    // if it actually worked.
-    const { error: dbError } = await supabase.from("media_library").delete().eq("id", item.id)
+  async function deleteItems(toRemove: MediaItem[]) {
+    if (toRemove.length === 0) return
+    setDeleting(true)
+
+    const ids = toRemove.map((i) => i.id)
+    const { error: dbError } = await supabase.from("media_library").delete().in("id", ids)
     if (dbError) {
-      toast.error(`Couldn't delete "${item.title}": ${dbError.message}`)
+      toast.error(`Couldn't delete: ${dbError.message}`)
+      setDeleting(false)
       return
     }
 
-    // Best-effort storage cleanup; warn but don't fail the delete if it errors.
-    const path = item.file_url.split("/media/").pop()
-    if (path) {
-      const { error: storageError } = await supabase.storage.from("media").remove([path])
+    const paths = toRemove
+      .map((i) => storagePathFromPublicUrl(i.file_url))
+      .filter((p): p is string => !!p)
+    if (paths.length > 0) {
+      const { error: storageError } = await supabase.storage.from("media").remove(paths)
       if (storageError) {
-        toast.warning(`"${item.title}" removed, but the file couldn't be deleted from storage.`)
+        toast.warning("Removed from the library, but some files couldn't be deleted from storage.")
       }
     }
 
-    setPreviewItem(null)
-    toast.success(`"${item.title}" deleted`)
+    const gone = new Set(ids)
+    setPreviewItem((cur) => (cur && gone.has(cur.id) ? null : cur))
+    setPendingDelete([])
+    setSelected((prev) => {
+      const next = new Set(prev)
+      ids.forEach((id) => next.delete(id))
+      return next
+    })
+    setDeleting(false)
+    toast.success(toRemove.length === 1 ? `"${toRemove[0].title}" deleted` : `${toRemove.length} files deleted`)
     await loadItems()
+  }
+
+  function toggleSelected(id: string) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function toggleGroup(groupItems: MediaItem[]) {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      const allOn = groupItems.every((i) => next.has(i.id))
+      for (const i of groupItems) {
+        if (allOn) next.delete(i.id)
+        else next.add(i.id)
+      }
+      return next
+    })
   }
 
   const filtered = items.filter((item) => {
@@ -326,31 +365,15 @@ export default function MediaPage() {
     grouped[item.type].push(item)
   })
 
+  const selectedItems = items.filter((i) => selected.has(i.id))
+  const allFilteredSelected = filtered.length > 0 && filtered.every((i) => selected.has(i.id))
+
   // Stats
   const totalFiles = items.length
   const totalQuran = items.filter((i) => i.type === "quran").length
   const totalMem = items.filter((i) => i.type === "memorization").length
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-48 shimmer rounded-lg" />
-          <div className="h-5 w-72 shimmer rounded-lg" />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-24 shimmer rounded-2xl" />
-          ))}
-        </div>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-40 shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="media" />
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -367,7 +390,7 @@ export default function MediaPage() {
           <input
             ref={bulkFileRef}
             type="file"
-            accept=".pdf"
+            accept="image/*,.pdf"
             multiple
             className="hidden"
             onChange={(e) => {
@@ -375,11 +398,7 @@ export default function MediaPage() {
               if (bulkFileRef.current) bulkFileRef.current.value = ""
             }}
           />
-          <Button
-            variant="outline"
-            onClick={() => bulkFileRef.current?.click()}
-            disabled={bulkUploading}
-          >
+          <Button variant="outline" onClick={() => setBulkOpen(true)} disabled={bulkUploading}>
             <Upload className="h-4 w-4 mr-2" />
             Bulk Upload
           </Button>
@@ -478,6 +497,106 @@ export default function MediaPage() {
           ))}
         </div>
       </div>
+
+      {selected.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2">
+          <span className="text-sm text-muted-foreground">
+            {selected.size} selected
+            {selected.size !== filtered.length ? ` of ${filtered.length}` : ""}
+          </span>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+            <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-foreground/35 bg-transparent">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onChange={() => {
+                  setSelected((prev) => {
+                    const next = new Set(prev)
+                    if (allFilteredSelected) filtered.forEach((i) => next.delete(i.id))
+                    else filtered.forEach((i) => next.add(i.id))
+                    return next
+                  })
+                }}
+                className="sr-only"
+              />
+              {allFilteredSelected && <Check className="h-3 w-3 text-foreground" strokeWidth={3} />}
+            </span>
+            Select all
+          </label>
+          <button
+            type="button"
+            onClick={() => setSelected(new Set())}
+            className="text-xs text-muted-foreground hover:text-foreground"
+          >
+            Clear
+          </button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="ml-auto text-destructive hover:text-destructive"
+            onClick={() => setPendingDelete(selectedItems)}
+            disabled={deleting}
+          >
+            <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+            Delete selected
+          </Button>
+        </div>
+      )}
+
+      {/* Bulk upload: tag the batch, then pick images and/or PDFs */}
+      <Dialog open={bulkOpen} onOpenChange={setBulkOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Upload</DialogTitle>
+            <DialogDescription>
+              Tag the whole batch, then pick as many images or PDFs as you want. Titles come from
+              the file name (Quran PDFs named like Para 1 stay Paras).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 sm:grid-cols-2 pt-2">
+            <div className="space-y-2">
+              <Label>Type *</Label>
+              <Select
+                value={bulkType}
+                onValueChange={(v) => {
+                  setBulkType(v)
+                  setBulkCategory(getCategories(v)[0] || "General")
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {MEDIA_TYPES.map((t) => (
+                    <SelectItem key={t.value} value={t.value}>
+                      {t.icon} {t.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Category *</Label>
+              <Select value={bulkCategory} onValueChange={setBulkCategory}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {getCategories(bulkType).map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <Button className="mt-2" onClick={() => bulkFileRef.current?.click()}>
+            <Upload className="h-4 w-4 mr-2" />
+            Choose files
+          </Button>
+        </DialogContent>
+      </Dialog>
 
       {/* Upload Dialog */}
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
@@ -713,8 +832,12 @@ export default function MediaPage() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => deleteItem(previewItem)}
+                    onClick={() => {
+                      setPendingDelete([previewItem])
+                      setPreviewItem(null)
+                    }}
                     className="text-destructive hover:text-destructive/80"
+                    title="Delete"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -742,6 +865,43 @@ export default function MediaPage() {
           </div>
         </div>
       )}
+
+      <Dialog
+        open={pendingDelete.length > 0}
+        onOpenChange={(open) => !open && !deleting && setPendingDelete([])}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {pendingDelete.length === 1
+                ? `Delete “${pendingDelete[0].title}”?`
+                : `Delete ${pendingDelete.length} files?`}
+            </DialogTitle>
+            <DialogDescription>
+              This removes {pendingDelete.length === 1 ? "the file" : "these files"} from the
+              library and deletes {pendingDelete.length === 1 ? "it" : "them"} from storage. This
+              cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 pt-2">
+            <Button
+              variant="outline"
+              onClick={() => setPendingDelete([])}
+              disabled={deleting}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => deleteItems(pendingDelete)}
+              disabled={deleting}
+              className="flex-1 bg-destructive hover:bg-destructive/90 text-white"
+            >
+              {deleting ? "Deleting…" : "Delete"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Media grid */}
       {filtered.length === 0 ? (
@@ -773,17 +933,61 @@ export default function MediaPage() {
           return (
             <div key={groupType} className="space-y-3">
               <div className="flex items-center gap-2">
+                {selected.size > 0 && (
+                  <label className="flex items-center cursor-pointer">
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-foreground/35 bg-transparent">
+                      <input
+                        type="checkbox"
+                        checked={groupItems.length > 0 && groupItems.every((i) => selected.has(i.id))}
+                        onChange={() => toggleGroup(groupItems)}
+                        className="sr-only"
+                        aria-label={`Select all ${typeLabel}`}
+                      />
+                      {groupItems.every((i) => selected.has(i.id)) && (
+                        <Check className="h-3 w-3 text-foreground" strokeWidth={3} />
+                      )}
+                    </span>
+                  </label>
+                )}
                 <Badge className={`${colors.bg} ${colors.text} border-0`}>{typeLabel}</Badge>
                 <span className="text-sm text-muted-foreground">{groupItems.length} files</span>
               </div>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {groupItems.map((item) => (
-                  <button
+                  <div
                     key={item.id}
-                    type="button"
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setPreviewItem(item)}
-                    className="relative rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border transition-all text-left group"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault()
+                        setPreviewItem(item)
+                      }
+                    }}
+                    className={`relative rounded-2xl border bg-card overflow-hidden hover:border-border transition-all text-left group cursor-pointer ${
+                      selected.has(item.id) ? "border-primary ring-2 ring-primary/20" : "border-border/50"
+                    }`}
                   >
+                    <label
+                      className={`absolute top-2 left-2 z-20 flex h-5 w-5 cursor-pointer items-center justify-center rounded-sm border border-white/90 bg-transparent shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition-opacity ${
+                        selected.size > 0
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100 max-lg:opacity-100"
+                      }`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selected.has(item.id)}
+                        onChange={() => toggleSelected(item.id)}
+                        className="sr-only"
+                        aria-label={`Select ${item.title}`}
+                      />
+                      {selected.has(item.id) && (
+                        <Check className="h-3.5 w-3.5 text-white drop-shadow" strokeWidth={3} />
+                      )}
+                    </label>
                     {/* Preview area */}
                     {item.file_type === "image" ? (
                       <div className="aspect-[4/3] overflow-hidden bg-secondary">
@@ -847,13 +1051,24 @@ export default function MediaPage() {
                       </div>
                     </div>
 
-                    {/* Hover overlay */}
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Hover overlay — always visible on touch (no hover) */}
+                    <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                       <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white backdrop-blur-sm">
                         <Eye className="h-3.5 w-3.5" />
                       </span>
+                      <button
+                        type="button"
+                        title="Delete"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setPendingDelete([item])
+                        }}
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-destructive backdrop-blur-sm"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>

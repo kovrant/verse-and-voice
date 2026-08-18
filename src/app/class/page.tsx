@@ -22,6 +22,7 @@ import { toast } from "sonner"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import { OnlineDot } from "@/components/online-dot"
+import { PageLoading } from "@/components/page-loading"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
@@ -217,18 +218,7 @@ export default function ClassPage() {
   }
 
   // Loading
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-40 shimmer rounded-lg" />
-          <div className="h-5 w-64 shimmer rounded-lg" />
-        </div>
-        <div className="h-11 w-80 shimmer rounded-xl" />
-        <div className="h-80 shimmer rounded-2xl max-w-2xl mx-auto" />
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="class-session" />
 
   // Sort by class time ascending. AM slots before 6:00 are treated as next-day
   // (added to a 24h window) so they fall after late-evening PM slots.

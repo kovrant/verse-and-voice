@@ -5,6 +5,7 @@ import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
+import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { logActivity } from "@/lib/activity-log"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
@@ -15,11 +16,7 @@ const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex flex-1 items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    ),
+    loading: () => <InlineLoader label="Opening para…" />,
   },
 )
 
@@ -219,21 +216,7 @@ export default function StudentQuranPage() {
     }
   }, [mediaLoaded, currentPara])
 
-  if (studentLoading) {
-    return (
-      <div className="mx-auto max-w-6xl animate-fade-in-up space-y-8">
-        <div className="h-11 w-56 shimmer rounded-xl" />
-        <div
-          className="grid gap-4"
-          style={{ gridTemplateColumns: "repeat(auto-fill, minmax(196px, 1fr))" }}
-        >
-          {PARAS.map((n) => (
-            <div key={n} className="h-[196px] shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (studentLoading) return <PageLoading variant="grid-dense" student count={30} />
 
   if (error || !student) {
     return (

@@ -1,10 +1,11 @@
 "use client"
 
-import { BookOpen, Loader2, LogOut } from "lucide-react"
+import { BookOpen, LogOut } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
 import { useLiveClass } from "@/components/live-class-provider"
+import { InlineLoader } from "@/components/page-loading"
 import { supabase } from "@/lib/supabase"
 import type { NavState } from "@/lib/use-class-channel"
 
@@ -12,11 +13,7 @@ const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex-1 flex items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    ),
+    loading: () => <InlineLoader label="Joining class…" />,
   },
 )
 
@@ -146,10 +143,7 @@ export function StudentLiveClass() {
 
       {/* Body */}
       {!ready ? (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">Connecting to your teacher…</p>
-        </div>
+        <InlineLoader label="Connecting to your teacher…" />
       ) : fileUrl ? (
         <SyncedPdfViewer
           fileUrl={fileUrl}

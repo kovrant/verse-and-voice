@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { PageLoading } from "@/components/page-loading"
 import { supabase } from "@/lib/supabase"
 
 interface QuranPara {
@@ -64,21 +65,7 @@ export default function QuranPage() {
 
   const currentIdx = viewingPara ? paras.findIndex((p) => p.id === viewingPara.id) : -1
 
-  if (loading) {
-    return (
-      <div className="space-y-6 animate-fade-in-up">
-        <div className="space-y-2">
-          <div className="h-8 w-48 shimmer rounded-lg" />
-          <div className="h-5 w-72 shimmer rounded-lg" />
-        </div>
-        <div className="grid gap-3 grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10">
-          {[...Array(30)].map((_, i) => (
-            <div key={i} className="aspect-square shimmer rounded-2xl" />
-          ))}
-        </div>
-      </div>
-    )
-  }
+  if (loading) return <PageLoading variant="grid-dense" count={30} />
 
   // Full-screen PDF viewer
   if (viewingPara) {

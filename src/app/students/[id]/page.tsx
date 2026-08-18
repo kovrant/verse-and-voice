@@ -50,6 +50,7 @@ import { ActivityFeed, type ActivityLog } from "@/components/student-activity-fe
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentPortalAccess } from "@/components/student-portal-access"
+import { PageLoading } from "@/components/page-loading"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import {
   type ClassSession,
@@ -594,20 +595,8 @@ export default function StudentDetailPage() {
 
   if (loading || !student) {
     return (
-      <div className="max-w-4xl mx-auto space-y-6 animate-fade-in-up">
-        <div className="flex items-center gap-4">
-          <div className="h-10 w-10 shimmer rounded-xl" />
-          <div className="space-y-2 flex-1">
-            <div className="h-8 w-48 shimmer rounded-lg" />
-            <div className="h-5 w-64 shimmer rounded-lg" />
-          </div>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-28 shimmer rounded-2xl" />
-          ))}
-        </div>
-        <div className="h-64 shimmer rounded-2xl" />
+      <div className="max-w-4xl mx-auto">
+        <PageLoading variant="detail" />
       </div>
     )
   }

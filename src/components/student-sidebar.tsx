@@ -22,7 +22,7 @@ import { useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useLiveClass } from "@/components/live-class-provider"
-import { getHijriToday } from "@/lib/hijri"
+import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -37,13 +37,6 @@ const navItems = [
   { href: "/student/history", label: "Islamic History", icon: ScrollText, exact: false },
   { href: "/student/fees", label: "Fees", icon: CreditCard, exact: false },
 ] as const
-
-/** `ord(1) → "1st"` — small ordinal helper for the Hijri day. */
-function ord(n: number): string {
-  const s = ["th", "st", "nd", "rd"]
-  const v = n % 100
-  return n + (s[(v - 20) % 10] || s[v] || s[0])
-}
 
 export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const pathname = usePathname()
@@ -119,7 +112,7 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
         {/* Islamic month card → Islamic History */}
         <Link
           href="/student/history"
-          title={`${ord(hijri.day)} ${hijri.monthInfo.name} ${hijri.year} AH`}
+          title={`${ordinalDay(hijri.day)} ${hijri.monthInfo.name} ${hijri.year} AH`}
           onClick={() => setMobileOpen(false)}
           className={cn(
             "relative mb-2 flex items-center overflow-hidden bg-gradient-to-br from-primary to-[hsl(var(--sage))] px-5 py-3 text-primary-foreground shadow-[0_8px_20px_-10px_hsl(var(--primary)/0.6)]",
@@ -136,7 +129,7 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
           <Moon className={cn("relative h-[22px] w-[22px]", collapsed ? "hidden lg:block" : "hidden")} />
           <span className={cn("relative", hideOnCollapse)}>
             <span className="font-heading text-[22px] font-bold leading-tight">
-              {ord(hijri.day)} {hijri.monthInfo.name}
+              {ordinalDay(hijri.day)} {hijri.monthInfo.name}
             </span>{" "}
             <span className="text-sm font-semibold opacity-80">{hijri.year} AH</span>
           </span>
