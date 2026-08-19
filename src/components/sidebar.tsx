@@ -48,6 +48,7 @@ const navSections = [
       { href: "/memorization", label: "Memorization", icon: BookMarked },
       { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
       { href: "/qaida", label: "Qaida", icon: SpellCheck },
+      { href: "/namaz", label: "Namaz", icon: Moon },
       { href: "/history", label: "Islamic History", icon: ScrollText },
     ],
   },

@@ -49,6 +49,7 @@ import {
 import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
+import { StudentNamazAssign } from "@/components/student-namaz-assign"
 import { StudentPortalAccess } from "@/components/student-portal-access"
 import { PageLoading } from "@/components/page-loading"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
@@ -1521,6 +1522,7 @@ export default function StudentDetailPage() {
           <StudentPortalAccess studentId={student.id} />
           <StudentSignInAccess studentId={student.id} />
           <StudentQaidaAssign studentId={student.id} qaidaMediaId={student.qaida_media_id} />
+          <StudentNamazAssign studentId={student.id} />
           <StudentForceSignOut studentId={student.id} />
         </div>
       )}

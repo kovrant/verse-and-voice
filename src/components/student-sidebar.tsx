@@ -18,19 +18,21 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useLiveClass } from "@/components/live-class-provider"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
+import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
-const navItems = [
+const baseNavItems = [
   { href: "/student", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/student/notifications", label: "Notifications", icon: Bell, exact: false },
   { href: "/student/classes", label: "Classes", icon: History, exact: false, live: true },
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
+  { href: "/student/namaz", label: "Namaz", icon: Moon, exact: false, requiresNamaz: true },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },
   { href: "/student/qaida", label: "Qaida", icon: SpellCheck, exact: false },
   { href: "/student/quran", label: "Quran", icon: BookText, exact: false },
@@ -41,8 +43,33 @@ const navItems = [
 export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [hasNamaz, setHasNamaz] = useState(false)
   const { live } = useLiveClass()
   const { student, username } = useStudent()
+
+  useEffect(() => {
+    if (!student?.id) {
+      setHasNamaz(false)
+      return
+    }
+    let active = true
+    supabase
+      .from("student_namaz")
+      .select("id")
+      .eq("student_id", student.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setHasNamaz(!!data)
+      })
+    return () => {
+      active = false
+    }
+  }, [student?.id])
+
+  const navItems = useMemo(
+    () => baseNavItems.filter((item) => !("requiresNamaz" in item && item.requiresNamaz) || hasNamaz),
+    [hasNamaz],
+  )
 
   if (pathname === "/login") return null
 
