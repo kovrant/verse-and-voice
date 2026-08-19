@@ -18,12 +18,13 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useLiveClass } from "@/components/live-class-provider"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
+import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -47,24 +48,24 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const { live } = useLiveClass()
   const { student, username } = useStudent()
 
-  useEffect(() => {
+  const refreshNamaz = useCallback(() => {
     if (!student?.id) {
       setHasNamaz(false)
       return
     }
-    let active = true
-    supabase
+    void supabase
       .from("student_namaz")
       .select("id")
       .eq("student_id", student.id)
       .maybeSingle()
-      .then(({ data }) => {
-        if (active) setHasNamaz(!!data)
-      })
-    return () => {
-      active = false
-    }
+      .then(({ data }) => setHasNamaz(!!data))
   }, [student?.id])
+
+  useEffect(() => {
+    refreshNamaz()
+  }, [refreshNamaz])
+
+  useStudentNamazRealtime(student?.id, refreshNamaz, "nav")
 
   const navItems = useMemo(
     () => baseNavItems.filter((item) => !("requiresNamaz" in item && item.requiresNamaz) || hasNamaz),

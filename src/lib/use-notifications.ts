@@ -17,7 +17,7 @@ import { toast } from "sonner"
 
 import { retentionCutoffIso } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
-import { getCurrentAuthUser } from "@/lib/use-current-user"
+import { ensureRealtimeAuth, getCurrentAuthUser } from "@/lib/use-current-user"
 
 export interface NotificationRow {
   id: string
@@ -133,7 +133,7 @@ export function useNotifications() {
       )
 
     // RLS on postgres_changes is evaluated with the user's JWT — attach it first.
-    void supabase.realtime.setAuth().finally(() => active && channel.subscribe())
+    void ensureRealtimeAuth().finally(() => active && channel.subscribe())
 
     return () => {
       active = false

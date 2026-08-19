@@ -23,10 +23,10 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   useSessionTimeout()
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_OUT" || (!session && event !== "INITIAL_SESSION")) {
-        router.replace("/login")
-      }
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      // Only react to an explicit sign-out. A broad "no session" check raced with
+      // login and bounced freshly authenticated students back to /login.
+      if (event === "SIGNED_OUT") router.replace("/login")
     })
     return () => sub.subscription.unsubscribe()
   }, [router])

@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { ArrowLeft } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { NamazStepCard } from "@/components/namaz-step-card"
 import { PageLoading } from "@/components/page-loading"
@@ -26,6 +26,7 @@ import {
   type StudentNamazStep,
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
+import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -39,31 +40,34 @@ export default function StudentNamazPage() {
   const [dataLoading, setDataLoading] = useState(true)
   const [viewStep, setViewStep] = useState<NamazStep | null>(null)
 
-  useEffect(() => {
-    if (!student?.id) {
-      if (!studentLoading) setDataLoading(false)
-      return
-    }
-    let active = true
-    Promise.all([
+  const loadData = useCallback(async () => {
+    if (!student?.id) return
+    const [assignRes, stepsRes, partsRes, stepProgRes, partProgRes] = await Promise.all([
       supabase.from("student_namaz").select(STUDENT_NAMAZ_SELECT).eq("student_id", student.id).maybeSingle(),
       supabase.from("namaz_steps").select(NAMAZ_STEP_SELECT).order("order_index"),
       supabase.from("namaz_step_parts").select(NAMAZ_PART_SELECT).order("order_index"),
       supabase.from("student_namaz_steps").select(STUDENT_NAMAZ_STEP_SELECT).eq("student_id", student.id),
       supabase.from("student_namaz_parts").select(STUDENT_NAMAZ_PART_SELECT).eq("student_id", student.id),
-    ]).then(([assignRes, stepsRes, partsRes, stepProgRes, partProgRes]) => {
-      if (!active) return
-      setAssignment((assignRes.data as StudentNamaz | null) ?? null)
-      setSteps((stepsRes.data as NamazStep[]) || [])
-      setParts((partsRes.data as NamazStepPart[]) || [])
-      setStepRows((stepProgRes.data as StudentNamazStep[]) || [])
-      setPartRows((partProgRes.data as StudentNamazPart[]) || [])
-      setDataLoading(false)
-    })
-    return () => {
-      active = false
+    ])
+    setAssignment((assignRes.data as StudentNamaz | null) ?? null)
+    setSteps((stepsRes.data as NamazStep[]) || [])
+    setParts((partsRes.data as NamazStepPart[]) || [])
+    setStepRows((stepProgRes.data as StudentNamazStep[]) || [])
+    setPartRows((partProgRes.data as StudentNamazPart[]) || [])
+    setDataLoading(false)
+  }, [student?.id])
+
+  useEffect(() => {
+    if (!student?.id) {
+      if (!studentLoading) setDataLoading(false)
+      return
     }
-  }, [student?.id, studentLoading])
+    setDataLoading(true)
+    void loadData()
+  }, [student?.id, studentLoading, loadData])
+
+  // Teacher unlocks steps / assigns part revision on another device — update live.
+  useStudentNamazRealtime(student?.id, loadData, "page")
 
   const stepProgress = stepProgressByStepId(stepRows)
   const partProgress = partProgressByPartId(partRows)

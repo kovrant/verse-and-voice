@@ -22,7 +22,7 @@ let cached: User | null | undefined = undefined
 let inflight: Promise<User | null> | null = null
 
 async function loadUser(): Promise<User | null> {
-  if (cached !== undefined) return cached
+  if (cached !== undefined && !inflight) return cached
   if (!inflight) {
     // getSession() reads from local storage (no network round-trip), which keeps
     // the lock held for the shortest possible time. Security is still enforced
@@ -30,15 +30,37 @@ async function loadUser(): Promise<User | null> {
     inflight = supabase.auth
       .getSession()
       .then(({ data }) => {
-        cached = data.session?.user ?? null
-        return cached
+        const user = data.session?.user ?? null
+        // Don't clobber a fresher seedAuthUser() from a concurrent sign-in.
+        if (cached === undefined) cached = user
+        return cached ?? user
       })
-      .catch(() => null) // swallow stolen-lock / transient errors
+      .catch(() => cached ?? null) // swallow stolen-lock / transient errors
       .finally(() => {
         inflight = null
       })
   }
   return inflight
+}
+
+let setAuthInflight: Promise<void> | null = null
+
+/** Deduped Realtime JWT attach — every channel subscribe can call this safely. */
+export function ensureRealtimeAuth(): Promise<void> {
+  if (!setAuthInflight) {
+    setAuthInflight = supabase.realtime
+      .setAuth()
+      .catch(() => {})
+      .finally(() => {
+        setAuthInflight = null
+      })
+  }
+  return setAuthInflight
+}
+
+/** Seed the auth cache after sign-in so nothing else needs to touch the lock. */
+export function seedAuthUser(user: User | null) {
+  cached = user
 }
 
 // Keep the cache fresh from auth events instead of re-calling getUser().

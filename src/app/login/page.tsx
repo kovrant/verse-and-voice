@@ -1,6 +1,6 @@
 "use client"
 
-import { BookOpen, Eye, EyeOff, Loader2, Lock, Moon, Sun, User } from "lucide-react"
+import { BookOpen, Eye, EyeOff, Loader2, Lock, Moon, Sun, User as UserIcon } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
@@ -8,6 +8,8 @@ import { Brand } from "@/components/brand"
 import { useTheme } from "@/components/theme-provider"
 import { isLoginDisabled, resolveLoginEmail } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
+import { getCurrentAuthUser, seedAuthUser } from "@/lib/use-current-user"
+import type { User } from "@supabase/supabase-js"
 
 // Friendly, non-punitive message shown when a teacher has turned off sign-in.
 const CONTACT_TEACHER_MESSAGE = "To access the portal, please contact your teacher."
@@ -36,6 +38,21 @@ function StudentLoginForm() {
   )
   const [loading, setLoading] = useState(false)
 
+  async function finishLogin(user: User | null | undefined) {
+    if (isLoginDisabled(user?.app_metadata as { login_disabled?: boolean })) {
+      await supabase.auth.signOut()
+      setError(CONTACT_TEACHER_MESSAGE)
+      setLoading(false)
+      return
+    }
+
+    const role = (user?.app_metadata as { role?: string } | null)?.role
+    if (role === "student") void fetch("/api/presence", { method: "POST", keepalive: true })
+    seedAuthUser(user ?? null)
+    router.replace(role === "student" ? redirectTo : "/")
+    router.refresh()
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
@@ -45,25 +62,19 @@ function StudentLoginForm() {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
     if (error) {
+      // Concurrent auth reads can steal the Web Lock and fail sign-in even though
+      // the session was written — recover instead of showing a false error.
+      const recovered = await getCurrentAuthUser()
+      if (recovered) {
+        await finishLogin(recovered)
+        return
+      }
       setError(error.message)
       setLoading(false)
       return
     }
 
-    // signInWithPassword returns current app_metadata, so a teacher's "sign-in
-    // off" is enforced even on an otherwise-valid password.
-    if (isLoginDisabled(data.user?.app_metadata as { login_disabled?: boolean })) {
-      await supabase.auth.signOut()
-      setError(CONTACT_TEACHER_MESSAGE)
-      setLoading(false)
-      return
-    }
-
-    const role = (data.user?.app_metadata as { role?: string } | null)?.role
-    // Let teachers know a student came online (fire-and-forget).
-    if (role === "student") void fetch("/api/presence", { method: "POST", keepalive: true })
-    router.replace(role === "student" ? redirectTo : "/")
-    router.refresh()
+    await finishLogin(data.user)
   }
 
   const fieldClass =
@@ -100,7 +111,7 @@ function StudentLoginForm() {
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-extrabold text-foreground">Username</span>
               <span className="relative">
-                <User
+                <UserIcon
                   className="pointer-events-none absolute left-4 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-muted-foreground"
                   aria-hidden="true"
                 />

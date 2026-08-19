@@ -124,12 +124,15 @@ export function TeacherTopBar() {
 }
 
 export function StudentTopBar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
-  const { student, username } = useStudent()
+  const { student, username, loading } = useStudent()
   const name = student?.name || username || "Student"
+  const initial = loading
+    ? "…"
+    : (student?.name?.[0] || username?.[0] || "?").toUpperCase()
   return (
     <PortalTopBar
-      initial={(name[0] || "?").toUpperCase()}
-      title={name}
+      initial={initial}
+      title={loading ? "Loading…" : name}
       subtitle={username ? `@${username}` : null}
       role="Student"
       signOutNext="/login"

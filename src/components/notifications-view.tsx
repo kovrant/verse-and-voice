@@ -11,7 +11,7 @@ import { PageLoading } from "@/components/page-loading"
 import { Pagination } from "@/components/ui/pagination"
 import { retentionCutoffIso, sanitizeSearchTerm } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
-import { getCurrentAuthUser } from "@/lib/use-current-user"
+import { ensureRealtimeAuth, getCurrentAuthUser } from "@/lib/use-current-user"
 import {
   markAllNotificationsRead,
   markNotificationRead,
@@ -98,7 +98,7 @@ export function NotificationsView() {
         { event: "*", schema: "public", table: "notifications", filter },
         refresh,
       )
-    void supabase.realtime.setAuth().finally(() => channel.subscribe())
+    void ensureRealtimeAuth().finally(() => channel.subscribe())
     return () => {
       if (t) clearTimeout(t)
       supabase.removeChannel(channel)

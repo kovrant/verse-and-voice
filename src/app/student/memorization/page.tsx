@@ -30,6 +30,7 @@ import {
   type StudentMemItem,
 } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
+import { ensureRealtimeAuth } from "@/lib/use-current-user"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -179,7 +180,7 @@ export default function StudentMemorizationPage() {
       refresh,
     )
     // RLS on postgres_changes is evaluated with the user's JWT — attach it first.
-    void supabase.realtime.setAuth().finally(() => channel.subscribe())
+    void ensureRealtimeAuth().finally(() => channel.subscribe())
     return () => {
       if (t) clearTimeout(t)
       supabase.removeChannel(channel)

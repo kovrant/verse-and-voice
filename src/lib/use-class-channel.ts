@@ -4,6 +4,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
+import { ensureRealtimeAuth } from "@/lib/use-current-user"
 
 export interface NavState {
   paraNumber: number
@@ -183,7 +184,7 @@ export function useClassChannel({
     // on the socket. setAuth() (no arg → current session token) attaches it
     // before subscribe; without it the server denies the subscription silently.
     if (PRIVATE_CHANNEL) {
-      supabase.realtime.setAuth().then(doSubscribe).catch(doSubscribe)
+      ensureRealtimeAuth().then(doSubscribe).catch(doSubscribe)
     } else {
       doSubscribe()
     }

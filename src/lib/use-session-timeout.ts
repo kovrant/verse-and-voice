@@ -2,6 +2,7 @@
 
 import { useEffect } from "react"
 
+import { getCurrentAuthUser } from "@/lib/use-current-user"
 import { supabase } from "@/lib/supabase"
 
 // Hard cap on how long a student may stay logged in. Supabase refresh tokens
@@ -15,6 +16,19 @@ const keyFor = (userId: string) => `${PREFIX}${userId}`
 /** Pure: ms left before the session must end. <= 0 means it's already expired. */
 export function msUntilExpiry(startMs: number, now: number, maxMs = MAX_SESSION_MS): number {
   return startMs + maxMs - now
+}
+
+/** Pure: pick the session anchor — fresh login always resets the 3h window. */
+export function resolveSessionStartMs(
+  storedRaw: string | null,
+  now: number,
+  opts: { freshLogin?: boolean; maxMs?: number } = {},
+): { start: number } | { expired: true } {
+  const maxMs = opts.maxMs ?? MAX_SESSION_MS
+  const stored = storedRaw != null ? Number(storedRaw) : NaN
+  if (opts.freshLogin || !storedRaw || Number.isNaN(stored)) return { start: now }
+  if (msUntilExpiry(stored, now, maxMs) <= 0) return { expired: true }
+  return { start: stored }
 }
 
 function clearAllStarts() {
@@ -53,40 +67,29 @@ export function useSessionTimeout() {
       supabase.auth.signOut().catch(() => {})
     }
 
-    const arm = async () => {
+    const arm = async (freshLogin = false) => {
       disarm()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const user = await getCurrentAuthUser()
       if (cancelled || !user) return
 
       const k = keyFor(user.id)
-      let start = Number(localStorage.getItem(k))
-      if (!start || Number.isNaN(start)) {
-        start = Date.now()
-        localStorage.setItem(k, String(start))
-      }
-
-      const remaining = msUntilExpiry(start, Date.now())
-      if (remaining <= 0) {
+      const resolved = resolveSessionStartMs(localStorage.getItem(k), Date.now(), { freshLogin })
+      if ("expired" in resolved) {
         endSession()
         return
       }
-      timer = setTimeout(endSession, remaining)
+      localStorage.setItem(k, String(resolved.start))
+      timer = setTimeout(endSession, msUntilExpiry(resolved.start, Date.now()))
     }
-
-    arm()
 
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
         disarm()
         clearAllStarts()
-      } else if (
-        event === "SIGNED_IN" ||
-        event === "INITIAL_SESSION" ||
-        event === "TOKEN_REFRESHED"
-      ) {
-        arm()
+      } else if (event === "SIGNED_IN") {
+        void arm(true)
+      } else if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") {
+        void arm(false)
       }
     })
 

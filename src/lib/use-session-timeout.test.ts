@@ -4,7 +4,26 @@ import { describe, expect, it, vi } from "vitest"
 // helper can be imported in a plain node test.
 vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
-import { MAX_SESSION_MS, msUntilExpiry } from "./use-session-timeout"
+import { MAX_SESSION_MS, msUntilExpiry, resolveSessionStartMs } from "./use-session-timeout"
+
+describe("resolveSessionStartMs", () => {
+  const now = 1_000_000
+
+  it("starts a fresh window on explicit login", () => {
+    expect(resolveSessionStartMs(String(now - MAX_SESSION_MS - 1), now, { freshLogin: true })).toEqual({
+      start: now,
+    })
+  })
+
+  it("reuses a stored anchor on reload", () => {
+    const stored = String(now - 60_000)
+    expect(resolveSessionStartMs(stored, now)).toEqual({ start: now - 60_000 })
+  })
+
+  it("expires a stale anchor when the tab reloads after 3h", () => {
+    expect(resolveSessionStartMs(String(now - MAX_SESSION_MS - 1), now)).toEqual({ expired: true })
+  })
+})
 
 describe("msUntilExpiry", () => {
   const start = 1_000_000
