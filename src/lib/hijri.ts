@@ -120,7 +120,7 @@ export interface HijriDate {
  * Umm al-Qura calendar. Uses our own transliterated month names for a
  * consistent look, while pulling the numeric day/month/year from Intl.
  */
-export function toHijri(date: Date = new Date()): HijriDate {
+function toHijri(date: Date = new Date()): HijriDate {
   const parts = new Intl.DateTimeFormat("en-u-ca-islamic-umalqura", {
     day: "numeric",
     month: "numeric",

@@ -94,7 +94,7 @@ export function isStepUnlockedForLearning(
   return !!progress?.unlocked_at
 }
 
-export function isStepUnlockedForWholeStepRevision(
+function isStepUnlockedForWholeStepRevision(
   progress: StudentNamazStep | undefined,
   moduleStatus: NamazModuleStatus,
   hasParts: boolean,
@@ -103,7 +103,7 @@ export function isStepUnlockedForWholeStepRevision(
   return !!progress?.completed_at && !!progress.revision_assigned_at
 }
 
-export function isStepOpenForRevision(
+function isStepOpenForRevision(
   progress: StudentNamazStep | undefined,
   moduleStatus: NamazModuleStatus,
   parts: NamazStepPart[],

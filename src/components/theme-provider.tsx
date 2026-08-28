@@ -11,7 +11,7 @@ export type Portal = "admin" | "student"
 
 const DARK_KEY = "qa-dark"
 
-export function portalForPath(pathname: string): Portal {
+function portalForPath(pathname: string): Portal {
   if (pathname === "/login" || pathname === "/student" || pathname.startsWith("/student/")) {
     return "student"
   }

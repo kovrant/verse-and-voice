@@ -1,14 +1,14 @@
 "use client"
 
 import { BookOpen, Eye, EyeOff, Loader2, Lock, Moon, Sun, User as UserIcon } from "lucide-react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { useTheme } from "@/components/theme-provider"
-import { isLoginDisabled, resolveLoginEmail } from "@/lib/student-auth"
+import { isLoginDisabled, resolveLoginEmail, studentPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
-import { getCurrentAuthUser, seedAuthUser } from "@/lib/use-current-user"
+import { getCurrentAuthUser, prepareForPasswordSignIn, seedAuthUser } from "@/lib/use-current-user"
 import type { User } from "@supabase/supabase-js"
 
 // Friendly, non-punitive message shown when a teacher has turned off sign-in.
@@ -23,7 +23,6 @@ export default function StudentLoginPage() {
 }
 
 function StudentLoginForm() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirectTo") || "/student"
   const { dark, toggleDark } = useTheme()
@@ -49,14 +48,17 @@ function StudentLoginForm() {
     const role = (user?.app_metadata as { role?: string } | null)?.role
     if (role === "student") void fetch("/api/presence", { method: "POST", keepalive: true })
     seedAuthUser(user ?? null)
-    router.replace(role === "student" ? redirectTo : "/")
-    router.refresh()
+    // Hard navigation so the next request carries the session cookies.
+    // router.replace + refresh races middleware and bounces back to /login.
+    window.location.assign(role === "student" ? studentPostLoginPath(redirectTo) : "/")
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
     setLoading(true)
+
+    await prepareForPasswordSignIn()
 
     const email = resolveLoginEmail(identifier)
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })

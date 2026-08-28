@@ -90,6 +90,8 @@ import {
   STUDENT_MEM_SELECT,
   type StudentMemItem,
 } from "@/lib/memorization"
+import { awardMemLesson, syncMemChunkAchievements } from "@/lib/mem-achievements"
+import { syncQuranRoundAchievements, type RoundProgress } from "@/lib/quran-achievements"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import {
   COUNTRIES,
@@ -101,6 +103,16 @@ import {
   type Student,
   type StudentStatus,
 } from "@/lib/utils"
+
+function roundProgress(
+  r: Pick<QuranRound, "desc_completed" | "asc_completed" | "completed_at">,
+): RoundProgress {
+  return {
+    desc: r.desc_completed || 0,
+    asc: r.asc_completed || 0,
+    completed_at: r.completed_at,
+  }
+}
 
 export default function StudentDetailPage() {
   const params = useParams()
@@ -332,6 +344,13 @@ export default function StudentDetailPage() {
   }
 
   async function toggleChunk(chunk: MemChunk, memorized: boolean) {
+    const studentId = params.id as string
+    const chunks = chunksByItem[chunk.catalog_id] || []
+    const chunkIndex = chunks.findIndex((c) => c.id === chunk.id)
+    const lessonTitle =
+      memItems.find((m) => m.catalog_id === chunk.catalog_id)?.memorization_catalog?.title ??
+      "Lesson"
+
     // Optimistic: update the local set so the checklist responds instantly.
     setMemorizedChunkIds((prev) => {
       const next = new Set(prev)
@@ -339,9 +358,20 @@ export default function StudentDetailPage() {
       else next.delete(chunk.id)
       return next
     })
-    const { error } = await setChunkMemorized(params.id as string, chunk.id, memorized)
+    const { error } = await setChunkMemorized(studentId, chunk.id, memorized)
     if (error) {
       toast.error(`Couldn't update part: ${error.message}`)
+    } else if (memorized && chunkIndex >= 0) {
+      const nextIds = new Set(memorizedChunkIds)
+      nextIds.add(chunk.id)
+      void syncMemChunkAchievements(
+        studentId,
+        chunk,
+        chunkIndex,
+        lessonTitle,
+        chunks,
+        nextIds,
+      )
     }
     // Reload so the DB-derived item status (memorizing ↔ memorized) is reflected.
     await loadMemItems()
@@ -382,6 +412,13 @@ export default function StudentDetailPage() {
         last_revised_at: newStatus === "memorized" ? new Date().toISOString() : null,
       })
       .eq("id", item.id)
+    if (newStatus === "memorized") {
+      void awardMemLesson(
+        params.id as string,
+        item.catalog_id,
+        item.memorization_catalog.title,
+      )
+    }
     await loadMemItems()
   }
 
@@ -451,10 +488,13 @@ export default function StudentDetailPage() {
   async function completeActiveRound() {
     const active = getActiveRound(rounds)
     if (!active) return
-    await supabase
-      .from("quran_rounds")
-      .update({ completed_at: formatLocalDate() })
-      .eq("id", active.id)
+    const before = roundProgress(active)
+    const completedAt = formatLocalDate()
+    await supabase.from("quran_rounds").update({ completed_at: completedAt }).eq("id", active.id)
+    void syncQuranRoundAchievements(params.id as string, active, before, {
+      ...before,
+      completed_at: completedAt,
+    })
     await loadRounds()
     toast.success("Round marked as completed")
   }
@@ -463,13 +503,22 @@ export default function StudentDetailPage() {
     const active = getActiveRound(rounds)
     if (!active) return
 
+    const before = roundProgress(active)
+    const desc = parseInt(roundForm.desc_completed) || 0
+    const asc = parseInt(roundForm.asc_completed) || 0
     await supabase
       .from("quran_rounds")
       .update({
-        desc_completed: parseInt(roundForm.desc_completed) || 0,
-        asc_completed: parseInt(roundForm.asc_completed) || 0,
+        desc_completed: desc,
+        asc_completed: asc,
       })
       .eq("id", active.id)
+
+    void syncQuranRoundAchievements(params.id as string, active, before, {
+      desc,
+      asc,
+      completed_at: before.completed_at,
+    })
 
     setRoundEditOpen(false)
     await loadRounds()
@@ -493,32 +542,53 @@ export default function StudentDetailPage() {
     if (!newRoundForm.is_completed) {
       const active = getActiveRound(rounds)
       if (active) {
+        const before = roundProgress(active)
+        const closedAt = newRoundForm.started_at || formatLocalDate()
         const { error: closeError } = await supabase
           .from("quran_rounds")
-          .update({ completed_at: newRoundForm.started_at || formatLocalDate() })
+          .update({ completed_at: closedAt })
           .eq("id", active.id)
         if (closeError) {
           toast.error(closeError.message)
           return
         }
+        void syncQuranRoundAchievements(params.id as string, active, before, {
+          ...before,
+          completed_at: closedAt,
+        })
       }
     }
 
-    const { error } = await supabase.from("quran_rounds").insert({
-      student_id: params.id,
-      type: newRoundForm.type,
-      round_number: nextNum,
-      started_at: newRoundForm.started_at,
-      completed_at: newRoundForm.is_completed
-        ? newRoundForm.completed_at || formatLocalDate()
-        : null,
-      desc_completed: desc,
-      asc_completed: asc,
-    })
+    const completedAt = newRoundForm.is_completed
+      ? newRoundForm.completed_at || formatLocalDate()
+      : null
+
+    const { data: inserted, error } = await supabase
+      .from("quran_rounds")
+      .insert({
+        student_id: params.id,
+        type: newRoundForm.type,
+        round_number: nextNum,
+        started_at: newRoundForm.started_at,
+        completed_at: completedAt,
+        desc_completed: desc,
+        asc_completed: asc,
+      })
+      .select("id")
+      .single()
 
     if (error) {
       toast.error(error.message)
       return
+    }
+
+    if (inserted?.id && (desc > 0 || asc > 0 || completedAt)) {
+      void syncQuranRoundAchievements(
+        params.id as string,
+        { id: inserted.id, type: newRoundForm.type, round_number: nextNum },
+        { desc: 0, asc: 0, completed_at: null },
+        { desc, asc, completed_at: completedAt },
+      )
     }
 
     setNewRoundOpen(false)
@@ -548,16 +618,18 @@ export default function StudentDetailPage() {
     if (!editingRound) return
 
     // Completed round => desc=30, asc=0 (=> 30/30). See note in startNewRound.
+    const before = roundProgress(editingRound)
     const desc = editRoundForm.is_completed ? 30 : parseInt(editRoundForm.desc_completed) || 0
     const asc = editRoundForm.is_completed ? 0 : parseInt(editRoundForm.asc_completed) || 0
+    const completedAt = editRoundForm.is_completed
+      ? editRoundForm.completed_at || formatLocalDate()
+      : null
 
     const { error } = await supabase
       .from("quran_rounds")
       .update({
         started_at: editRoundForm.started_at,
-        completed_at: editRoundForm.is_completed
-          ? editRoundForm.completed_at || formatLocalDate()
-          : null,
+        completed_at: completedAt,
         desc_completed: desc,
         asc_completed: asc,
       })
@@ -567,6 +639,12 @@ export default function StudentDetailPage() {
       toast.error(error.message)
       return
     }
+
+    void syncQuranRoundAchievements(params.id as string, editingRound, before, {
+      desc,
+      asc,
+      completed_at: completedAt,
+    })
 
     setEditingRound(null)
     await loadRounds()

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 
 /** 0 = Sunday … 6 = Saturday (matches JS Date.getDay()). */
 export const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"] as const
-export const DAY_NAMES = [
+const DAY_NAMES = [
   "Sunday",
   "Monday",
   "Tuesday",

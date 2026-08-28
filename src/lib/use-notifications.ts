@@ -56,7 +56,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 }
 
 /** Exact unread total — the feed is capped at FEED_LIMIT, so it can't be counted from it. */
-export async function countUnreadNotifications(userId: string): Promise<number> {
+async function countUnreadNotifications(userId: string): Promise<number> {
   const { count } = await supabase
     .from("notifications")
     .select("id", { count: "exact", head: true })

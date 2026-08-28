@@ -1,5 +1,5 @@
 /** Milestone thresholds celebrated with a toast. */
-export const STREAK_MILESTONES = [3, 7, 14, 30, 100] as const
+const STREAK_MILESTONES = [3, 7, 14, 30, 100] as const
 
 export type WeekDayStatus = "off" | "done" | "missed" | "today" | "upcoming"
 
@@ -21,7 +21,7 @@ function pad2(n: number): string {
 }
 
 /** Local calendar date key YYYY-MM-DD in the viewer's timezone. */
-export function localDateKey(d: Date): string {
+function localDateKey(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 }
 

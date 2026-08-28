@@ -5,11 +5,11 @@
 // email under a dedicated domain. The domain must match on both the client
 // (login form) and the server (credential API), hence the NEXT_PUBLIC_ var.
 
-export const STUDENT_EMAIL_DOMAIN =
+const STUDENT_EMAIL_DOMAIN =
   process.env.NEXT_PUBLIC_STUDENT_EMAIL_DOMAIN || "students.quran-academy.app"
 
 /** Usernames: letters, digits, dot, underscore, hyphen; 3–30 chars. */
-export const USERNAME_PATTERN = /^[a-z0-9._-]{3,30}$/
+const USERNAME_PATTERN = /^[a-z0-9._-]{3,30}$/
 
 export function normalizeUsername(username: string): string {
   return username.trim().toLowerCase()
@@ -25,7 +25,7 @@ export function usernameToEmail(username: string): string {
 }
 
 /** A login identifier is treated as an email if it contains "@". */
-export function isEmailIdentifier(identifier: string): boolean {
+function isEmailIdentifier(identifier: string): boolean {
   return identifier.includes("@")
 }
 
@@ -64,4 +64,17 @@ export function isTeacherRole(
 export function resolveLoginEmail(identifier: string): string {
   const value = identifier.trim()
   return isEmailIdentifier(value) ? value : usernameToEmail(value)
+}
+
+/**
+ * After a student signs in, only the student portal is a safe destination.
+ * Visiting `/` while logged out stamps `?redirectTo=/` on `/login`; sending
+ * that straight back through middleware is a bounce loop if cookies aren't
+ * visible on the next request yet.
+ */
+export function studentPostLoginPath(redirectTo: string | null | undefined): string {
+  if (redirectTo === "/student" || (redirectTo?.startsWith("/student/") && !redirectTo.includes("://"))) {
+    return redirectTo
+  }
+  return "/student"
 }

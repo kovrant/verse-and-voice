@@ -22,6 +22,7 @@ let cached: User | null | undefined = undefined
 let inflight: Promise<User | null> | null = null
 
 async function loadUser(): Promise<User | null> {
+  ensureAuthListener()
   if (cached !== undefined && !inflight) return cached
   if (!inflight) {
     // getSession() reads from local storage (no network round-trip), which keeps
@@ -63,8 +64,24 @@ export function seedAuthUser(user: User | null) {
   cached = user
 }
 
+/**
+ * Drop a stale/broken local session before signInWithPassword. A dead refresh
+ * token holds the auth Web Lock (and middleware logs "Refresh Token Not Found");
+ * the login page then hangs on "Signing in…" or bounces back to /login.
+ */
+export async function prepareForPasswordSignIn() {
+  inflight = null
+  cached = undefined
+  await supabase.auth.signOut({ scope: "local" }).catch(() => {})
+}
+
 // Keep the cache fresh from auth events instead of re-calling getUser().
-if (typeof window !== "undefined") {
+// Lazy: importing this module on /login used to subscribe immediately, and
+// INITIAL_SESSION's token refresh stole the lock from signInWithPassword.
+let listening = false
+function ensureAuthListener() {
+  if (listening || typeof window === "undefined") return
+  listening = true
   supabase.auth.onAuthStateChange((_event, session) => {
     cached = session?.user ?? null
   })

@@ -21,7 +21,7 @@ import {
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 
-export { chunkProgress, currentChunkIndex, labelFor, type MemChunk }
+export { labelFor, type MemChunk }
 
 /** Load all chunks for the given catalog items, grouped by catalog_id, each in order. */
 export async function loadChunksFor(catalogIds: string[]): Promise<Record<string, MemChunk[]>> {
@@ -68,7 +68,7 @@ export async function setChunkMemorized(studentId: string, chunkId: string, memo
 }
 
 /** One page in the viewer — a lesson overview, or a single part. */
-export interface ViewerPage {
+interface ViewerPage {
   src: string
   label: string
   /** Compact label for the thumbnail strip ("All", "3"). */
@@ -221,7 +221,7 @@ function partState(index: number, currentIdx: number, isDone: boolean): PartStat
 }
 
 /** Horizontal numbered path: done / current / upcoming. */
-export function MemPartPath({
+function MemPartPath({
   chunks,
   memorizedIds,
   selectedIndex,
@@ -273,7 +273,7 @@ export function MemPartPath({
 }
 
 /** Large image for the active / selected part (student spotlight or teacher panel). */
-export function MemPartHero({
+function MemPartHero({
   chunk,
   index,
   badge,

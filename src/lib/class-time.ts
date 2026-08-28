@@ -61,7 +61,7 @@ function pktWallToUtcMs(y: number, m: number, d: number, h: number, min: number)
  * Next class instant. If `classDays` is set, only those weekdays count;
  * otherwise falls back to daily recurrence (legacy).
  */
-export function nextClassInstant(
+function nextClassInstant(
   classTime: string | null,
   now: Date = new Date(),
   classDays?: number[] | null,

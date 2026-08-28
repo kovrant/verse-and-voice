@@ -40,6 +40,7 @@ import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
 import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
+import { syncQuranRoundAchievements } from "@/lib/quran-achievements"
 import { formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.
@@ -289,6 +290,11 @@ export default function LiveSession({
 
   async function advancePara() {
     if (!activeRound) return
+    const before = {
+      desc: activeRound.desc_completed || 0,
+      asc: activeRound.asc_completed || 0,
+      completed_at: activeRound.completed_at,
+    }
     // Finishing the final para completes the round. asc_completed is 1-indexed
     // ("currently on para N"), and the DB caps it at 30 — so we must not write 31.
     // Instead mark the round completed using the same shape as a finished round.
@@ -307,6 +313,15 @@ export default function LiveSession({
       toast.error(`Couldn't update progress: ${error.message}`)
       return
     }
+
+    void syncQuranRoundAchievements(
+      student.id,
+      activeRound,
+      before,
+      finishing
+        ? { desc: 30, asc: 0, completed_at: update.completed_at ?? null }
+        : { ...before, asc: currentParaNumber + 1 },
+    )
 
     const { data } = await supabase
       .from("quran_rounds")

@@ -11,7 +11,7 @@ export interface NavState {
   page: number
 }
 
-export type ClassRole = "teacher" | "student"
+type ClassRole = "teacher" | "student"
 
 interface UseClassChannelOptions {
   /** The student the class belongs to — the channel key. */

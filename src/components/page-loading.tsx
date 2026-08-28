@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import { BookOpen } from "lucide-react"
 
-import { Brand } from "@/components/brand"
 import { cn } from "@/lib/utils"
 
 /** Shimmer block — use anywhere a placeholder bar/card is needed. */
@@ -303,85 +302,6 @@ export function PageLoading({
     default:
       return wrap(<HeaderSkeleton />)
   }
-}
-
-/**
- * Branded route-transition loader (Next.js loading.tsx). Shown while a new
- * page shell is streaming in — distinct from in-page data skeletons.
- */
-export function RouteLoader({ portal = "admin" }: { portal?: "admin" | "student" }) {
-  const student = portal === "student"
-
-  return (
-    <div
-      className={cn(
-        "flex min-h-[min(70vh,520px)] flex-col items-center justify-center px-6 animate-fade-in-up",
-        student && "mx-auto max-w-lg",
-      )}
-      role="status"
-      aria-label="Loading page"
-    >
-      <div className="relative mb-8">
-        {/* Soft glow behind the book */}
-        <div
-          className={cn(
-            "absolute inset-0 rounded-3xl blur-2xl animate-pulse-glow",
-            student ? "bg-primary/25" : "bg-primary/15",
-          )}
-          aria-hidden="true"
-        />
-        <div
-          className={cn(
-            "relative flex h-[72px] w-[72px] items-center justify-center rounded-[22px] shadow-soft-lg book-open-anim",
-            student
-              ? "bg-primary text-primary-foreground ring-2 ring-inset ring-white/20"
-              : "bg-card text-primary border border-border",
-          )}
-        >
-          <BookOpen className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
-        </div>
-        {student && (
-          <>
-            <span
-              className="sparkle-twinkle absolute -right-2 -top-1 text-lg"
-              style={{ animationDelay: "0ms" }}
-              aria-hidden="true"
-            >
-              ✦
-            </span>
-            <span
-              className="sparkle-twinkle absolute -left-2 top-2 text-sm opacity-70"
-              style={{ animationDelay: "400ms" }}
-              aria-hidden="true"
-            >
-              ✦
-            </span>
-          </>
-        )}
-      </div>
-
-      <p className="mb-1 text-center font-heading text-lg font-semibold tracking-tight text-foreground">
-        <Brand amp={student ? "text-primary/70" : undefined} />
-      </p>
-      <p className="mb-6 text-center text-sm text-muted-foreground">
-        {student ? "Getting things ready for you…" : "Loading…"}
-      </p>
-
-      <div className="flex items-center gap-1.5" aria-hidden="true">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className={cn(
-              "h-2 w-2 rounded-full bg-primary loading-dot",
-              student && "bg-primary",
-            )}
-            style={{ animationDelay: `${i * 160}ms` }}
-          />
-        ))}
-      </div>
-      <span className="sr-only">Loading page…</span>
-    </div>
-  )
 }
 
 /** Compact branded loader for PDF viewers and dynamic imports. */

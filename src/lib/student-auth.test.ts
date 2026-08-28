@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 // student-auth.ts is pure (no browser client import), so no mock is needed.
-import { isLoginDisabled, isTeacherRole } from "./student-auth"
+import { isLoginDisabled, isTeacherRole, studentPostLoginPath } from "./student-auth"
 
 describe("isLoginDisabled", () => {
   it("is true only when the flag is explicitly true", () => {
@@ -39,5 +39,25 @@ describe("isTeacherRole", () => {
     expect(isTeacherRole(null, null)).toBe(false)
     expect(isTeacherRole(undefined, undefined)).toBe(false)
     expect(isTeacherRole("", "")).toBe(false)
+  })
+})
+
+describe("studentPostLoginPath", () => {
+  it("sends students to /student, ignoring teacher-home and empty redirects", () => {
+    expect(studentPostLoginPath(null)).toBe("/student")
+    expect(studentPostLoginPath(undefined)).toBe("/student")
+    expect(studentPostLoginPath("")).toBe("/student")
+    expect(studentPostLoginPath("/")).toBe("/student")
+    expect(studentPostLoginPath("/admin")).toBe("/student")
+  })
+
+  it("keeps a student-portal deep link", () => {
+    expect(studentPostLoginPath("/student")).toBe("/student")
+    expect(studentPostLoginPath("/student/quran")).toBe("/student/quran")
+  })
+
+  it("rejects lookalike paths that are not the student portal", () => {
+    expect(studentPostLoginPath("/studenting")).toBe("/student")
+    expect(studentPostLoginPath("//evil.example")).toBe("/student")
   })
 })
