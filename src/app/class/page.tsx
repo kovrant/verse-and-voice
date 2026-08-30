@@ -17,6 +17,7 @@ import {
   Users,
 } from "lucide-react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -63,6 +64,8 @@ interface ClassSession {
 type SessionMode = "landing" | "live"
 
 export default function ClassPage() {
+  const searchParams = useSearchParams()
+  const preselected = useRef(false)
   const [students, setStudents] = useState<ClassStudent[]>([])
   const [selected, setSelected] = useState<ClassStudent | null>(null)
   const [rounds, setRounds] = useState<QuranRound[]>([])
@@ -85,6 +88,15 @@ export default function ClassPage() {
     loadStudents()
     loadParas()
   }, [])
+
+  useEffect(() => {
+    if (preselected.current || loading) return
+    const id = searchParams.get("student")
+    if (id && students.some((s) => s.id === id)) {
+      preselected.current = true
+      void handleSelect(id)
+    }
+  }, [searchParams, loading, students])
 
   async function loadStudents() {
     const { data } = await supabase

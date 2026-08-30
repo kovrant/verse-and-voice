@@ -5,17 +5,14 @@
 import * as Popover from "@radix-ui/react-popover"
 import { differenceInDays, format, formatDistanceToNow, subMonths } from "date-fns"
 import {
-  Activity,
   ArrowLeft,
   BookMarked,
   BookOpen,
   CalendarDays,
   Check,
   Clock,
-  CreditCard,
   FileText,
   History,
-  KeyRound,
   MapPin,
   Pencil,
   Play,
@@ -43,15 +40,16 @@ import { QuranJourney } from "@/components/quran-journey"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
-  QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
-import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
+import { type ActivityLog } from "@/components/student-activity-feed"
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentNamazAssign } from "@/components/student-namaz-assign"
 import { StudentPortalAccess } from "@/components/student-portal-access"
 import { PageLoading } from "@/components/page-loading"
+import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
+import { StudentOverview } from "@/components/student-overview"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import {
   type ClassSession,
@@ -93,6 +91,7 @@ import {
 import { awardMemLesson, syncMemChunkAchievements } from "@/lib/mem-achievements"
 import { syncQuranRoundAchievements, type RoundProgress } from "@/lib/quran-achievements"
 import { fetchAllRows, supabase } from "@/lib/supabase"
+import { useOnlineStudents } from "@/lib/use-online-students"
 import {
   COUNTRIES,
   type FeePayment,
@@ -127,6 +126,7 @@ export default function StudentDetailPage() {
   const [feePage, setFeePage] = useState(1)
   const feePageSize = 12
   const { rates } = useExchangeRates()
+  const onlineIds = useOnlineStudents()
   const [memItems, setMemItems] = useState<StudentMemItem[]>([])
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
   const [chunksByItem, setChunksByItem] = useState<Record<string, MemChunk[]>>({})
@@ -154,9 +154,7 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
-  const [activeTab, setActiveTab] = useState<
-    "journey" | "sessions" | "memorization" | "fees" | "activity" | "portal"
-  >("journey")
+  const [activeTab, setActiveTab] = useState<StudentView>("overview")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -671,12 +669,12 @@ export default function StudentDetailPage() {
 
   // Reset Sessions pagination when entering the tab
   useEffect(() => {
-    if (activeTab === "sessions") setSessionPage(1)
+    if (activeTab === "classes") setSessionPage(1)
   }, [activeTab])
 
-  // Lazy-load the activity feed the first time the tab is opened.
+  // Lazy-load activity for the overview panel.
   useEffect(() => {
-    if (activeTab === "activity" && !activityLoaded && !activityLoading) {
+    if (activeTab === "overview" && !activityLoaded && !activityLoading) {
       loadActivity()
     }
   }, [activeTab, activityLoaded, activityLoading, loadActivity])
@@ -699,20 +697,26 @@ export default function StudentDetailPage() {
   const unpaidCount = fees.filter((f) => !f.is_paid).length
   const memorizingCount = memItems.filter((m) => m.status === "memorizing").length
   const memorizedCount = memItems.filter((m) => m.status === "memorized").length
+  const now = new Date()
+  const currentMonthUnpaid = fees.some(
+    (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear() && !f.is_paid,
+  )
+  const lastSession = sessions[0]
+  const progressHint = activeRound
+    ? activeRound.type === "qaida"
+      ? "Qaida"
+      : `Para ${activeRound.asc_completed || 1}`
+    : "No active round"
 
-  const TABS = [
-    { id: "journey" as const, label: "Quran Journey", icon: BookOpen },
-    { id: "sessions" as const, label: "Sessions", icon: History, count: sessions.length },
-    {
-      id: "memorization" as const,
-      label: "Memorization",
-      icon: BookMarked,
-      count: memorizingCount + memorizedCount,
-    },
-    { id: "fees" as const, label: "Fees", icon: CreditCard, count: unpaidCount },
-    { id: "activity" as const, label: "Activity", icon: Activity },
-    { id: "portal" as const, label: "Portal Access", icon: KeyRound },
-  ]
+  const navItems = studentNavItems({
+    lastClassLabel: lastSession
+      ? formatDistanceToNow(new Date(lastSession.started_at), { addSuffix: true })
+      : undefined,
+    sessionCount: sessions.length,
+    memInProgress: memorizingCount,
+    unpaidThisMonth: currentMonthUnpaid,
+    progressHint,
+  })
 
   return (
     <div className="animate-fade-in-up">
@@ -769,7 +773,14 @@ export default function StudentDetailPage() {
             )}
           </div>
         </div>
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link href={`/class?student=${student.id}`}>
+            <Button size="sm">
+              <Play className="h-3.5 w-3.5 mr-1.5" />
+              Start class
+            </Button>
+          </Link>
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
           <DialogTrigger asChild>
             <Button variant="outline" size="sm">
               <Pencil className="h-3.5 w-3.5 mr-1.5" />
@@ -895,105 +906,41 @@ export default function StudentDetailPage() {
             </div>
           </DialogContent>
         </Dialog>
-      </div>
-
-      {/* Stat bar — one segmented card */}
-      <div className="mb-5 flex flex-col overflow-hidden rounded-2xl border border-border bg-card sm:flex-row">
-        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-            <CreditCard className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <FeeDisplay
-              amount={student.fee}
-              currency={student.fee_currency}
-              rates={rates}
-              size="sm"
-            />
-          </div>
-        </div>
-        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600">
-            <BookOpen className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <div className="text-sm font-semibold text-foreground">
-              <QuranProgress rounds={rounds} variant="compact" />
-            </div>
-            <p className="text-[11px] text-muted-foreground">Progress</p>
-          </div>
-        </div>
-        <div className="flex flex-1 items-center gap-3 border-b border-border px-5 py-4 sm:border-b-0 sm:border-r">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-blue-500/10 text-blue-500">
-            <Clock className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">
-              {student.class_time || "No time set"}
-            </p>
-            <p className="text-[11px] text-muted-foreground">
-              {student.class_days && student.class_days.length > 0
-                ? student.class_days
-                    .slice()
-                    .sort((a, b) => a - b)
-                    .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
-                    .join(" · ")
-                : "No days set"}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-1 items-center gap-3 px-5 py-4">
-          <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-purple-500/10 text-purple-500">
-            <CalendarDays className="h-4 w-4" />
-          </span>
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              <span className="tabular-nums">{daysSinceStart}</span> days
-            </p>
-            <p className="text-[11px] text-muted-foreground">Enrolled</p>
-          </div>
         </div>
       </div>
 
-      {/* Tab Navigation — connected segmented control; active segment is raised */}
-      <div className="mb-6 overflow-x-auto pb-1 -mb-1 sm:mb-6">
-        <div className="inline-flex items-center gap-1 rounded-2xl border border-border bg-secondary/60 p-1.5">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 whitespace-nowrap rounded-xl px-3.5 py-2 text-sm transition-all duration-200 ${
-                  isActive
-                    ? "bg-card font-semibold text-foreground shadow-soft"
-                    : "font-medium text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <tab.icon
-                  className={`h-4 w-4 flex-shrink-0 ${isActive ? "text-emerald-600" : ""}`}
-                />
-                <span>{tab.label}</span>
-                {tab.count != null && tab.count > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                      isActive
-                        ? "bg-emerald-500/15 text-emerald-600"
-                        : "bg-background/60 text-muted-foreground"
-                    }`}
-                  >
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+        <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
 
-      {/* Tab Content */}
-      {activeTab === "journey" && (
+        <div className="flex-1 min-w-0">
+      {activeTab === "overview" && (
+        <StudentOverview
+          student={student}
+          rounds={rounds}
+          sessions={sessions}
+          fees={fees}
+          memItems={memItems}
+          chunksByItem={chunksByItem}
+          memorizedChunkIds={memorizedChunkIds}
+          rates={rates}
+          online={onlineIds.has(student.id)}
+          activity={activity}
+          activityLoading={activityLoading}
+          onNavigate={setActiveTab}
+          onMarkFeePaid={toggleFee}
+          onUpdateProgress={() => {
+            if (!activeRound) return
+            setRoundForm({
+              desc_completed: (activeRound.desc_completed || 0).toString(),
+              asc_completed: (activeRound.asc_completed || 0).toString(),
+            })
+            setRoundEditOpen(true)
+          }}
+          onCompleteRound={() => void completeActiveRound()}
+        />
+      )}
+
+      {activeTab === "progress" && (
         <div className="space-y-4 animate-fade-in-up">
           {/* Action buttons */}
           <div className="flex items-center gap-2 justify-end">
@@ -1035,7 +982,7 @@ export default function StudentDetailPage() {
         </div>
       )}
 
-      {activeTab === "sessions" &&
+      {activeTab === "classes" &&
         (() => {
           const totalSessions = sessions.length
           const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
@@ -1543,76 +1490,64 @@ export default function StudentDetailPage() {
         </div>
       )}
 
-      {activeTab === "fees" && (
-        <div className="animate-fade-in-up">
-          {/* Fee summary */}
-          <div className="flex items-center gap-4 mb-4 text-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
-              <span className="text-muted-foreground">Paid</span>
-              <span className="font-semibold">{paidCount}</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-amber-400" />
-              <span className="text-muted-foreground">Unpaid</span>
-              <span className="font-semibold">{unpaidCount}</span>
-            </span>
-            <span className="text-muted-foreground/40">|</span>
-            <FeeDisplay
-              amount={student.fee}
-              currency={student.fee_currency}
-              rates={rates}
-              size="sm"
+      {activeTab === "account" && (
+        <div className="animate-fade-in-up space-y-6">
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Billing</h2>
+            <p className="text-sm text-muted-foreground mb-4">Monthly fees and payment history</p>
+            <div className="flex items-center gap-4 mb-4 text-sm">
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="text-muted-foreground">Paid</span>
+                <span className="font-semibold">{paidCount}</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="text-muted-foreground">Unpaid</span>
+                <span className="font-semibold">{unpaidCount}</span>
+              </span>
+              <span className="text-muted-foreground/40">|</span>
+              <FeeDisplay
+                amount={student.fee}
+                currency={student.fee_currency}
+                rates={rates}
+                size="sm"
+              />
+              <span className="text-muted-foreground text-xs">/ month</span>
+            </div>
+            <FeeHistoryTable
+              fees={fees}
+              sortKey={feeSortKey}
+              sortDir={feeSortDir}
+              page={feePage}
+              pageSize={feePageSize}
+              onSort={(key) => {
+                const result = toggleSort(feeSortKey, feeSortDir, key)
+                setFeeSortKey(result.direction ? result.key : null)
+                setFeeSortDir(result.direction)
+                setFeePage(1)
+              }}
+              onPageChange={setFeePage}
+              onToggleFee={toggleFee}
             />
-            <span className="text-muted-foreground text-xs">/ month</span>
           </div>
-          <FeeHistoryTable
-            fees={fees}
-            sortKey={feeSortKey}
-            sortDir={feeSortDir}
-            page={feePage}
-            pageSize={feePageSize}
-            onSort={(key) => {
-              const result = toggleSort(feeSortKey, feeSortDir, key)
-              setFeeSortKey(result.direction ? result.key : null)
-              setFeeSortDir(result.direction)
-              setFeePage(1)
-            }}
-            onPageChange={setFeePage}
-            onToggleFee={toggleFee}
-          />
+
+          <div>
+            <h2 className="text-lg font-semibold mb-1">Portal</h2>
+            <p className="text-sm text-muted-foreground mb-4">Login, Qaida, Namaz, and access controls</p>
+            <div className="space-y-4">
+              <StudentPortalAccess studentId={student.id} />
+              <StudentSignInAccess studentId={student.id} />
+              <StudentQaidaAssign studentId={student.id} qaidaMediaId={student.qaida_media_id} />
+              <StudentNamazAssign studentId={student.id} />
+              <StudentForceSignOut studentId={student.id} />
+            </div>
+          </div>
         </div>
       )}
 
-      {activeTab === "activity" && (
-        <div className="animate-fade-in-up">
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-muted-foreground">
-              Every page, link and para this student opened — in order, oldest first.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadActivity}
-              disabled={activityLoading}
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              Refresh
-            </Button>
-          </div>
-          <ActivityFeed logs={activity} loading={activityLoading} />
         </div>
-      )}
-
-      {activeTab === "portal" && (
-        <div className="animate-fade-in-up space-y-4">
-          <StudentPortalAccess studentId={student.id} />
-          <StudentSignInAccess studentId={student.id} />
-          <StudentQaidaAssign studentId={student.id} qaidaMediaId={student.qaida_media_id} />
-          <StudentNamazAssign studentId={student.id} />
-          <StudentForceSignOut studentId={student.id} />
-        </div>
-      )}
+      </div>
 
       {/* Update Progress Dialog */}
       <Dialog open={roundEditOpen} onOpenChange={setRoundEditOpen}>
