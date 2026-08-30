@@ -103,11 +103,26 @@ CREATE TABLE class_sessions (
   duration_seconds integer NOT NULL DEFAULT 0,
   starting_para integer,
   ending_para integer,
+  ending_page integer,
+  last_page integer,
   paras_covered integer[] NOT NULL DEFAULT '{}',
   memorization_revised text[] NOT NULL DEFAULT '{}',
   notes text,
   created_at timestamptz DEFAULT now()
 );
+
+-- Per-(student, para) PDF page position (live class resume)
+CREATE TABLE student_para_progress (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id uuid NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  para_number integer NOT NULL,
+  last_page integer NOT NULL DEFAULT 1,
+  total_pages integer,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_student_para_progress_student_para
+  ON student_para_progress (student_id, para_number);
 
 -- RLS policies (allow all — private local tool, no auth)
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;

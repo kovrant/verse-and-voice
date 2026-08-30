@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS class_sessions (
   duration_seconds integer NOT NULL DEFAULT 0,
   starting_para integer,
   ending_para integer,
+  ending_page integer,
+  last_page integer,
   paras_covered integer[] NOT NULL DEFAULT '{}',
   memorization_revised text[] NOT NULL DEFAULT '{}',
   notes text,

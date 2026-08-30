@@ -39,6 +39,34 @@ async function alreadyNotified(
   return (count ?? 0) > 0
 }
 
+async function teacherIds(admin: Admin): Promise<string[]> {
+  const { data } = await admin.from("profiles").select("id").eq("role", "teacher")
+  return (data ?? []).map((t) => t.id as string)
+}
+
+async function fanOutToTeachers(
+  admin: Admin,
+  row: { type: string; title: string; body?: string | null; link?: string | null; priority?: string },
+): Promise<void> {
+  const ids = await teacherIds(admin)
+  if (ids.length === 0) return
+  await admin.from("notifications").insert(
+    ids.map((recipient_id) => ({
+      recipient_id,
+      type: row.type,
+      title: row.title,
+      body: row.body ?? null,
+      link: row.link ?? null,
+      priority: row.priority ?? "normal",
+    })),
+  )
+}
+
+async function studentName(admin: Admin, studentId: string): Promise<string | null> {
+  const { data } = await admin.from("students").select("name").eq("id", studentId).maybeSingle()
+  return data?.name ?? null
+}
+
 /**
  * Notify every teacher that a student signed in / out. No-op when the given
  * user isn't a student (e.g. the teacher signing out).
@@ -82,19 +110,83 @@ export async function notifyTeachersOfStudentPresence(
     .maybeSingle()
   if (last?.title === title) return
 
-  const { data: teachers } = await admin.from("profiles").select("id").eq("role", "teacher")
-  const teacherIds = (teachers ?? []).map((t) => t.id as string)
-  if (teacherIds.length === 0) return
+  await fanOutToTeachers(admin, { type: "presence", title, link, priority: "low" })
+}
 
-  await admin.from("notifications").insert(
-    teacherIds.map((recipient_id) => ({
-      recipient_id,
-      type: "presence",
+/** All teachers — a student paid a monthly fee. */
+export async function notifyTeachersFeePaid(
+  studentId: string,
+  month: number,
+  year: number,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const name = (await studentName(admin, studentId)) || "A student"
+  const monthLabel = new Date(year, month - 1, 1).toLocaleString("en-US", {
+    month: "long",
+    year: "numeric",
+  })
+  const title = `${name} paid ${monthLabel} fee`
+  const link = `/students/${studentId}`
+
+  const ids = await teacherIds(admin)
+  for (const recipientId of ids) {
+    if (await alreadyNotified(admin, recipientId, "fee_paid", title)) continue
+    await admin.from("notifications").insert({
+      recipient_id: recipientId,
+      type: "fee_paid",
+      title,
+      link,
+      priority: "normal",
+    })
+  }
+}
+
+/** All teachers — a student earned a badge / milestone. */
+export async function notifyTeachersAchievement(
+  studentId: string,
+  achievementTitle: string,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const name = (await studentName(admin, studentId)) || "A student"
+  const title = `${name} earned ${achievementTitle}`
+  const link = `/students/${studentId}`
+
+  const ids = await teacherIds(admin)
+  for (const recipientId of ids) {
+    if (await alreadyNotified(admin, recipientId, "achievement", title)) continue
+    await admin.from("notifications").insert({
+      recipient_id: recipientId,
+      type: "achievement",
+      title,
+      link,
+      priority: "normal",
+    })
+  }
+}
+
+/** All teachers — a live class session was saved. */
+export async function notifyTeachersSessionEnded(
+  studentId: string,
+  durationMinutes: number,
+  endingPara: number | null,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const name = (await studentName(admin, studentId)) || "A student"
+  const paraBit = endingPara != null ? ` · ended on Para ${endingPara}` : ""
+  const title = `Class with ${name} · ${durationMinutes} min${paraBit}`
+  const link = `/students/${studentId}`
+
+  const ids = await teacherIds(admin)
+  for (const recipientId of ids) {
+    if (await alreadyNotified(admin, recipientId, "session", title)) continue
+    await admin.from("notifications").insert({
+      recipient_id: recipientId,
+      type: "session",
       title,
       link,
       priority: "low",
-    })),
-  )
+    })
+  }
 }
 
 /**

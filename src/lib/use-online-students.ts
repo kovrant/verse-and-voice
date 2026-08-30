@@ -59,44 +59,68 @@ export function useTrackStudentOnline(studentId: string | null | undefined) {
  * lands while the student has the portal open (no offline/admin revoke here).
  */
 export async function forceSignOutStudent(studentId: string): Promise<void> {
-  // Deliver over REST (httpSend), NOT by subscribing a second channel: the
-  // teacher page already holds a subscribed `students:online` channel via
-  // useOnlineStudents(), and a second subscribe() on the same topic never
-  // fires SUBSCRIBED — the promise would hang forever ("Signing out…").
-  const channel = supabase.channel(ONLINE_TOPIC)
-  try {
-    const res = await channel.httpSend(FORCE_SIGNOUT_EVENT, { studentId })
-    if (!res.success) throw new Error("Realtime broadcast failed")
-  } finally {
-    supabase.removeChannel(channel)
-  }
+  // Reuse the teacher presence channel when it exists — supabase-js dedupes by
+  // topic, and removeChannel() on a shared ref would drop the dashboard listener.
+  ensureTeacherChannel()
+  const channel = teacherChannel!
+  const res = await channel.httpSend(FORCE_SIGNOUT_EVENT, { studentId })
+  if (!res.success) throw new Error("Realtime broadcast failed")
 }
 
 /** Teacher side — the set of student ids currently online (listen-only). */
+type OnlineListener = (ids: Set<string>) => void
+
+let teacherChannel: ReturnType<typeof supabase.channel> | null = null
+let teacherListeners = new Set<OnlineListener>()
+let teacherOnlineIds = new Set<string>()
+
+function readPresenceIds(channel: NonNullable<typeof teacherChannel>): Set<string> {
+  const state = channel.presenceState() as Record<string, Array<{ studentId?: string }>>
+  const ids = new Set<string>()
+  for (const key of Object.keys(state)) {
+    for (const p of state[key]) if (p.studentId) ids.add(p.studentId)
+  }
+  return ids
+}
+
+function broadcastOnlineIds() {
+  if (!teacherChannel) return
+  teacherOnlineIds = readPresenceIds(teacherChannel)
+  for (const fn of teacherListeners) fn(teacherOnlineIds)
+}
+
+function ensureTeacherChannel() {
+  if (teacherChannel) return
+  teacherChannel = supabase.channel(ONLINE_TOPIC)
+  teacherChannel
+    .on("presence", { event: "sync" }, broadcastOnlineIds)
+    .on("presence", { event: "join" }, broadcastOnlineIds)
+    .on("presence", { event: "leave" }, broadcastOnlineIds)
+    .subscribe()
+}
+
+function subscribeOnline(listener: OnlineListener) {
+  ensureTeacherChannel()
+  listener(teacherOnlineIds)
+  teacherListeners.add(listener)
+}
+
+function unsubscribeOnline(listener: OnlineListener) {
+  teacherListeners.delete(listener)
+  if (teacherListeners.size === 0 && teacherChannel) {
+    supabase.removeChannel(teacherChannel)
+    teacherChannel = null
+    teacherOnlineIds = new Set()
+  }
+}
+
 export function useOnlineStudents(): Set<string> {
-  const [online, setOnline] = useState<Set<string>>(() => new Set())
+  const [online, setOnline] = useState<Set<string>>(() => new Set(teacherOnlineIds))
 
   useEffect(() => {
-    const channel = supabase.channel(ONLINE_TOPIC)
-
-    const compute = () => {
-      const state = channel.presenceState() as Record<string, Array<{ studentId?: string }>>
-      const ids = new Set<string>()
-      for (const key of Object.keys(state)) {
-        for (const p of state[key]) if (p.studentId) ids.add(p.studentId)
-      }
-      setOnline(ids)
-    }
-
-    channel
-      .on("presence", { event: "sync" }, compute)
-      .on("presence", { event: "join" }, compute)
-      .on("presence", { event: "leave" }, compute)
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
+    const listener: OnlineListener = (ids) => setOnline(new Set(ids))
+    subscribeOnline(listener)
+    return () => unsubscribeOnline(listener)
   }, [])
 
   return online

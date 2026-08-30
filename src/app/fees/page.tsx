@@ -103,6 +103,15 @@ export default function FeesPage() {
         ),
       )
       toast.error(`Couldn't update payment: ${error.message}`)
+      return
+    }
+
+    if (newPaid) {
+      void fetch("/api/notify/fee-paid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ student_id: fee.student_id, month: fee.month, year: fee.year }),
+      })
     }
   }
 

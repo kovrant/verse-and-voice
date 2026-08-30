@@ -187,6 +187,16 @@ export default function ClassPage() {
     setMode("landing")
     toast.success("Class session saved")
 
+    void fetch("/api/notify/session-ended", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: selected!.id,
+        duration_minutes: Math.round(data.durationSeconds / 60),
+        ending_para: data.endingPara,
+      }),
+    })
+
     // Reload sessions
     if (selected) {
       const { data: sessionsData } = await supabase

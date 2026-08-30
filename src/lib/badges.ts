@@ -26,18 +26,34 @@ export async function awardBadge(
   slug: string,
   source?: string,
 ): Promise<boolean> {
-  let badgeId = (await supabase.from("badges").select("id").eq("slug", slug).maybeSingle()).data?.id
-  if (!badgeId) return false
+  const { data: badge } = await supabase.from("badges").select("id, title").eq("slug", slug).maybeSingle()
+  if (!badge?.id) return false
+
+  const { data: existing } = await supabase
+    .from("student_badges")
+    .select("id")
+    .eq("student_id", studentId)
+    .eq("badge_id", badge.id)
+    .maybeSingle()
+  if (existing?.id) return false
 
   const { error } = await supabase.from("student_badges").upsert(
     {
       student_id: studentId,
-      badge_id: badgeId,
+      badge_id: badge.id,
       earned_at: new Date().toISOString(),
       source: source ?? slug,
     },
     { onConflict: "student_id,badge_id", ignoreDuplicates: true },
   )
+
+  if (!error) {
+    void fetch("/api/notify/achievement", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ student_id: studentId, title: badge.title }),
+    })
+  }
 
   return !error
 }
