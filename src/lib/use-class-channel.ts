@@ -46,8 +46,8 @@ interface ClassChannel {
   sendNav: (nav: NavState) => void
   /** Broadcast this client's in-page scroll ratio (0..1). Lightweight — no presence write. */
   sendScroll: (ratio: number) => void
-  /** Broadcast an explicit "class ended" signal to the other party. */
-  endClass: () => void
+  /** Broadcast an explicit "class ended" signal and leave presence immediately. */
+  endClass: () => Promise<void>
 }
 
 function genId() {
@@ -89,9 +89,8 @@ export function useClassChannel({
   const onScrollRef = useRef(onScroll)
   const onEndRef = useRef(onEnd)
   const onPeerJoinRef = useRef(onPeerJoin)
-  // After an explicit end, ignore the other side's (stale) presence briefly so
-  // the "live" flag can't flicker back on before presence teardown propagates.
-  const endedAtRef = useRef(0)
+  // After an explicit end, ignore stale teacher presence until they join again.
+  const classEndedRef = useRef(false)
 
   useEffect(() => {
     onNavRef.current = onNav
@@ -128,8 +127,8 @@ export function useClassChannel({
           }
         }
       }
-      // Ignore stale presence for a moment after an explicit end.
-      if (otherPresent && Date.now() - endedAtRef.current < 4000) {
+      // Stale presence can linger after end — only trust it again after a fresh join.
+      if (classEndedRef.current) {
         otherPresent = false
         nav = null
       }
@@ -143,7 +142,10 @@ export function useClassChannel({
         const others = (newPresences as Array<{ role?: ClassRole }>).some(
           (p) => p.role && p.role !== role,
         )
-        if (others) onPeerJoinRef.current?.()
+        if (others) {
+          classEndedRef.current = false
+          onPeerJoinRef.current?.()
+        }
       })
       .on("broadcast", { event: "nav" }, ({ payload }) => {
         if (!payload || (payload as { by?: string }).by === clientId) return
@@ -159,7 +161,7 @@ export function useClassChannel({
       })
       .on("broadcast", { event: "end" }, ({ payload }) => {
         if (payload && (payload as { by?: string }).by === clientId) return
-        endedAtRef.current = Date.now()
+        classEndedRef.current = true
         setLive(false)
         setPeerNav(null)
         onEndRef.current?.()
@@ -228,10 +230,15 @@ export function useClassChannel({
     [clientId],
   )
 
-  const endClass = useCallback(() => {
+  const endClass = useCallback(async () => {
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
-    ch.send({ type: "broadcast", event: "end", payload: { by: clientId } })
+    try {
+      await ch.send({ type: "broadcast", event: "end", payload: { by: clientId } })
+    } catch {
+      // Best-effort — untrack below still signals leave via presence.
+    }
+    await ch.untrack().catch(() => {})
   }, [clientId])
 
   return { live, peerNav, sendNav, sendScroll, endClass }

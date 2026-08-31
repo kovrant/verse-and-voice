@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
+import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
@@ -144,6 +145,16 @@ export default function LiveSession({
   // Para switching is an explicit button in the top bar.
 
   const currentPara = paras.find((p) => p.meta?.para_number === currentParaNumber) || null
+
+  // Warm the PDF cache for nearby paras so para switches don't flash white.
+  useEffect(() => {
+    const urlByPara: Record<number, string> = {}
+    for (const p of paras) {
+      const n = Number(p.meta?.para_number)
+      if (n && p.file_url) urlByPara[n] = p.file_url
+    }
+    prefetchParaUrls(urlByPara, currentParaNumber)
+  }, [paras, currentParaNumber])
 
   function navigatePara(direction: "prev" | "next") {
     const next = direction === "prev" ? currentParaNumber - 1 : currentParaNumber + 1
@@ -342,7 +353,7 @@ export default function LiveSession({
     setSaving(true)
     // Tell the student first so they close immediately (before the channel is
     // torn down on unmount — presence-leave alone is too slow/unreliable).
-    endClass()
+    await endClass()
     const endedAt = new Date()
     const sessionData: SessionEndData = {
       startedAt,

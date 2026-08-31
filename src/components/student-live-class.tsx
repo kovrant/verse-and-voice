@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
+import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
 import type { NavState } from "@/lib/use-class-channel"
 
@@ -96,6 +97,12 @@ export function StudentLiveClass() {
       active = false
     }
   }, [])
+
+  // Warm nearby para PDFs so teacher-led para changes feel instant.
+  useEffect(() => {
+    if (!mediaLoaded) return
+    prefetchParaUrls(mediaMap, para)
+  }, [mediaLoaded, mediaMap, para])
 
   // Broadcast our page turns (only after synced) so the teacher follows. Skip
   // only when our position exactly matches what the teacher last pushed us to —

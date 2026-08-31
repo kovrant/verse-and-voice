@@ -4,12 +4,12 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css"
 import "react-pdf/dist/esm/Page/TextLayer.css"
 
 import { ChevronLeft, ChevronRight, Loader2, Maximize2, ZoomIn, ZoomOut } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
-import { Document, Page, pdfjs } from "react-pdf"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Document, Page } from "react-pdf"
+import type { PDFDocumentProxy } from "pdfjs-dist"
 
+import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
 import { ratioFromScrollTop, scrollTopFromRatio } from "@/lib/scroll-sync"
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
 
 interface SyncedPdfViewerProps {
   fileUrl: string
@@ -23,6 +23,49 @@ interface SyncedPdfViewerProps {
   onScrollRatio?: (ratio: number) => void
   /** A remote scroll position to apply. A new object identity each time re-applies it. */
   remoteScroll?: { ratio: number } | null
+}
+
+function PdfSkeleton() {
+  return (
+    <div className="flex min-h-[50vh] w-full items-center justify-center p-4">
+      <div className="relative h-[min(72vh,720px)] w-full max-w-3xl overflow-hidden rounded-md bg-muted shadow-soft">
+        <div className="absolute inset-0 shimmer opacity-60" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** Two-slot page buffer — keep the last rendered page visible while the next paints. */
+function BufferedPdfPage({
+  page,
+  pageWidth,
+  visible,
+  onRendered,
+}: {
+  page: number
+  pageWidth?: number
+  visible: boolean
+  onRendered?: () => void
+}) {
+  return (
+    <div
+      className={visible ? "relative" : "pointer-events-none absolute inset-0 opacity-0"}
+      aria-hidden={!visible}
+    >
+      <Page
+        pageNumber={page}
+        width={pageWidth}
+        renderAnnotationLayer={false}
+        renderTextLayer={false}
+        loading={null}
+        onRenderSuccess={onRendered}
+        className="overflow-hidden rounded-md bg-white shadow-soft"
+      />
+    </div>
+  )
 }
 
 /**
@@ -39,16 +82,83 @@ export function SyncedPdfViewer({
   remoteScroll,
 }: SyncedPdfViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const pdfRef = useRef<PDFDocumentProxy | null>(null)
+  const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null)
+  const [loadedUrl, setLoadedUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState(0)
   const [baseWidth, setBaseWidth] = useState(0)
   const [zoom, setZoom] = useState(1)
   const [errored, setErrored] = useState(false)
 
-  // Reset per-document state when the file changes (para switch).
+  // Warm this para immediately; nearby paras are prefetched by the live class shell.
   useEffect(() => {
-    setNumPages(0)
-    setErrored(false)
+    prefetchPdf(fileUrl)
   }, [fileUrl])
+
+  // Fetch bytes via shared cache — react-pdf wants { data }, not a PDFDocumentProxy.
+  useEffect(() => {
+    let active = true
+    setErrored(false)
+    void loadPdfBytes(fileUrl)
+      .then((data) => {
+        if (!active) return
+        setPdfData(data)
+        setLoadedUrl(fileUrl)
+      })
+      .catch(() => {
+        if (!active) return
+        setErrored(true)
+      })
+    return () => {
+      active = false
+    }
+  }, [fileUrl])
+
+  const ready = pdfData !== null && loadedUrl === fileUrl
+  const file = useMemo(() => (ready ? { data: pdfData! } : null), [ready, pdfData])
+
+  // Double-buffer page turns: paint the incoming page off-screen, then swap slots.
+  const [slots, setSlots] = useState<[number, number]>(() => [page, page])
+  const [activeSlot, setActiveSlot] = useState(0)
+  const pageRef = useRef(page)
+  const slotsRef = useRef(slots)
+  const activeSlotRef = useRef(activeSlot)
+  pageRef.current = page
+  slotsRef.current = slots
+  activeSlotRef.current = activeSlot
+
+  useEffect(() => {
+    pdfRef.current = null
+    setSlots([page, page])
+    setActiveSlot(0)
+  }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps -- page is read at para switch
+
+  useEffect(() => {
+    setSlots((prev) => {
+      const shown = prev[activeSlotRef.current]
+      if (page === shown) return prev
+      const idle = activeSlotRef.current === 0 ? 1 : 0
+      if (prev[idle] === page) return prev
+      const next: [number, number] = [...prev]
+      next[idle] = page
+      return next
+    })
+  }, [page])
+
+  const onSlotRendered = useCallback((slot: 0 | 1) => {
+    if (slotsRef.current[slot] === pageRef.current && activeSlotRef.current !== slot) {
+      setActiveSlot(slot)
+    }
+  }, [])
+
+  // Warm adjacent pages in pdf.js so turns within a para stay snappy.
+  useEffect(() => {
+    const pdf = pdfRef.current
+    if (!pdf || numPages <= 0) return
+    for (const n of [page - 1, page, page + 1]) {
+      if (n >= 1 && n <= numPages) void pdf.getPage(n).catch(() => {})
+    }
+  }, [page, numPages])
 
   // Measure container for fit-to-width rendering.
   useEffect(() => {
@@ -76,8 +186,6 @@ export function SyncedPdfViewer({
   }, [numPages, page, onPageChange])
 
   // Broadcast our scroll position (throttled) so the other side can follow.
-  // Suppressed while we're programmatically applying a remote scroll, so a
-  // follower never echoes the leader's position back.
   const onScrollRatioRef = useRef(onScrollRatio)
   onScrollRatioRef.current = onScrollRatio
   const applyingRemote = useRef(false)
@@ -103,19 +211,15 @@ export function SyncedPdfViewer({
     }
   }, [onScrollRatio])
 
-  // Apply an incoming remote scroll position (follower side). New object identity
-  // each broadcast so repeated identical ratios still re-sync us.
   useEffect(() => {
     const el = scrollRef.current
     if (!el || !remoteScroll) return
     applyingRemote.current = true
     el.scrollTop = scrollTopFromRatio(remoteScroll.ratio, el.scrollHeight, el.clientHeight)
-    // Release the guard after the resulting scroll event has fired.
     const t = setTimeout(() => (applyingRemote.current = false), 0)
     return () => clearTimeout(t)
   }, [remoteScroll])
 
-  // Arrow keys turn PDF pages (ignored while typing).
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
@@ -140,13 +244,12 @@ export function SyncedPdfViewer({
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {/* Toolbar */}
       <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => go(page - 1)}
-            disabled={atFirst}
+            disabled={atFirst || !ready}
             aria-label="Previous page"
             className={iconBtn}
           >
@@ -159,7 +262,7 @@ export function SyncedPdfViewer({
           <button
             type="button"
             onClick={() => go(page + 1)}
-            disabled={atLast}
+            disabled={atLast || !ready}
             aria-label="Next page"
             className={iconBtn}
           >
@@ -204,35 +307,41 @@ export function SyncedPdfViewer({
         </div>
       </div>
 
-      {/* Page surface */}
-      <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto bg-muted/40 p-4">
+      <div ref={scrollRef} className="relative flex-1 min-h-0 overflow-auto bg-muted/40 p-4">
         {errored ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Couldn&apos;t load this PDF.
           </div>
-        ) : (
+        ) : ready && file ? (
           <div className="flex justify-center">
             <Document
-              file={fileUrl}
-              onLoadSuccess={({ numPages }) => setNumPages(numPages)}
+              file={file}
+              onLoadSuccess={(pdf) => {
+                pdfRef.current = pdf
+                setNumPages(pdf.numPages)
+              }}
               onLoadError={() => setErrored(true)}
-              loading={
-                <div className="flex h-40 items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              }
+              loading={<PdfSkeleton />}
               error={null}
             >
-              <Page
-                pageNumber={page}
-                width={pageWidth}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
-                loading={null}
-                className="overflow-hidden rounded-md bg-white shadow-soft"
-              />
+              <div className="relative" style={{ width: pageWidth }}>
+                <BufferedPdfPage
+                  page={slots[0]}
+                  pageWidth={pageWidth}
+                  visible={activeSlot === 0}
+                  onRendered={() => onSlotRendered(0)}
+                />
+                <BufferedPdfPage
+                  page={slots[1]}
+                  pageWidth={pageWidth}
+                  visible={activeSlot === 1}
+                  onRendered={() => onSlotRendered(1)}
+                />
+              </div>
             </Document>
           </div>
+        ) : (
+          <PdfSkeleton />
         )}
       </div>
     </div>
