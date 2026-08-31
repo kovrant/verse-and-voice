@@ -4,7 +4,9 @@ import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
 import { useActivityLogger } from "@/lib/activity-log"
+import { isLoginDisabled } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
+import { getCurrentAuthUser } from "@/lib/use-current-user"
 import { useSessionTimeout } from "@/lib/use-session-timeout"
 
 /**
@@ -21,6 +23,16 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // Force a sign-out 3 hours after login, regardless of token refresh.
   useSessionTimeout()
+
+  // Belt-and-suspenders: if sign-in was disabled while this tab is open, leave
+  // immediately (middleware reads JWT locally; teacher disable also revokes globally).
+  useEffect(() => {
+    void getCurrentAuthUser().then((user) => {
+      if (isLoginDisabled(user?.app_metadata as { login_disabled?: boolean })) {
+        void supabase.auth.signOut().finally(() => router.replace("/login?blocked=1"))
+      }
+    })
+  }, [router])
 
   useEffect(() => {
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {

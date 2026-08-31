@@ -5,6 +5,13 @@ import { isLoginDisabled } from "@/lib/student-auth"
 
 const PUBLIC_PATHS = ["/login", "/admin", "/auth"]
 
+/** Drop Supabase auth cookies without a network signOut — middleware must stay local. */
+function clearSupabaseAuthCookies(response: NextResponse, request: NextRequest) {
+  for (const { name } of request.cookies.getAll()) {
+    if (name.startsWith("sb-")) response.cookies.delete(name)
+  }
+}
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
 
@@ -27,9 +34,14 @@ export async function middleware(request: NextRequest) {
     },
   )
 
+  // getSession() reads the JWT from cookies — no round-trip to Supabase Auth.
+  // getUser() validates remotely on EVERY request and caused MIDDLEWARE_INVOCATION_TIMEOUT
+  // (504) on Vercel during live classes when Auth was slow. RLS + API routes still
+  // enforce security; this gate only routes pages by role.
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+  } = await supabase.auth.getSession()
+  const user = session?.user ?? null
 
   const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p))
@@ -60,20 +72,17 @@ export async function middleware(request: NextRequest) {
     return redirectTo(url)
   }
 
-  // Teacher turned this student's sign-in off. getUser() returns the CURRENT
-  // app_metadata (not the stale JWT), so this catches a lingering session that
-  // the live force-signout broadcast never reached (e.g. student was offline).
-  // Sign out first — that writes session-clearing cookies onto `response` via
-  // setAll — then carry them onto the redirect so /login lands unauthenticated
-  // (no logged-in-user-bounced-off-/login loop). API routes are exempt: they
-  // enforce their own auth and a redirect would drop the request body.
+  // Teacher turned sign-in off — flag is on the JWT (app_metadata.login_disabled).
+  // Clear cookies locally and send to /login; disabling also revokes sessions
+  // server-side via /api/students/:id/access so the JWT can't linger.
   if (user && !isApi && isLoginDisabled(user.app_metadata as { login_disabled?: boolean })) {
-    await supabase.auth.signOut()
     const url = request.nextUrl.clone()
     url.pathname = "/login"
     url.search = ""
     url.searchParams.set("blocked", "1")
-    return redirectTo(url)
+    const redirect = NextResponse.redirect(url)
+    clearSupabaseAuthCookies(redirect, request)
+    return redirect
   }
 
   // Unauthenticated: the student login is the default entry for everything.

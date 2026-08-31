@@ -69,5 +69,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     return NextResponse.json({ error: updErr.message }, { status: 500 })
   }
 
+  // Kill every active session immediately so disabled students can't keep browsing
+  // on a stale JWT while middleware reads cookies locally (no remote getUser).
+  if (disabled) {
+    await admin.auth.admin.signOut(authUserId, "global")
+  }
+
   return NextResponse.json({ disabled })
 }

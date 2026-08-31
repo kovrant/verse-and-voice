@@ -2,20 +2,22 @@ import { NextRequest } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Shared, hoisted mock state so the factory below can read it.
-const state = vi.hoisted(() => ({ user: null as null | { id: string }, rotate: true }))
+const state = vi.hoisted(() => ({ user: null as null | { id: string; app_metadata?: Record<string, unknown> }, rotate: true }))
 
-// Mock the Supabase SSR client. getUser() simulates token rotation by writing a
-// refreshed cookie through the same cookies.setAll the real client uses.
+// Mock the Supabase SSR client. getSession() reads from cookies locally — no
+// network round-trip — which is what production middleware uses.
 vi.mock("@supabase/ssr", () => ({
   createServerClient: (_url: string, _key: string, opts: any) => ({
     auth: {
-      getUser: async () => {
+      getSession: async () => {
         if (state.rotate) {
           opts.cookies.setAll([
             { name: "sb-access-token", value: "rotated-token", options: { path: "/" } },
           ])
         }
-        return { data: { user: state.user } }
+        return {
+          data: { session: state.user ? { user: state.user } : null },
+        }
       },
     },
   }),
@@ -61,5 +63,17 @@ describe("middleware auth cookie handling (Bug 8)", () => {
       new NextRequest(new URL("http://localhost/api/activity"), { method: "POST" }),
     )
     expect(res.headers.get("location")).toBeNull()
+  })
+
+  it("redirects login_disabled students to /login?blocked=1 and clears sb cookies", async () => {
+    state.user = { id: "s1", app_metadata: { role: "student", login_disabled: true } }
+    state.rotate = false
+    const req = new NextRequest(new URL("http://localhost/student"))
+    req.cookies.set("sb-test-auth-token", "stale")
+    const res = await middleware(req)
+    expect(res.status).toBe(307)
+    expect(res.headers.get("location")).toContain("/login")
+    expect(res.headers.get("location")).toContain("blocked=1")
+    expect(res.cookies.get("sb-test-auth-token")?.value).toBe("")
   })
 })
