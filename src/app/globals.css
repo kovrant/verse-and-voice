@@ -242,74 +242,78 @@
     --radius-input: 0.5rem; /* 8px */
   }
 
-  /* ── STUDENT — Forest Green (earthy) — dark ── */
+  /* ── STUDENT — Ink & pearl (dark) ──
+   * Neutral warm surfaces, cream CTAs. Jade green only via emerald-* scale
+   * (--c-p-*), not on backgrounds — avoids olive/gold/mint takeover. */
   [data-portal="student"].dark {
-    --background: 48 14% 7%; /* #14130f */
-    --foreground: 40 41% 91%; /* #f2ece0 */
-    --card: 38 13% 12%; /* #221f1a */
-    --card-foreground: 40 41% 91%;
-    --surface-alt: 40 16% 15%; /* #2c2820 */
-    --popover: 38 13% 12%;
-    --popover-foreground: 40 41% 91%;
-    --secondary: 40 15% 20%; /* #3a352b beige */
-    --secondary-foreground: 40 41% 91%;
-    --muted: 40 16% 15%;
-    --muted-foreground: 39 14% 60%; /* #a89e8c */
-    --destructive: 8 58% 58%;
+    --background: 40 4% 8%; /* #151413 */
+    --foreground: 40 20% 94%; /* #f3f0ea */
+    --card: 40 3% 11%; /* #1c1b1a */
+    --card-foreground: 40 20% 94%;
+    --surface-alt: 40 3% 13%;
+    --popover: 40 3% 11%;
+    --popover-foreground: 40 20% 94%;
+    --secondary: 40 3% 15%;
+    --secondary-foreground: 40 20% 94%;
+    --muted: 40 3% 13%;
+    --muted-foreground: 40 5% 56%; /* #918e88 */
+    --destructive: 0 65% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 10% 24%;
-    --border-strong: 40 10% 32%;
-    --input: 40 10% 24%;
+    --border: 40 3% 19%;
+    --border-strong: 40 3% 25%;
+    --input: 40 3% 19%;
 
-    /* Primary = lighter forest that reads on dark surfaces */
-    --primary: 145 23% 39%; /* #4c7a5f */
-    --primary-hover: 145 23% 45%;
-    --primary-foreground: 41 32% 85%; /* #e4dccb cream */
-    --ring: 145 23% 50%;
+    /* Buttons / links — pearl, not green or gold */
+    --primary: 40 20% 94%;
+    --primary-hover: 40 18% 88%;
+    --primary-foreground: 40 6% 9%;
+    --ring: 40 12% 72%;
 
-    --accent: 145 23% 39%;
-    --accent-soft: 40 15% 22%;
-    --accent-foreground: 41 32% 85%;
-    --gold: 36 60% 55%;
-    --gold-foreground: 40 20% 10%;
+    --accent: 156 34% 48%;
+    --accent-soft: 40 3% 15%;
+    --accent-foreground: 40 20% 94%;
+    --gold: 36 50% 52%;
+    --gold-foreground: 40 6% 9%;
 
-    --sage: 94 14% 56%; /* #8ea080 */
-    --taupe: 37 19% 63%; /* #b3a58f */
+    --sage: 40 5% 52%;
+    --taupe: 40 5% 58%;
 
-    --brand: 145 30% 55%;
-    --brand-soft: 40 42% 66%;
+    --brand: 156 34% 48%;
+    --brand-soft: 40 5% 52%;
 
-    --success: 145 40% 50%;
-    --warning: 38 72% 56%;
-    --error: 8 58% 58%;
+    --success: 156 38% 44%;
+    --warning: 36 70% 52%;
+    --error: 0 65% 58%;
 
-    --c-p-300: 145 22% 62%;
-    --c-p-400: 145 22% 52%;
-    --c-p-500: 145 23% 44%;
-    --c-p-600: 145 24% 36%;
-    --c-p-900: 145 26% 22%;
-    --c-s-300: 94 12% 60%;
-    --c-s-400: 94 12% 48%;
-    --c-s-500: 94 12% 40%;
-    --c-s-600: 94 12% 30%;
-    --c-s-900: 94 14% 80%;
-    --c-a-300: 40 62% 70%;
-    --c-a-400: 38 66% 60%;
-    --c-a-500: 36 68% 52%;
-    --c-a-600: 34 68% 44%;
-    --c-y-300: 44 68% 70%;
-    --c-y-400: 42 70% 60%;
-    --c-g-600: 145 40% 50%;
-    --c-o-600: 14 68% 58%;
-    --c-p-rgb: 76 122 95;
-    --c-p-light-rgb: 142 160 128;
-    --c-a-rgb: 210 165 92;
-    --c-p-bg-glow: 145 18% 16%;
-    --c-a-bg-glow: 40 24% 16%;
+    /* emerald-* utilities — restrained jade (live badges, progress chips) */
+    --c-p-300: 156 28% 62%;
+    --c-p-400: 156 30% 52%;
+    --c-p-500: 156 34% 44%;
+    --c-p-600: 156 36% 38%;
+    --c-p-900: 156 22% 16%;
+    /* teal-* utilities — warm neutral grays (not green-brown) */
+    --c-s-300: 40 4% 68%;
+    --c-s-400: 40 4% 56%;
+    --c-s-500: 40 4% 46%;
+    --c-s-600: 40 4% 36%;
+    --c-s-900: 40 3% 16%;
+    --c-a-300: 36 45% 68%;
+    --c-a-400: 36 48% 58%;
+    --c-a-500: 36 50% 48%;
+    --c-a-600: 34 52% 40%;
+    --c-y-300: 44 55% 68%;
+    --c-y-400: 42 58% 58%;
+    --c-g-600: 156 38% 44%;
+    --c-o-600: 24 62% 52%;
+    --c-p-rgb: 243 240 234;
+    --c-p-light-rgb: 145 142 136;
+    --c-a-rgb: 184 148 88;
+    --c-p-bg-glow: 40 3% 12%;
+    --c-a-bg-glow: 40 3% 12%;
 
-    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.45);
-    --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+    --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.42);
+    --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.48);
+    --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.58);
   }
 }
 
@@ -1051,5 +1055,5 @@
   background: linear-gradient(160deg, #e9eee7 0%, #dfe7db 100%);
 }
 [data-portal="student"].dark .vv-login-stage {
-  background: linear-gradient(160deg, #121a15 0%, #0f1512 100%);
+  background: linear-gradient(160deg, #1a1918 0%, #131211 100%);
 }

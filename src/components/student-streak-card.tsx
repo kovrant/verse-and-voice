@@ -1,6 +1,6 @@
 "use client"
 
-import { Flame as FlameIcon } from "lucide-react"
+import { Check, Flame as FlameIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 
@@ -25,19 +25,35 @@ interface StudentStreakCardProps {
   variant?: "hero" | "pill"
 }
 
-/** Week-dot styling on the forest hero background. */
+/** Week dots: light mode hero is forest (white tiles); dark mode hero is cream (green ticks). */
 function heroDot(status: WeekDayStatus): string {
   switch (status) {
     case "done":
-      return "bg-white text-primary"
+      return cn(
+        "border shadow-sm",
+        "border-white/35 bg-white text-emerald-700",
+        "dark:border-emerald-500/50 dark:bg-emerald-500/15 dark:text-emerald-400",
+      )
     case "today":
-      return "bg-white/25 ring-2 ring-white/70"
+      return cn(
+        "border-2",
+        "border-white/75 bg-white/25",
+        "dark:border-emerald-500/70 dark:bg-emerald-500/10",
+      )
     case "missed":
     case "upcoming":
-      return "bg-white/12 text-white/45"
+      return cn(
+        "border",
+        "border-white/35 bg-white/20 text-white/75",
+        "dark:border-border dark:bg-secondary dark:text-foreground/80",
+      )
     case "off":
     default:
-      return "bg-white/5 text-white/25"
+      return cn(
+        "border",
+        "border-white/25 bg-white/10 text-white/45",
+        "dark:border-border/70 dark:bg-muted dark:text-muted-foreground/70",
+      )
   }
 }
 
@@ -175,7 +191,9 @@ export function StudentStreakCard({
                   heroDot(status),
                 )}
               >
-                {status === "done" ? "✓" : ""}
+                {status === "done" ? (
+                  <Check className="h-4 w-4 stroke-[3]" aria-hidden />
+                ) : null}
               </span>
             </div>
           ))}

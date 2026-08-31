@@ -69,7 +69,7 @@ export default function StudentClassesPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-400/20 text-violet-600 flex-shrink-0">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-accent flex-shrink-0">
           <CalendarClock className="h-6 w-6" strokeWidth={2.25} />
         </div>
         <div>
@@ -82,7 +82,7 @@ export default function StudentClassesPage() {
         <button
           type="button"
           onClick={join}
-          className="group flex w-full items-center gap-4 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-500/15 to-teal-500/10 p-5 text-left transition-colors hover:from-emerald-500/20 hover:to-teal-500/15"
+          className="group flex w-full items-center gap-4 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5 text-left transition-colors hover:bg-emerald-500/15"
         >
           <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20">
             <span className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
@@ -98,8 +98,8 @@ export default function StudentClassesPage() {
           </span>
         </button>
       ) : (
-        <div className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-500/10 to-fuchsia-500/5 p-6">
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-500">
+        <div className="rounded-2xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <CalendarClock className="h-3.5 w-3.5" />
             Next class
           </div>

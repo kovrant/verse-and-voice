@@ -47,7 +47,7 @@ export default function StudentProgressPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-400/20 text-emerald-600 flex-shrink-0">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-accent flex-shrink-0">
           <BookOpen className="h-6 w-6" strokeWidth={2.25} />
         </div>
         <div>
@@ -59,7 +59,7 @@ export default function StudentProgressPage() {
       </div>
 
       <Card className="relative overflow-hidden">
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
+        <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500/50" />
         <CardContent className="pt-8">
           <QuranProgress rounds={rounds} variant="full" />
         </CardContent>
@@ -95,8 +95,8 @@ export default function StudentProgressPage() {
                         {r.type === "qaida" ? "Norani Qaida" : `Quran R${chronologicalNum}`}
                       </span>
                       {isActive && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-primary bg-emerald-500/10">
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                           Active
                         </span>
                       )}
