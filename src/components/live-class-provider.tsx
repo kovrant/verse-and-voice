@@ -26,6 +26,8 @@ interface LiveClassContextValue {
   leave: () => void
   /** Broadcast the student's position (only meaningful once joined). */
   sendNav: (nav: NavState) => void
+  /** Broadcast the student's in-page scroll ratio (0..1). */
+  sendScroll: (ratio: number) => void
   /** Subscribe to the teacher's nav events; returns an unsubscribe fn. */
   subscribeNav: (fn: NavListener) => () => void
   /** Subscribe to the teacher's scroll events; returns an unsubscribe fn. */
@@ -40,6 +42,7 @@ const LiveClassContext = createContext<LiveClassContextValue>({
   join: () => {},
   leave: () => {},
   sendNav: () => {},
+  sendScroll: () => {},
   subscribeNav: () => () => {},
   subscribeScroll: () => () => {},
 })
@@ -74,7 +77,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     setJoined(false)
   }, [])
 
-  const { live, peerNav, sendNav } = useClassChannel({
+  const { live, peerNav, sendNav, sendScroll } = useClassChannel({
     studentId,
     role: "student",
     enabled: !!studentId,
@@ -143,6 +146,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
         join,
         leave,
         sendNav,
+        sendScroll,
         subscribeNav,
         subscribeScroll,
       }}

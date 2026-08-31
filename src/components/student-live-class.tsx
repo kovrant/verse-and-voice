@@ -24,7 +24,7 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, sendNav, subscribeNav, subscribeScroll, leave } = useLiveClass()
+  const { peerNav, sendNav, sendScroll, subscribeNav, subscribeScroll, leave } = useLiveClass()
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
@@ -57,8 +57,7 @@ export function StudentLiveClass() {
     [subscribeNav],
   )
 
-  // Follow the teacher's in-page scrolling (teacher leads). New object identity
-  // each time so identical ratios still re-apply after the student scrolls away.
+  // Follow remote in-page scroll (teacher or our own side applying the other's).
   useEffect(() => subscribeScroll((ratio) => setRemoteScroll({ ratio })), [subscribeScroll])
 
   // Fallback: if the teacher hasn't pushed a position within 2.5s (e.g. flaky
@@ -150,6 +149,7 @@ export function StudentLiveClass() {
           page={page}
           onPageChange={setPage}
           followingLabel="Synced with teacher"
+          onScrollRatio={sendScroll}
           remoteScroll={remoteScroll}
         />
       ) : (
