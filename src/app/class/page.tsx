@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
@@ -64,6 +64,14 @@ interface ClassSession {
 type SessionMode = "landing" | "live"
 
 export default function ClassPage() {
+  return (
+    <Suspense fallback={<PageLoading variant="class-session" />}>
+      <ClassPageContent />
+    </Suspense>
+  )
+}
+
+function ClassPageContent() {
   const searchParams = useSearchParams()
   const preselected = useRef(false)
   const [students, setStudents] = useState<ClassStudent[]>([])
