@@ -9,7 +9,7 @@ import { Document, Page } from "react-pdf"
 import type { PDFDocumentProxy } from "pdfjs-dist"
 
 import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
-import { ratioFromScrollTop, scrollTopFromRatio } from "@/lib/scroll-sync"
+import { ratioFromScrollTop, scrollRatioNear, scrollTopFromRatio } from "@/lib/scroll-sync"
 
 interface SyncedPdfViewerProps {
   fileUrl: string
@@ -123,6 +123,9 @@ export function SyncedPdfViewer({
   const pageRef = useRef(page)
   const slotsRef = useRef(slots)
   const activeSlotRef = useRef(activeSlot)
+  const applyingRemote = useRef(false)
+  const suppressEmitUntil = useRef(0)
+  const lastRemoteRatio = useRef<number | null>(null)
   pageRef.current = page
   slotsRef.current = slots
   activeSlotRef.current = activeSlot
@@ -131,7 +134,12 @@ export function SyncedPdfViewer({
     pdfRef.current = null
     setSlots([page, page])
     setActiveSlot(0)
+    lastRemoteRatio.current = null
   }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps -- page is read at para switch
+
+  useEffect(() => {
+    lastRemoteRatio.current = null
+  }, [page])
 
   useEffect(() => {
     setSlots((prev) => {
@@ -188,15 +196,17 @@ export function SyncedPdfViewer({
   // Broadcast our scroll position (throttled) so the other side can follow.
   const onScrollRatioRef = useRef(onScrollRatio)
   onScrollRatioRef.current = onScrollRatio
-  const applyingRemote = useRef(false)
   useEffect(() => {
     const el = scrollRef.current
     if (!el || !onScrollRatio) return
     let last = 0
     let trailing: ReturnType<typeof setTimeout> | null = null
     const emit = () => {
+      if (applyingRemote.current || performance.now() < suppressEmitUntil.current) return
+      const ratio = ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight)
+      if (lastRemoteRatio.current !== null && scrollRatioNear(ratio, lastRemoteRatio.current)) return
       last = performance.now()
-      onScrollRatioRef.current?.(ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight))
+      onScrollRatioRef.current?.(ratio)
     }
     const handler = () => {
       if (applyingRemote.current) return
@@ -211,14 +221,24 @@ export function SyncedPdfViewer({
     }
   }, [onScrollRatio])
 
+  const remoteRatio = remoteScroll?.ratio
   useEffect(() => {
     const el = scrollRef.current
-    if (!el || !remoteScroll) return
+    if (!el || remoteRatio === undefined) return
+    const current = ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight)
+    if (scrollRatioNear(current, remoteRatio)) {
+      lastRemoteRatio.current = remoteRatio
+      return
+    }
     applyingRemote.current = true
-    el.scrollTop = scrollTopFromRatio(remoteScroll.ratio, el.scrollHeight, el.clientHeight)
-    const t = setTimeout(() => (applyingRemote.current = false), 0)
+    suppressEmitUntil.current = performance.now() + 250
+    lastRemoteRatio.current = remoteRatio
+    el.scrollTop = scrollTopFromRatio(remoteRatio, el.scrollHeight, el.clientHeight)
+    const t = setTimeout(() => {
+      applyingRemote.current = false
+    }, 200)
     return () => clearTimeout(t)
-  }, [remoteScroll])
+  }, [remoteRatio])
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

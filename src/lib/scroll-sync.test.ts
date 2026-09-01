@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { ratioFromScrollTop, scrollTopFromRatio } from "./scroll-sync"
+import { ratioFromScrollTop, scrollRatioNear, scrollTopFromRatio } from "./scroll-sync"
 
 describe("scroll-sync ratio math", () => {
   it("round-trips a position across different zoom levels", () => {
@@ -20,5 +20,10 @@ describe("scroll-sync ratio math", () => {
     expect(ratioFromScrollTop(9999, 1000, 400)).toBe(1)
     expect(scrollTopFromRatio(-1, 1000, 400)).toBe(0)
     expect(scrollTopFromRatio(2, 1000, 400)).toBe(600)
+  })
+
+  it("treats near-equal ratios as in sync", () => {
+    expect(scrollRatioNear(0.5, 0.505)).toBe(true)
+    expect(scrollRatioNear(0.5, 0.52)).toBe(false)
   })
 })

@@ -172,7 +172,6 @@ export default function LiveSession({
   // Echo guard by VALUE: remember the last position the student pushed us to and
   // only broadcast when ours differs — immune to duplicate/no-op broadcasts.
   const lastRemote = useRef<{ paraNumber: number; page: number } | null>(null)
-  const [remoteScroll, setRemoteScroll] = useState<{ ratio: number } | null>(null)
   // Notify the teacher's bell about the join only once per session (presence can
   // flap / re-fire). The in-session "Student joined" pill updates regardless.
   const joinNotifiedRef = useRef(false)
@@ -193,7 +192,7 @@ export default function LiveSession({
       lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
       setPdfPage(nav.page)
     },
-    onScroll: (ratio) => setRemoteScroll({ ratio }),
+    // Scroll is teacher-led — student follows the teacher, not vice versa.
     // A student just joined → push our authoritative position so they land here,
     // and record a one-time "student joined" notification for the teacher.
     onPeerJoin: () => {
@@ -704,7 +703,6 @@ export default function LiveSession({
                 page={pdfPage}
                 onPageChange={setPdfPage}
                 onScrollRatio={sendScroll}
-                remoteScroll={remoteScroll}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center overflow-auto p-4">

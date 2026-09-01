@@ -25,7 +25,7 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, sendNav, sendScroll, subscribeNav, subscribeScroll, leave } = useLiveClass()
+  const { peerNav, sendNav, subscribeNav, subscribeScroll, leave } = useLiveClass()
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
@@ -156,7 +156,6 @@ export function StudentLiveClass() {
           page={page}
           onPageChange={setPage}
           followingLabel="Synced with teacher"
-          onScrollRatio={sendScroll}
           remoteScroll={remoteScroll}
         />
       ) : (

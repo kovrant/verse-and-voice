@@ -6,6 +6,13 @@
 
 const clamp01 = (n: number) => (n < 0 ? 0 : n > 1 ? 1 : n)
 
+/** Ignore sub-pixel ratio noise that causes scroll ping-pong between clients. */
+export const SCROLL_SYNC_EPS = 0.012
+
+export function scrollRatioNear(a: number, b: number, eps = SCROLL_SYNC_EPS): boolean {
+  return Math.abs(a - b) < eps
+}
+
 /** How far down the scroll container we are, as a 0..1 ratio. */
 export function ratioFromScrollTop(
   scrollTop: number,
