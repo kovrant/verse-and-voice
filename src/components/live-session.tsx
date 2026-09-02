@@ -21,7 +21,7 @@ import {
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { InlineLoader } from "@/components/page-loading"

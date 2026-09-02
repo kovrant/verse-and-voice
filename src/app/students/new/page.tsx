@@ -4,7 +4,7 @@ import { ArrowLeft, Sparkles, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
 import { Button } from "@/components/ui/button"

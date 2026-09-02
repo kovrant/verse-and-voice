@@ -3,7 +3,7 @@
 import { format } from "date-fns"
 import { AlertCircle, Check, CheckCircle2, CreditCard, TrendingUp, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { FeeDisplay } from "@/components/fee-display"
 import { PageLoading } from "@/components/page-loading"

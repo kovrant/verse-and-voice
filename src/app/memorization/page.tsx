@@ -17,7 +17,7 @@ import {
   X,
 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { labelFor, loadChunksFor,type MemChunk } from "@/components/memorization-chunks"
 import { PageLoading } from "@/components/page-loading"

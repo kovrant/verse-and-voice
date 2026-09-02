@@ -1,10 +1,11 @@
 import "./globals.css"
+import "goey-toast/styles.css"
 
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
-import { Toaster } from "sonner"
 
 import { AppShell } from "@/components/app-shell"
+import { GoeyToasterHost } from "@/components/goey-toaster"
 import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
 import { ThemeProvider } from "@/components/theme-provider"
 
@@ -68,18 +69,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SidebarVisibilityProvider>
             <AppShell>{children}</AppShell>
           </SidebarVisibilityProvider>
+          <GoeyToasterHost />
         </ThemeProvider>
-        <Toaster
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
-              color: "hsl(var(--foreground))",
-              borderRadius: "var(--radius)",
-            },
-          }}
-        />
       </body>
     </html>
   )

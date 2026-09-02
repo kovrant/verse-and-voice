@@ -13,7 +13,7 @@
 // supabase/migration_notifications_rls_fix.sql.
 
 import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { retentionCutoffIso } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"

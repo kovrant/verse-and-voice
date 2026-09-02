@@ -4,7 +4,7 @@
 
 import { ChevronDown, ChevronUp, ImagePlus, Loader2, Moon, Plus, Trash2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { NamazStepCard } from "@/components/namaz-step-card"
 import { PageLoading } from "@/components/page-loading"

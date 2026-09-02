@@ -2,7 +2,7 @@
 
 import { Check, Flame as FlameIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import { DAY_LABELS } from "@/components/class-days-picker"
 import { Skeleton } from "@/components/page-loading"

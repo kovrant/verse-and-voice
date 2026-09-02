@@ -19,7 +19,7 @@ import {
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+import { toast } from "@/lib/toast"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import { OnlineDot } from "@/components/online-dot"
