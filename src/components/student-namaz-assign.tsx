@@ -6,7 +6,7 @@ import { useCallback, useEffect, useState } from "react"
 import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
-import { awardNamazCompleteBadge } from "@/lib/badges"
+import { awardNamazCompleteBadge } from "@/lib/achievements"
 import {
   activeRevisionPart,
   currentLearningStep,

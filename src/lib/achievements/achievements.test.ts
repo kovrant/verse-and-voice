@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  khatmBadgeSlug,
-  newlyCompletedParas,
-  paraBadgeSlug,
-  parasCompleted,
-  totalParas,
-} from "./quran-achievement-logic"
+import { newlyCompletedParas, parasCompleted, totalParas } from "./completion/quran"
+import { khatmSlug, paraSlug, slugIssuesCertificate } from "./slugs"
 
 describe("parasCompleted", () => {
   it("collects paras from both ends", () => {
@@ -35,14 +30,23 @@ describe("totalParas", () => {
   })
 })
 
-describe("badge slugs", () => {
+describe("achievement slugs", () => {
   it("zero-pads para slugs", () => {
-    expect(paraBadgeSlug(1)).toBe("para_01")
-    expect(paraBadgeSlug(15)).toBe("para_15")
+    expect(paraSlug(1)).toBe("para_01")
+    expect(paraSlug(15)).toBe("para_15")
   })
 
   it("uses the generic khatm slug for round 1", () => {
-    expect(khatmBadgeSlug(1)).toBe("quran_khatm")
-    expect(khatmBadgeSlug(2)).toBe("khatm_2")
+    expect(khatmSlug(1)).toBe("quran_khatm")
+    expect(khatmSlug(2)).toBe("khatm_2")
+  })
+
+  it("issues certificates only for major milestones", () => {
+    expect(slugIssuesCertificate("qaida_complete")).toBe(true)
+    expect(slugIssuesCertificate("quran_khatm")).toBe(true)
+    expect(slugIssuesCertificate("khatm_2")).toBe(true)
+    expect(slugIssuesCertificate("namaz_complete")).toBe(true)
+    expect(slugIssuesCertificate("para_05")).toBe(false)
+    expect(slugIssuesCertificate("quran_half")).toBe(false)
   })
 })

@@ -41,7 +41,7 @@ import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
-import { syncQuranRoundAchievements } from "@/lib/quran-achievements"
+import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.

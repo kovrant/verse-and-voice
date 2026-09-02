@@ -88,8 +88,12 @@ import {
   STUDENT_MEM_SELECT,
   type StudentMemItem,
 } from "@/lib/memorization"
-import { awardMemLesson, syncMemChunkAchievements } from "@/lib/mem-achievements"
-import { syncQuranRoundAchievements, type RoundProgress } from "@/lib/quran-achievements"
+import {
+  awardMemLesson,
+  syncMemChunkAchievements,
+  syncQuranRoundAchievements,
+  type RoundProgress,
+} from "@/lib/achievements"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import {

@@ -14,6 +14,7 @@ import {
   Moon,
   ScrollText,
   SpellCheck,
+  Trophy,
   X,
 } from "lucide-react"
 import Link from "next/link"
@@ -35,6 +36,7 @@ const baseNavItems = [
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/namaz", label: "Namaz", icon: Moon, exact: false, requiresNamaz: true },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },
+  { href: "/student/achievements", label: "Trophies", icon: Trophy, exact: false },
   { href: "/student/qaida", label: "Qaida", icon: SpellCheck, exact: false },
   { href: "/student/quran", label: "Quran", icon: BookText, exact: false },
   { href: "/student/history", label: "Islamic History", icon: ScrollText, exact: false },
