@@ -8,6 +8,9 @@ import {
   isQaidaComplete,
   khatmJustCompleted,
   newlyCompletedParas,
+  parasCompleted,
+  qualifiesForKhatm,
+  totalParas,
 } from "./completion/quran"
 import {
   khatmSlug,
@@ -58,6 +61,53 @@ export async function syncQuranRound(
     }
   } catch {
     // ponytail: progress save is source of truth; awards are best-effort
+  }
+}
+
+/** Backfill: award everything a round's current state entitles — not a before/after delta. */
+export async function ensureQuranRoundAchievements(
+  db: SupabaseClient,
+  studentId: string,
+  round: QuranRoundRef,
+  progress: QuranRoundProgress,
+): Promise<void> {
+  try {
+    if (round.type === "qaida") {
+      if (progress.completed_at) {
+        await awardAchievement(db, studentId, QAIDA_COMPLETE_SLUG, `round:${round.id}`)
+      }
+      return
+    }
+
+    const paraList =
+      totalParas(progress.desc, progress.asc) > 0
+        ? parasCompleted(progress.desc, progress.asc)
+        : progress.completed_at
+          ? Array.from({ length: 30 }, (_, i) => i + 1)
+          : []
+
+    for (const para of paraList) {
+      await awardAchievement(db, studentId, paraSlug(para), `round:${round.id}:para:${para}`)
+    }
+
+    if (totalParas(progress.desc, progress.asc) >= 15 || qualifiesForKhatm(progress)) {
+      await awardAchievement(db, studentId, QURAN_HALF_SLUG, `round:${round.id}`)
+    }
+
+    if (qualifiesForKhatm(progress)) {
+      const slug = khatmSlug(round.round_number)
+      const title = round.round_number <= 1 ? "Khatm" : `Khatm ${round.round_number}`
+      await awardAchievement(db, studentId, slug, `round:${round.id}`, {
+        slug,
+        title,
+        description: "Completed a full reading of the Quran",
+        domain: "quran",
+        kind: "certificate",
+        issuesCertificate: true,
+      })
+    }
+  } catch {
+    // ponytail: best-effort backfill
   }
 }
 

@@ -25,6 +25,14 @@ export function isFullQuranComplete(progress: QuranRoundProgress): boolean {
   return totalParas(progress.desc, progress.asc) >= 30
 }
 
+/** Khatm eligibility — includes legacy rounds where only completed_at was saved. */
+export function qualifiesForKhatm(progress: QuranRoundProgress): boolean {
+  if (!progress.completed_at) return false
+  if (totalParas(progress.desc, progress.asc) >= 30) return true
+  // ponytail: "Complete" used to set completed_at alone; treat as khatm on backfill
+  return progress.desc === 0 && progress.asc === 0
+}
+
 export function isQaidaComplete(before: QuranRoundProgress, after: QuranRoundProgress): boolean {
   return !before.completed_at && !!after.completed_at
 }

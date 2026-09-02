@@ -48,6 +48,7 @@ import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentNamazAssign } from "@/components/student-namaz-assign"
 import { StudentPortalAccess } from "@/components/student-portal-access"
 import { PageLoading } from "@/components/page-loading"
+import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
 import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
 import { StudentOverview } from "@/components/student-overview"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
@@ -146,6 +147,7 @@ export default function StudentDetailPage() {
   const [activity, setActivity] = useState<ActivityLog[]>([])
   const [activityLoading, setActivityLoading] = useState(false)
   const [activityLoaded, setActivityLoaded] = useState(false)
+  const [achievementCount, setAchievementCount] = useState(0)
 
   // Edit form (non-quran fields)
   const [editForm, setEditForm] = useState({
@@ -184,6 +186,14 @@ export default function StudentDetailPage() {
     is_completed: false,
   })
 
+  async function loadAchievementCount() {
+    const { count } = await supabase
+      .from("student_achievements")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", params.id as string)
+    setAchievementCount(count ?? 0)
+  }
+
   const loadStudent = useCallback(async () => {
     const { data } = await supabase.from("students").select("*").eq("id", params.id).single()
 
@@ -204,7 +214,14 @@ export default function StudentDetailPage() {
     })
 
     await ensureFeeRecords(data)
-    await Promise.all([loadRounds(), loadFees(), loadMemItems(), loadCatalog(), loadSessions()])
+    await Promise.all([
+      loadRounds(),
+      loadFees(),
+      loadMemItems(),
+      loadCatalog(),
+      loadSessions(),
+      loadAchievementCount(),
+    ])
     setLoading(false)
     // The loaders above only close over params.id (already a dep) and stable
     // state setters. Adding them to the deps would recreate loadStudent on every
@@ -501,9 +518,16 @@ export default function StudentDetailPage() {
     if (!active) return
     const before = roundProgress(active)
     const completedAt = formatLocalDate()
-    await supabase.from("quran_rounds").update({ completed_at: completedAt }).eq("id", active.id)
+    const total = before.desc + (before.asc > 0 ? before.asc - 1 : 0)
+    const desc = total >= 30 ? 30 : before.desc
+    const asc = total >= 30 ? 0 : before.asc
+    await supabase
+      .from("quran_rounds")
+      .update({ completed_at: completedAt, desc_completed: desc, asc_completed: asc })
+      .eq("id", active.id)
     void syncQuranRoundAchievements(params.id as string, active, before, {
-      ...before,
+      desc,
+      asc,
       completed_at: completedAt,
     })
     await loadRounds()
@@ -720,6 +744,7 @@ export default function StudentDetailPage() {
     memInProgress: memorizingCount,
     unpaidThisMonth: currentMonthUnpaid,
     progressHint,
+    achievementCount,
   })
 
   return (
@@ -1492,6 +1517,13 @@ export default function StudentDetailPage() {
             </Card>
           )}
         </div>
+      )}
+
+      {activeTab === "achievements" && (
+        <StudentAchievementsPanel
+          studentId={student.id}
+          onUpdated={() => void loadAchievementCount()}
+        />
       )}
 
       {activeTab === "account" && (

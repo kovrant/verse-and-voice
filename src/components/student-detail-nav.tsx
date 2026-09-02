@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  Award,
   BookMarked,
   BookOpen,
   CreditCard,
@@ -11,7 +12,13 @@ import {
 
 import { cn } from "@/lib/utils"
 
-export type StudentView = "overview" | "progress" | "classes" | "memorization" | "account"
+export type StudentView =
+  | "overview"
+  | "progress"
+  | "classes"
+  | "memorization"
+  | "achievements"
+  | "account"
 
 export interface StudentNavItem {
   id: StudentView
@@ -99,6 +106,7 @@ export function studentNavItems(signals: {
   memInProgress: number
   unpaidThisMonth: boolean
   progressHint?: string
+  achievementCount?: number
 }): StudentNavItem[] {
   return [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
@@ -119,6 +127,15 @@ export function studentNavItems(signals: {
       label: "Memorization",
       icon: BookMarked,
       hint: signals.memInProgress > 0 ? `${signals.memInProgress} in progress` : "None active",
+    },
+    {
+      id: "achievements",
+      label: "Trophies",
+      icon: Award,
+      hint:
+        signals.achievementCount && signals.achievementCount > 0
+          ? `${signals.achievementCount} earned`
+          : "Badges & certificates",
     },
     {
       id: "account",

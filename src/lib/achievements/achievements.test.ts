@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { newlyCompletedParas, parasCompleted, totalParas } from "./completion/quran"
+import { qualifiesForKhatm } from "./completion/quran"
 import { khatmSlug, paraSlug, slugIssuesCertificate } from "./slugs"
 
 describe("parasCompleted", () => {
@@ -48,5 +49,16 @@ describe("achievement slugs", () => {
     expect(slugIssuesCertificate("namaz_complete")).toBe(true)
     expect(slugIssuesCertificate("para_05")).toBe(false)
     expect(slugIssuesCertificate("quran_half")).toBe(false)
+  })
+
+  it("qualifies legacy khatm rounds closed with completed_at only", () => {
+    expect(
+      qualifiesForKhatm({ desc: 30, asc: 0, completed_at: "2026-01-01" }),
+    ).toBe(true)
+    expect(
+      qualifiesForKhatm({ desc: 0, asc: 0, completed_at: "2026-01-01" }),
+    ).toBe(true)
+    expect(qualifiesForKhatm({ desc: 0, asc: 0, completed_at: null })).toBe(false)
+    expect(qualifiesForKhatm({ desc: 10, asc: 5, completed_at: "2026-01-01" })).toBe(false)
   })
 })
