@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation"
 import { useState } from "react"
 
 import { LiveClassProvider } from "@/components/live-class-provider"
+import { AchievementCelebrationProvider } from "@/components/achievement-celebration-provider"
 import { Sidebar } from "@/components/sidebar"
 import { StudentSidebar } from "@/components/student-sidebar"
 import { StudentTopBar, TeacherTopBar } from "@/components/topbar"
@@ -72,5 +73,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </div>
   )
 
-  return isStudentArea ? <LiveClassProvider>{shell}</LiveClassProvider> : shell
+  return isStudentArea ? (
+    <LiveClassProvider>
+      <AchievementCelebrationProvider>{shell}</AchievementCelebrationProvider>
+    </LiveClassProvider>
+  ) : (
+    shell
+  )
 }

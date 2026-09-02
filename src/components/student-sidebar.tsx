@@ -22,6 +22,7 @@ import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { Brand } from "@/components/brand"
+import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
 import { useLiveClass } from "@/components/live-class-provider"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
@@ -49,6 +50,7 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const [hasNamaz, setHasNamaz] = useState(false)
   const { live } = useLiveClass()
   const { student, username } = useStudent()
+  const { hasUnseen: hasUnseenTrophies } = useAchievementCelebrations()
 
   const refreshNamaz = useCallback(() => {
     if (!student?.id) {
@@ -170,6 +172,7 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
           {navItems.map((item) => {
             const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
             const isLive = live && "live" in item && item.live
+            const showTrophyDot = item.href === "/student/achievements" && hasUnseenTrophies
             return (
               <Link
                 key={item.href}
@@ -197,6 +200,15 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
                     <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
                     LIVE
                   </span>
+                )}
+                {showTrophyDot && !isLive && (
+                  <span
+                    className={cn(
+                      "ml-auto h-2 w-2 rounded-full bg-amber-400",
+                      hideOnCollapse,
+                    )}
+                    title="New trophies"
+                  />
                 )}
               </Link>
             )
