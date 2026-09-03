@@ -55,6 +55,7 @@ migration_qaida_live_class.sql     # allows para_number = 0 (the Qaida sentinel)
 migration_namaz_steps.sql          # badges / student_badges (Namaz + achievement stubs)
 migration_achievements.sql         # seed Qaida, para, half-Quran, khatm badges
 migration_achievements_module.sql # unified achievements + certificates; drops badges tables
+migration_memorization_revision.sql # revision bucket: revision_assigned_at + trigger fix
 ```
 
 `backfill_old_fees_paid.sql` and `backfill_notification_copy.sql` are one-off data

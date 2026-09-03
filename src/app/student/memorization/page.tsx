@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
 import { format } from "date-fns"
-import { BookMarked, Check, Sparkles } from "lucide-react"
+import { BookMarked, Check, RotateCcw, Sparkles } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
 import {
@@ -208,6 +208,8 @@ export default function StudentMemorizationPage() {
 
   const memorizing = items.filter((m) => m.status === "memorizing")
   const memorized = items.filter((m) => m.status === "memorized")
+  const revisionAssigned = memorized.filter((m) => m.revision_assigned_at)
+  const revisionBucket = memorized.filter((m) => !m.revision_assigned_at)
   const celebration = queue[0] ?? null
   const celebratingId = celebration?.kind === "part" ? celebration.id : null
 
@@ -235,6 +237,73 @@ export default function StudentMemorizationPage() {
           </p>
         </div>
       </div>
+
+      {revisionAssigned.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+            <RotateCcw className="h-3 w-3" />
+            Assigned for revision ({revisionAssigned.length})
+          </p>
+          {revisionAssigned.map((item) => {
+            const chunks = chunksByItem[item.catalog_id] || []
+            const title = item.memorization_catalog?.title || "Lesson"
+            return (
+              <div
+                key={item.id}
+                id={`mem-${item.id}`}
+                className={cn(
+                  "overflow-hidden rounded-2xl border border-amber-500/30 bg-amber-500/5 scroll-mt-24 transition-shadow",
+                  highlightId === item.id &&
+                    "ring-2 ring-amber-400 shadow-[0_0_0_4px_rgba(251,191,36,0.2)]",
+                )}
+              >
+                <button
+                  type="button"
+                  onClick={() => chunks.length > 0 && toggleExpanded(item.id)}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left"
+                >
+                  {item.memorization_catalog?.image_url ? (
+                    <img
+                      src={item.memorization_catalog.image_url}
+                      alt=""
+                      className="h-10 w-10 rounded-xl border border-border bg-white object-contain p-0.5 flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 flex-shrink-0">
+                      <RotateCcw className="h-5 w-5" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-foreground">{title}</p>
+                    <p className="text-[11px] text-amber-700 dark:text-amber-300 mt-0.5">
+                      Your teacher assigned this for revision
+                    </p>
+                  </div>
+                </button>
+                {chunks.length > 0 && (
+                  <div className="border-t border-amber-500/20 px-4 py-4">
+                    <MemStudentLesson
+                      chunks={chunks}
+                      memorizedIds={memorizedChunkIds}
+                      overviewUrl={item.memorization_catalog?.image_url}
+                      title={title}
+                    />
+                  </div>
+                )}
+                {chunks.length === 0 && item.memorization_catalog?.image_url && (
+                  <div className="border-t border-amber-500/20 px-4 pb-4">
+                    <img
+                      src={item.memorization_catalog.image_url}
+                      alt={title}
+                      className="mx-auto max-h-64 rounded-xl border border-border bg-white object-contain p-2"
+                    />
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {memorizing.length > 0 && (
         <div className="space-y-4">
@@ -307,13 +376,13 @@ export default function StudentMemorizationPage() {
         </div>
       )}
 
-      {memorized.length > 0 && (
+      {revisionBucket.length > 0 && (
         <div className="space-y-3">
           <p className="text-xs font-semibold text-emerald-500 uppercase tracking-wider flex items-center gap-1.5">
             <Check className="h-3 w-3" />
-            Memorized ({memorized.length})
+            Completed ({revisionBucket.length})
           </p>
-          {memorized.map((item) => {
+          {revisionBucket.map((item) => {
             const chunks = chunksByItem[item.catalog_id] || []
             const title = item.memorization_catalog?.title || "Lesson"
             const open = expandedMemorized.has(item.id)

@@ -28,6 +28,7 @@ export interface StudentMemItem {
   catalog_id: string
   status: "memorizing" | "memorized"
   last_revised_at: string | null
+  revision_assigned_at: string | null
   memorization_catalog: CatalogItem
 }
 
@@ -41,7 +42,7 @@ export const STUDENT_MEM_SELECT = `*, ${CATALOG_SELECT}`
 export type MemItem = Omit<StudentMemItem, "catalog_id">
 
 /** Select for a MemItem — mirrors the Omit above, so the type matches the row. */
-export const MEM_ITEM_SELECT = `id, status, last_revised_at, ${CATALOG_SELECT}`
+export const MEM_ITEM_SELECT = `id, status, last_revised_at, revision_assigned_at, ${CATALOG_SELECT}`
 
 // ── Chunk helpers ────────────────────────────────────────────────────────────
 

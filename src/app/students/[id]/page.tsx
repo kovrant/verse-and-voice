@@ -428,7 +428,8 @@ export default function StudentDetailPage() {
       .from("student_memorization")
       .update({
         status: newStatus,
-        last_revised_at: newStatus === "memorized" ? new Date().toISOString() : null,
+        last_revised_at: null,
+        revision_assigned_at: null,
       })
       .eq("id", item.id)
     if (newStatus === "memorized") {
@@ -441,11 +442,31 @@ export default function StudentDetailPage() {
     await loadMemItems()
   }
 
-  async function markRevised(id: string) {
-    await supabase
+  async function assignRevision(id: string) {
+    const { error } = await supabase
       .from("student_memorization")
-      .update({ last_revised_at: new Date().toISOString() })
+      .update({ revision_assigned_at: new Date().toISOString() })
       .eq("id", id)
+    if (error) {
+      toast.error("Couldn't assign revision")
+      return
+    }
+    toast.success("Assigned for revision")
+    await loadMemItems()
+  }
+
+  async function markRevised(id: string) {
+    const { error } = await supabase
+      .from("student_memorization")
+      .update({
+        revision_assigned_at: null,
+        last_revised_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+    if (error) {
+      toast.error("Couldn't record revision")
+      return
+    }
     await loadMemItems()
   }
 
@@ -1416,7 +1437,10 @@ export default function StudentDetailPage() {
             <div className="space-y-2.5">
               <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
                 <Check className="h-3.5 w-3.5" />
-                Memorized ({memorizedCount})
+                Revision bucket ({memorizedCount})
+              </p>
+              <p className="text-xs text-muted-foreground -mt-1">
+                Completed lessons land here. Assign what this student should revise.
               </p>
               {memItems
                 .filter((m) => m.status === "memorized")
@@ -1424,6 +1448,7 @@ export default function StudentDetailPage() {
                   const chunks = chunksByItem[item.catalog_id] || []
                   const hasChunks = chunks.length > 0
                   const progress = chunkProgress(chunks, memorizedChunkIds)
+                  const assigned = !!item.revision_assigned_at
                   return (
                     <div
                       key={item.id}
@@ -1436,10 +1461,17 @@ export default function StudentDetailPage() {
                             {item.memorization_catalog?.title}
                           </p>
                           <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                              <Check className="h-2.5 w-2.5" />
-                              Memorized
-                            </span>
+                            {assigned ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                                <RotateCcw className="h-2.5 w-2.5" />
+                                Assigned
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
+                                <Check className="h-2.5 w-2.5" />
+                                In bucket
+                              </span>
+                            )}
                             {hasChunks && (
                               <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
                                 {progress.done}/{progress.total} parts
@@ -1458,15 +1490,27 @@ export default function StudentDetailPage() {
                           </div>
                         </div>
                         <div className="flex flex-shrink-0 items-center gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => markRevised(item.id)}
-                            className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
-                          >
-                            <RotateCcw className="mr-1 h-3.5 w-3.5" />
-                            Revised
-                          </Button>
+                          {assigned ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => markRevised(item.id)}
+                              className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                            >
+                              <Check className="mr-1 h-3.5 w-3.5" />
+                              Mark revised
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => assignRevision(item.id)}
+                              className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
+                            >
+                              <RotateCcw className="mr-1 h-3.5 w-3.5" />
+                              Assign revision
+                            </Button>
+                          )}
                           {!hasChunks && (
                             <Button
                               variant="ghost"

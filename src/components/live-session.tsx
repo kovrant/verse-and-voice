@@ -42,7 +42,7 @@ import { loadLastPage, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useClassChannel } from "@/lib/use-class-channel"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
-import { formatLocalDate, formatSessionDuration } from "@/lib/utils"
+import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.
 const SyncedPdfViewer = dynamic(
@@ -256,7 +256,9 @@ export default function LiveSession({
 
   function pickRevision() {
     if (memorized.length === 0) return
-    const sorted = [...memorized].sort((a, b) => {
+    const assigned = memorized.filter((m) => m.revision_assigned_at)
+    const base = assigned.length > 0 ? assigned : memorized
+    const sorted = [...base].sort((a, b) => {
       const aTime = a.last_revised_at ? new Date(a.last_revised_at).getTime() : 0
       const bTime = b.last_revised_at ? new Date(b.last_revised_at).getTime() : 0
       return aTime - bTime
@@ -272,7 +274,10 @@ export default function LiveSession({
   async function markRevised(id: string) {
     const { error } = await supabase
       .from("student_memorization")
-      .update({ last_revised_at: new Date().toISOString() })
+      .update({
+        revision_assigned_at: null,
+        last_revised_at: new Date().toISOString(),
+      })
       .eq("id", id)
 
     if (error) {
@@ -578,13 +583,18 @@ export default function LiveSession({
                           style={{ letterSpacing: "0.08em" }}
                         >
                           <Check className="h-2.5 w-2.5 text-primary" />
-                          Memorized ({memorized.length})
+                          Revision bucket ({memorized.length})
                         </p>
                         <div className="flex flex-wrap gap-1.5">
                           {memorized.map((item) => (
                             <span
                               key={item.id}
-                              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border border-border bg-card text-muted-foreground"
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-card text-muted-foreground",
+                                item.revision_assigned_at
+                                  ? "border-amber-500/40 text-amber-700 dark:text-amber-300"
+                                  : "border-border",
+                              )}
                             >
                               {item.memorization_catalog?.title}
                             </span>

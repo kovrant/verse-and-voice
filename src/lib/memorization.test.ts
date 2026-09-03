@@ -41,6 +41,7 @@ const MEM_ITEM_FIELDS: Record<keyof MemItem, true> = {
   id: true,
   status: true,
   last_revised_at: true,
+  revision_assigned_at: true,
   memorization_catalog: true,
 }
 

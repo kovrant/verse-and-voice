@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image isn't worth it here */
 
-import { BookMarked, CalendarClock } from "lucide-react"
+import { BookMarked, CalendarClock, RotateCcw } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
 
@@ -20,6 +20,7 @@ export default function StudentClassesPage() {
   const { student, loading } = useStudent()
   const { live, joined, join } = useLiveClass()
   const [items, setItems] = useState<StudentMemItem[]>([])
+  const [revisionItems, setRevisionItems] = useState<StudentMemItem[]>([])
   const [sessionStarts, setSessionStarts] = useState<string[]>([])
   const [loadingItems, setLoadingItems] = useState(true)
   const [now, setNow] = useState(() => new Date())
@@ -38,10 +39,17 @@ export default function StudentClassesPage() {
         .select(STUDENT_MEM_SELECT)
         .eq("student_id", student.id)
         .eq("status", "memorizing"),
+      supabase
+        .from("student_memorization")
+        .select(STUDENT_MEM_SELECT)
+        .eq("student_id", student.id)
+        .eq("status", "memorized")
+        .not("revision_assigned_at", "is", null),
       supabase.from("class_sessions").select("started_at").eq("student_id", student.id),
-    ]).then(([mem, sessions]) => {
+    ]).then(([mem, revision, sessions]) => {
       if (!active) return
       setItems(((mem.data as any) || []) as StudentMemItem[])
+      setRevisionItems(((revision.data as any) || []) as StudentMemItem[])
       setSessionStarts(
         ((sessions.data as { started_at: string }[]) || []).map((r) => r.started_at),
       )
@@ -132,6 +140,43 @@ export default function StudentClassesPage() {
         </div>
       )}
 
+      {revisionItems.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider flex items-center gap-1.5">
+            <RotateCcw className="h-3 w-3" />
+            Revise before class
+          </p>
+          {revisionItems.map((item) => (
+            <Link
+              key={item.id}
+              href={`/student/memorization#mem-${item.id}`}
+              className="flex items-center gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 transition-colors hover:bg-amber-500/15"
+            >
+              {item.memorization_catalog?.image_url ? (
+                <img
+                  src={item.memorization_catalog.image_url}
+                  alt=""
+                  className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
+                />
+              ) : (
+                <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500/20 flex-shrink-0">
+                  <RotateCcw className="h-4 w-4 text-amber-600" />
+                </span>
+              )}
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-foreground truncate">
+                  {item.memorization_catalog?.title}
+                </span>
+                <span className="block text-[11px] text-amber-700 dark:text-amber-300">
+                  Assigned for revision · tap to open
+                </span>
+              </span>
+              <span className="text-muted-foreground/50">→</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {items.length > 0 ? (
         <div className="space-y-2">
           <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -167,7 +212,7 @@ export default function StudentClassesPage() {
             </Link>
           ))}
         </div>
-      ) : (
+      ) : revisionItems.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
@@ -179,7 +224,7 @@ export default function StudentClassesPage() {
             </p>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   )
 }
