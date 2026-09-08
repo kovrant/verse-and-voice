@@ -1052,8 +1052,110 @@
 
 /* Student login — warm forest stage behind the card */
 [data-portal="student"] .vv-login-stage {
-  background: linear-gradient(160deg, #e9eee7 0%, #dfe7db 100%);
+  background: linear-gradient(160deg, #eef3ec 0%, #e2ebd9 100%);
+  position: relative;
+  overflow: hidden;
 }
 [data-portal="student"].dark .vv-login-stage {
-  background: linear-gradient(160deg, #1a1918 0%, #131211 100%);
+  background: linear-gradient(160deg, #181716 0%, #11100f 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Dynamic Children's Login Background Animations ─────────────────── */
+@keyframes ambient-drift-1 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(24px, -18px) scale(1.06);
+  }
+}
+
+@keyframes ambient-drift-2 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-20px, 22px) scale(1.1);
+  }
+}
+
+@keyframes ambient-drift-3 {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(16px, 24px) scale(1.04);
+  }
+}
+
+@keyframes star-twinkle-ambient {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85) rotate(0deg);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.15) rotate(15deg);
+  }
+}
+
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2.5deg);
+  }
+}
+
+@keyframes float-reverse {
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(8px) rotate(-2.5deg);
+  }
+}
+
+.animate-ambient-1 {
+  animation: ambient-drift-1 12s ease-in-out infinite;
+}
+
+.animate-ambient-2 {
+  animation: ambient-drift-2 16s ease-in-out infinite;
+}
+
+.animate-ambient-3 {
+  animation: ambient-drift-3 14s ease-in-out infinite;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 7s ease-in-out infinite;
+}
+
+.animate-twinkle {
+  animation: star-twinkle-ambient 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ambient-1,
+  .animate-ambient-2,
+  .animate-ambient-3,
+  .animate-float-gentle,
+  .animate-float-reverse,
+  .animate-twinkle {
+    animation: none !important;
+  }
 }

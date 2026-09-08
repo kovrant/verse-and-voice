@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
 import { Brand } from "@/components/brand"
+import { LoginBackground } from "@/components/login-background"
 import { useTheme } from "@/components/theme-provider"
 import { isLoginDisabled, resolveLoginEmail, studentPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
@@ -83,33 +84,38 @@ function StudentLoginForm() {
     "h-[50px] w-full rounded-2xl border-2 border-border bg-[hsl(var(--surface-alt))] pl-12 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:border-primary/40 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50"
 
   return (
-    <div className="vv-login-stage -m-4 -mt-16 grid min-h-dvh place-items-center px-6 py-10 lg:-m-8">
-      <div className="relative w-full max-w-[340px] animate-fade-in-up">
+    <div className="vv-login-stage -m-4 -mt-16 grid min-h-dvh place-items-center px-4 py-10 lg:-m-8">
+      {/* Dynamic Children's Ambient Background */}
+      <LoginBackground />
+
+      <div className="relative w-full max-w-[360px] animate-fade-in-up">
         {/* Light / dark toggle */}
         <button
           type="button"
           onClick={toggleDark}
           title={dark ? "Switch to light mode" : "Switch to dark mode"}
           aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-          className="absolute -right-1.5 -top-1.5 z-[3] flex h-10 w-10 items-center justify-center rounded-xl bg-card text-foreground shadow-soft-lg transition-transform hover:scale-105"
+          className="absolute right-0 top-1 z-20 flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card text-foreground shadow-soft transition-transform hover:scale-105 active:scale-95"
         >
           {dark ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
         </button>
 
-        <div className="overflow-hidden rounded-[28px] border border-border/60 bg-card shadow-soft-lg">
-          {/* Forest header */}
-          <div className="bg-primary px-6 pb-6 pt-7 text-center">
-            <div className="mx-auto flex h-[62px] w-[62px] items-center justify-center rounded-[18px] bg-white/15 ring-2 ring-inset ring-white/25">
-              <BookOpen className="h-[30px] w-[30px] text-primary-foreground" strokeWidth={1.75} />
-            </div>
-            <h1 className="mt-3 font-heading text-[22px] font-bold text-primary-foreground">
-              <Brand amp="text-primary-foreground/75" />
-            </h1>
-            <p className="text-[13px] text-primary-foreground/85">Welcome back! Ready to learn?</p>
+        {/* Prominent Brand Header */}
+        <div className="mb-6 text-center">
+          <div className="mx-auto mb-3.5 flex h-[58px] w-[58px] items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-soft-md ring-4 ring-primary/15">
+            <BookOpen className="h-[28px] w-[28px]" strokeWidth={1.8} />
           </div>
+          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-[32px]">
+            <Brand amp="text-brand" />
+          </h1>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
+            Quran Academy
+          </p>
+        </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5 px-6 pb-6 pt-5" noValidate>
+        {/* Form Card */}
+        <div className="rounded-[28px] border border-border/60 bg-card p-6 shadow-soft-lg">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5" noValidate>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs font-extrabold text-foreground">Username</span>
               <span className="relative">
