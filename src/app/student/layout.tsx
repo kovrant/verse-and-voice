@@ -7,7 +7,6 @@ import { useActivityLogger } from "@/lib/activity-log"
 import { isLoginDisabled } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser } from "@/lib/use-current-user"
-import { useSessionTimeout } from "@/lib/use-session-timeout"
 
 /**
  * Client-side auth guard for the student portal. The middleware already sends
@@ -20,9 +19,6 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   // Log every page view + click across the student portal.
   useActivityLogger()
-
-  // Force a sign-out 3 hours after login, regardless of token refresh.
-  useSessionTimeout()
 
   // Belt-and-suspenders: if sign-in was disabled while this tab is open, leave
   // immediately (middleware reads JWT locally; teacher disable also revokes globally).

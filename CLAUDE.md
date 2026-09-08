@@ -65,7 +65,7 @@ Fonts dependency.
    returns `{ user }` or a ready-to-return `denied` response. Never re-implement it inline
    (the old copy-pasted variants drifted and granted teacher powers by default).
 3. `src/app/student/layout.tsx` — client-side `onAuthStateChange` catches a session dying
-   while the tab is open, plus a 3h hard session timeout (`use-session-timeout.ts`).
+   while the tab is open.
 
 `/api` routes use the **service-role** client (`src/lib/supabase-admin.ts`, bypasses RLS)
 and derive `student_id` from the session cookie — the client never sends it.
