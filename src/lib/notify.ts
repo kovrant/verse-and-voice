@@ -74,6 +74,7 @@ async function studentName(admin: Admin, studentId: string): Promise<string | nu
 export async function notifyTeachersOfStudentPresence(
   userId: string,
   event: "login" | "logout",
+  device?: string,
 ): Promise<void> {
   const admin = createSupabaseAdminClient()
 
@@ -84,6 +85,17 @@ export async function notifyTeachersOfStudentPresence(
     .maybeSingle()
 
   if (!profile?.student_id) return // not a student — nothing to announce
+
+  if (event === "login" && device) {
+    try {
+      await admin
+        .from("students")
+        .update({ last_device: device, last_device_at: new Date().toISOString() })
+        .eq("id", profile.student_id)
+    } catch {
+      // Best-effort device record
+    }
+  }
 
   const { data: student } = await admin
     .from("students")

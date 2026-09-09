@@ -7,6 +7,7 @@ import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { detectDevice } from "@/lib/device-detection"
 import { type NavState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"
@@ -60,6 +61,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const studentId = student?.id ?? null
   const [joined, setJoined] = useState(false)
   const [alertOpen, setAlertOpen] = useState(false)
+  const [deviceInfo] = useState(() => (typeof window !== "undefined" ? detectDevice() : null))
 
   // Advertise this student as online (green dot in the teacher portal) for as
   // long as any student page is open.
@@ -80,6 +82,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const { live, peerNav, sendNav, sendScroll } = useClassChannel({
     studentId,
     role: "student",
+    deviceInfo,
     enabled: !!studentId,
     present: joined, // listen-only until the student joins
     onNav: (nav) => navCbs.current.forEach((fn) => fn(nav)),

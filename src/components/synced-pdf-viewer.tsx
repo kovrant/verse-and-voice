@@ -3,7 +3,7 @@
 import "react-pdf/dist/esm/Page/AnnotationLayer.css"
 import "react-pdf/dist/esm/Page/TextLayer.css"
 
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, ZoomIn, ZoomOut } from "lucide-react"
+import { ChevronLeft, ChevronRight, Loader2, Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Document, Page } from "react-pdf"
 import type { PDFDocumentProxy } from "pdfjs-dist"
@@ -42,22 +42,25 @@ function PdfSkeleton() {
 function BufferedPdfPage({
   page,
   pageWidth,
+  pageHeight,
   visible,
   onRendered,
 }: {
   page: number
   pageWidth?: number
+  pageHeight?: number
   visible: boolean
   onRendered?: () => void
 }) {
   return (
     <div
-      className={visible ? "relative" : "pointer-events-none absolute inset-0 opacity-0"}
+      className={visible ? "relative flex justify-center" : "pointer-events-none absolute inset-0 opacity-0"}
       aria-hidden={!visible}
     >
       <Page
         pageNumber={page}
         width={pageWidth}
+        height={pageHeight}
         renderAnnotationLayer={false}
         renderTextLayer={false}
         loading={null}
@@ -87,6 +90,8 @@ export function SyncedPdfViewer({
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState(0)
   const [baseWidth, setBaseWidth] = useState(0)
+  const [baseHeight, setBaseHeight] = useState(0)
+  const [fitMode, setFitMode] = useState<"page" | "width">("page")
   const [zoom, setZoom] = useState(1)
   const [errored, setErrored] = useState(false)
 
@@ -168,11 +173,14 @@ export function SyncedPdfViewer({
     }
   }, [page, numPages])
 
-  // Measure container for fit-to-width rendering.
+  // Measure container for fit-to-page / fit-to-width rendering.
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-    const measure = () => setBaseWidth(Math.max(0, el.clientWidth - 32))
+    const measure = () => {
+      setBaseWidth(Math.max(0, el.clientWidth - 32))
+      setBaseHeight(Math.max(0, el.clientHeight - 32))
+    }
     measure()
     const ro = new ResizeObserver(measure)
     ro.observe(el)
@@ -255,7 +263,10 @@ export function SyncedPdfViewer({
     return () => window.removeEventListener("keydown", onKey)
   }, [go, page])
 
-  const pageWidth = baseWidth > 0 ? baseWidth * zoom : undefined
+  // In fit-to-page (full 16-line Mushaf view), scale by height so all 16 lines fit on screen without vertical scrolling.
+  // In fit-to-width, scale by width.
+  const pageHeight = fitMode === "page" && baseHeight > 0 ? baseHeight * zoom : undefined
+  const pageWidth = fitMode === "width" && baseWidth > 0 ? baseWidth * zoom : undefined
   const atFirst = page <= 1
   const atLast = numPages > 0 && page >= numPages
 
@@ -298,6 +309,18 @@ export function SyncedPdfViewer({
           ) : null}
           <button
             type="button"
+            onClick={() => {
+              setFitMode((m) => (m === "page" ? "width" : "page"))
+              setZoom(1)
+            }}
+            aria-label={fitMode === "page" ? "Switch to Fit Width" : "Switch to Full Page (16 Lines)"}
+            title={fitMode === "page" ? "Fit to Width" : "Fit Full Page (16 Lines)"}
+            className={`${iconBtn} ${fitMode === "page" ? "bg-secondary text-foreground font-semibold" : ""}`}
+          >
+            {fitMode === "page" ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
+          </button>
+          <button
+            type="button"
             onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.15).toFixed(2)))}
             aria-label="Zoom out"
             className={iconBtn}
@@ -318,11 +341,11 @@ export function SyncedPdfViewer({
           <button
             type="button"
             onClick={() => setZoom(1)}
-            aria-label="Fit width"
-            title="Fit width"
+            aria-label="Reset zoom"
+            title="Reset zoom"
             className={iconBtn}
           >
-            <Maximize2 className="h-4 w-4" />
+            100%
           </button>
         </div>
       </div>
@@ -344,16 +367,18 @@ export function SyncedPdfViewer({
               loading={<PdfSkeleton />}
               error={null}
             >
-              <div className="relative" style={{ width: pageWidth }}>
+              <div className="relative flex justify-center" style={{ width: pageWidth, height: pageHeight }}>
                 <BufferedPdfPage
                   page={slots[0]}
                   pageWidth={pageWidth}
+                  pageHeight={pageHeight}
                   visible={activeSlot === 0}
                   onRendered={() => onSlotRendered(0)}
                 />
                 <BufferedPdfPage
                   page={slots[1]}
                   pageWidth={pageWidth}
+                  pageHeight={pageHeight}
                   visible={activeSlot === 1}
                   onRendered={() => onSlotRendered(1)}
                 />

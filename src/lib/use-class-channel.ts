@@ -13,11 +13,18 @@ export interface NavState {
 
 type ClassRole = "teacher" | "student"
 
+export interface PeerDevice {
+  label: string
+  type: "tablet" | "laptop" | "mobile" | "desktop"
+}
+
 interface UseClassChannelOptions {
   /** The student the class belongs to — the channel key. */
   studentId: string | null | undefined
   /** This client's role. "live" reflects whether the *other* role is present. */
   role: ClassRole
+  /** Optional device info to advertise in presence. */
+  deviceInfo?: { label: string; type: "tablet" | "laptop" | "mobile" | "desktop" } | null
   /** Only join when true (e.g. class is active). */
   enabled?: boolean
   /**
@@ -42,6 +49,8 @@ interface ClassChannel {
   live: boolean
   /** The other role's last-known position (for a joiner to land correctly). */
   peerNav: NavState | null
+  /** The other role's detected device (e.g. iPad (10.9"), MacBook, iPhone). */
+  peerDevice: PeerDevice | null
   /** Broadcast this client's position + update its presence. */
   sendNav: (nav: NavState) => void
   /** Broadcast this client's in-page scroll ratio (0..1). Lightweight — no presence write. */
@@ -72,6 +81,7 @@ const PRIVATE_CHANNEL = process.env.NEXT_PUBLIC_REALTIME_PRIVATE === "true"
 export function useClassChannel({
   studentId,
   role,
+  deviceInfo,
   enabled = true,
   present = true,
   onNav,
@@ -82,6 +92,7 @@ export function useClassChannel({
   const [clientId] = useState(genId)
   const [live, setLive] = useState(false)
   const [peerNav, setPeerNav] = useState<NavState | null>(null)
+  const [peerDevice, setPeerDevice] = useState<PeerDevice | null>(null)
   const channelRef = useRef<RealtimeChannel | null>(null)
   const subscribedRef = useRef(false)
   const presentRef = useRef(present)
@@ -113,16 +124,20 @@ export function useClassChannel({
     const computePresence = () => {
       const state = channel.presenceState() as Record<
         string,
-        Array<{ role?: ClassRole; paraNumber?: number; page?: number }>
+        Array<{ role?: ClassRole; paraNumber?: number; page?: number; device?: string; deviceType?: PeerDevice["type"] }>
       >
       let otherPresent = false
       let nav: NavState | null = null
+      let otherDevice: PeerDevice | null = null
       for (const key of Object.keys(state)) {
         for (const p of state[key]) {
           if (p.role && p.role !== role) {
             otherPresent = true
             if (typeof p.paraNumber === "number" && typeof p.page === "number") {
               nav = { paraNumber: p.paraNumber, page: p.page }
+            }
+            if (p.device) {
+              otherDevice = { label: p.device, type: p.deviceType || "tablet" }
             }
           }
         }
@@ -131,9 +146,11 @@ export function useClassChannel({
       if (classEndedRef.current) {
         otherPresent = false
         nav = null
+        otherDevice = null
       }
       setLive(otherPresent)
       setPeerNav(nav)
+      setPeerDevice(otherDevice)
     }
 
     channel
@@ -177,7 +194,13 @@ export function useClassChannel({
       channel.subscribe((status) => {
         if (status === "SUBSCRIBED") {
           subscribedRef.current = true
-          if (presentRef.current) channel.track({ role })
+          if (presentRef.current) {
+            channel.track({
+              role,
+              device: deviceInfo?.label,
+              deviceType: deviceInfo?.type,
+            })
+          }
         }
       })
     }
@@ -198,16 +221,23 @@ export function useClassChannel({
       supabase.removeChannel(channel)
       channelRef.current = null
     }
-  }, [studentId, role, enabled, clientId])
+  }, [studentId, role, enabled, clientId, deviceInfo])
 
   // Present toggle — track/untrack on the existing channel.
   useEffect(() => {
     presentRef.current = present
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
-    if (present) ch.track({ role })
-    else ch.untrack().catch(() => {})
-  }, [present, role])
+    if (present) {
+      ch.track({
+        role,
+        device: deviceInfo?.label,
+        deviceType: deviceInfo?.type,
+      })
+    } else {
+      ch.untrack().catch(() => {})
+    }
+  }, [present, role, deviceInfo])
 
   const sendNav = useCallback(
     (nav: NavState) => {
@@ -216,9 +246,15 @@ export function useClassChannel({
       // "tried to push … before joining". Silently no-op until subscribed.
       if (!ch || !subscribedRef.current) return
       ch.send({ type: "broadcast", event: "nav", payload: { ...nav, by: clientId } })
-      ch.track({ role, paraNumber: nav.paraNumber, page: nav.page }).catch(() => {})
+      ch.track({
+        role,
+        paraNumber: nav.paraNumber,
+        page: nav.page,
+        device: deviceInfo?.label,
+        deviceType: deviceInfo?.type,
+      }).catch(() => {})
     },
-    [clientId, role],
+    [clientId, role, deviceInfo],
   )
 
   const sendScroll = useCallback(
@@ -241,5 +277,5 @@ export function useClassChannel({
     await ch.untrack().catch(() => {})
   }, [clientId])
 
-  return { live, peerNav, sendNav, sendScroll, endClass }
+  return { live, peerNav, peerDevice, sendNav, sendScroll, endClass }
 }

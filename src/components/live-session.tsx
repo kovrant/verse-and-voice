@@ -180,6 +180,7 @@ export default function LiveSession({
   const joinNotifiedRef = useRef(false)
   const {
     live: studentJoined,
+    peerDevice,
     sendNav,
     sendScroll,
     endClass,
@@ -430,7 +431,7 @@ export default function LiveSession({
 
           <div className="h-5 w-px bg-border" />
 
-          {/* Live presence */}
+          {/* Live presence & student device */}
           <span
             className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
               studentJoined
@@ -443,7 +444,18 @@ export default function LiveSession({
                 studentJoined ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
               }`}
             />
-            {studentJoined ? "Student joined" : "Waiting for student…"}
+            {studentJoined ? (
+              <span>
+                Student joined
+                {peerDevice ? (
+                  <span className="ml-1.5 font-medium text-emerald-700/90 dark:text-emerald-300/90">
+                    · {peerDevice.label}
+                  </span>
+                ) : null}
+              </span>
+            ) : (
+              "Waiting for student…"
+            )}
           </span>
         </div>
 

@@ -92,6 +92,9 @@ export interface Student {
   class_days: number[] | null
   /** Assigned Qaida (media_library id), or null if none. */
   qaida_media_id?: string | null
+  /** Student's detected hardware / device (e.g. iPad 10.9", MacBook). */
+  last_device?: string | null
+  last_device_at?: string | null
   created_at: string
 }
 

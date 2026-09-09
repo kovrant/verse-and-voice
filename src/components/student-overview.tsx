@@ -11,6 +11,7 @@ import {
   CreditCard,
   Play,
   Sparkles,
+  Tablet,
 } from "lucide-react"
 import Link from "next/link"
 import { useState } from "react"
@@ -92,6 +93,15 @@ export function StudentOverview({
           <p className="text-sm text-muted-foreground">What you need before the next class</p>
         </div>
         <div className="flex items-center gap-2">
+          {student.last_device && (
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full bg-secondary/80 px-2.5 py-1 text-xs font-medium text-muted-foreground"
+              title={student.last_device_at ? `Last active on this device: ${new Date(student.last_device_at).toLocaleString()}` : undefined}
+            >
+              <Tablet className="h-3 w-3 text-primary" />
+              {student.last_device}
+            </span>
+          )}
           {online && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold text-emerald-600">
               <OnlineDot />

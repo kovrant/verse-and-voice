@@ -7,6 +7,7 @@ import { Suspense, useState } from "react"
 import { Brand } from "@/components/brand"
 import { LoginBackground } from "@/components/login-background"
 import { useTheme } from "@/components/theme-provider"
+import { detectDevice } from "@/lib/device-detection"
 import { isLoginDisabled, resolveLoginEmail, studentPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser, prepareForPasswordSignIn, seedAuthUser } from "@/lib/use-current-user"
@@ -47,7 +48,15 @@ function StudentLoginForm() {
     }
 
     const role = (user?.app_metadata as { role?: string } | null)?.role
-    if (role === "student") void fetch("/api/presence", { method: "POST", keepalive: true })
+    if (role === "student") {
+      const dev = detectDevice()
+      void fetch("/api/presence", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ device: dev.label }),
+        keepalive: true,
+      })
+    }
     seedAuthUser(user ?? null)
     // Hard navigation so the next request carries the session cookies.
     // router.replace + refresh races middleware and bounces back to /login.
