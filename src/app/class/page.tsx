@@ -33,8 +33,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { classTimeToMinutes } from "@/lib/class-time"
 import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
+import { saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, type Student } from "@/lib/utils"
@@ -56,6 +58,8 @@ interface ClassSession {
   duration_seconds: number
   starting_para: number | null
   ending_para: number | null
+  ending_page?: number | null
+  last_page?: number | null
   paras_covered: number[]
   memorization_revised: string[]
   notes: string | null
@@ -79,9 +83,7 @@ function ClassPageContent() {
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [memItems, setMemItems] = useState<MemItem[]>([])
   const [paras, setParas] = useState<QuranPara[]>([])
-  // Loaded for future session-history UI; the value isn't rendered yet, so only
-  // the setter is bound (keeps the fetch without an unused-variable warning).
-  const [, setSessions] = useState<ClassSession[]>([])
+  const [sessions, setSessions] = useState<ClassSession[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
   const [starting, setStarting] = useState(false)
@@ -166,9 +168,15 @@ function ClassPageContent() {
     }
   }
 
-  // Determine current para from active round
+  // Determine current para and page from latest session or active round
   const activeRound = getActiveRound(rounds)
-  const currentPara = activeRound?.asc_completed || 1
+  const latestSession = sessions[0]
+  const latestPara =
+    latestSession?.ending_para && latestSession.ending_para >= 1 && latestSession.ending_para <= 30
+      ? latestSession.ending_para
+      : activeRound?.asc_completed || 1
+  const latestPage = latestSession?.ending_page ?? latestSession?.last_page ?? null
+  const currentPara = latestPara
 
   // Start class — button morphs to Bismillah, then swaps to live screen
   function handleStartClass() {
@@ -204,6 +212,31 @@ function ClassPageContent() {
       return false
     }
 
+    // Save the exact page position for this para
+    if (data.endingPara && data.endingPage) {
+      await saveLastPage(selected!.id, data.endingPara, data.endingPage).catch(() => {})
+    }
+
+    // Automatically sync the active Quran round's asc_completed if advanced
+    if (activeRound && data.endingPara >= 1 && data.endingPara <= 30) {
+      const before = {
+        desc: activeRound.desc_completed || 0,
+        asc: activeRound.asc_completed || 0,
+        completed_at: activeRound.completed_at,
+      }
+      const newAsc = Math.max(activeRound.asc_completed || 0, data.endingPara)
+      if (newAsc !== (activeRound.asc_completed || 0)) {
+        await supabase
+          .from("quran_rounds")
+          .update({ asc_completed: newAsc })
+          .eq("id", activeRound.id)
+        void syncQuranRoundAchievements(selected!.id, activeRound, before, {
+          ...before,
+          asc: newAsc,
+        })
+      }
+    }
+
     setMode("landing")
     toast.success("Class session saved")
 
@@ -217,15 +250,23 @@ function ClassPageContent() {
       }),
     })
 
-    // Reload sessions
+    // Reload sessions and rounds so the landing page updates immediately
     if (selected) {
-      const { data: sessionsData } = await supabase
-        .from("class_sessions")
-        .select("*")
-        .eq("student_id", selected.id)
-        .order("started_at", { ascending: false })
-        .limit(10)
-      setSessions(sessionsData || [])
+      const [sessionsRes, roundsRes] = await Promise.all([
+        supabase
+          .from("class_sessions")
+          .select("*")
+          .eq("student_id", selected.id)
+          .order("started_at", { ascending: false })
+          .limit(10),
+        supabase
+          .from("quran_rounds")
+          .select("*")
+          .eq("student_id", selected.id)
+          .order("round_number", { ascending: true }),
+      ])
+      setSessions(sessionsRes.data || [])
+      setRounds(roundsRes.data || [])
     }
 
     return true
@@ -364,7 +405,9 @@ function ClassPageContent() {
                         Currently On
                       </p>
                       <p className="text-xl font-bold text-primary mt-0.5">
-                        {activeRound ? `Para ${currentPara}` : "Not started"}
+                        {activeRound
+                          ? `Para ${latestPara}${latestPage ? ` · Page ${latestPage}` : ""}`
+                          : "Not started"}
                       </p>
                     </div>
                   </div>

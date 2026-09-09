@@ -161,6 +161,9 @@ export default function LiveSession({
     if (next < 1 || next > 30) return
     setCurrentParaNumber(next)
     setPdfPage(1)
+    loadLastPage(student.id, next).then((p) => {
+      if (currentParaRef.current === next && p > 1) setPdfPage(p)
+    })
     setParasViewed((prev) => {
       const s = new Set(Array.from(prev))
       s.add(next)
