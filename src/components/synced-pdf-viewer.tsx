@@ -4,13 +4,13 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css"
 import "react-pdf/dist/esm/Page/TextLayer.css"
 
 import {
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   Crosshair,
   Loader2,
   Maximize2,
   Minimize2,
-  Tablet,
   X,
   ZoomIn,
   ZoomOut,
@@ -23,7 +23,7 @@ import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
 import { calculateLineBounds, calculateMushafLine } from "@/lib/mushaf-pointer"
 import type { PointerState } from "@/lib/use-class-channel"
 
-export type ViewMode = "ipad" | "width" | "page"
+export type ViewMode = "standard" | "width" | "page"
 
 interface SyncedPdfViewerProps {
   fileUrl: string
@@ -111,22 +111,22 @@ function BufferedPdfPage({
         {/* 16-Line Highlight Strip & Laser Pointer Overlay */}
         {visible && pointer && typeof pointer.y === "number" && (
           <div className="pointer-events-none absolute inset-0 z-20">
-            {/* 16-Line Highlight Strip */}
+            {/* 16-Line Mild Green Highlight Strip */}
             {lineBounds && (
               <div
-                className="absolute inset-x-0 border-y border-amber-500/50 bg-amber-400/20 backdrop-blur-[0.5px] transition-all duration-200"
+                className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
                 style={{
                   top: `${lineBounds.topPercent}%`,
                   height: `${lineBounds.heightPercent}%`,
                 }}
               >
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
                   Line {pointer.line}
                 </div>
               </div>
             )}
 
-            {/* Glowing Laser Pointer Pin */}
+            {/* Glowing Mild Green Laser Pointer Pin */}
             <div
               className="absolute transition-all duration-150"
               style={{
@@ -135,8 +135,8 @@ function BufferedPdfPage({
               }}
             >
               <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
-                <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-amber-500/50" />
-                <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-amber-500 shadow-md">
+                <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
+                <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
                   <span className="h-1.5 w-1.5 rounded-full bg-white" />
                 </span>
               </div>
@@ -172,7 +172,7 @@ export function SyncedPdfViewer({
   const [numPages, setNumPages] = useState(0)
   const [baseWidth, setBaseWidth] = useState(0)
   const [baseHeight, setBaseHeight] = useState(0)
-  const [fitMode, setFitMode] = useState<ViewMode>("ipad")
+  const [fitMode, setFitMode] = useState<ViewMode>("standard")
   const [zoom, setZoom] = useState(1)
   const [errored, setErrored] = useState(false)
   const [localPointer, setLocalPointer] = useState<PointerState | null>(null)
@@ -362,13 +362,13 @@ export function SyncedPdfViewer({
   }, [go, page])
 
   // Dimensions based on fitMode:
-  // - "ipad": Optimal readable Mushaf width (~740px, or container baseWidth if smaller), with zoom scaling.
+  // - "standard": Optimal readable Mushaf width (~740px, or container baseWidth if smaller), with zoom scaling.
   // - "width": Full available container width.
   // - "page": Fits entire height on screen without vertical scroll.
-  const ipadBaseWidth = baseWidth > 0 ? Math.min(baseWidth, 740) : 740
+  const standardBaseWidth = baseWidth > 0 ? Math.min(baseWidth, 740) : 740
   const pageWidth =
-    fitMode === "ipad"
-      ? ipadBaseWidth * zoom
+    fitMode === "standard"
+      ? standardBaseWidth * zoom
       : fitMode === "width" && baseWidth > 0
         ? baseWidth * zoom
         : undefined
@@ -425,15 +425,15 @@ export function SyncedPdfViewer({
 
           {/* Active pointer banner / clear */}
           {activePointer ? (
-            <div className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-300">
-              <Crosshair className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <div className="flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-emerald-800 dark:text-emerald-200">
+              <Crosshair className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Line {activePointer.line ?? "•"}</span>
               <button
                 type="button"
                 onClick={clearPointer}
                 aria-label="Clear pointer"
                 title="Clear pointer highlight"
-                className="ml-0.5 rounded-full p-0.5 hover:bg-amber-500/20"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
               >
                 <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
               </button>
@@ -445,18 +445,18 @@ export function SyncedPdfViewer({
             <button
               type="button"
               onClick={() => {
-                setFitMode("ipad")
+                setFitMode("standard")
                 setZoom(1)
               }}
-              title="iPad View (~740px width — Standard 16-Line Mushaf)"
+              title="Standard Mushaf Width (~740px — 16-Line Reading Width)"
               className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
-                fitMode === "ipad"
+                fitMode === "standard"
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Tablet className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">iPad Size</span>
+              <BookOpen className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Standard</span>
             </button>
             <button
               type="button"
