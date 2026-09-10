@@ -59,8 +59,14 @@ export function StudentLiveClass() {
     () =>
       subscribeNav((nav) => {
         lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
-        if (nav.paraNumber !== paraRef.current) setPara(nav.paraNumber)
-        if (nav.page !== pageRef.current) setPage(nav.page)
+        if (nav.paraNumber !== paraRef.current) {
+          setPara(nav.paraNumber)
+          setRemotePointer(null)
+        }
+        if (nav.page !== pageRef.current) {
+          setPage(nav.page)
+          setRemotePointer(null)
+        }
         if (!syncedRef.current) setSynced(true)
       }),
     [subscribeNav],

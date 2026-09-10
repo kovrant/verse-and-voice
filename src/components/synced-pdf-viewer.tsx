@@ -219,11 +219,13 @@ export function SyncedPdfViewer({
     setSlots([page, page])
     setActiveSlot(0)
     setLocalPointer(null)
+    onPointerChange?.(null)
   }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setLocalPointer(null)
-  }, [page])
+    onPointerChange?.(null)
+  }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setSlots((prev) => {
@@ -319,6 +321,13 @@ export function SyncedPdfViewer({
       const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
       const line = calculateMushafLine(y, 16)
 
+      // Clicking the same line toggles off the line ruler & pointer
+      if (localPointer && localPointer.line === line) {
+        setLocalPointer(null)
+        onPointerChange?.(null)
+        return
+      }
+
       const newPointer: PointerState = {
         x: Number(x.toFixed(4)),
         y: Number(y.toFixed(4)),
@@ -328,7 +337,7 @@ export function SyncedPdfViewer({
       setLocalPointer(newPointer)
       onPointerChange?.(newPointer)
     },
-    [allowPointing, onPointerChange],
+    [allowPointing, onPointerChange, localPointer],
   )
 
   const clearPointer = useCallback(() => {

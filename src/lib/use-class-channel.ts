@@ -191,11 +191,20 @@ export function useClassChannel({
       })
       .on("broadcast", { event: "pointer" }, ({ payload }) => {
         if (!payload || (payload as { by?: string }).by === clientId) return
-        const p = payload as (PointerState & { by?: string }) | null
-        if (p === null) {
+        const data = payload as { pointer?: PointerState | null; by?: string; x?: number; y?: number; line?: number }
+        // Support { pointer: null | PointerState } wrapper and direct payload
+        if (data.pointer === null) {
           onPointerRef.current?.(null)
-        } else if (typeof p.x === "number" && typeof p.y === "number") {
-          onPointerRef.current?.({ x: p.x, y: p.y, line: p.line })
+        } else if (data.pointer && typeof data.pointer.x === "number" && typeof data.pointer.y === "number") {
+          onPointerRef.current?.({
+            x: data.pointer.x,
+            y: data.pointer.y,
+            line: data.pointer.line,
+          })
+        } else if (typeof data.x === "number" && typeof data.y === "number") {
+          onPointerRef.current?.({ x: data.x, y: data.y, line: data.line })
+        } else {
+          onPointerRef.current?.(null)
         }
       })
       .on("broadcast", { event: "end" }, ({ payload }) => {
@@ -295,7 +304,16 @@ export function useClassChannel({
       ch.send({
         type: "broadcast",
         event: "pointer",
-        payload: pointer ? { ...pointer, by: clientId } : null,
+        payload: {
+          by: clientId,
+          pointer: pointer
+            ? {
+                x: pointer.x,
+                y: pointer.y,
+                line: pointer.line,
+              }
+            : null,
+        },
       })
     },
     [clientId],
