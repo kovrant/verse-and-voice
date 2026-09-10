@@ -3,13 +3,27 @@
 import "react-pdf/dist/esm/Page/AnnotationLayer.css"
 import "react-pdf/dist/esm/Page/TextLayer.css"
 
-import { ChevronLeft, ChevronRight, Loader2, Maximize2, Minimize2, ZoomIn, ZoomOut } from "lucide-react"
+import {
+  ChevronLeft,
+  ChevronRight,
+  Crosshair,
+  Loader2,
+  Maximize2,
+  Minimize2,
+  Tablet,
+  X,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Document, Page } from "react-pdf"
 import type { PDFDocumentProxy } from "pdfjs-dist"
 
 import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
-import { ratioFromScrollTop, scrollRatioNear, scrollTopFromRatio } from "@/lib/scroll-sync"
+import { calculateLineBounds, calculateMushafLine } from "@/lib/mushaf-pointer"
+import type { PointerState } from "@/lib/use-class-channel"
+
+export type ViewMode = "ipad" | "width" | "page"
 
 interface SyncedPdfViewerProps {
   fileUrl: string
@@ -19,15 +33,21 @@ interface SyncedPdfViewerProps {
   onPageChange: (page: number) => void
   /** Optional label shown in the toolbar, e.g. "Following teacher". */
   followingLabel?: string | null
+  /** Called with the laser pointer position (0..1 ratio of page, line 1..16). */
+  onPointerChange?: (pointer: PointerState | null) => void
+  /** A remote pointer position to display and scroll into view. */
+  remotePointer?: PointerState | null
+  /** Whether this viewer allows clicking to place a pointer (default: true). */
+  allowPointing?: boolean
   /** Called (throttled) with the current in-page scroll ratio (0..1) as the user scrolls. */
   onScrollRatio?: (ratio: number) => void
-  /** A remote scroll position to apply. A new object identity each time re-applies it. */
+  /** A remote scroll position to apply. */
   remoteScroll?: { ratio: number } | null
 }
 
 function PdfSkeleton() {
   return (
-    <div className="flex min-h-[50vh] w-full items-center justify-center p-4">
+    <div className="flex min-h-[50vh] w-full items-center justify-center p-2 sm:p-4">
       <div className="relative h-[min(72vh,720px)] w-full max-w-3xl overflow-hidden rounded-md bg-muted shadow-soft">
         <div className="absolute inset-0 shimmer opacity-60" />
         <div className="absolute inset-0 flex items-center justify-center">
@@ -45,55 +65,117 @@ function BufferedPdfPage({
   pageHeight,
   visible,
   onRendered,
+  pointer,
+  onPageClick,
+  allowPointing,
 }: {
   page: number
   pageWidth?: number
   pageHeight?: number
   visible: boolean
   onRendered?: () => void
+  pointer?: PointerState | null
+  onPageClick?: (e: React.MouseEvent<HTMLDivElement>) => void
+  allowPointing?: boolean
 }) {
+  const lineBounds =
+    pointer && typeof pointer.line === "number" && pointer.line >= 1 && pointer.line <= 16
+      ? calculateLineBounds(pointer.line, 16)
+      : null
+
   return (
     <div
-      className={visible ? "relative flex justify-center" : "pointer-events-none absolute inset-0 opacity-0"}
+      className={
+        visible
+          ? "relative flex justify-center select-none"
+          : "pointer-events-none absolute inset-0 opacity-0"
+      }
       aria-hidden={!visible}
     >
-      <Page
-        pageNumber={page}
-        width={pageWidth}
-        height={pageHeight}
-        renderAnnotationLayer={false}
-        renderTextLayer={false}
-        loading={null}
-        onRenderSuccess={onRendered}
-        className="overflow-hidden rounded-md bg-white shadow-soft"
-      />
+      <div
+        className={`relative inline-block overflow-hidden rounded-md bg-white shadow-soft ${
+          allowPointing ? "cursor-crosshair" : "cursor-default"
+        }`}
+        onClick={visible && allowPointing ? onPageClick : undefined}
+      >
+        <Page
+          pageNumber={page}
+          width={pageWidth}
+          height={pageHeight}
+          renderAnnotationLayer={false}
+          renderTextLayer={false}
+          loading={null}
+          onRenderSuccess={onRendered}
+        />
+
+        {/* 16-Line Highlight Strip & Laser Pointer Overlay */}
+        {visible && pointer && typeof pointer.y === "number" && (
+          <div className="pointer-events-none absolute inset-0 z-20">
+            {/* 16-Line Highlight Strip */}
+            {lineBounds && (
+              <div
+                className="absolute inset-x-0 border-y border-amber-500/50 bg-amber-400/20 backdrop-blur-[0.5px] transition-all duration-200"
+                style={{
+                  top: `${lineBounds.topPercent}%`,
+                  height: `${lineBounds.heightPercent}%`,
+                }}
+              >
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-amber-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+                  Line {pointer.line}
+                </div>
+              </div>
+            )}
+
+            {/* Glowing Laser Pointer Pin */}
+            <div
+              className="absolute transition-all duration-150"
+              style={{
+                left: `${Math.max(0, Math.min(1, pointer.x)) * 100}%`,
+                top: `${Math.max(0, Math.min(1, pointer.y)) * 100}%`,
+              }}
+            >
+              <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
+                <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-amber-500/50" />
+                <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-amber-500 shadow-md">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 /**
- * Single-page PDF viewer (react-pdf) with per-user zoom. The current *page* is
- * a controlled prop so it can be synced across clients; zoom is local (a
- * personal viewing preference, never synced).
+ * Single-page Quran Mushaf PDF viewer with:
+ * 1. Default standard iPad framing (~740px wide) for large, crisp 16-line text
+ * 2. Mobile-optimized responsive toolbar (no awkward wrapping)
+ * 3. Realtime Teacher Pointer & 16-Line Ruler overlay
+ * 4. Responsive fit modes: "ipad" (recommended), "width", and "page"
  */
 export function SyncedPdfViewer({
   fileUrl,
   page,
   onPageChange,
   followingLabel,
-  onScrollRatio,
-  remoteScroll,
+  onPointerChange,
+  remotePointer,
+  allowPointing = true,
 }: SyncedPdfViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const pageContainerRef = useRef<HTMLDivElement>(null)
   const pdfRef = useRef<PDFDocumentProxy | null>(null)
   const [pdfData, setPdfData] = useState<ArrayBuffer | null>(null)
   const [loadedUrl, setLoadedUrl] = useState<string | null>(null)
   const [numPages, setNumPages] = useState(0)
   const [baseWidth, setBaseWidth] = useState(0)
   const [baseHeight, setBaseHeight] = useState(0)
-  const [fitMode, setFitMode] = useState<"page" | "width">("page")
+  const [fitMode, setFitMode] = useState<ViewMode>("ipad")
   const [zoom, setZoom] = useState(1)
   const [errored, setErrored] = useState(false)
+  const [localPointer, setLocalPointer] = useState<PointerState | null>(null)
 
   // Warm this para immediately; nearby paras are prefetched by the live class shell.
   useEffect(() => {
@@ -128,9 +210,6 @@ export function SyncedPdfViewer({
   const pageRef = useRef(page)
   const slotsRef = useRef(slots)
   const activeSlotRef = useRef(activeSlot)
-  const applyingRemote = useRef(false)
-  const suppressEmitUntil = useRef(0)
-  const lastRemoteRatio = useRef<number | null>(null)
   pageRef.current = page
   slotsRef.current = slots
   activeSlotRef.current = activeSlot
@@ -139,11 +218,11 @@ export function SyncedPdfViewer({
     pdfRef.current = null
     setSlots([page, page])
     setActiveSlot(0)
-    lastRemoteRatio.current = null
-  }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps -- page is read at para switch
+    setLocalPointer(null)
+  }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    lastRemoteRatio.current = null
+    setLocalPointer(null)
   }, [page])
 
   useEffect(() => {
@@ -173,13 +252,15 @@ export function SyncedPdfViewer({
     }
   }, [page, numPages])
 
-  // Measure container for fit-to-page / fit-to-width rendering.
+  // Measure container for rendering dimensions.
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
     const measure = () => {
-      setBaseWidth(Math.max(0, el.clientWidth - 32))
-      setBaseHeight(Math.max(0, el.clientHeight - 32))
+      const horizontalPadding = window.innerWidth < 640 ? 8 : 32
+      const verticalPadding = window.innerWidth < 640 ? 8 : 32
+      setBaseWidth(Math.max(0, el.clientWidth - horizontalPadding))
+      setBaseHeight(Math.max(0, el.clientHeight - verticalPadding))
     }
     measure()
     const ro = new ResizeObserver(measure)
@@ -190,10 +271,14 @@ export function SyncedPdfViewer({
   const go = useCallback(
     (n: number) => {
       const clamped = Math.max(1, Math.min(numPages || 1, n))
-      if (clamped !== page) onPageChange(clamped)
+      if (clamped !== page) {
+        onPageChange(clamped)
+        setLocalPointer(null)
+        onPointerChange?.(null)
+      }
       scrollRef.current?.scrollTo({ top: 0 })
     },
-    [numPages, page, onPageChange],
+    [numPages, page, onPageChange, onPointerChange],
   )
 
   // Keep an out-of-range controlled page in bounds once we know the count.
@@ -201,53 +286,57 @@ export function SyncedPdfViewer({
     if (numPages > 0 && page > numPages) onPageChange(numPages)
   }, [numPages, page, onPageChange])
 
-  // Broadcast our scroll position (throttled) so the other side can follow.
-  const onScrollRatioRef = useRef(onScrollRatio)
-  onScrollRatioRef.current = onScrollRatio
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el || !onScrollRatio) return
-    let last = 0
-    let trailing: ReturnType<typeof setTimeout> | null = null
-    const emit = () => {
-      if (applyingRemote.current || performance.now() < suppressEmitUntil.current) return
-      const ratio = ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight)
-      if (lastRemoteRatio.current !== null && scrollRatioNear(ratio, lastRemoteRatio.current)) return
-      last = performance.now()
-      onScrollRatioRef.current?.(ratio)
-    }
-    const handler = () => {
-      if (applyingRemote.current) return
-      if (trailing) clearTimeout(trailing)
-      if (performance.now() - last >= 90) emit()
-      else trailing = setTimeout(emit, 90)
-    }
-    el.addEventListener("scroll", handler, { passive: true })
-    return () => {
-      el.removeEventListener("scroll", handler)
-      if (trailing) clearTimeout(trailing)
-    }
-  }, [onScrollRatio])
+  // Effective pointer is remotePointer (if provided) or localPointer.
+  const activePointer = remotePointer !== undefined ? remotePointer : localPointer
 
-  const remoteRatio = remoteScroll?.ratio
+  // Auto-scroll pointed line into view smoothly when receiving a pointer.
   useEffect(() => {
+    if (!activePointer || typeof activePointer.y !== "number") return
     const el = scrollRef.current
-    if (!el || remoteRatio === undefined) return
-    const current = ratioFromScrollTop(el.scrollTop, el.scrollHeight, el.clientHeight)
-    if (scrollRatioNear(current, remoteRatio)) {
-      lastRemoteRatio.current = remoteRatio
-      return
-    }
-    applyingRemote.current = true
-    suppressEmitUntil.current = performance.now() + 250
-    lastRemoteRatio.current = remoteRatio
-    el.scrollTop = scrollTopFromRatio(remoteRatio, el.scrollHeight, el.clientHeight)
-    const t = setTimeout(() => {
-      applyingRemote.current = false
-    }, 200)
-    return () => clearTimeout(t)
-  }, [remoteRatio])
+    if (!el) return
 
+    const scrollContainerHeight = el.clientHeight
+    const scrollTotalHeight = el.scrollHeight
+    if (scrollTotalHeight <= scrollContainerHeight) return
+
+    const targetYInPage = activePointer.y * scrollTotalHeight
+    const desiredScrollTop = Math.max(0, targetYInPage - scrollContainerHeight / 2)
+
+    el.scrollTo({
+      top: desiredScrollTop,
+      behavior: "smooth",
+    })
+  }, [activePointer])
+
+  // Click handler to place laser pointer and highlight line.
+  const handlePageClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (!allowPointing) return
+      const rect = e.currentTarget.getBoundingClientRect()
+      if (!rect.width || !rect.height) return
+
+      const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
+      const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
+      const line = calculateMushafLine(y, 16)
+
+      const newPointer: PointerState = {
+        x: Number(x.toFixed(4)),
+        y: Number(y.toFixed(4)),
+        line,
+      }
+
+      setLocalPointer(newPointer)
+      onPointerChange?.(newPointer)
+    },
+    [allowPointing, onPointerChange],
+  )
+
+  const clearPointer = useCallback(() => {
+    setLocalPointer(null)
+    onPointerChange?.(null)
+  }, [onPointerChange])
+
+  // Keyboard navigation.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
@@ -263,100 +352,186 @@ export function SyncedPdfViewer({
     return () => window.removeEventListener("keydown", onKey)
   }, [go, page])
 
-  // In fit-to-page (full 16-line Mushaf view), scale by height so all 16 lines fit on screen without vertical scrolling.
-  // In fit-to-width, scale by width.
-  const pageHeight = fitMode === "page" && baseHeight > 0 ? baseHeight * zoom : undefined
-  const pageWidth = fitMode === "width" && baseWidth > 0 ? baseWidth * zoom : undefined
+  // Dimensions based on fitMode:
+  // - "ipad": Optimal readable Mushaf width (~740px, or container baseWidth if smaller), with zoom scaling.
+  // - "width": Full available container width.
+  // - "page": Fits entire height on screen without vertical scroll.
+  const ipadBaseWidth = baseWidth > 0 ? Math.min(baseWidth, 740) : 740
+  const pageWidth =
+    fitMode === "ipad"
+      ? ipadBaseWidth * zoom
+      : fitMode === "width" && baseWidth > 0
+        ? baseWidth * zoom
+        : undefined
+
+  const pageHeight =
+    fitMode === "page" && baseHeight > 0 ? baseHeight * zoom : undefined
+
   const atFirst = page <= 1
   const atLast = numPages > 0 && page >= numPages
 
   const iconBtn =
-    "flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+    "flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b border-border bg-card px-3 py-2">
-        <div className="flex items-center gap-1">
+    <div className="flex h-full min-h-0 flex-col bg-background">
+      {/* Quran Toolbar — responsive, clean wrap/flex */}
+      <div className="flex items-center justify-between gap-1.5 border-b border-border bg-card px-2.5 py-1.5 sm:px-3 sm:py-2">
+        {/* Left: Page Navigation */}
+        <div className="flex items-center gap-0.5 sm:gap-1">
           <button
             type="button"
             onClick={() => go(page - 1)}
             disabled={atFirst || !ready}
             aria-label="Previous page"
+            title="Previous page (← Arrow)"
             className={iconBtn}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[92px] text-center text-sm font-medium tabular-nums text-foreground">
-            Page {page}
-            {numPages ? <span className="text-muted-foreground"> / {numPages}</span> : null}
+          <span className="min-w-[65px] sm:min-w-[90px] text-center text-xs sm:text-sm font-semibold tabular-nums text-foreground">
+            <span className="hidden sm:inline">Page </span>
+            {page}
+            {numPages ? <span className="text-muted-foreground font-normal"> / {numPages}</span> : null}
           </span>
           <button
             type="button"
             onClick={() => go(page + 1)}
             disabled={atLast || !ready}
             aria-label="Next page"
+            title="Next page (→ Arrow)"
             className={iconBtn}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex items-center gap-1">
+        {/* Right: View Mode & Zoom & Pointer Controls */}
+        <div className="flex items-center gap-1 sm:gap-1.5">
           {followingLabel ? (
-            <span className="mr-1 inline-flex items-center rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <span className="hidden md:inline-flex mr-1 items-center rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
               {followingLabel}
             </span>
           ) : null}
-          <button
-            type="button"
-            onClick={() => {
-              setFitMode((m) => (m === "page" ? "width" : "page"))
-              setZoom(1)
-            }}
-            aria-label={fitMode === "page" ? "Switch to Fit Width" : "Switch to Full Page (16 Lines)"}
-            title={fitMode === "page" ? "Fit to Width" : "Fit Full Page (16 Lines)"}
-            className={`${iconBtn} ${fitMode === "page" ? "bg-secondary text-foreground font-semibold" : ""}`}
-          >
-            {fitMode === "page" ? <Maximize2 className="h-4 w-4" /> : <Minimize2 className="h-4 w-4" />}
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.max(0.5, +(z - 0.15).toFixed(2)))}
-            aria-label="Zoom out"
-            className={iconBtn}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </button>
-          <span className="w-10 text-center text-xs font-medium tabular-nums text-muted-foreground">
-            {Math.round(zoom * 100)}%
-          </span>
-          <button
-            type="button"
-            onClick={() => setZoom((z) => Math.min(3, +(z + 0.15).toFixed(2)))}
-            aria-label="Zoom in"
-            className={iconBtn}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => setZoom(1)}
-            aria-label="Reset zoom"
-            title="Reset zoom"
-            className={iconBtn}
-          >
-            100%
-          </button>
+
+          {/* Active pointer banner / clear */}
+          {activePointer ? (
+            <div className="flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] sm:text-xs font-semibold text-amber-700 dark:text-amber-300">
+              <Crosshair className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+              <span>Line {activePointer.line ?? "•"}</span>
+              <button
+                type="button"
+                onClick={clearPointer}
+                aria-label="Clear pointer"
+                title="Clear pointer highlight"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-amber-500/20"
+              >
+                <X className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+              </button>
+            </div>
+          ) : null}
+
+          {/* View Mode Segmented Controls */}
+          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                setFitMode("ipad")
+                setZoom(1)
+              }}
+              title="iPad View (~740px width — Standard 16-Line Mushaf)"
+              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
+                fitMode === "ipad"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Tablet className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">iPad Size</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFitMode("width")
+                setZoom(1)
+              }}
+              title="Fit to Width"
+              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
+                fitMode === "width"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Maximize2 className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Fit Width</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFitMode("page")
+                setZoom(1)
+              }}
+              title="Fit Full Page (Fit 16 Lines vertically)"
+              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
+                fitMode === "page"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Minimize2 className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Full Page</span>
+            </button>
+          </div>
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-0.5 border-l border-border pl-1 sm:pl-1.5">
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.15).toFixed(2)))}
+              disabled={zoom <= 0.6}
+              aria-label="Zoom out"
+              title="Zoom out"
+              className={iconBtn}
+            >
+              <ZoomOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+
+            {/* Clickable Zoom Percentage Badge */}
+            <button
+              type="button"
+              onClick={() => setZoom(1)}
+              title="Click to reset zoom to 100%"
+              aria-label="Reset zoom to 100%"
+              className="h-6 sm:h-7 min-w-[38px] sm:min-w-[48px] rounded-md px-1 text-center text-[11px] sm:text-xs font-bold tabular-nums text-foreground transition-colors hover:bg-muted"
+            >
+              {Math.round(zoom * 100)}%
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setZoom((z) => Math.min(2.5, +(z + 0.15).toFixed(2)))}
+              disabled={zoom >= 2.5}
+              aria-label="Zoom in"
+              title="Zoom in"
+              className={iconBtn}
+            >
+              <ZoomIn className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </button>
+          </div>
         </div>
       </div>
 
-      <div ref={scrollRef} className="relative flex-1 min-h-0 overflow-auto bg-muted/40 p-4">
+      {/* PDF Scroll Canvas — minimal padding on mobile for maximum Quran text size */}
+      <div
+        ref={scrollRef}
+        className="relative flex-1 min-h-0 overflow-auto bg-muted/40 p-1 sm:p-3 md:p-4"
+      >
         {errored ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Couldn&apos;t load this PDF.
           </div>
         ) : ready && file ? (
-          <div className="flex justify-center">
+          <div ref={pageContainerRef} className="flex justify-center">
             <Document
               file={file}
               onLoadSuccess={(pdf) => {
@@ -367,13 +542,19 @@ export function SyncedPdfViewer({
               loading={<PdfSkeleton />}
               error={null}
             >
-              <div className="relative flex justify-center" style={{ width: pageWidth, height: pageHeight }}>
+              <div
+                className="relative flex justify-center"
+                style={{ width: pageWidth, height: pageHeight }}
+              >
                 <BufferedPdfPage
                   page={slots[0]}
                   pageWidth={pageWidth}
                   pageHeight={pageHeight}
                   visible={activeSlot === 0}
                   onRendered={() => onSlotRendered(0)}
+                  pointer={activePointer}
+                  onPageClick={handlePageClick}
+                  allowPointing={allowPointing}
                 />
                 <BufferedPdfPage
                   page={slots[1]}
@@ -381,6 +562,9 @@ export function SyncedPdfViewer({
                   pageHeight={pageHeight}
                   visible={activeSlot === 1}
                   onRendered={() => onSlotRendered(1)}
+                  pointer={activePointer}
+                  onPageClick={handlePageClick}
+                  allowPointing={allowPointing}
                 />
               </div>
             </Document>

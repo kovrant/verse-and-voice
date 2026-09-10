@@ -183,6 +183,7 @@ export default function LiveSession({
     peerDevice,
     sendNav,
     sendScroll,
+    sendPointer,
     endClass,
   } = useClassChannel({
     studentId: student.id,
@@ -727,7 +728,7 @@ export default function LiveSession({
                 fileUrl={currentPara.file_url}
                 page={pdfPage}
                 onPageChange={setPdfPage}
-                onScrollRatio={sendScroll}
+                onPointerChange={sendPointer}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center overflow-auto p-4">

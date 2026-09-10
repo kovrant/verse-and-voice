@@ -8,12 +8,13 @@ import { toast } from "@/lib/toast"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { detectDevice } from "@/lib/device-detection"
-import { type NavState, useClassChannel } from "@/lib/use-class-channel"
+import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"
 
 type NavListener = (nav: NavState) => void
 type ScrollListener = (ratio: number) => void
+type PointerListener = (pointer: PointerState | null) => void
 
 interface LiveClassContextValue {
   /** Is the teacher currently hosting a live class for this student? */
@@ -29,10 +30,14 @@ interface LiveClassContextValue {
   sendNav: (nav: NavState) => void
   /** Broadcast the student's in-page scroll ratio (0..1). */
   sendScroll: (ratio: number) => void
+  /** Broadcast a laser pointer / line highlight position on the current page. */
+  sendPointer: (pointer: PointerState | null) => void
   /** Subscribe to the teacher's nav events; returns an unsubscribe fn. */
   subscribeNav: (fn: NavListener) => () => void
   /** Subscribe to the teacher's scroll events; returns an unsubscribe fn. */
   subscribeScroll: (fn: ScrollListener) => () => void
+  /** Subscribe to the teacher's pointer events; returns an unsubscribe fn. */
+  subscribePointer: (fn: PointerListener) => () => void
 }
 
 const LiveClassContext = createContext<LiveClassContextValue>({
@@ -44,8 +49,10 @@ const LiveClassContext = createContext<LiveClassContextValue>({
   leave: () => {},
   sendNav: () => {},
   sendScroll: () => {},
+  sendPointer: () => {},
   subscribeNav: () => () => {},
   subscribeScroll: () => () => {},
+  subscribePointer: () => () => {},
 })
 
 export const useLiveClass = () => useContext(LiveClassContext)
@@ -68,6 +75,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   useTrackStudentOnline(studentId)
   const navCbs = useRef<Set<NavListener>>(new Set())
   const scrollCbs = useRef<Set<ScrollListener>>(new Set())
+  const pointerCbs = useRef<Set<PointerListener>>(new Set())
 
   // Close the live viewer once per join (dedupes explicit-end vs presence-drop).
   const closingRef = useRef(false)
@@ -79,7 +87,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     setJoined(false)
   }, [])
 
-  const { live, peerNav, sendNav, sendScroll } = useClassChannel({
+  const { live, peerNav, sendNav, sendScroll, sendPointer } = useClassChannel({
     studentId,
     role: "student",
     deviceInfo,
@@ -87,6 +95,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     present: joined, // listen-only until the student joins
     onNav: (nav) => navCbs.current.forEach((fn) => fn(nav)),
     onScroll: (ratio) => scrollCbs.current.forEach((fn) => fn(ratio)),
+    onPointer: (pointer) => pointerCbs.current.forEach((fn) => fn(pointer)),
     onEnd: endNow, // explicit "class ended" from the teacher → close immediately
   })
 
@@ -100,6 +109,12 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     scrollCbs.current.add(fn)
     return () => {
       scrollCbs.current.delete(fn)
+    }
+  }, [])
+  const subscribePointer = useCallback((fn: PointerListener) => {
+    pointerCbs.current.add(fn)
+    return () => {
+      pointerCbs.current.delete(fn)
     }
   }, [])
   const join = useCallback(() => setJoined(true), [])
@@ -150,8 +165,10 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
         leave,
         sendNav,
         sendScroll,
+        sendPointer,
         subscribeNav,
         subscribeScroll,
+        subscribePointer,
       }}
     >
       {children}

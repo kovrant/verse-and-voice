@@ -6,6 +6,7 @@ import type { ReactNode } from "react"
 
 import { NotificationBell } from "@/components/notification-bell"
 import { NotificationCompose } from "@/components/notification-compose"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { ThemeSwitch } from "@/components/theme-switch"
 import { useCurrentUser } from "@/lib/use-current-user"
 import { useStudent } from "@/lib/use-student"
@@ -110,8 +111,10 @@ function PortalTopBar({
 }
 
 export function TeacherTopBar() {
+  const { visible } = useSidebarVisibility()
   const user = useCurrentUser()
   const email = user?.email || "—"
+  if (!visible) return null
   return (
     <PortalTopBar
       initial={(user?.email?.[0] || "?").toUpperCase()}
@@ -124,11 +127,13 @@ export function TeacherTopBar() {
 }
 
 export function StudentTopBar({ onToggleSidebar }: { onToggleSidebar?: () => void }) {
+  const { visible } = useSidebarVisibility()
   const { student, username, loading } = useStudent()
   const name = student?.name || username || "Student"
   const initial = loading
     ? "…"
     : (student?.name?.[0] || username?.[0] || "?").toUpperCase()
+  if (!visible) return null
   return (
     <PortalTopBar
       initial={initial}

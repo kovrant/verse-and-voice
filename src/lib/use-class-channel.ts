@@ -18,6 +18,12 @@ export interface PeerDevice {
   type: "tablet" | "laptop" | "mobile" | "desktop"
 }
 
+export interface PointerState {
+  x: number // 0..1 ratio of page width
+  y: number // 0..1 ratio of page height
+  line?: number // 1..16 estimated Mushaf line
+}
+
 interface UseClassChannelOptions {
   /** The student the class belongs to — the channel key. */
   studentId: string | null | undefined
@@ -37,6 +43,8 @@ interface UseClassChannelOptions {
   onNav?: (nav: NavState) => void
   /** Fired when the other party scrolls within the page (0..1 ratio). Echoes filtered. */
   onScroll?: (ratio: number) => void
+  /** Fired when the other party points on the page. */
+  onPointer?: (pointer: PointerState | null) => void
   /** Fired when the other party explicitly ends the class. */
   onEnd?: () => void
   /** Fired when the other role newly joins (presence join) — e.g. so the
@@ -55,6 +63,8 @@ interface ClassChannel {
   sendNav: (nav: NavState) => void
   /** Broadcast this client's in-page scroll ratio (0..1). Lightweight — no presence write. */
   sendScroll: (ratio: number) => void
+  /** Broadcast a laser pointer / line highlight position on the current page. */
+  sendPointer: (pointer: PointerState | null) => void
   /** Broadcast an explicit "class ended" signal and leave presence immediately. */
   endClass: () => Promise<void>
 }
@@ -86,6 +96,7 @@ export function useClassChannel({
   present = true,
   onNav,
   onScroll,
+  onPointer,
   onEnd,
   onPeerJoin,
 }: UseClassChannelOptions): ClassChannel {
@@ -98,6 +109,7 @@ export function useClassChannel({
   const presentRef = useRef(present)
   const onNavRef = useRef(onNav)
   const onScrollRef = useRef(onScroll)
+  const onPointerRef = useRef(onPointer)
   const onEndRef = useRef(onEnd)
   const onPeerJoinRef = useRef(onPeerJoin)
   // After an explicit end, ignore stale teacher presence until they join again.
@@ -106,9 +118,10 @@ export function useClassChannel({
   useEffect(() => {
     onNavRef.current = onNav
     onScrollRef.current = onScroll
+    onPointerRef.current = onPointer
     onEndRef.current = onEnd
     onPeerJoinRef.current = onPeerJoin
-  }, [onNav, onScroll, onEnd, onPeerJoin])
+  }, [onNav, onScroll, onPointer, onEnd, onPeerJoin])
 
   // Channel lifecycle — deliberately does NOT depend on `present` so joining
   // (track) doesn't tear down and rebuild the channel.
@@ -175,6 +188,15 @@ export function useClassChannel({
         if (!payload || (payload as { by?: string }).by === clientId) return
         const { ratio } = payload as { ratio?: number }
         if (typeof ratio === "number") onScrollRef.current?.(ratio)
+      })
+      .on("broadcast", { event: "pointer" }, ({ payload }) => {
+        if (!payload || (payload as { by?: string }).by === clientId) return
+        const p = payload as (PointerState & { by?: string }) | null
+        if (p === null) {
+          onPointerRef.current?.(null)
+        } else if (typeof p.x === "number" && typeof p.y === "number") {
+          onPointerRef.current?.({ x: p.x, y: p.y, line: p.line })
+        }
       })
       .on("broadcast", { event: "end" }, ({ payload }) => {
         if (payload && (payload as { by?: string }).by === clientId) return
@@ -266,6 +288,19 @@ export function useClassChannel({
     [clientId],
   )
 
+  const sendPointer = useCallback(
+    (pointer: PointerState | null) => {
+      const ch = channelRef.current
+      if (!ch || !subscribedRef.current) return
+      ch.send({
+        type: "broadcast",
+        event: "pointer",
+        payload: pointer ? { ...pointer, by: clientId } : null,
+      })
+    },
+    [clientId],
+  )
+
   const endClass = useCallback(async () => {
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
@@ -277,5 +312,5 @@ export function useClassChannel({
     await ch.untrack().catch(() => {})
   }, [clientId])
 
-  return { live, peerNav, peerDevice, sendNav, sendScroll, endClass }
+  return { live, peerNav, peerDevice, sendNav, sendScroll, sendPointer, endClass }
 }

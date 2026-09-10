@@ -6,9 +6,10 @@ import { useEffect, useRef, useState } from "react"
 
 import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
-import type { NavState } from "@/lib/use-class-channel"
+import type { NavState, PointerState } from "@/lib/use-class-channel"
 
 const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
@@ -25,11 +26,18 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, sendNav, subscribeNav, subscribeScroll, leave } = useLiveClass()
+  const { peerNav, sendNav, subscribeNav, subscribePointer, leave } = useLiveClass()
+  const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
+
+  // Hide the app sidebar and topbar for the duration of the live session; restore on unmount.
+  useEffect(() => {
+    setAppSidebarVisible(false)
+    return () => setAppSidebarVisible(true)
+  }, [setAppSidebarVisible])
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
-  const [remoteScroll, setRemoteScroll] = useState<{ ratio: number } | null>(null)
+  const [remotePointer, setRemotePointer] = useState<PointerState | null>(null)
   const [synced, setSynced] = useState(false)
   const [mediaMap, setMediaMap] = useState<Record<number, string>>({})
   const [mediaLoaded, setMediaLoaded] = useState(false)
@@ -58,8 +66,8 @@ export function StudentLiveClass() {
     [subscribeNav],
   )
 
-  // Follow remote in-page scroll (teacher or our own side applying the other's).
-  useEffect(() => subscribeScroll((ratio) => setRemoteScroll({ ratio })), [subscribeScroll])
+  // Follow remote teacher pointer & 16-line highlight ruler.
+  useEffect(() => subscribePointer((pointer) => setRemotePointer(pointer)), [subscribePointer])
 
   // Fallback: if the teacher hasn't pushed a position within 2.5s (e.g. flaky
   // network), proceed with the presence hint so we don't hang on "Connecting…".
@@ -118,7 +126,7 @@ export function StudentLiveClass() {
   const fileUrl = mediaMap[para]
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-[70] flex flex-col bg-background">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
         <div className="flex items-center gap-3">
@@ -156,7 +164,8 @@ export function StudentLiveClass() {
           page={page}
           onPageChange={setPage}
           followingLabel="Synced with teacher"
-          remoteScroll={remoteScroll}
+          remotePointer={remotePointer}
+          allowPointing={false}
         />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">

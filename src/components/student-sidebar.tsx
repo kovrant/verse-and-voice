@@ -25,6 +25,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { Brand } from "@/components/brand"
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
 import { useLiveClass } from "@/components/live-class-provider"
+import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
 import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
@@ -48,6 +49,7 @@ const baseNavItems = [
 
 export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
   const pathname = usePathname()
+  const { visible } = useSidebarVisibility()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [hasNamaz, setHasNamaz] = useState(false)
   const { live } = useLiveClass()
@@ -78,7 +80,7 @@ export function StudentSidebar({ collapsed = false }: { collapsed?: boolean }) {
     [hasNamaz],
   )
 
-  if (pathname === "/login") return null
+  if (pathname === "/login" || !visible) return null
 
   const hijri = getHijriToday()
   const initial = (student?.name?.[0] || username?.[0] || "?").toUpperCase()
