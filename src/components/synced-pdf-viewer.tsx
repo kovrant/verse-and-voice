@@ -58,95 +58,7 @@ function PdfSkeleton() {
   )
 }
 
-/** Two-slot page buffer — keep the last rendered page visible while the next paints. */
-function BufferedPdfPage({
-  page,
-  pageWidth,
-  pageHeight,
-  visible,
-  onRendered,
-  pointer,
-  onPageClick,
-  allowPointing,
-}: {
-  page: number
-  pageWidth?: number
-  pageHeight?: number
-  visible: boolean
-  onRendered?: () => void
-  pointer?: PointerState | null
-  onPageClick?: (e: React.MouseEvent<HTMLDivElement>) => void
-  allowPointing?: boolean
-}) {
-  const lineBounds =
-    pointer && typeof pointer.line === "number" && pointer.line >= 1 && pointer.line <= 16
-      ? calculateLineBounds(pointer.line, 16)
-      : null
 
-  return (
-    <div
-      className={
-        visible
-          ? "relative flex justify-center select-none"
-          : "pointer-events-none absolute inset-0 opacity-0"
-      }
-      aria-hidden={!visible}
-    >
-      <div
-        className={`relative inline-block overflow-hidden rounded-md bg-white shadow-soft ${
-          allowPointing ? "cursor-crosshair" : "cursor-default"
-        }`}
-        onClick={visible && allowPointing ? onPageClick : undefined}
-      >
-        <Page
-          pageNumber={page}
-          width={pageWidth}
-          height={pageHeight}
-          renderAnnotationLayer={false}
-          renderTextLayer={false}
-          loading={null}
-          onRenderSuccess={onRendered}
-        />
-
-        {/* 16-Line Highlight Strip & Laser Pointer Overlay */}
-        {visible && pointer && typeof pointer.y === "number" && (
-          <div className="pointer-events-none absolute inset-0 z-20">
-            {/* 16-Line Mild Green Highlight Strip */}
-            {lineBounds && (
-              <div
-                className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
-                style={{
-                  top: `${lineBounds.topPercent}%`,
-                  height: `${lineBounds.heightPercent}%`,
-                }}
-              >
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                  Line {pointer.line}
-                </div>
-              </div>
-            )}
-
-            {/* Glowing Mild Green Laser Pointer Pin */}
-            <div
-              className="absolute transition-all duration-150"
-              style={{
-                left: `${Math.max(0, Math.min(1, pointer.x)) * 100}%`,
-                top: `${Math.max(0, Math.min(1, pointer.y)) * 100}%`,
-              }}
-            >
-              <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
-                <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
-                <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
 /**
  * Single-page Quran Mushaf PDF viewer with:
@@ -204,20 +116,14 @@ export function SyncedPdfViewer({
   const ready = pdfData !== null && loadedUrl === fileUrl
   const file = useMemo(() => (ready ? { data: pdfData! } : null), [ready, pdfData])
 
-  // Double-buffer page turns: paint the incoming page off-screen, then swap slots.
-  const [slots, setSlots] = useState<[number, number]>(() => [page, page])
-  const [activeSlot, setActiveSlot] = useState(0)
-  const pageRef = useRef(page)
-  const slotsRef = useRef(slots)
-  const activeSlotRef = useRef(activeSlot)
-  pageRef.current = page
-  slotsRef.current = slots
-  activeSlotRef.current = activeSlot
+  // Whenever the page or document changes (locally or synced from student/teacher),
+  // immediately reset the scroll container to the beginning of the page.
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: 0, behavior: "instant" })
+  }, [page, loadedUrl])
 
   useEffect(() => {
     pdfRef.current = null
-    setSlots([page, page])
-    setActiveSlot(0)
     setLocalPointer(null)
     onPointerChange?.(null)
   }, [fileUrl]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -226,24 +132,6 @@ export function SyncedPdfViewer({
     setLocalPointer(null)
     onPointerChange?.(null)
   }, [page]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    setSlots((prev) => {
-      const shown = prev[activeSlotRef.current]
-      if (page === shown) return prev
-      const idle = activeSlotRef.current === 0 ? 1 : 0
-      if (prev[idle] === page) return prev
-      const next: [number, number] = [...prev]
-      next[idle] = page
-      return next
-    })
-  }, [page])
-
-  const onSlotRendered = useCallback((slot: 0 | 1) => {
-    if (slotsRef.current[slot] === pageRef.current && activeSlotRef.current !== slot) {
-      setActiveSlot(slot)
-    }
-  }, [])
 
   // Warm adjacent pages in pdf.js so turns within a para stay snappy.
   useEffect(() => {
@@ -290,6 +178,10 @@ export function SyncedPdfViewer({
 
   // Effective pointer is remotePointer (if provided) or localPointer.
   const activePointer = remotePointer !== undefined ? remotePointer : localPointer
+  const lineBounds =
+    activePointer && typeof activePointer.line === "number" && activePointer.line >= 1 && activePointer.line <= 16
+      ? calculateLineBounds(activePointer.line, 16)
+      : null
 
   // Auto-scroll pointed line into view smoothly when receiving a pointer.
   useEffect(() => {
@@ -551,31 +443,58 @@ export function SyncedPdfViewer({
               loading={<PdfSkeleton />}
               error={null}
             >
-              <div
-                className="relative flex justify-center"
-                style={{ width: pageWidth, height: pageHeight }}
-              >
-                <BufferedPdfPage
-                  page={slots[0]}
-                  pageWidth={pageWidth}
-                  pageHeight={pageHeight}
-                  visible={activeSlot === 0}
-                  onRendered={() => onSlotRendered(0)}
-                  pointer={activePointer}
-                  onPageClick={handlePageClick}
-                  allowPointing={allowPointing}
-                />
-                <BufferedPdfPage
-                  page={slots[1]}
-                  pageWidth={pageWidth}
-                  pageHeight={pageHeight}
-                  visible={activeSlot === 1}
-                  onRendered={() => onSlotRendered(1)}
-                  pointer={activePointer}
-                  onPageClick={handlePageClick}
-                  allowPointing={allowPointing}
-                />
-              </div>
+                <div
+                  className={`relative inline-block overflow-hidden rounded-md bg-white shadow-soft ${
+                    allowPointing ? "cursor-crosshair" : "cursor-default"
+                  }`}
+                  onClick={allowPointing ? handlePageClick : undefined}
+                >
+                  <Page
+                    key={`${loadedUrl}-p${page}`}
+                    pageNumber={page}
+                    width={pageWidth}
+                    height={pageHeight}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={false}
+                    loading={null}
+                  />
+
+                  {/* 16-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
+                  {activePointer && typeof activePointer.y === "number" && (
+                    <div className="pointer-events-none absolute inset-0 z-20">
+                      {/* 16-Line Mild Green Highlight Strip */}
+                      {lineBounds && (
+                        <div
+                          className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
+                          style={{
+                            top: `${lineBounds.topPercent}%`,
+                            height: `${lineBounds.heightPercent}%`,
+                          }}
+                        >
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                            Line {activePointer.line}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Glowing Mild Green Laser Pointer Pin */}
+                      <div
+                        className="absolute transition-all duration-150"
+                        style={{
+                          left: `${Math.max(0, Math.min(1, activePointer.x)) * 100}%`,
+                          top: `${Math.max(0, Math.min(1, activePointer.y)) * 100}%`,
+                        }}
+                      >
+                        <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
+                          <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
+                          <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
             </Document>
           </div>
         ) : (
