@@ -147,6 +147,7 @@ export async function notifyTeachersFeePaid(
       recipient_id: recipientId,
       type: "fee_paid",
       title,
+      body: `Recorded tuition payment for ${monthLabel}.`,
       link,
       priority: "normal",
     })
@@ -170,6 +171,7 @@ export async function notifyTeachersAchievement(
       recipient_id: recipientId,
       type: "achievement",
       title,
+      body: `Unlocked a new achievement badge in their Quran journey.`,
       link,
       priority: "normal",
     })
@@ -195,10 +197,46 @@ export async function notifyTeachersSessionEnded(
       recipient_id: recipientId,
       type: "session",
       title,
+      body: `Live class completed successfully (${durationMinutes} mins${endingPara ? `, Para ${endingPara}` : ""}).`,
       link,
       priority: "low",
     })
   }
+}
+
+/**
+ * Notify the student that their live class session completed with a summary.
+ */
+export async function notifyStudentSessionEnded(
+  studentId: string,
+  durationMinutes: number,
+  endingPara: number | null,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("student_id", studentId)
+    .maybeSingle()
+  if (!profile?.id) return
+
+  const paraBit = endingPara != null ? ` · Para ${endingPara}` : ""
+  const title = `Class completed · ${durationMinutes} min${paraBit}`
+  const body =
+    endingPara != null
+      ? `Masha'Allah! Today's live Quran class was completed on Para ${endingPara}.`
+      : `Masha'Allah! Your live Quran class session (${durationMinutes} mins) is complete.`
+
+  if (await alreadyNotified(admin, profile.id as string, "session", title)) return
+
+  await admin.from("notifications").insert({
+    recipient_id: profile.id,
+    type: "session",
+    title,
+    body,
+    link: "/student/history",
+    priority: "normal",
+  })
 }
 
 /**
@@ -250,6 +288,7 @@ export async function notifyTeacherStudentJoined(
     recipient_id: teacherUserId,
     type: "live_class",
     title,
+    body: "Student entered the live Quran class room.",
     link: `/students/${studentId}`,
     priority: "normal",
     created_by: teacherUserId,

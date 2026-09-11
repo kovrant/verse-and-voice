@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { requireTeacher } from "@/lib/api-auth"
-import { notifyTeachersSessionEnded } from "@/lib/notify"
+import { notifyStudentSessionEnded, notifyTeachersSessionEnded } from "@/lib/notify"
 
 export async function POST(request: Request) {
   const { denied } = await requireTeacher()
@@ -30,10 +30,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "student_id and duration_minutes required" }, { status: 400 })
   }
 
-  await notifyTeachersSessionEnded(
-    studentId,
-    durationMinutes,
-    endingPara != null && Number.isFinite(endingPara) ? endingPara : null,
-  )
+  const resolvedEndingPara = endingPara != null && Number.isFinite(endingPara) ? endingPara : null
+
+  await Promise.all([
+    notifyTeachersSessionEnded(studentId, durationMinutes, resolvedEndingPara),
+    notifyStudentSessionEnded(studentId, durationMinutes, resolvedEndingPara),
+  ])
+
   return NextResponse.json({ ok: true })
 }
