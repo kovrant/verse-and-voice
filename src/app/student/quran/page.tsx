@@ -7,7 +7,9 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { logActivity } from "@/lib/activity-log"
+import { loadBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
+import type { PointerState } from "@/lib/use-class-channel"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -112,10 +114,24 @@ export default function StudentQuranPage() {
   // In-app PDF reader: which para is open (null = showing the grid) + its page.
   const [viewing, setViewing] = useState<{ para: number; fileUrl: string } | null>(null)
   const [viewerPage, setViewerPage] = useState(1)
+  const [bookmarkPointer, setBookmarkPointer] = useState<PointerState | null>(null)
 
   function openPara(para: number, fileUrl: string) {
     setViewerPage(1)
+    setBookmarkPointer(null)
     setViewing({ para, fileUrl })
+    if (student?.id) {
+      loadBookmark(student.id, para).then((bm) => {
+        if (bm.page > 1) setViewerPage(bm.page)
+        if (typeof bm.line === "number") {
+          setBookmarkPointer({
+            x: bm.x ?? 0.5,
+            y: bm.y ?? 0.5,
+            line: bm.line,
+          })
+        }
+      })
+    }
     logActivity({
       event_type: "para_open",
       label: `Para ${para} — ${JUZ_NAMES[para - 1]}`,
@@ -394,6 +410,8 @@ export default function StudentQuranPage() {
             fileUrl={viewing.fileUrl}
             page={viewerPage}
             onPageChange={handleViewerPageChange}
+            initialPointer={bookmarkPointer}
+            allowPointing={false}
           />
         </div>
       )}

@@ -150,6 +150,14 @@ export function StudentLiveClass() {
               <span className="text-muted-foreground">Connecting…</span>
             )}
           </span>
+
+          {/* Teacher bookmark / pointer indicator */}
+          {remotePointer?.line ? (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
+              <span>📍</span>
+              <span>Line {remotePointer.line}</span>
+            </div>
+          ) : null}
         </div>
         <button
           type="button"

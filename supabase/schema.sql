@@ -105,18 +105,24 @@ CREATE TABLE class_sessions (
   ending_para integer,
   ending_page integer,
   last_page integer,
+  ending_line integer,
+  ending_pointer_x numeric,
+  ending_pointer_y numeric,
   paras_covered integer[] NOT NULL DEFAULT '{}',
   memorization_revised text[] NOT NULL DEFAULT '{}',
   notes text,
   created_at timestamptz DEFAULT now()
 );
 
--- Per-(student, para) PDF page position (live class resume)
+-- Per-(student, para) PDF page position & bookmark (live class resume)
 CREATE TABLE student_para_progress (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   student_id uuid NOT NULL REFERENCES students(id) ON DELETE CASCADE,
   para_number integer NOT NULL,
   last_page integer NOT NULL DEFAULT 1,
+  last_line integer,
+  last_pointer_x numeric,
+  last_pointer_y numeric,
   total_pages integer,
   updated_at timestamptz NOT NULL DEFAULT now()
 );

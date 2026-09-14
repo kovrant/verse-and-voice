@@ -20,7 +20,7 @@ import {
   Square,
 } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "@/lib/toast"
 
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
@@ -36,11 +36,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
+import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
-import { loadLastPage, saveLastPage } from "@/lib/para-progress"
+import { loadBookmark, saveBookmark, type ParaBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
-import { useClassChannel } from "@/lib/use-class-channel"
+import { useClassChannel, type PointerState } from "@/lib/use-class-channel"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
@@ -80,6 +80,9 @@ export interface SessionEndData {
   startingPara: number
   endingPara: number
   endingPage: number
+  endingLine?: number | null
+  endingPointerX?: number | null
+  endingPointerY?: number | null
   parasCovered: number[]
   memorizationRevised: string[]
   notes: string
@@ -106,6 +109,9 @@ export default function LiveSession({
   const [currentParaNumber, setCurrentParaNumber] = useState(initialParaNumber)
   const [parasViewed, setParasViewed] = useState<Set<number>>(() => new Set([initialParaNumber]))
   const [pdfPage, setPdfPage] = useState(1)
+  const [currentPointer, setCurrentPointer] = useState<PointerState | null>(null)
+  const currentPointerRef = useRef<PointerState | null>(null)
+  currentPointerRef.current = currentPointer
   const [startedAt] = useState(() => new Date())
   const [elapsed, setElapsed] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -161,9 +167,21 @@ export default function LiveSession({
     if (next < 1 || next > 30) return
     setCurrentParaNumber(next)
     setPdfPage(1)
+    setCurrentPointer(null)
     sendPointer(null)
-    loadLastPage(student.id, next).then((p) => {
-      if (currentParaRef.current === next && p > 1) setPdfPage(p)
+    loadBookmark(student.id, next).then((bm) => {
+      if (currentParaRef.current === next) {
+        if (bm.page > 1) setPdfPage(bm.page)
+        if (typeof bm.line === "number") {
+          const pointer: PointerState = {
+            x: bm.x ?? 0.5,
+            y: bm.y ?? 0.5,
+            line: bm.line,
+          }
+          setCurrentPointer(pointer)
+          sendPointer(pointer)
+        }
+      }
     })
     setParasViewed((prev) => {
       const s = new Set(Array.from(prev))
@@ -203,6 +221,9 @@ export default function LiveSession({
     // and record a one-time "student joined" notification for the teacher.
     onPeerJoin: () => {
       sendNav({ paraNumber: currentParaNumber, page: pdfPage })
+      if (currentPointerRef.current) {
+        sendPointer(currentPointerRef.current)
+      }
       if (joinNotifiedRef.current) return
       joinNotifiedRef.current = true
       void fetch("/api/live-class/notify", {
@@ -234,27 +255,57 @@ export default function LiveSession({
     sendNav({ paraNumber: currentParaNumber, page: pdfPage })
   }, [currentParaNumber, pdfPage, sendNav])
 
-  // ── Persist the reading position (student_para_progress) ──
+  // ── Persist the reading position & bookmark (student_para_progress) ──
   const currentParaRef = useRef(currentParaNumber)
   currentParaRef.current = currentParaNumber
+
+  const handlePointerChange = useCallback(
+    (pointer: PointerState | null) => {
+      setCurrentPointer(pointer)
+      sendPointer(pointer)
+      void saveBookmark(student.id, currentParaNumber, {
+        page: pdfPage,
+        line: pointer?.line,
+        x: pointer?.x,
+        y: pointer?.y,
+      })
+    },
+    [sendPointer, student.id, currentParaNumber, pdfPage],
+  )
 
   // Debounced save of the current page for this para.
   useEffect(() => {
     const t = setTimeout(() => {
-      saveLastPage(student.id, currentParaNumber, pdfPage)
+      saveBookmark(student.id, currentParaNumber, {
+        page: pdfPage,
+        line: currentPointerRef.current?.line,
+        x: currentPointerRef.current?.x,
+        y: currentPointerRef.current?.y,
+      })
     }, 1200)
     return () => clearTimeout(t)
   }, [student.id, currentParaNumber, pdfPage])
 
-  // Resume the starting para at its last-read page (once, on open).
+  // Resume the starting para at its last-read page & bookmark (once, on open).
   const resumedRef = useRef(false)
   useEffect(() => {
     if (resumedRef.current) return
     resumedRef.current = true
-    loadLastPage(student.id, initialParaNumber).then((p) => {
-      if (p > 1 && currentParaRef.current === initialParaNumber) setPdfPage(p)
+    loadBookmark(student.id, initialParaNumber).then((bm) => {
+      if (currentParaRef.current === initialParaNumber) {
+        if (bm.page > 1) setPdfPage(bm.page)
+        if (typeof bm.line === "number") {
+          const pointer: PointerState = {
+            x: bm.x ?? 0.5,
+            y: bm.y ?? 0.5,
+            line: bm.line,
+          }
+          setCurrentPointer(pointer)
+          sendPointer(pointer)
+        }
+      }
     })
-  }, [student.id, initialParaNumber])
+  }, [student.id, initialParaNumber, sendPointer])
 
   // Memorization
   const memorizing = memItems.filter((m) => m.status === "memorizing")
@@ -372,10 +423,21 @@ export default function LiveSession({
       startingPara: initialParaNumber,
       endingPara: currentParaNumber,
       endingPage: pdfPage,
+      endingLine: currentPointer?.line ?? null,
+      endingPointerX: currentPointer?.x ?? null,
+      endingPointerY: currentPointer?.y ?? null,
       parasCovered: Array.from(parasViewed).sort((a, b) => a - b),
       memorizationRevised: revisionsThisSession,
       notes,
     }
+
+    await saveBookmark(student.id, currentParaNumber, {
+      page: pdfPage,
+      line: currentPointer?.line,
+      x: currentPointer?.x,
+      y: currentPointer?.y,
+    }).catch(() => {})
+
     try {
       const result = await onEnd(sessionData)
       // A false result means the save failed — re-enable the button so the
@@ -459,6 +521,14 @@ export default function LiveSession({
               "Waiting for student…"
             )}
           </span>
+
+          {/* Bookmark Badge Indicator */}
+          {currentPointer?.line ? (
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
+              <span>📍</span>
+              <span>Bookmark: Line {currentPointer.line}</span>
+            </div>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-3">
@@ -728,8 +798,14 @@ export default function LiveSession({
               <SyncedPdfViewer
                 fileUrl={currentPara.file_url}
                 page={pdfPage}
-                onPageChange={setPdfPage}
-                onPointerChange={sendPointer}
+                onPageChange={(nextPage) => {
+                  setPdfPage(nextPage)
+                  setCurrentPointer(null)
+                  sendPointer(null)
+                  void saveBookmark(student.id, currentParaNumber, { page: nextPage })
+                }}
+                initialPointer={currentPointer}
+                onPointerChange={handlePointerChange}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center overflow-auto p-4">

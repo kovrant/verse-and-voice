@@ -20,7 +20,7 @@ import { Document, Page } from "react-pdf"
 import type { PDFDocumentProxy } from "pdfjs-dist"
 
 import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
-import { calculateLineBounds, calculateMushafLine } from "@/lib/mushaf-pointer"
+import { DEFAULT_MUSHAF_LINES, calculateLineBounds, calculateMushafLine } from "@/lib/mushaf-pointer"
 import type { PointerState } from "@/lib/use-class-channel"
 
 export type ViewMode = "standard" | "width" | "page"
@@ -33,7 +33,9 @@ interface SyncedPdfViewerProps {
   onPageChange: (page: number) => void
   /** Optional label shown in the toolbar, e.g. "Following teacher". */
   followingLabel?: string | null
-  /** Called with the laser pointer position (0..1 ratio of page, line 1..16). */
+  /** Initial pointer / bookmark position to restore on load. */
+  initialPointer?: PointerState | null
+  /** Called with the laser pointer position (0..1 ratio of page, line 1..15). */
   onPointerChange?: (pointer: PointerState | null) => void
   /** A remote pointer position to display and scroll into view. */
   remotePointer?: PointerState | null
@@ -72,6 +74,7 @@ export function SyncedPdfViewer({
   page,
   onPageChange,
   followingLabel,
+  initialPointer,
   onPointerChange,
   remotePointer,
   allowPointing = true,
@@ -87,7 +90,13 @@ export function SyncedPdfViewer({
   const [fitMode, setFitMode] = useState<ViewMode>("standard")
   const [zoom, setZoom] = useState(1)
   const [errored, setErrored] = useState(false)
-  const [localPointer, setLocalPointer] = useState<PointerState | null>(null)
+  const [localPointer, setLocalPointer] = useState<PointerState | null>(initialPointer ?? null)
+
+  useEffect(() => {
+    if (initialPointer !== undefined) {
+      setLocalPointer(initialPointer)
+    }
+  }, [initialPointer])
 
   // Warm this para immediately; nearby paras are prefetched by the live class shell.
   useEffect(() => {
@@ -179,8 +188,11 @@ export function SyncedPdfViewer({
   // Effective pointer is remotePointer (if provided) or localPointer.
   const activePointer = remotePointer !== undefined ? remotePointer : localPointer
   const lineBounds =
-    activePointer && typeof activePointer.line === "number" && activePointer.line >= 1 && activePointer.line <= 16
-      ? calculateLineBounds(activePointer.line, 16)
+    activePointer &&
+    typeof activePointer.line === "number" &&
+    activePointer.line >= 1 &&
+    activePointer.line <= DEFAULT_MUSHAF_LINES
+      ? calculateLineBounds(activePointer.line)
       : null
 
   // Auto-scroll pointed line into view smoothly when receiving a pointer.
@@ -211,7 +223,7 @@ export function SyncedPdfViewer({
 
       const x = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width))
       const y = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height))
-      const line = calculateMushafLine(y, 16)
+      const line = calculateMushafLine(y)
 
       // Clicking the same line toggles off the line ruler & pointer
       if (localPointer && localPointer.line === line) {
@@ -459,10 +471,10 @@ export function SyncedPdfViewer({
                     loading={null}
                   />
 
-                  {/* 16-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
+                  {/* 15-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
                   {activePointer && typeof activePointer.y === "number" && (
                     <div className="pointer-events-none absolute inset-0 z-20">
-                      {/* 16-Line Mild Green Highlight Strip */}
+                      {/* 15-Line Mild Green Highlight Strip */}
                       {lineBounds && (
                         <div
                           className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
@@ -471,8 +483,9 @@ export function SyncedPdfViewer({
                             height: `${lineBounds.heightPercent}%`,
                           }}
                         >
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                            Line {activePointer.line}
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                            <span>📍</span>
+                            <span>Line {activePointer.line}</span>
                           </div>
                         </div>
                       )}

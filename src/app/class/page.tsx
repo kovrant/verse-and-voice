@@ -35,8 +35,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { classTimeToMinutes } from "@/lib/class-time"
-import { MEM_ITEM_SELECT,type MemItem } from "@/lib/memorization"
-import { saveLastPage } from "@/lib/para-progress"
+import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
+import { saveBookmark, saveLastPage } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, type Student } from "@/lib/utils"
@@ -60,6 +60,9 @@ interface ClassSession {
   ending_para: number | null
   ending_page?: number | null
   last_page?: number | null
+  ending_line?: number | null
+  ending_pointer_x?: number | null
+  ending_pointer_y?: number | null
   paras_covered: number[]
   memorization_revised: string[]
   notes: string | null
@@ -176,6 +179,7 @@ function ClassPageContent() {
       ? latestSession.ending_para
       : activeRound?.asc_completed || 1
   const latestPage = latestSession?.ending_page ?? latestSession?.last_page ?? null
+  const latestLine = latestSession?.ending_line ?? null
   const currentPara = latestPara
 
   // Start class — button morphs to Bismillah, then swaps to live screen
@@ -192,7 +196,7 @@ function ClassPageContent() {
   // End class — save session and return to landing.
   // Returns false on failure so LiveSession can re-enable its Save button.
   async function handleEndSession(data: SessionEndData): Promise<boolean> {
-    const { error } = await supabase.from("class_sessions").insert({
+    const sessionInsert: Record<string, unknown> = {
       student_id: selected!.id,
       started_at: data.startedAt.toISOString(),
       ended_at: data.endedAt.toISOString(),
@@ -201,10 +205,22 @@ function ClassPageContent() {
       ending_para: data.endingPara,
       ending_page: data.endingPage,
       last_page: data.endingPage,
+      ending_line: data.endingLine ?? null,
+      ending_pointer_x: data.endingPointerX ?? null,
+      ending_pointer_y: data.endingPointerY ?? null,
       paras_covered: data.parasCovered,
       memorization_revised: data.memorizationRevised,
       notes: data.notes || null,
-    })
+    }
+
+    let { error } = await supabase.from("class_sessions").insert(sessionInsert)
+    if (error) {
+      delete sessionInsert.ending_line
+      delete sessionInsert.ending_pointer_x
+      delete sessionInsert.ending_pointer_y
+      const retry = await supabase.from("class_sessions").insert(sessionInsert)
+      error = retry.error
+    }
 
     if (error) {
       console.error("Failed to save class session:", error)
@@ -212,9 +228,14 @@ function ClassPageContent() {
       return false
     }
 
-    // Save the exact page position for this para
+    // Save the exact bookmark position for this para
     if (data.endingPara && data.endingPage) {
-      await saveLastPage(selected!.id, data.endingPara, data.endingPage).catch(() => {})
+      await saveBookmark(selected!.id, data.endingPara, {
+        page: data.endingPage,
+        line: data.endingLine,
+        x: data.endingPointerX,
+        y: data.endingPointerY,
+      }).catch(() => {})
     }
 
     // Automatically sync the active Quran round's asc_completed if advanced
@@ -406,7 +427,7 @@ function ClassPageContent() {
                       </p>
                       <p className="text-xl font-bold text-primary mt-0.5">
                         {activeRound
-                          ? `Para ${latestPara}${latestPage ? ` · Page ${latestPage}` : ""}`
+                          ? `Para ${latestPara}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
                           : "Not started"}
                       </p>
                     </div>
