@@ -128,11 +128,14 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     }
   }, [joined])
 
-  // Fallback: teacher's presence drops while joined (crash / closed tab).
+  // Fallback: teacher's presence drops while joined (crash / closed tab / ended).
   useEffect(() => {
     if (!joined) return
-    if (live) sawLive.current = true
-    else if (sawLive.current) endNow()
+    if (live) {
+      sawLive.current = true
+    } else {
+      endNow()
+    }
   }, [joined, live, endNow])
 
   // Prominent "class is live" alert (replaces the old bottom-right toast). Opens

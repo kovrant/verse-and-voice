@@ -168,6 +168,7 @@ export function useClassChannel({
 
     channel
       .on("presence", { event: "sync" }, computePresence)
+      .on("presence", { event: "leave" }, computePresence)
       .on("presence", { event: "join" }, ({ newPresences }) => {
         const others = (newPresences as Array<{ role?: ClassRole }>).some(
           (p) => p.role && p.role !== role,
@@ -328,6 +329,8 @@ export function useClassChannel({
       // Best-effort — untrack below still signals leave via presence.
     }
     await ch.untrack().catch(() => {})
+    // Give mobile clients / WebSocket server 250ms to relay the packet before socket closure
+    await new Promise((resolve) => setTimeout(resolve, 250))
   }, [clientId])
 
   return { live, peerNav, peerDevice, sendNav, sendScroll, sendPointer, endClass }
