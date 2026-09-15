@@ -10,6 +10,7 @@ import {
   Clock,
   CreditCard,
   Play,
+  RotateCcw,
   Sparkles,
   Tablet,
 } from "lucide-react"
@@ -31,7 +32,7 @@ import {
   type QuranRound,
 } from "@/components/quran-progress"
 import type { FeePayment, Student } from "@/lib/utils"
-import { formatSessionDuration } from "@/lib/utils"
+import { cn, formatSessionDuration } from "@/lib/utils"
 import type { StudentView } from "@/components/student-detail-nav"
 import type { MemChunk } from "@/components/memorization-chunks"
 
@@ -79,6 +80,8 @@ export function StudentOverview({
   const now = new Date()
   const currentFee = fees.find((f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear())
   const memorizing = memItems.filter((m) => m.status === "memorizing")
+  const revising = memItems.filter((m) => m.status === "memorized" && m.revision_assigned_at)
+  const activeMemItems = [...memorizing, ...revising]
 
   const paraInfo =
     activeRound?.type === "quran"
@@ -259,16 +262,16 @@ export function StudentOverview({
           </CardContent>
         </Card>
 
-        {/* Memorization */}
+        {/* Memorization & Revision */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
               <BookMarked className="h-4 w-4" />
-              Memorizing
+              Memorization & Revision
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {memorizing.length === 0 ? (
+            {activeMemItems.length === 0 ? (
               <>
                 <p className="text-sm text-muted-foreground">Nothing in progress</p>
                 <Button variant="outline" size="sm" onClick={() => onNavigate("memorization")}>
@@ -278,16 +281,36 @@ export function StudentOverview({
             ) : (
               <>
                 <ul className="space-y-2">
-                  {memorizing.slice(0, 3).map((item) => {
+                  {activeMemItems.slice(0, 3).map((item) => {
+                    const isRevising = !!item.revision_assigned_at && item.status === "memorized"
                     const chunks = chunksByItem[item.catalog_id] || []
                     const progress = chunkProgress(chunks, memorizedChunkIds)
                     return (
                       <li
                         key={item.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-border/50 px-2.5 py-2"
+                        className={cn(
+                          "flex items-center justify-between gap-2 rounded-lg border px-2.5 py-2",
+                          isRevising
+                            ? "border-amber-500/30 bg-amber-500/5"
+                            : "border-border/50 bg-card",
+                        )}
                       >
-                        <span className="text-sm font-medium truncate">{item.memorization_catalog?.title}</span>
-                        {chunks.length > 0 ? (
+                        <div className="min-w-0 flex-1">
+                          <span className="text-sm font-medium truncate block">
+                            {item.memorization_catalog?.title}
+                          </span>
+                          {isRevising && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 dark:text-amber-400">
+                              <RotateCcw className="h-2.5 w-2.5" />
+                              Revision assigned
+                            </span>
+                          )}
+                        </div>
+                        {isRevising ? (
+                          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300 flex-shrink-0">
+                            Revising
+                          </span>
+                        ) : chunks.length > 0 ? (
                           <span className="text-[10px] font-semibold tabular-nums text-muted-foreground flex-shrink-0">
                             {progress.done}/{progress.total}
                           </span>
@@ -298,8 +321,8 @@ export function StudentOverview({
                     )
                   })}
                 </ul>
-                {memorizing.length > 3 && (
-                  <p className="text-[11px] text-muted-foreground">+{memorizing.length - 3} more</p>
+                {activeMemItems.length > 3 && (
+                  <p className="text-[11px] text-muted-foreground">+{activeMemItems.length - 3} more</p>
                 )}
                 <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => onNavigate("memorization")}>
                   Open workspace <ArrowRight className="h-3 w-3 ml-1" />

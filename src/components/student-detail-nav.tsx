@@ -104,10 +104,20 @@ export function studentNavItems(signals: {
   lastClassLabel?: string
   sessionCount: number
   memInProgress: number
+  revisingCount?: number
   unpaidThisMonth: boolean
   progressHint?: string
   achievementCount?: number
 }): StudentNavItem[] {
+  const memHint =
+    signals.memInProgress > 0 && (signals.revisingCount || 0) > 0
+      ? `${signals.memInProgress} learning · ${signals.revisingCount} revising`
+      : signals.memInProgress > 0
+        ? `${signals.memInProgress} in progress`
+        : (signals.revisingCount || 0) > 0
+          ? `${signals.revisingCount} revising`
+          : "None active"
+
   return [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     {
@@ -126,7 +136,7 @@ export function studentNavItems(signals: {
       id: "memorization",
       label: "Memorization",
       icon: BookMarked,
-      hint: signals.memInProgress > 0 ? `${signals.memInProgress} in progress` : "None active",
+      hint: memHint,
     },
     {
       id: "achievements",

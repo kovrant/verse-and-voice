@@ -746,6 +746,7 @@ export default function StudentDetailPage() {
   const unpaidCount = fees.filter((f) => !f.is_paid).length
   const memorizingCount = memItems.filter((m) => m.status === "memorizing").length
   const memorizedCount = memItems.filter((m) => m.status === "memorized").length
+  const revisingCount = memItems.filter((m) => m.status === "memorized" && m.revision_assigned_at).length
   const now = new Date()
   const currentMonthUnpaid = fees.some(
     (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear() && !f.is_paid,
@@ -763,6 +764,7 @@ export default function StudentDetailPage() {
       : undefined,
     sessionCount: sessions.length,
     memInProgress: memorizingCount,
+    revisingCount,
     unpaidThisMonth: currentMonthUnpaid,
     progressHint,
     achievementCount,

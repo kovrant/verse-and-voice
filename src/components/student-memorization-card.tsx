@@ -6,9 +6,11 @@ import { useEffect, useState } from "react"
 
 import { PageLoading } from "@/components/page-loading"
 import { supabase } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 
 interface CurrentMem {
   title: string
+  isRevision?: boolean
   /** Memorized chunks ("parts") and total chunks for the current item. */
   done: number
   total: number
@@ -30,7 +32,7 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
       setLoading(true)
       const { data } = await supabase
         .from("student_memorization")
-        .select("status, last_revised_at, catalog_id, memorization_catalog(title)")
+        .select("status, revision_assigned_at, last_revised_at, catalog_id, memorization_catalog(title)")
         .eq("student_id", studentId)
         .order("last_revised_at", { ascending: false, nullsFirst: false })
       if (!active) return
@@ -38,15 +40,20 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
       const items =
         (data as unknown as {
           status: string
+          revision_assigned_at: string | null
           catalog_id: string
           memorization_catalog: { title: string } | null
         }[]) || []
-      const cur = items.find((i) => i.status === "memorizing" && i.memorization_catalog)
+      const cur =
+        items.find((i) => i.status === "memorizing" && i.memorization_catalog) ||
+        items.find((i) => i.status === "memorized" && i.revision_assigned_at && i.memorization_catalog)
       if (!cur) {
         setCurrent(null)
         setLoading(false)
         return
       }
+
+      const isRevision = cur.status === "memorized" && !!cur.revision_assigned_at
 
       const { data: chunks } = await supabase
         .from("memorization_chunks")
@@ -65,7 +72,7 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
       }
 
       if (!active) return
-      setCurrent({ title: cur.memorization_catalog!.title, done, total })
+      setCurrent({ title: cur.memorization_catalog!.title, isRevision, done, total })
       setLoading(false)
     }
     load()
@@ -110,11 +117,23 @@ export function StudentMemorizationCard({ studentId }: { studentId: string }) {
     <div className={card}>
       <div className="mb-4 flex items-center justify-between">
         <div className="text-[11px] font-extrabold tracking-[1.2px] text-muted-foreground">
-          NOW MEMORIZING
+          {current.isRevision ? "REVISING NOW" : "NOW MEMORIZING"}
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(var(--surface-alt))] px-[11px] py-[5px] text-[11.5px] font-extrabold text-[hsl(var(--taupe))]">
-          <span className="h-[7px] w-[7px] rounded-full bg-[hsl(var(--taupe))]" />
-          On track
+        <span
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-full px-[11px] py-[5px] text-[11.5px] font-extrabold",
+            current.isRevision
+              ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+              : "bg-[hsl(var(--surface-alt))] text-[hsl(var(--taupe))]",
+          )}
+        >
+          <span
+            className={cn(
+              "h-[7px] w-[7px] rounded-full",
+              current.isRevision ? "bg-amber-500" : "bg-[hsl(var(--taupe))]",
+            )}
+          />
+          {current.isRevision ? "Revision" : "On track"}
         </span>
       </div>
 
