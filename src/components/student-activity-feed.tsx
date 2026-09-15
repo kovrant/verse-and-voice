@@ -64,9 +64,12 @@ export function ActivityFeed({ logs, loading }: { logs: ActivityLog[]; loading: 
     )
   }
 
-  // Group by calendar day for a scannable timeline.
+  // Group by calendar day for a scannable timeline (descending: newest first).
+  const sortedLogs = [...logs].sort(
+    (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
+  )
   const groups: { day: string; items: ActivityLog[] }[] = []
-  for (const log of logs) {
+  for (const log of sortedLogs) {
     const day = format(new Date(log.occurred_at), "EEEE, MMM d, yyyy")
     const last = groups[groups.length - 1]
     if (last && last.day === day) last.items.push(log)

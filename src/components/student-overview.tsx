@@ -375,7 +375,7 @@ export function StudentOverview({
         </button>
         {activityOpen && (
           <CardContent className="pt-0 pb-5">
-            <ActivityFeed logs={activity.slice(-50)} loading={activityLoading} />
+            <ActivityFeed logs={activity.slice(0, 50)} loading={activityLoading} />
           </CardContent>
         )}
       </Card>

@@ -255,10 +255,8 @@ export default function StudentDetailPage() {
       .select("id, event_type, path, label, href, meta, occurred_at")
       .eq("student_id", params.id)
       .order("occurred_at", { ascending: false })
-      .limit(500)
-    // Query pulls the 500 most-recent events (desc + limit); reverse so the feed
-    // reads chronologically — oldest at the top, newest at the bottom.
-    setActivity(((data as ActivityLog[]) || []).reverse())
+    // Query pulls the 500 most-recent events (newest at top).
+    setActivity((data as ActivityLog[]) || [])
     setActivityLoading(false)
     setActivityLoaded(true)
   }, [params.id])
