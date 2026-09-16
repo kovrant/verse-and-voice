@@ -87,23 +87,16 @@ export default function StudentQuizzesPage() {
     return map
   }, [attempts])
 
-  // Assigned quizzes that are pending (never attempted yet)
+  // Assigned quizzes that are pending (either newly assigned or re-assigned by teacher)
   const pendingAssigned = useMemo(() => {
-    return assignments.filter((a) => {
-      if (!a.quiz) return false
-      const hasAttempt = attempts.some((att) => att.quiz_id === a.quiz_id)
-      return a.status === "pending" && !hasAttempt
-    })
-  }, [assignments, attempts])
+    return assignments.filter((a) => a.status === "pending" && a.quiz)
+  }, [assignments])
 
-  // Assigned quizzes that have been completed / attempted
+  // Assigned quizzes that have been completed
   const completedAssigned = useMemo(() => {
-    return assignments.filter((a) => {
-      if (!a.quiz) return false
-      const hasAttempt = attempts.some((att) => att.quiz_id === a.quiz_id)
-      return a.status === "completed" || hasAttempt
-    })
-  }, [assignments, attempts])
+    return assignments.filter((a) => a.status === "completed" && a.quiz)
+  }, [assignments])
+
 
   if (loading || studentLoading) {
     return <PageLoading variant="grid-cards" student />
@@ -166,6 +159,7 @@ export default function StudentQuizzesPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {pendingAssigned.map((assignment) => {
                   const quiz = assignment.quiz!
+                  const previousBest = bestAttempts.get(quiz.id)
                   const cat = CATEGORY_LABELS[quiz.category] || CATEGORY_LABELS.general
                   const ageLabel = AGE_GROUP_LABELS[quiz.age_group] || "All Ages"
 
@@ -179,9 +173,16 @@ export default function StudentQuizzesPage() {
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
                             {cat.label}
                           </span>
-                          <Badge variant="outline" className="text-[10px]">
-                            {ageLabel}
-                          </Badge>
+                          <div className="flex items-center gap-1.5">
+                            {previousBest && (
+                              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30 text-[9px] font-bold">
+                                Retake (Best: {previousBest.percentage}%)
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="text-[10px]">
+                              {ageLabel}
+                            </Badge>
+                          </div>
                         </div>
                         <CardTitle className="text-base font-bold line-clamp-1">{quiz.title}</CardTitle>
                         <p className="text-xs text-muted-foreground line-clamp-2">
@@ -208,13 +209,14 @@ export default function StudentQuizzesPage() {
                         >
                           <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm">
                             <Play className="h-4 w-4 fill-white" />
-                            Start Quest
+                            {previousBest ? "Retake Quest (Aim for 100%)" : "Start Quest"}
                           </Button>
                         </Link>
                       </CardContent>
                     </Card>
                   )
                 })}
+
               </div>
             </section>
           )}

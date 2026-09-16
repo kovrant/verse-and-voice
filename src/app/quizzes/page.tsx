@@ -8,6 +8,7 @@ import {
   HelpCircle,
   Loader2,
   Plus,
+  RotateCcw,
   Search,
   Sparkles,
   Trash2,
@@ -405,6 +406,33 @@ export default function TeacherQuizzesPage() {
   const handleOpenResults = (quiz: Quiz) => {
     setSelectedQuizForResults(quiz)
     setResultsModalOpen(true)
+  }
+
+  // Quick Re-assign Single Student (Allow Retake)
+  const [reassigningStudentId, setReassigningStudentId] = useState<string | null>(null)
+  const handleReassignSingle = async (quizId: string, studentId: string) => {
+    setReassigningStudentId(studentId)
+    try {
+      const res = await fetch("/api/quizzes/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quiz_id: quizId,
+          student_ids: [studentId],
+          reassign: true,
+        }),
+      })
+
+      if (!res.ok) throw new Error("Failed to re-assign")
+      const studentName = studentsMap.get(studentId)?.name || "Student"
+      toast.success(`Re-assigned to ${studentName}! They can now retake this quest to improve their score.`)
+      await loadData()
+    } catch (err) {
+      console.error("Error re-assigning quiz:", err)
+      toast.error("Could not re-assign quiz. Please try again.")
+    } finally {
+      setReassigningStudentId(null)
+    }
   }
 
   if (loading) {
@@ -1096,12 +1124,41 @@ export default function TeacherQuizzesPage() {
                             )}
                           </div>
                         </div>
-                        {student.status && (
-                          <Badge variant="outline" className="text-[10px] font-normal shrink-0">
-                            {student.status}
-                          </Badge>
-                        )}
+
+                        {(() => {
+                          const attemptRow = attempts.find(
+                            (a) => a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
+                          )
+                          const assignRow = assignments.find(
+                            (a) => a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
+                          )
+
+                          if (attemptRow) {
+                            return (
+                              <Badge
+                                className={
+                                  attemptRow.passed
+                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold"
+                                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-semibold"
+                                }
+                              >
+                                {attemptRow.passed ? `Passed (${attemptRow.percentage}%)` : `Score: ${attemptRow.percentage}%`}
+                              </Badge>
+                            )
+                          }
+
+                          if (assignRow?.status === "pending") {
+                            return (
+                              <Badge variant="outline" className="text-[10px] font-normal shrink-0 text-amber-600 border-amber-500/30">
+                                Assigned
+                              </Badge>
+                            )
+                          }
+
+                          return null
+                        })()}
                       </label>
+
                     )
                   })
               )}
@@ -1202,27 +1259,61 @@ export default function TeacherQuizzesPage() {
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-sm">{attempt.percentage}%</span>
-                            <Badge
-                              className={
-                                attempt.passed
-                                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
-                                  : "bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
-                              }
-                            >
-                              {attempt.passed ? "Passed" : "Needs Review"}
-                            </Badge>
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <div className="flex items-center gap-1.5 justify-end">
+                              <span className="font-bold text-sm">{attempt.percentage}%</span>
+                              <Badge
+                                className={
+                                  attempt.passed
+                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 text-[10px]"
+                                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 text-[10px]"
+                                }
+                              >
+                                {attempt.passed ? "Passed" : "Needs Review"}
+                              </Badge>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                              {attempt.score} / {attempt.total_questions} correct
+                            </p>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
-                            {attempt.score} / {attempt.total_questions} correct
-                          </p>
+
+                          {(() => {
+                            const assignRow = assignments.find(
+                              (a) => a.quiz_id === attempt.quiz_id && a.student_id === attempt.student_id,
+                            )
+                            const isPending = assignRow?.status === "pending"
+
+                            if (isPending) {
+                              return (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 shrink-0"
+                                >
+                                  Retake Active
+                                </Badge>
+                              )
+                            }
+
+                            return (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={reassigningStudentId === attempt.student_id}
+                                onClick={() => handleReassignSingle(selectedQuizForResults!.id, attempt.student_id)}
+                                className="h-7 text-xs font-semibold gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                              >
+                                <RotateCcw className="h-3 w-3" />
+                                {reassigningStudentId === attempt.student_id ? "Re-assigning..." : "Allow Retake"}
+                              </Button>
+                            )
+                          })()}
                         </div>
                       </div>
                     )
                   })}
                 </div>
+
 
               )
             })()}

@@ -46,25 +46,74 @@ export async function POST(request: Request) {
   // 2. Grade attempt
   const gradeResult = gradeQuizAttempt(questions, answers, quiz.passing_score || 80)
 
-  // 3. Record attempt
-  const { data: attempt, error: attemptError } = await admin
+  // 3. Record attempt — keep ONLY the maximum score attempt, discard lower attempts
+  const { data: existingAttempts } = await admin
     .from("quiz_attempts")
-    .insert({
-      quiz_id: quiz.id,
-      student_id: studentId,
-      assignment_id: assignmentId,
-      score: gradeResult.score,
-      total_questions: gradeResult.totalQuestions,
-      percentage: gradeResult.percentage,
-      passed: gradeResult.passed,
-      answers,
-      completed_at: new Date().toISOString(),
-    })
-    .select("id")
-    .maybeSingle()
+    .select("id, percentage, score")
+    .eq("quiz_id", quiz.id)
+    .eq("student_id", studentId)
 
-  if (attemptError) {
-    console.error("Failed to record quiz attempt:", attemptError)
+  const currentMaxPercentage = (existingAttempts || []).reduce(
+    (max, a) => Math.max(max, a.percentage),
+    -1,
+  )
+
+  let attemptId: string | undefined
+
+  if (!existingAttempts || existingAttempts.length === 0) {
+    // First attempt
+    const { data: newAttempt, error: attemptError } = await admin
+      .from("quiz_attempts")
+      .insert({
+        quiz_id: quiz.id,
+        student_id: studentId,
+        assignment_id: assignmentId,
+        score: gradeResult.score,
+        total_questions: gradeResult.totalQuestions,
+        percentage: gradeResult.percentage,
+        passed: gradeResult.passed,
+        answers,
+        completed_at: new Date().toISOString(),
+      })
+      .select("id")
+      .maybeSingle()
+
+    if (attemptError) {
+      console.error("Failed to record quiz attempt:", attemptError)
+    }
+    attemptId = newAttempt?.id
+  } else if (gradeResult.percentage >= currentMaxPercentage) {
+    // New attempt has equal or higher marks: insert new best attempt & delete old lower attempt(s)
+    const { data: newAttempt, error: attemptError } = await admin
+      .from("quiz_attempts")
+      .insert({
+        quiz_id: quiz.id,
+        student_id: studentId,
+        assignment_id: assignmentId,
+        score: gradeResult.score,
+        total_questions: gradeResult.totalQuestions,
+        percentage: gradeResult.percentage,
+        passed: gradeResult.passed,
+        answers,
+        completed_at: new Date().toISOString(),
+      })
+      .select("id")
+      .maybeSingle()
+
+    if (attemptError) {
+      console.error("Failed to record improved quiz attempt:", attemptError)
+    }
+
+    if (newAttempt?.id) {
+      attemptId = newAttempt.id
+      // Prune previous lower attempts to keep only the maximum marks record
+      const oldIds = existingAttempts.map((a) => a.id)
+      await admin.from("quiz_attempts").delete().in("id", oldIds)
+    }
+  } else {
+    // New attempt has fewer marks than their best record:
+    // Protect the student's highest score — do not downgrade their record
+    attemptId = existingAttempts[0]?.id
   }
 
   let badgeAwarded = false
@@ -100,9 +149,10 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     success: true,
-    attemptId: attempt?.id,
+    attemptId: attemptId || null,
     gradeResult,
     badgeAwarded,
     badgeTitle: quiz.badge_title,
   })
+
 }

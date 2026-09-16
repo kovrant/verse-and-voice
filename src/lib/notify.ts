@@ -302,6 +302,7 @@ export async function notifyStudentQuizAssigned(
   studentId: string,
   quizTitle: string,
   quizId: string,
+  isReassigned?: boolean,
 ): Promise<void> {
   const admin = createSupabaseAdminClient()
   const { data: profile } = await admin
@@ -311,8 +312,10 @@ export async function notifyStudentQuizAssigned(
     .maybeSingle()
   if (!profile?.id) return
 
-  const title = `New Quiz Assigned: ${quizTitle}`
-  const body = `Your teacher assigned you a new Islamic Quiz Quest: "${quizTitle}". Tap to start and earn your badge!`
+  const title = isReassigned ? `Quiz Quest Re-assigned: ${quizTitle}` : `New Quiz Assigned: ${quizTitle}`
+  const body = isReassigned
+    ? `Your teacher re-assigned "${quizTitle}" so you can retake it and improve your score! Tap to start.`
+    : `Your teacher assigned you a new Islamic Quiz Quest: "${quizTitle}". Tap to start and earn your badge!`
 
   if (await alreadyNotified(admin, profile.id as string, "quiz_assigned", title)) return
 
@@ -325,4 +328,5 @@ export async function notifyStudentQuizAssigned(
     priority: "high",
   })
 }
+
 
