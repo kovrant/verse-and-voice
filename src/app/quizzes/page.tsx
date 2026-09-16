@@ -148,6 +148,15 @@ export default function TeacherQuizzesPage() {
     void loadData()
   }, [loadData])
 
+  // Student Lookup Map
+  const studentsMap = useMemo(() => {
+    const map = new Map<string, Student>()
+    for (const s of students) {
+      map.set(s.id, s)
+    }
+    return map
+  }, [students])
+
   // Filtered quizzes
   const filteredQuizzes = useMemo(() => {
     return quizzes.filter((q) => {
@@ -1149,59 +1158,70 @@ export default function TeacherQuizzesPage() {
 
               return (
                 <div className="space-y-2">
-                  {quizAttempts.map((attempt) => (
-                    <div
-                      key={attempt.id}
-                      className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/60"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`flex h-9 w-9 items-center justify-center rounded-xl ${
-                            attempt.passed
-                              ? "bg-emerald-500/15 text-emerald-600"
-                              : "bg-amber-500/15 text-amber-600"
-                          }`}
-                        >
-                          {attempt.passed ? (
-                            <CheckCircle2 className="h-5 w-5" />
-                          ) : (
-                            <XCircle className="h-5 w-5" />
-                          )}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {attempt.student?.name || "Student"}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground">
-                            {new Date(attempt.completed_at).toLocaleDateString()} at{" "}
-                            {new Date(attempt.completed_at).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </div>
-                      </div>
+                  {quizAttempts.map((attempt) => {
+                    const studentInfo =
+                      studentsMap.get(attempt.student_id) ||
+                      attempt.student ||
+                      (Array.isArray(attempt.students) ? attempt.students[0] : attempt.students)
+                    const studentName = studentInfo?.name || "Student"
+                    const studentGuardian = studentInfo?.guardian_name
+                      ? `Parent/Guardian: ${studentInfo.guardian_name}`
+                      : ""
 
-                      <div className="text-right">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm">{attempt.percentage}%</span>
-                          <Badge
-                            className={
+                    return (
+                      <div
+                        key={attempt.id}
+                        className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/60"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`flex h-9 w-9 items-center justify-center rounded-xl ${
                               attempt.passed
-                                ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
-                                : "bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
-                            }
+                                ? "bg-emerald-500/15 text-emerald-600"
+                                : "bg-amber-500/15 text-amber-600"
+                            }`}
                           >
-                            {attempt.passed ? "Passed" : "Retake"}
-                          </Badge>
+                            {attempt.passed ? (
+                              <CheckCircle2 className="h-5 w-5" />
+                            ) : (
+                              <XCircle className="h-5 w-5" />
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-sm text-foreground">{studentName}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {studentGuardian ? `${studentGuardian} • ` : ""}
+                              {new Date(attempt.completed_at).toLocaleDateString()} at{" "}
+                              {new Date(attempt.completed_at).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
                         </div>
-                        <p className="text-[10px] text-muted-foreground mt-0.5">
-                          {attempt.score} / {attempt.total_questions} correct
-                        </p>
+
+                        <div className="text-right">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-sm">{attempt.percentage}%</span>
+                            <Badge
+                              className={
+                                attempt.passed
+                                  ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                                  : "bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20"
+                              }
+                            >
+                              {attempt.passed ? "Passed" : "Needs Review"}
+                            </Badge>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {attempt.score} / {attempt.total_questions} correct
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
+
               )
             })()}
           </div>

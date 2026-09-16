@@ -69,16 +69,23 @@ export async function POST(request: Request) {
 
   let badgeAwarded = false
 
-  // 4. If passed, complete assignment and award badge
-  if (gradeResult.passed) {
-    if (assignmentId) {
-      await admin
-        .from("quiz_assignments")
-        .update({ status: "completed" })
-        .eq("id", assignmentId)
-        .eq("student_id", studentId)
-    }
+  // 4. Mark assignment as completed
+  if (assignmentId) {
+    await admin
+      .from("quiz_assignments")
+      .update({ status: "completed" })
+      .eq("id", assignmentId)
+      .eq("student_id", studentId)
+  } else {
+    await admin
+      .from("quiz_assignments")
+      .update({ status: "completed" })
+      .eq("quiz_id", quizId)
+      .eq("student_id", studentId)
+  }
 
+  // 5. If passed, award badge
+  if (gradeResult.passed) {
     const awardRes = await awardAchievement(admin, studentId, quiz.badge_slug, "quiz", {
       slug: quiz.badge_slug,
       title: quiz.badge_title,

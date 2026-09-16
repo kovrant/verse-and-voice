@@ -75,16 +75,6 @@ export default function StudentQuizzesPage() {
     void loadData()
   }, [student?.id, studentLoading, loadData])
 
-  // Assigned quizzes that are pending
-  const pendingAssigned = useMemo(() => {
-    return assignments.filter((a) => a.status === "pending" && a.quiz)
-  }, [assignments])
-
-  // Assigned quizzes that are completed
-  const completedAssigned = useMemo(() => {
-    return assignments.filter((a) => a.status === "completed" && a.quiz)
-  }, [assignments])
-
   // Map of best attempt by quiz id
   const bestAttempts = useMemo(() => {
     const map = new Map<string, QuizAttempt>()
@@ -96,6 +86,24 @@ export default function StudentQuizzesPage() {
     }
     return map
   }, [attempts])
+
+  // Assigned quizzes that are pending (never attempted yet)
+  const pendingAssigned = useMemo(() => {
+    return assignments.filter((a) => {
+      if (!a.quiz) return false
+      const hasAttempt = attempts.some((att) => att.quiz_id === a.quiz_id)
+      return a.status === "pending" && !hasAttempt
+    })
+  }, [assignments, attempts])
+
+  // Assigned quizzes that have been completed / attempted
+  const completedAssigned = useMemo(() => {
+    return assignments.filter((a) => {
+      if (!a.quiz) return false
+      const hasAttempt = attempts.some((att) => att.quiz_id === a.quiz_id)
+      return a.status === "completed" || hasAttempt
+    })
+  }, [assignments, attempts])
 
   if (loading || studentLoading) {
     return <PageLoading variant="grid-cards" student />
@@ -276,19 +284,51 @@ export default function StudentQuizzesPage() {
                           </div>
                         </div>
 
-                        {/* Retake button */}
-                        <Link
-                          href={`/student/quizzes/${quiz.id}?assignment=${assignment.id}`}
-                          className="block"
-                        >
-                          <Button
-                            variant="outline"
-                            className="w-full font-semibold gap-1.5 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                        {/* Status & Score */}
+                        <div className="flex items-center justify-between rounded-xl bg-secondary/60 px-3 py-2 text-xs">
+                          <div className="flex items-center gap-1.5 font-medium text-foreground">
+                            {hasPassed ? (
+                              <>
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                <span className="text-emerald-700 dark:text-emerald-300 font-bold">Passed & Completed</span>
+                              </>
+                            ) : (
+                              <>
+                                <RotateCcw className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                                <span className="text-amber-700 dark:text-amber-300 font-bold">Attempted</span>
+                              </>
+                            )}
+                          </div>
+                          <span className="font-extrabold text-foreground">
+                            {best ? `${best.percentage}% (${best.score}/${best.total_questions})` : "Done"}
+                          </span>
+                        </div>
+
+                        {/* Action: View Trophy Case or Retry */}
+                        {hasPassed ? (
+                          <Link href="/student/achievements" className="block">
+                            <Button
+                              variant="outline"
+                              className="w-full font-semibold gap-1.5 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                            >
+                              <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                              View Badge in Trophy Case
+                            </Button>
+                          </Link>
+                        ) : (
+                          <Link
+                            href={`/student/quizzes/${quiz.id}?assignment=${assignment.id}`}
+                            className="block"
                           >
-                            <RotateCcw className="h-3.5 w-3.5" />
-                            Retake Quest ({best ? `${best.percentage}%` : "Play"})
-                          </Button>
-                        </Link>
+                            <Button
+                              variant="outline"
+                              className="w-full font-semibold gap-1.5 border-amber-500/30 text-amber-700 dark:text-amber-300 hover:bg-amber-500/10"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5" />
+                              Retry Quest ({best?.percentage || 0}%)
+                            </Button>
+                          </Link>
+                        )}
                       </CardContent>
                     </Card>
                   )
@@ -298,6 +338,7 @@ export default function StudentQuizzesPage() {
           )}
         </div>
       )}
+
     </div>
   )
 }
