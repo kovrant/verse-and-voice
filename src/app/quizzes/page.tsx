@@ -104,6 +104,7 @@ export default function TeacherQuizzesPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [selectedQuizToAssign, setSelectedQuizToAssign] = useState<Quiz | null>(null)
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([])
+  const [assignStudentSearch, setAssignStudentSearch] = useState("")
   const [assignDueDate, setAssignDueDate] = useState("")
   const [savingAssignments, setSavingAssignments] = useState(false)
 
@@ -118,9 +119,12 @@ export default function TeacherQuizzesPage() {
           .from("quizzes")
           .select("*, quiz_questions(*)")
           .order("created_at", { ascending: false }),
-        supabase.from("students").select("*").eq("is_active", true).order("name"),
+        supabase.from("students").select("*").order("name"),
         supabase.from("quiz_assignments").select("*"),
-        supabase.from("quiz_attempts").select("*, students(id, name, username)").order("completed_at", { ascending: false }),
+        supabase
+          .from("quiz_attempts")
+          .select("*, students(id, name, guardian_name)")
+          .order("completed_at", { ascending: false }),
       ])
 
       const mappedQuizzes = (quizzesRes.data || []).map((q: any) => ({
@@ -1018,6 +1022,16 @@ export default function TeacherQuizzesPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search students by name or guardian..."
+                value={assignStudentSearch}
+                onChange={(e) => setAssignStudentSearch(e.target.value)}
+                className="pl-8 h-9 text-xs"
+              />
+            </div>
+
             <div className="flex items-center justify-between pb-1 border-b border-border/60">
               <span className="text-xs font-semibold text-muted-foreground">
                 {selectedStudentIds.length} of {students.length} students selected
@@ -1039,40 +1053,62 @@ export default function TeacherQuizzesPage() {
             </div>
 
             <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
-              {students.map((student) => {
-                const isSelected = selectedStudentIds.includes(student.id)
-                return (
-                  <label
-                    key={student.id}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-colors ${
-                      isSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10"
-                        : "border-border/60 hover:bg-secondary/60"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => {
-                          if (isSelected) {
-                            setSelectedStudentIds(selectedStudentIds.filter((id) => id !== student.id))
-                          } else {
-                            setSelectedStudentIds([...selectedStudentIds, student.id])
-                          }
-                        }}
-                        className="accent-emerald-600 h-4 w-4 rounded"
-                      />
-                      <span className="text-sm font-medium">{student.name}</span>
-                    </div>
-                    {student.guardian_name && (
-                      <span className="text-xs text-muted-foreground">
-                        {student.guardian_name}
-                      </span>
-                    )}
-                  </label>
-                )
-              })}
+              {students.length === 0 ? (
+                <div className="py-6 text-center text-xs text-muted-foreground">
+                  No active students found in the database.
+                </div>
+              ) : (
+                students
+                  .filter(
+                    (s) =>
+                      assignStudentSearch.trim() === "" ||
+                      s.name.toLowerCase().includes(assignStudentSearch.toLowerCase()) ||
+                      s.guardian_name?.toLowerCase().includes(assignStudentSearch.toLowerCase()),
+                  )
+                  .map((student) => {
+                    const isSelected = selectedStudentIds.includes(student.id)
+                    return (
+                      <label
+                        key={student.id}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-colors ${
+                          isSelected
+                            ? "border-emerald-500/50 bg-emerald-500/10"
+                            : "border-border/60 hover:bg-secondary/60"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              if (isSelected) {
+                                setSelectedStudentIds(
+                                  selectedStudentIds.filter((id) => id !== student.id),
+                                )
+                              } else {
+                                setSelectedStudentIds([...selectedStudentIds, student.id])
+                              }
+                            }}
+                            className="accent-emerald-600 h-4 w-4 rounded"
+                          />
+                          <div>
+                            <p className="text-sm font-medium leading-none">{student.name}</p>
+                            {student.guardian_name && (
+                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                                Guardian: {student.guardian_name}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {student.status && (
+                          <Badge variant="outline" className="text-[10px] font-normal shrink-0">
+                            {student.status}
+                          </Badge>
+                        )}
+                      </label>
+                    )
+                  })
+              )}
             </div>
 
             <div className="space-y-1.5 pt-2">
