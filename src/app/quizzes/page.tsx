@@ -20,7 +20,6 @@ import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { toast } from "@/lib/toast"
 import {
   Dialog,
   DialogContent,
@@ -49,6 +48,7 @@ import type {
   QuizOption,
 } from "@/lib/quizzes/types"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import type { Student } from "@/lib/utils"
 
 export default function TeacherQuizzesPage() {
@@ -1159,10 +1159,11 @@ export default function TeacherQuizzesPage() {
               return (
                 <div className="space-y-2">
                   {quizAttempts.map((attempt) => {
+                    const rawAttempt = attempt as any
                     const studentInfo =
                       studentsMap.get(attempt.student_id) ||
                       attempt.student ||
-                      (Array.isArray(attempt.students) ? attempt.students[0] : attempt.students)
+                      (Array.isArray(rawAttempt.students) ? rawAttempt.students[0] : rawAttempt.students)
                     const studentName = studentInfo?.name || "Student"
                     const studentGuardian = studentInfo?.guardian_name
                       ? `Parent/Guardian: ${studentInfo.guardian_name}`
@@ -1173,6 +1174,7 @@ export default function TeacherQuizzesPage() {
                         key={attempt.id}
                         className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/60"
                       >
+
                         <div className="flex items-center gap-3">
                           <div
                             className={`flex h-9 w-9 items-center justify-center rounded-xl ${
