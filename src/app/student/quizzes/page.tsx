@@ -42,7 +42,22 @@ export default function StudentQuizzesPage() {
           .order("completed_at", { ascending: false }),
       ])
 
-      setAssignments((assignRes.data as any[]) || [])
+      const rawAssignments = (assignRes.data as any[]) || []
+      const formattedAssignments: QuizAssignment[] = rawAssignments.map((a) => {
+        const quizObj = a.quiz || a.quizzes
+        const resolvedQuiz = Array.isArray(quizObj) ? quizObj[0] : quizObj
+        return {
+          id: a.id,
+          quiz_id: a.quiz_id,
+          student_id: a.student_id,
+          status: a.status,
+          assigned_at: a.assigned_at,
+          due_date: a.due_date,
+          quiz: resolvedQuiz,
+        }
+      })
+
+      setAssignments(formattedAssignments)
       setAttempts((attemptsRes.data as QuizAttempt[]) || [])
     } catch (err) {
       console.error("Error loading student quiz data:", err)
