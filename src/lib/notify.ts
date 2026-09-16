@@ -294,3 +294,35 @@ export async function notifyTeacherStudentJoined(
     created_by: teacherUserId,
   })
 }
+
+/**
+ * Notify a student that a new quiz quest has been assigned to them.
+ */
+export async function notifyStudentQuizAssigned(
+  studentId: string,
+  quizTitle: string,
+  quizId: string,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("student_id", studentId)
+    .maybeSingle()
+  if (!profile?.id) return
+
+  const title = `New Quiz Assigned: ${quizTitle}`
+  const body = `Your teacher assigned you a new Islamic Quiz Quest: "${quizTitle}". Tap to start and earn your badge!`
+
+  if (await alreadyNotified(admin, profile.id as string, "quiz_assigned", title)) return
+
+  await admin.from("notifications").insert({
+    recipient_id: profile.id,
+    type: "assignment",
+    title,
+    body,
+    link: `/student/quizzes/${quizId}`,
+    priority: "high",
+  })
+}
+

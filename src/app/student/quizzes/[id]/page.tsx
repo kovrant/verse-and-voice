@@ -56,17 +56,31 @@ export default function StudentQuizPlayerPage() {
   const [isCompleted, setIsCompleted] = useState(false)
   const [gradeResult, setGradeResult] = useState<QuizGradeResult | null>(null)
 
+  const [isNotAssigned, setIsNotAssigned] = useState(false)
+
   const loadQuiz = useCallback(async () => {
-    if (!quizId) return
+    if (!quizId || !student?.id) return
     try {
-      const [quizRes, questionsRes] = await Promise.all([
+      const [quizRes, questionsRes, assignRes] = await Promise.all([
         supabase.from("quizzes").select("*").eq("id", quizId).maybeSingle(),
         supabase
           .from("quiz_questions")
           .select("*")
           .eq("quiz_id", quizId)
           .order("order_index", { ascending: true }),
+        supabase
+          .from("quiz_assignments")
+          .select("id")
+          .eq("quiz_id", quizId)
+          .eq("student_id", student.id)
+          .maybeSingle(),
       ])
+
+      if (!assignRes.data) {
+        setIsNotAssigned(true)
+        setLoading(false)
+        return
+      }
 
       if (quizRes.data) {
         setQuiz(quizRes.data as Quiz)
@@ -79,11 +93,15 @@ export default function StudentQuizPlayerPage() {
     } finally {
       setLoading(false)
     }
-  }, [quizId])
+  }, [quizId, student?.id])
 
   useEffect(() => {
+    if (!student?.id) {
+      if (!studentLoading) setLoading(false)
+      return
+    }
     void loadQuiz()
-  }, [loadQuiz])
+  }, [student?.id, studentLoading, loadQuiz])
 
   const currentQuestion = questions[currentIndex]
   const totalQuestions = questions.length
@@ -181,6 +199,23 @@ export default function StudentQuizPlayerPage() {
 
   if (loading || studentLoading) {
     return <PageLoading variant="student-simple" student />
+  }
+
+  if (isNotAssigned) {
+    return (
+      <div className="py-16 text-center space-y-4 max-w-md mx-auto">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+          <Award className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-bold">Quest Not Assigned</h2>
+        <p className="text-sm text-muted-foreground">
+          This quiz quest is not currently assigned to your account. Ask your teacher to assign it to you!
+        </p>
+        <Link href="/student/quizzes">
+          <Button variant="outline">Back to My Quests</Button>
+        </Link>
+      </div>
+    )
   }
 
   if (!quiz || questions.length === 0) {

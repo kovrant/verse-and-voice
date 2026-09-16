@@ -364,36 +364,17 @@ export default function TeacherQuizzesPage() {
     if (!selectedQuizToAssign) return
     setSavingAssignments(true)
     try {
-      const quizId = selectedQuizToAssign.id
+      const res = await fetch("/api/quizzes/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quiz_id: selectedQuizToAssign.id,
+          student_ids: selectedStudentIds,
+          due_date: assignDueDate || null,
+        }),
+      })
 
-      // Delete removed assignments
-      const currentAssigned = assignments.filter((a) => a.quiz_id === quizId)
-      const toRemove = currentAssigned.filter((a) => !selectedStudentIds.includes(a.student_id))
-
-      if (toRemove.length > 0) {
-        await supabase
-          .from("quiz_assignments")
-          .delete()
-          .in(
-            "id",
-            toRemove.map((a) => a.id),
-          )
-      }
-
-      // Add newly assigned
-      const newlyAdded = selectedStudentIds.filter(
-        (id) => !currentAssigned.some((a) => a.student_id === id),
-      )
-
-      if (newlyAdded.length > 0) {
-        const rows = newlyAdded.map((studentId) => ({
-          quiz_id: quizId,
-          student_id: studentId,
-          status: "pending",
-          due_date: assignDueDate ? new Date(assignDueDate).toISOString() : null,
-        }))
-        await supabase.from("quiz_assignments").insert(rows)
-      }
+      if (!res.ok) throw new Error("Failed to save assignments")
 
       setAssignModalOpen(false)
       await loadData()
