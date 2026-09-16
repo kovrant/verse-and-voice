@@ -20,6 +20,7 @@ import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "@/lib/toast"
 import {
   Dialog,
   DialogContent,
@@ -202,10 +203,15 @@ export default function TeacherQuizzesPage() {
         })
         setAiModalOpen(false)
         setBuilderOpen(true)
+        if (data.source === "gemini_ai") {
+          toast.success("Quiz generated with Gemini AI!")
+        } else if (data.notice) {
+          toast.info("Generated using Islamic question bank. Configure GEMINI_API_KEY in .env.local for live AI.")
+        }
       }
     } catch (err) {
       console.error("AI quiz generation error:", err)
-      alert("Could not generate quiz. Please try again or create manually.")
+      toast.error("Could not generate quiz. Please try again or create manually.")
     } finally {
       setGeneratingAi(false)
     }
