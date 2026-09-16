@@ -19,7 +19,6 @@ import {
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import { OnlineDot } from "@/components/online-dot"
@@ -36,8 +35,9 @@ import { Input } from "@/components/ui/input"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { classTimeToMinutes } from "@/lib/class-time"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { saveBookmark, saveLastPage } from "@/lib/para-progress"
+import { saveBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, type Student } from "@/lib/utils"
 

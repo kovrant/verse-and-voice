@@ -2,7 +2,6 @@
 
 import { Check, Eye, EyeOff, KeyRound } from "lucide-react"
 import { useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { isValidUsername } from "@/lib/student-auth"
+import { toast } from "@/lib/toast"
 
 /**
  * Teacher-facing card to create or reset a student's portal login. Talks to

@@ -3,8 +3,8 @@
 import { BookMarked, BookOpen } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { getDashboardProgress, type QuranRound } from "@/components/quran-progress"
 import { PageLoading } from "@/components/page-loading"
+import { getDashboardProgress, type QuranRound } from "@/components/quran-progress"
 import { StudentMemorizationCard } from "@/components/student-memorization-card"
 import { StudentParaPdf } from "@/components/student-para-pdf"
 import { StudentStreakCard } from "@/components/student-streak-card"

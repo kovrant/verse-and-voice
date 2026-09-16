@@ -4,7 +4,6 @@ import { ArrowLeft, Sparkles, UserPlus } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
 import { Button } from "@/components/ui/button"
@@ -20,6 +19,7 @@ import {
 } from "@/components/ui/select"
 import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { COUNTRIES, formatLocalDate } from "@/lib/utils"
 
 export default function NewStudentPage() {

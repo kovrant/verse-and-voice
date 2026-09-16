@@ -18,9 +18,9 @@ import {
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
+import { PageLoading } from "@/components/page-loading"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { PageLoading } from "@/components/page-loading"
 import { Pagination } from "@/components/ui/pagination"
 import {
   CATEGORY_THEMES,

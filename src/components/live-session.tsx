@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Loader2,
   PanelLeftClose,
   PanelLeftOpen,
   RotateCcw,
@@ -21,10 +20,9 @@ import {
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
-import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { InlineLoader } from "@/components/page-loading"
+import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,12 +34,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { prefetchParaUrls } from "@/lib/pdf-document-cache"
-import { loadBookmark, saveBookmark, type ParaBookmark } from "@/lib/para-progress"
-import { supabase } from "@/lib/supabase"
-import { useClassChannel, type PointerState } from "@/lib/use-class-channel"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
+import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
+import { loadBookmark,saveBookmark } from "@/lib/para-progress"
+import { prefetchParaUrls } from "@/lib/pdf-document-cache"
+import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
+import { type PointerState,useClassChannel } from "@/lib/use-class-channel"
 import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.

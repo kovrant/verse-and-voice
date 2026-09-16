@@ -4,12 +4,12 @@ import { format } from "date-fns"
 import { BookMarked, BookOpen, Trophy } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { PageLoading } from "@/components/page-loading"
 import {
   getChronologicalRoundNumber,
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
-import { PageLoading } from "@/components/page-loading"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { supabase } from "@/lib/supabase"

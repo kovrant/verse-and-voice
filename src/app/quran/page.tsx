@@ -5,10 +5,10 @@
 import { BookOpen, ChevronLeft, ChevronRight, FileText, Search, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { PageLoading } from "@/components/page-loading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { PageLoading } from "@/components/page-loading"
 import { supabase } from "@/lib/supabase"
 
 interface QuranPara {

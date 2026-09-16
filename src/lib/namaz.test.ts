@@ -6,10 +6,10 @@ import {
   isModuleReadyToComplete,
   isStepCardClickable,
   isStepUnlockedForLearning,
-  partRevisionStats,
-  stepProgressByStepId,
   type NamazStep,
   type NamazStepPart,
+  partRevisionStats,
+  stepProgressByStepId,
   type StudentNamazPart,
   type StudentNamazStep,
 } from "./namaz"

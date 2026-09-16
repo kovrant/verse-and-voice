@@ -14,7 +14,6 @@ import {
   X,
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { ArabicText } from "@/components/arabic-text"
 import { PageLoading } from "@/components/page-loading"
@@ -40,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { getHijriMonthInfo, HIJRI_MONTHS } from "@/lib/hijri"
 import { CATEGORIES, CATEGORY_ICON, type HistoryStory } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 type FormState = {
   title: string

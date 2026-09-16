@@ -14,6 +14,7 @@ import {
   Menu,
   Moon,
   ScrollText,
+  Sparkles,
   SpellCheck,
   Trophy,
   X,
@@ -22,14 +23,14 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { Brand } from "@/components/brand"
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
+import { Brand } from "@/components/brand"
 import { useLiveClass } from "@/components/live-class-provider"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { supabase } from "@/lib/supabase"
-import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { useStudent } from "@/lib/use-student"
+import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { cn } from "@/lib/utils"
 
 const baseNavItems = [
@@ -40,6 +41,7 @@ const baseNavItems = [
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/namaz", label: "Namaz", icon: Moon, exact: false, requiresNamaz: true },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },
+  { href: "/student/quizzes", label: "Quizzes", icon: Sparkles, exact: false },
   { href: "/student/achievements", label: "Trophies", icon: Trophy, exact: false },
   { href: "/student/qaida", label: "Qaida", icon: SpellCheck, exact: false },
   { href: "/student/quran", label: "Quran", icon: BookText, exact: false },

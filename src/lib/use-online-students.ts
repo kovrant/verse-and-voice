@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 // Live "who's online" for students, over Supabase Realtime Presence.
 //

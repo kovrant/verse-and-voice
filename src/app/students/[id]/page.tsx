@@ -25,7 +25,6 @@ import {
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
 import { FeeDisplay } from "@/components/fee-display"
@@ -36,21 +35,21 @@ import {
   MemPartWorkspace,
   setChunkMemorized,
 } from "@/components/memorization-chunks"
+import { PageLoading } from "@/components/page-loading"
 import { QuranJourney } from "@/components/quran-journey"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
   type QuranRound,
 } from "@/components/quran-progress"
+import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
 import { type ActivityLog } from "@/components/student-activity-feed"
+import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { StudentNamazAssign } from "@/components/student-namaz-assign"
-import { StudentPortalAccess } from "@/components/student-portal-access"
-import { PageLoading } from "@/components/page-loading"
-import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
-import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
 import { StudentOverview } from "@/components/student-overview"
+import { StudentPortalAccess } from "@/components/student-portal-access"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import {
   type ClassSession,
@@ -81,6 +80,12 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { type SortDirection, toggleSort } from "@/components/ui/sortable-header"
+import {
+  awardMemLesson,
+  type RoundProgress,
+  syncMemChunkAchievements,
+  syncQuranRoundAchievements,
+} from "@/lib/achievements"
 import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import {
@@ -89,13 +94,8 @@ import {
   STUDENT_MEM_SELECT,
   type StudentMemItem,
 } from "@/lib/memorization"
-import {
-  awardMemLesson,
-  syncMemChunkAchievements,
-  syncQuranRoundAchievements,
-  type RoundProgress,
-} from "@/lib/achievements"
 import { fetchAllRows, supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import {
   COUNTRIES,

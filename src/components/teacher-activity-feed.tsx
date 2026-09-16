@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   FEED_FILTERS,
+  type FeedFilter,
   feedTypeMeta,
   matchesFeedFilter,
-  type FeedFilter,
 } from "@/lib/teacher-feed"
 import { DASHBOARD_FEED_LIMIT, useNotifications } from "@/lib/use-notifications"
 import { cn } from "@/lib/utils"

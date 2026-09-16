@@ -1,12 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { labelFor, STUDENT_MEM_SELECT, type MemChunk, type StudentMemItem } from "@/lib/memorization"
+import { type MemChunk, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 
 import {
+  ensureQuranRoundAchievements,
   syncMemorizationChunk,
   syncMemorizationLesson,
   syncNamazComplete,
-  ensureQuranRoundAchievements,
 } from "./sync"
 import type { QuranRoundProgress, QuranRoundRef } from "./types"
 

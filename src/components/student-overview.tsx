@@ -18,23 +18,23 @@ import Link from "next/link"
 import { useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
+import type { MemChunk } from "@/components/memorization-chunks"
 import { OnlineDot } from "@/components/online-dot"
-import { type ActivityLog, ActivityFeed } from "@/components/student-activity-feed"
-import { paraSummary, type ClassSession } from "@/components/student-session-bits"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { chunkProgress, type StudentMemItem } from "@/lib/memorization"
 import {
+  computeProgress,
   getActiveRound,
   getChronologicalRoundNumber,
-  computeProgress,
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
+import { ActivityFeed,type ActivityLog } from "@/components/student-activity-feed"
+import type { StudentView } from "@/components/student-detail-nav"
+import { type ClassSession,paraSummary } from "@/components/student-session-bits"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { chunkProgress, type StudentMemItem } from "@/lib/memorization"
 import type { FeePayment, Student } from "@/lib/utils"
 import { cn, formatSessionDuration } from "@/lib/utils"
-import type { StudentView } from "@/components/student-detail-nav"
-import type { MemChunk } from "@/components/memorization-chunks"
 
 interface StudentOverviewProps {
   student: Student

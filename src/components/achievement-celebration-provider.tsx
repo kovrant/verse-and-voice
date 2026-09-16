@@ -2,12 +2,12 @@
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
-  type ReactNode,
 } from "react"
 
 import {
@@ -16,8 +16,8 @@ import {
   readSeenAchievementIds,
   writeSeenAchievementIds,
 } from "@/lib/achievements/celebrations"
-import { toast } from "@/lib/toast"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { useStudent } from "@/lib/use-student"
 
 interface EarnedAchievement {

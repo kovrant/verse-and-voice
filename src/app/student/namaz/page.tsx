@@ -13,21 +13,21 @@ import {
   learningProgress,
   NAMAZ_PART_SELECT,
   NAMAZ_STEP_SELECT,
-  partsForStep,
+  type NamazStep,
+  type NamazStepPart,
   partProgressByPartId,
+  partsForStep,
   stepProgressByStepId,
   STUDENT_NAMAZ_PART_SELECT,
   STUDENT_NAMAZ_SELECT,
   STUDENT_NAMAZ_STEP_SELECT,
-  type NamazStep,
-  type NamazStepPart,
   type StudentNamaz,
   type StudentNamazPart,
   type StudentNamazStep,
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
-import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { useStudent } from "@/lib/use-student"
+import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
 import { cn } from "@/lib/utils"
 
 export default function StudentNamazPage() {

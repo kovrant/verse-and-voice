@@ -27,9 +27,14 @@ export function slugIssuesCertificate(slug: string): boolean {
   return /^khatm_\d+$/.test(slug)
 }
 
-export function domainForSlug(slug: string): "quran" | "qaida" | "memorization" | "namaz" {
+export function quizBadgeSlug(quizSlugOrId: string): string {
+  return quizSlugOrId.startsWith("badge_quiz_") ? quizSlugOrId : `badge_quiz_${quizSlugOrId}`
+}
+
+export function domainForSlug(slug: string): "quran" | "qaida" | "memorization" | "namaz" | "quiz" {
   if (slug === QAIDA_COMPLETE_SLUG) return "qaida"
   if (slug === NAMAZ_COMPLETE_SLUG) return "namaz"
   if (slug.startsWith("mem_")) return "memorization"
+  if (slug.startsWith("badge_quiz_") || slug.startsWith("quiz_")) return "quiz"
   return "quran"
 }

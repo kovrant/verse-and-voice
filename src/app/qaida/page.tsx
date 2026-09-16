@@ -3,10 +3,10 @@
 import { ChevronLeft, ChevronRight, FileText, Search, SpellCheck, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { PageLoading } from "@/components/page-loading"
 import { Input } from "@/components/ui/input"
 import { type QaidaItem } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"

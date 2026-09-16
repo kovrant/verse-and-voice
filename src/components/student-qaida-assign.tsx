@@ -2,7 +2,6 @@
 
 import { BookMarked } from "lucide-react"
 import { useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import {
   Select,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/select"
 import type { QaidaItem } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 const NONE = "__none__"
 

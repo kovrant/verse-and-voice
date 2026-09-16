@@ -1,5 +1,5 @@
-import { supabase } from "@/lib/supabase"
 import type { MemChunk } from "@/lib/memorization"
+import { supabase } from "@/lib/supabase"
 
 import {
   syncMemorizationChunk,

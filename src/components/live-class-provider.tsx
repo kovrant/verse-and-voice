@@ -3,11 +3,11 @@
 import { Radio } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { detectDevice } from "@/lib/device-detection"
+import { toast } from "@/lib/toast"
 import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"

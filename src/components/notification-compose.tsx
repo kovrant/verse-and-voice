@@ -2,7 +2,6 @@
 
 import { Send } from "lucide-react"
 import { useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -26,6 +25,7 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 interface StudentOption {
   id: string

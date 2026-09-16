@@ -3,7 +3,6 @@
 import { format } from "date-fns"
 import { AlertCircle, Check, CheckCircle2, CreditCard, TrendingUp, X } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { FeeDisplay } from "@/components/fee-display"
 import { PageLoading } from "@/components/page-loading"
@@ -21,6 +20,7 @@ import {
 import { SortableHeader, type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import { feeCurrencyBreakdown, sumFeesPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { CURRENCY_SYMBOLS, type FeePaymentWithStudent } from "@/lib/utils"
 
 // Helper to get a nested sort value

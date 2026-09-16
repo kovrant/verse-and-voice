@@ -17,7 +17,6 @@ import {
   X,
 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { labelFor, loadChunksFor,type MemChunk } from "@/components/memorization-chunks"
 import { PageLoading } from "@/components/page-loading"
@@ -41,6 +40,7 @@ import {
 } from "@/components/ui/select"
 import { type CatalogItem } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 /**
  * The catalog admin view: a shared catalog entry plus the fields only this page

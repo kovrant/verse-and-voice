@@ -3,10 +3,10 @@
 import { Trophy } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import type { AchievementDomain } from "@/lib/achievements"
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
 import { PageLoading } from "@/components/page-loading"
 import { toTrophyItem, TrophyCase } from "@/components/trophy-case"
+import type { AchievementDomain } from "@/lib/achievements"
 import { groupTrophies, trophyHeadline } from "@/lib/achievements/display"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"

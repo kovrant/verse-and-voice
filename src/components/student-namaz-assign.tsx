@@ -1,9 +1,8 @@
 "use client"
 
-import { Check, Lock, Moon, RotateCcw, Unlock } from "lucide-react"
 import { format } from "date-fns"
+import { Check, Lock, Moon, RotateCcw, Unlock } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { Button } from "@/components/ui/button"
 import { awardNamazCompleteBadge } from "@/lib/achievements"
@@ -13,20 +12,21 @@ import {
   isModuleReadyToComplete,
   NAMAZ_PART_SELECT,
   NAMAZ_STEP_SELECT,
+  type NamazStep,
+  type NamazStepPart,
+  partProgressByPartId,
   partRevisionStats,
   partsForStep,
-  partProgressByPartId,
   stepProgressByStepId,
   STUDENT_NAMAZ_PART_SELECT,
   STUDENT_NAMAZ_SELECT,
   STUDENT_NAMAZ_STEP_SELECT,
-  type NamazStep,
-  type NamazStepPart,
   type StudentNamaz,
   type StudentNamazPart,
   type StudentNamazStep,
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 
 /**

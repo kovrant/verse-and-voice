@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase", () => ({
   supabase: mockSupabase,
 }))
 
-import { loadBookmark, loadLastPage, saveBookmark, saveLastPage } from "./para-progress"
+import { loadBookmark, loadLastPage, saveBookmark } from "./para-progress"
 
 describe("para-progress", () => {
   beforeEach(() => {

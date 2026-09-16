@@ -9,14 +9,15 @@ import {
   ChevronDown,
   Moon,
   ScrollText,
+  Sparkles,
   SpellCheck,
   Trophy,
 } from "lucide-react"
 import { useMemo, useState } from "react"
 
-import type { AchievementDomain } from "@/lib/achievements"
-import { groupTrophies, type GroupedTrophies, type TrophyItem } from "@/lib/achievements/display"
 import { Card, CardContent } from "@/components/ui/card"
+import type { AchievementDomain } from "@/lib/achievements"
+import { type GroupedTrophies, groupTrophies, type TrophyItem } from "@/lib/achievements/display"
 import { cn } from "@/lib/utils"
 
 export interface TrophyCertificate {
@@ -270,6 +271,32 @@ export function TrophyCase({ earned, certificates, emptyHint }: TrophyCaseProps)
       {grouped.namaz.length > 0 ? (
         <DomainSection label="Namaz" icon={Moon}>
           {simpleBadges(grouped.namaz, Moon)}
+        </DomainSection>
+      ) : null}
+
+      {grouped.quizzes.length > 0 ? (
+        <DomainSection label="Quests & Quizzes" icon={Sparkles}>
+          <div className="flex flex-wrap gap-2">
+            {grouped.quizzes.map((item) => (
+              <div
+                key={item.slug}
+                className="inline-flex items-center gap-2.5 rounded-xl border border-border/60 bg-gradient-to-r from-amber-500/10 via-card to-card px-3.5 py-2.5 shadow-sm"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{item.title}</p>
+                  {item.description && (
+                    <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground/70 mt-0.5 font-medium">
+                    Unlocked {format(new Date(item.earned_at), "MMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </DomainSection>
       ) : null}
     </div>

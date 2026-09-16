@@ -2,8 +2,8 @@
 
 import { LogIn } from "lucide-react"
 import { useEffect, useState } from "react"
-import { toast } from "@/lib/toast"
 
+import { toast } from "@/lib/toast"
 import { forceSignOutStudent } from "@/lib/use-online-students"
 
 /**

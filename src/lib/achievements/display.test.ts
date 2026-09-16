@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
-import { groupTrophies, parseMemPartTitle, trophyHeadline } from "./display"
 import type { TrophyItem } from "./display"
+import { groupTrophies, parseMemPartTitle, trophyHeadline } from "./display"
 
 function item(partial: Partial<TrophyItem> & Pick<TrophyItem, "slug" | "domain" | "title">): TrophyItem {
   return {

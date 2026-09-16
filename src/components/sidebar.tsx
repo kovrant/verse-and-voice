@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
+  Sparkles,
   SpellCheck,
   Upload,
   Users,
@@ -49,6 +50,7 @@ const navSections = [
       { href: "/qaida", label: "Qaida", icon: SpellCheck },
       { href: "/namaz", label: "Namaz", icon: Moon },
       { href: "/history", label: "Islamic History", icon: ScrollText },
+      { href: "/quizzes", label: "Quizzes", icon: Sparkles },
     ],
   },
   {

@@ -12,11 +12,11 @@
 // teacher policy leak (and mark-read) every user's feed — see
 // supabase/migration_notifications_rls_fix.sql.
 
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from "react"
-import { toast } from "@/lib/toast"
+import { type Dispatch, type SetStateAction,useCallback, useEffect, useState } from "react"
 
 import { retentionCutoffIso } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { ensureRealtimeAuth, getCurrentAuthUser } from "@/lib/use-current-user"
 
 export interface NotificationRow {

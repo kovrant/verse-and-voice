@@ -3,12 +3,12 @@
 import { Loader2, RefreshCw } from "lucide-react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import type { AchievementDomain } from "@/lib/achievements"
-import { backfillStudentAchievements } from "@/lib/achievements/backfill"
-import { groupTrophies, trophyHeadline } from "@/lib/achievements/display"
 import { toTrophyItem, TrophyCase } from "@/components/trophy-case"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
+import type { AchievementDomain } from "@/lib/achievements"
+import { backfillStudentAchievements } from "@/lib/achievements/backfill"
+import { groupTrophies, trophyHeadline } from "@/lib/achievements/display"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 

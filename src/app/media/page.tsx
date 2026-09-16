@@ -17,12 +17,11 @@ import {
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { PageLoading } from "@/components/page-loading"
 import {
   Dialog,
   DialogContent,
@@ -47,6 +46,7 @@ import {
   titleFromFilename,
 } from "@/lib/media-upload"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 
 // react-pdf is client-only (uses worker + canvas) — avoid SSR
 const PdfThumbnail = dynamic(

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+
 import { detectDevice } from "./device-detection"
 
 describe("detectDevice", () => {

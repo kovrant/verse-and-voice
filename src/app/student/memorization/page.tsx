@@ -10,13 +10,13 @@ import {
   type Celebration,
   MemCelebration,
 } from "@/components/memorization-celebration"
-import { PageLoading } from "@/components/page-loading"
 import {
   loadChunksFor,
   loadMemorizedChunkIds,
   type MemChunk,
   MemStudentLesson,
 } from "@/components/memorization-chunks"
+import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import {

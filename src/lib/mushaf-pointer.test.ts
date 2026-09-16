@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest"
+
 import {
+  calculateLineBounds,
+  calculateMushafLine,
   DEFAULT_BOTTOM_MARGIN_RATIO,
   DEFAULT_MUSHAF_LINES,
   DEFAULT_TOP_MARGIN_RATIO,
-  calculateLineBounds,
-  calculateMushafLine,
 } from "@/lib/mushaf-pointer"
 
 describe("mushaf-pointer (15-line Mushaf)", () => {

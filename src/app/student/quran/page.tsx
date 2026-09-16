@@ -1,11 +1,11 @@
 "use client"
 
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 
-import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
+import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
 import { logActivity } from "@/lib/activity-log"
 import { loadBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"

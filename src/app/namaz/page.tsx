@@ -4,7 +4,6 @@
 
 import { ChevronDown, ChevronUp, ImagePlus, Loader2, Moon, Plus, Trash2 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { NamazStepCard } from "@/components/namaz-step-card"
 import { PageLoading } from "@/components/page-loading"
@@ -15,11 +14,12 @@ import {
   NAMAZ_CARD_COLORS,
   NAMAZ_PART_SELECT,
   NAMAZ_STEP_SELECT,
-  partsForStep,
   type NamazStep,
   type NamazStepPart,
+  partsForStep,
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 
 export default function NamazAdminPage() {

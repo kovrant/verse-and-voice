@@ -4,18 +4,18 @@ import { format } from "date-fns"
 import { CalendarCheck, Check, ChevronLeft, ChevronRight, Clock, Minus, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
 
-import { paraSummary, type ClassSession } from "@/components/student-session-bits"
+import { DAY_LABELS } from "@/components/class-days-picker"
 import { PageLoading } from "@/components/page-loading"
-import { Card, CardContent } from "@/components/ui/card"
+import { type ClassSession,paraSummary } from "@/components/student-session-bits"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import {
+  type AttendanceDayStatus,
   buildMonthAttendance,
   localDateKey,
   monthLabel,
   shiftMonth,
-  type AttendanceDayStatus,
 } from "@/lib/attendance"
-import { DAY_LABELS } from "@/components/class-days-picker"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn, formatSessionDuration } from "@/lib/utils"

@@ -15,12 +15,12 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
+import type { PDFDocumentProxy } from "pdfjs-dist"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Document, Page } from "react-pdf"
-import type { PDFDocumentProxy } from "pdfjs-dist"
 
+import { calculateLineBounds, calculateMushafLine,DEFAULT_MUSHAF_LINES } from "@/lib/mushaf-pointer"
 import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
-import { DEFAULT_MUSHAF_LINES, calculateLineBounds, calculateMushafLine } from "@/lib/mushaf-pointer"
 import type { PointerState } from "@/lib/use-class-channel"
 
 export type ViewMode = "standard" | "width" | "page"

@@ -1,5 +1,6 @@
 "use client"
 
+import type { User } from "@supabase/supabase-js"
 import { BookOpen, Eye, EyeOff, Loader2, Lock, Moon, Sun, User as UserIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
@@ -11,7 +12,6 @@ import { detectDevice } from "@/lib/device-detection"
 import { isLoginDisabled, resolveLoginEmail, studentPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
 import { getCurrentAuthUser, prepareForPasswordSignIn, seedAuthUser } from "@/lib/use-current-user"
-import type { User } from "@supabase/supabase-js"
 
 // Friendly, non-punitive message shown when a teacher has turned off sign-in.
 const CONTACT_TEACHER_MESSAGE = "To access the portal, please contact your teacher."

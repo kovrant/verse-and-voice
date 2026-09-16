@@ -2,7 +2,6 @@
 
 import { Check, Flame as FlameIcon } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
-import { toast } from "@/lib/toast"
 
 import { DAY_LABELS } from "@/components/class-days-picker"
 import { Skeleton } from "@/components/page-loading"
@@ -15,6 +14,7 @@ import {
   type WeekDayStatus,
 } from "@/lib/streak"
 import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
 
 interface StudentStreakCardProps {
