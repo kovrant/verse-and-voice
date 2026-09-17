@@ -105,11 +105,20 @@ export const HADITH_TOPICS: Record<HadithTopic, TopicInfo> = {
  */
 export function getEligibleHadithBadgeSlugs(memorizedCount: number): string[] {
   const slugs: string[] = []
+  if (memorizedCount >= 1) {
+    slugs.push(HADITH_BADGE_SLUGS.STARTER)
+  }
   if (memorizedCount >= 5) {
     slugs.push(HADITH_BADGE_SLUGS.EXPLORER)
   }
+  if (memorizedCount >= 10) {
+    slugs.push(HADITH_BADGE_SLUGS.SEEKER)
+  }
   if (memorizedCount >= 15) {
     slugs.push(HADITH_BADGE_SLUGS.CHAMPION)
+  }
+  if (memorizedCount >= 25) {
+    slugs.push(HADITH_BADGE_SLUGS.GUARDIAN)
   }
   if (memorizedCount >= 40) {
     slugs.push(HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR)
@@ -149,7 +158,7 @@ export function getHadithNextMilestone(memorizedCount: number): {
       isComplete: false,
     }
   }
-  if (memorizedCount >= 15) {
+  if (memorizedCount >= 25) {
     const target = 40
     return {
       current: memorizedCount,
@@ -159,7 +168,17 @@ export function getHadithNextMilestone(memorizedCount: number): {
       isComplete: false,
     }
   }
-  if (memorizedCount >= 5) {
+  if (memorizedCount >= 15) {
+    const target = 25
+    return {
+      current: memorizedCount,
+      target,
+      badgeTitle: "Hadith Guardian (25 Hadiths)",
+      percentage: Math.min(100, Math.round((memorizedCount / target) * 100)),
+      isComplete: false,
+    }
+  }
+  if (memorizedCount >= 10) {
     const target = 15
     return {
       current: memorizedCount,
@@ -169,12 +188,32 @@ export function getHadithNextMilestone(memorizedCount: number): {
       isComplete: false,
     }
   }
-  const target = 5
+  if (memorizedCount >= 5) {
+    const target = 10
+    return {
+      current: memorizedCount,
+      target,
+      badgeTitle: "Sunnah Seeker (10 Hadiths)",
+      percentage: Math.min(100, Math.round((memorizedCount / target) * 100)),
+      isComplete: false,
+    }
+  }
+  if (memorizedCount >= 1) {
+    const target = 5
+    return {
+      current: memorizedCount,
+      target,
+      badgeTitle: "Hadith Explorer (5 Hadiths)",
+      percentage: Math.min(100, Math.round((memorizedCount / target) * 100)),
+      isComplete: false,
+    }
+  }
+  const target = 1
   return {
     current: memorizedCount,
     target,
-    badgeTitle: "Hadith Explorer (5 Hadiths)",
-    percentage: Math.min(100, Math.round((memorizedCount / target) * 100)),
+    badgeTitle: "First Hadith Memorized",
+    percentage: 0,
     isComplete: false,
   }
 }

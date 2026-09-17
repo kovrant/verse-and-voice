@@ -63,8 +63,11 @@ export interface HadithStats {
 }
 
 export const HADITH_BADGE_SLUGS = {
+  STARTER: "hadith-starter",
   EXPLORER: "hadith-explorer",
+  SEEKER: "hadith-seeker",
   CHAMPION: "hadith-champion",
+  GUARDIAN: "hadith-guardian",
   ARBAIN_SCHOLAR: "hadith-arbain-scholar",
   GRAND_SCHOLAR: "hadith-grand-scholar",
 } as const

@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { getEligibleHadithBadgeSlugs } from "@/lib/hadiths/hadith-engine"
+import { HADITH_BADGE_SLUGS } from "@/lib/hadiths/types"
 import { chunkProgress, labelFor, type MemChunk } from "@/lib/memorization"
 
 import { awardAchievement } from "./award"
@@ -13,6 +15,7 @@ import {
   totalParas,
 } from "./completion/quran"
 import {
+  hadithItemSlug,
   khatmSlug,
   memLessonSlug,
   memPartSlug,
@@ -173,3 +176,109 @@ export async function syncNamazComplete(db: SupabaseClient, studentId: string): 
     // ponytail: best-effort
   }
 }
+
+export const HADITH_MILESTONE_DEFINITIONS: Record<
+  string,
+  { slug: string; title: string; description: string; domain: "hadith"; kind: "badge"; issuesCertificate: boolean }
+> = {
+  [HADITH_BADGE_SLUGS.STARTER]: {
+    slug: HADITH_BADGE_SLUGS.STARTER,
+    title: "First Hadith Memorized",
+    description: "Memorized your first Hadith of Prophet Muhammad (ﷺ)",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.EXPLORER]: {
+    slug: HADITH_BADGE_SLUGS.EXPLORER,
+    title: "Hadith Explorer",
+    description: "Memorized 5 precious Hadiths of Prophet Muhammad (ﷺ)",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.SEEKER]: {
+    slug: HADITH_BADGE_SLUGS.SEEKER,
+    title: "Sunnah Seeker",
+    description: "Memorized 10 Hadiths with their moral lessons and translations",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.CHAMPION]: {
+    slug: HADITH_BADGE_SLUGS.CHAMPION,
+    title: "Sunnah Champion",
+    description: "Memorized 15 Hadiths with their moral lessons and translations",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.GUARDIAN]: {
+    slug: HADITH_BADGE_SLUGS.GUARDIAN,
+    title: "Hadith Guardian",
+    description: "Memorized 25 Hadiths with their moral lessons and translations",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR]: {
+    slug: HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
+    title: "Arba'in Scholar (40 Hadith Master)",
+    description: "Completed the noble milestone of memorizing 40 Short Hadiths for Kids",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+  [HADITH_BADGE_SLUGS.GRAND_SCHOLAR]: {
+    slug: HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
+    title: "Grand Sunnah Scholar (50 Hadith Master)",
+    description: "Achieved the highest honor of memorizing 50 Short Hadiths for Kids",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
+}
+
+/** Sync Hadith progress → individual Hadith item badge + milestone badges. */
+export async function syncHadithMemorized(
+  db: SupabaseClient,
+  studentId: string,
+  hadith: { id: string; hadith_number: number; english_text?: string; topic?: string },
+  totalMemorized: number,
+): Promise<string[]> {
+  const newlyAwarded: string[] = []
+  try {
+    // 1. Award individual Hadith item badge
+    const itemSlug = hadithItemSlug(hadith.hadith_number)
+    const itemTitle = `Hadith #${hadith.hadith_number} Memorized`
+    const excerpt = hadith.english_text ? ` ("${hadith.english_text.slice(0, 75)}...")` : ""
+    const itemDesc = `Memorized Hadith #${hadith.hadith_number}${excerpt}`
+
+    const itemRes = await awardAchievement(db, studentId, itemSlug, `hadith:${hadith.id}`, {
+      slug: itemSlug,
+      title: itemTitle,
+      description: itemDesc,
+      domain: "hadith",
+      kind: "badge",
+      issuesCertificate: false,
+    })
+    if (itemRes.awarded) {
+      newlyAwarded.push(itemTitle)
+    }
+
+    // 2. Award milestone badges
+    const eligibleSlugs = getEligibleHadithBadgeSlugs(totalMemorized)
+    for (const slug of eligibleSlugs) {
+      const def = HADITH_MILESTONE_DEFINITIONS[slug]
+      if (!def) continue
+      const res = await awardAchievement(db, studentId, slug, "hadith", def)
+      if (res.awarded) {
+        newlyAwarded.push(def.title)
+      }
+    }
+  } catch (err) {
+    console.error("Error syncing hadith achievements:", err)
+  }
+  return newlyAwarded
+}
+

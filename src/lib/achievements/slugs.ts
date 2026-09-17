@@ -31,10 +31,15 @@ export function quizBadgeSlug(quizSlugOrId: string): string {
   return quizSlugOrId.startsWith("badge_quiz_") ? quizSlugOrId : `badge_quiz_${quizSlugOrId}`
 }
 
-export function domainForSlug(slug: string): "quran" | "qaida" | "memorization" | "namaz" | "quiz" {
+export function hadithItemSlug(hadithNumber: number): string {
+  return `hadith_${String(hadithNumber).padStart(2, "0")}`
+}
+
+export function domainForSlug(slug: string): "quran" | "qaida" | "memorization" | "namaz" | "quiz" | "hadith" {
   if (slug === QAIDA_COMPLETE_SLUG) return "qaida"
   if (slug === NAMAZ_COMPLETE_SLUG) return "namaz"
   if (slug.startsWith("mem_")) return "memorization"
   if (slug.startsWith("badge_quiz_") || slug.startsWith("quiz_")) return "quiz"
+  if (slug.startsWith("hadith_") || slug.startsWith("hadith-")) return "hadith"
   return "quran"
 }

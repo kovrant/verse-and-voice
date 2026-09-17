@@ -1,47 +1,8 @@
 import { NextResponse } from "next/server"
 
-import { awardAchievement } from "@/lib/achievements/award"
-import { getEligibleHadithBadgeSlugs } from "@/lib/hadiths/hadith-engine"
-import { HADITH_BADGE_SLUGS, type HadithStatus } from "@/lib/hadiths/types"
+import { syncHadithMemorized } from "@/lib/achievements/sync"
+import type { HadithStatus } from "@/lib/hadiths/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
-
-const HADITH_BADGE_DEFINITIONS: Record<
-  string,
-  { slug: string; title: string; description: string; domain: "hadith"; kind: "badge"; issuesCertificate: boolean }
-> = {
-  [HADITH_BADGE_SLUGS.EXPLORER]: {
-    slug: HADITH_BADGE_SLUGS.EXPLORER,
-    title: "Hadith Explorer",
-    description: "Memorized 5 precious Hadiths of Prophet Muhammad (ﷺ)",
-    domain: "hadith",
-    kind: "badge",
-    issuesCertificate: false,
-  },
-  [HADITH_BADGE_SLUGS.CHAMPION]: {
-    slug: HADITH_BADGE_SLUGS.CHAMPION,
-    title: "Sunnah Champion",
-    description: "Memorized 15 Hadiths with their moral lessons and translations",
-    domain: "hadith",
-    kind: "badge",
-    issuesCertificate: false,
-  },
-  [HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR]: {
-    slug: HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
-    title: "Arba'in Scholar (40 Hadith Master)",
-    description: "Completed the noble milestone of memorizing 40 Short Hadiths for Kids",
-    domain: "hadith",
-    kind: "badge",
-    issuesCertificate: false,
-  },
-  [HADITH_BADGE_SLUGS.GRAND_SCHOLAR]: {
-    slug: HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
-    title: "Grand Sunnah Scholar (50 Hadith Master)",
-    description: "Achieved the highest honor of memorizing 50 Short Hadiths for Kids",
-    domain: "hadith",
-    kind: "badge",
-    issuesCertificate: false,
-  },
-}
 
 export async function POST(request: Request) {
   let body: {
@@ -132,25 +93,35 @@ export async function POST(request: Request) {
       .eq("status", "pending")
   }
 
-  // 3. Count total memorized Hadiths for this student & check milestone badges
-  const { count: memorizedCount } = await admin
-    .from("student_hadith_progress")
-    .select("id", { count: "exact", head: true })
-    .eq("student_id", studentId)
-    .eq("status", "memorized")
+  // 3. Count total memorized Hadiths for this student & award trophies/badges
+  let newlyAwardedBadges: string[] = []
+  let totalMemorized = 0
 
-  const totalMemorized = memorizedCount || 0
-  const eligibleSlugs = getEligibleHadithBadgeSlugs(totalMemorized)
-  const newlyAwardedBadges: string[] = []
+  if (savedProgress?.status === "memorized") {
+    const [{ count: memorizedCount }, { data: hadithData }] = await Promise.all([
+      admin
+        .from("student_hadith_progress")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("status", "memorized"),
+      admin
+        .from("hadiths")
+        .select("id, hadith_number, english_text, topic")
+        .eq("id", hadithId)
+        .maybeSingle(),
+    ])
 
-  for (const slug of eligibleSlugs) {
-    const def = HADITH_BADGE_DEFINITIONS[slug]
-    if (!def) continue
-
-    const res = await awardAchievement(admin, studentId, slug, "hadith", def)
-    if (res.awarded) {
-      newlyAwardedBadges.push(def.title)
+    totalMemorized = memorizedCount || 0
+    if (hadithData) {
+      newlyAwardedBadges = await syncHadithMemorized(admin, studentId, hadithData, totalMemorized)
     }
+  } else {
+    const { count: memorizedCount } = await admin
+      .from("student_hadith_progress")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", studentId)
+      .eq("status", "memorized")
+    totalMemorized = memorizedCount || 0
   }
 
   return NextResponse.json({

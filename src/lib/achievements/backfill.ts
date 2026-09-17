@@ -4,6 +4,7 @@ import { type MemChunk, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/me
 
 import {
   ensureQuranRoundAchievements,
+  syncHadithMemorized,
   syncMemorizationChunk,
   syncMemorizationLesson,
   syncNamazComplete,
@@ -105,6 +106,20 @@ export async function backfillStudentAchievements(
 
   if (namaz?.status === "completed") {
     await syncNamazComplete(db, studentId)
+  }
+
+  const { data: hadithProgress } = await db
+    .from("student_hadith_progress")
+    .select("status, hadiths(id, hadith_number, english_text, topic)")
+    .eq("student_id", studentId)
+    .eq("status", "memorized")
+
+  const memorizedHadiths = (hadithProgress ?? [])
+    .map((row) => (Array.isArray(row.hadiths) ? row.hadiths[0] : row.hadiths))
+    .filter(Boolean) as { id: string; hadith_number: number; english_text?: string; topic?: string }[]
+
+  for (const h of memorizedHadiths) {
+    await syncHadithMemorized(db, studentId, h, memorizedHadiths.length)
   }
 
   const after = await countAchievements(db, studentId)

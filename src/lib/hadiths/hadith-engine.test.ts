@@ -12,45 +12,78 @@ import { HADITH_BADGE_SLUGS, type HadithWithProgress } from "./types"
 describe("Hadith Engine", () => {
   it("calculates eligible badge slugs correctly", () => {
     expect(getEligibleHadithBadgeSlugs(0)).toEqual([])
-    expect(getEligibleHadithBadgeSlugs(4)).toEqual([])
-    expect(getEligibleHadithBadgeSlugs(5)).toEqual([HADITH_BADGE_SLUGS.EXPLORER])
-    expect(getEligibleHadithBadgeSlugs(14)).toEqual([HADITH_BADGE_SLUGS.EXPLORER])
-    expect(getEligibleHadithBadgeSlugs(15)).toEqual([
+    expect(getEligibleHadithBadgeSlugs(1)).toEqual([HADITH_BADGE_SLUGS.STARTER])
+    expect(getEligibleHadithBadgeSlugs(4)).toEqual([HADITH_BADGE_SLUGS.STARTER])
+    expect(getEligibleHadithBadgeSlugs(5)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
       HADITH_BADGE_SLUGS.EXPLORER,
+    ])
+    expect(getEligibleHadithBadgeSlugs(10)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
+      HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.SEEKER,
+    ])
+    expect(getEligibleHadithBadgeSlugs(15)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
+      HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.SEEKER,
       HADITH_BADGE_SLUGS.CHAMPION,
     ])
-    expect(getEligibleHadithBadgeSlugs(39)).toEqual([
+    expect(getEligibleHadithBadgeSlugs(25)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
       HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.SEEKER,
       HADITH_BADGE_SLUGS.CHAMPION,
+      HADITH_BADGE_SLUGS.GUARDIAN,
     ])
     expect(getEligibleHadithBadgeSlugs(40)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
       HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.SEEKER,
       HADITH_BADGE_SLUGS.CHAMPION,
+      HADITH_BADGE_SLUGS.GUARDIAN,
       HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
     ])
     expect(getEligibleHadithBadgeSlugs(50)).toEqual([
+      HADITH_BADGE_SLUGS.STARTER,
       HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.SEEKER,
       HADITH_BADGE_SLUGS.CHAMPION,
+      HADITH_BADGE_SLUGS.GUARDIAN,
       HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
       HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
     ])
   })
 
   it("calculates next milestone targets", () => {
-    const m0 = getHadithNextMilestone(2)
-    expect(m0.target).toBe(5)
-    expect(m0.percentage).toBe(40)
+    const m0 = getHadithNextMilestone(0)
+    expect(m0.target).toBe(1)
     expect(m0.isComplete).toBe(false)
 
+    const m1 = getHadithNextMilestone(2)
+    expect(m1.target).toBe(5)
+    expect(m1.percentage).toBe(40)
+    expect(m1.isComplete).toBe(false)
+
     const m5 = getHadithNextMilestone(6)
-    expect(m5.target).toBe(15)
-    expect(m5.percentage).toBe(40)
+    expect(m5.target).toBe(10)
+    expect(m5.percentage).toBe(60)
     expect(m5.isComplete).toBe(false)
 
+    const m10 = getHadithNextMilestone(12)
+    expect(m10.target).toBe(15)
+    expect(m10.percentage).toBe(80)
+    expect(m10.isComplete).toBe(false)
+
     const m15 = getHadithNextMilestone(20)
-    expect(m15.target).toBe(40)
-    expect(m15.percentage).toBe(50)
+    expect(m15.target).toBe(25)
+    expect(m15.percentage).toBe(80)
     expect(m15.isComplete).toBe(false)
+
+    const m25 = getHadithNextMilestone(30)
+    expect(m25.target).toBe(40)
+    expect(m25.percentage).toBe(75)
+    expect(m25.isComplete).toBe(false)
 
     const m40 = getHadithNextMilestone(45)
     expect(m40.target).toBe(50)
