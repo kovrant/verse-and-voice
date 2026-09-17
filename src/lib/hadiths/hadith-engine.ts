@@ -26,6 +26,14 @@ export const HADITH_TOPICS: Record<HadithTopic, TopicInfo> = {
     color: "text-cyan-500",
     bgColor: "bg-cyan-500/10 border-cyan-500/20",
   },
+  purity: {
+    key: "purity",
+    label: "Cleanliness & Purity",
+    urduLabel: "طہارت و صفائی",
+    icon: "💧",
+    color: "text-cyan-500",
+    bgColor: "bg-cyan-500/10 border-cyan-500/20",
+  },
   knowledge: {
     key: "knowledge",
     label: "Knowledge & Learning",

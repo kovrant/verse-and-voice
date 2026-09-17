@@ -67,13 +67,11 @@ export default function TeacherHadithsPage() {
   const [selectedHadithForAssign, setSelectedHadithForAssign] = useState<Hadith | null>(null)
   const [targetStudentIds, setTargetStudentIds] = useState<string[]>([])
   const [dueDate, setDueDate] = useState<string>("")
-  const [notes, setNotes] = useState<string>("")
   const [submittingAssign, setSubmittingAssign] = useState(false)
 
   // Custom Hadith Modal
   const [customModalOpen, setCustomModalOpen] = useState(false)
   const [editingHadithId, setEditingHadithId] = useState<string | null>(null)
-  const [customTitle, setCustomTitle] = useState("")
   const [customArabic, setCustomArabic] = useState("")
   const [customEnglish, setCustomEnglish] = useState("")
   const [customUrdu, setCustomUrdu] = useState("")
@@ -86,13 +84,28 @@ export default function TeacherHadithsPage() {
   const loadData = useCallback(async () => {
     try {
       const [hadithsRes, studentsRes, assignRes, progRes] = await Promise.all([
-        supabase.from("hadiths").select("*").eq("is_active", true).order("order_index", { ascending: true }),
+        supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
         supabase.from("students").select("*").eq("status", "active").order("name", { ascending: true }),
         supabase.from("hadith_assignments").select("*, hadiths(*)").order("assigned_at", { ascending: false }),
         supabase.from("student_hadith_progress").select("*"),
       ])
 
-      setHadiths((hadithsRes.data as Hadith[]) || [])
+      const rawHadiths = (hadithsRes.data as any[]) || []
+      const formattedHadiths: Hadith[] = rawHadiths.map((h, index) => ({
+        id: h.id,
+        hadith_number: h.hadith_number || index + 1,
+        arabic_text: h.arabic_text || "",
+        english_text: h.english_text || h.english_translation || "",
+        urdu_text: h.urdu_text || h.urdu_translation || "",
+        kids_lesson: h.kids_lesson || h.kid_lesson || "",
+        narrator: h.narrator || "Prophet Muhammad (ﷺ)",
+        reference: h.reference || "",
+        topic: (h.topic as HadithTopic) || "general",
+        order_index: h.order_index || h.hadith_number || index + 1,
+        is_published: h.is_published !== false,
+      }))
+
+      setHadiths(formattedHadiths)
       setStudents((studentsRes.data as Student[]) || [])
       setAssignments((assignRes.data as any[]) || [])
       setProgressList((progRes.data as StudentHadithProgress[]) || [])
@@ -115,7 +128,7 @@ export default function TeacherHadithsPage() {
     const totalStudents = students.length
     const memorizedRows = progressList.filter((p) => p.status === "memorized")
     const totalMemorizations = memorizedRows.length
-    const activeAssignments = assignments.filter((a) => !a.completed_at).length
+    const activeAssignments = assignments.filter((a) => a.status === "pending").length
 
     return {
       totalHadiths,
@@ -131,12 +144,12 @@ export default function TeacherHadithsPage() {
       if (selectedTopic !== "all" && h.topic !== selectedTopic) return false
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchTitle = h.title.toLowerCase().includes(q)
-        const matchEng = h.english_translation.toLowerCase().includes(q)
-        const matchUrdu = h.urdu_translation.includes(q)
-        const matchArabic = h.arabic_text.includes(q)
-        const matchLesson = h.kid_lesson.toLowerCase().includes(q)
-        if (!matchTitle && !matchEng && !matchUrdu && !matchArabic && !matchLesson) {
+        const matchEng = (h.english_text || "").toLowerCase().includes(q)
+        const matchUrdu = (h.urdu_text || "").includes(q)
+        const matchArabic = (h.arabic_text || "").includes(q)
+        const matchLesson = (h.kids_lesson || "").toLowerCase().includes(q)
+        const matchRef = (h.reference || "").toLowerCase().includes(q)
+        if (!matchEng && !matchUrdu && !matchArabic && !matchLesson && !matchRef) {
           return false
         }
       }
@@ -154,7 +167,7 @@ export default function TeacherHadithsPage() {
 
       // Active assignments for this student
       const studentAssignments = assignments.filter(
-        (a) => a.student_id === student.id && !a.completed_at,
+        (a) => a.student_id === student.id && a.status === "pending",
       )
 
       return {
@@ -177,7 +190,7 @@ export default function TeacherHadithsPage() {
     } else if (targetHadith) {
       // Pre-select students currently assigned to this hadith
       const currentlyAssigned = assignments
-        .filter((a) => a.hadith_id === targetHadith.id && !a.completed_at)
+        .filter((a) => a.hadith_id === targetHadith.id && a.status === "pending")
         .map((a) => a.student_id)
       setTargetStudentIds(currentlyAssigned)
     } else {
@@ -185,7 +198,6 @@ export default function TeacherHadithsPage() {
     }
 
     setDueDate("")
-    setNotes("")
     setAssignModalOpen(true)
   }
 
@@ -205,7 +217,6 @@ export default function TeacherHadithsPage() {
           hadith_id: selectedHadithForAssign.id,
           student_ids: targetStudentIds,
           due_date: dueDate || null,
-          notes: notes || null,
         }),
       })
 
@@ -215,7 +226,7 @@ export default function TeacherHadithsPage() {
       }
 
       toast.success(
-        `Assigned "${selectedHadithForAssign.title}" to ${targetStudentIds.length} student${targetStudentIds.length === 1 ? "" : "s"}`,
+        `Assigned Hadith #${selectedHadithForAssign.hadith_number} to ${targetStudentIds.length} student${targetStudentIds.length === 1 ? "" : "s"}`,
       )
       setAssignModalOpen(false)
       void loadData()
@@ -231,17 +242,15 @@ export default function TeacherHadithsPage() {
   const openCustomModal = (hadith?: Hadith) => {
     if (hadith) {
       setEditingHadithId(hadith.id)
-      setCustomTitle(hadith.title)
       setCustomArabic(hadith.arabic_text)
-      setCustomEnglish(hadith.english_translation)
-      setCustomUrdu(hadith.urdu_translation)
-      setCustomLesson(hadith.kid_lesson)
-      setCustomNarrator(hadith.narrator)
+      setCustomEnglish(hadith.english_text)
+      setCustomUrdu(hadith.urdu_text)
+      setCustomLesson(hadith.kids_lesson)
+      setCustomNarrator(hadith.narrator || "Prophet Muhammad (ﷺ)")
       setCustomReference(hadith.reference)
       setCustomTopic(hadith.topic)
     } else {
       setEditingHadithId(null)
-      setCustomTitle("")
       setCustomArabic("")
       setCustomEnglish("")
       setCustomUrdu("")
@@ -255,8 +264,8 @@ export default function TeacherHadithsPage() {
 
   // Handle Save Custom Hadith
   const handleSaveCustomHadith = async () => {
-    if (!customTitle.trim() || !customArabic.trim() || !customEnglish.trim()) {
-      toast.error("Title, Arabic text, and English translation are required")
+    if (!customArabic.trim() || !customEnglish.trim()) {
+      toast.error("Arabic text and English translation are required")
       return
     }
 
@@ -266,11 +275,10 @@ export default function TeacherHadithsPage() {
         const { error } = await supabase
           .from("hadiths")
           .update({
-            title: customTitle.trim(),
             arabic_text: customArabic.trim(),
-            english_translation: customEnglish.trim(),
-            urdu_translation: customUrdu.trim(),
-            kid_lesson: customLesson.trim(),
+            english_text: customEnglish.trim(),
+            urdu_text: customUrdu.trim(),
+            kids_lesson: customLesson.trim(),
             narrator: customNarrator.trim() || "Prophet Muhammad (ﷺ)",
             reference: customReference.trim() || "Sahih al-Bukhari",
             topic: customTopic,
@@ -281,18 +289,18 @@ export default function TeacherHadithsPage() {
         if (error) throw error
         toast.success("Hadith updated successfully")
       } else {
-        const nextOrderIndex = hadiths.length > 0 ? Math.max(...hadiths.map((h) => h.order_index)) + 1 : 1
+        const nextHadithNumber = hadiths.length > 0 ? Math.max(...hadiths.map((h) => h.hadith_number)) + 1 : 1
         const { error } = await supabase.from("hadiths").insert({
-          title: customTitle.trim(),
+          hadith_number: nextHadithNumber,
           arabic_text: customArabic.trim(),
-          english_translation: customEnglish.trim(),
-          urdu_translation: customUrdu.trim(),
-          kid_lesson: customLesson.trim(),
+          english_text: customEnglish.trim(),
+          urdu_text: customUrdu.trim(),
+          kids_lesson: customLesson.trim(),
           narrator: customNarrator.trim() || "Prophet Muhammad (ﷺ)",
           reference: customReference.trim() || "Sahih al-Bukhari",
           topic: customTopic,
-          order_index: nextOrderIndex,
-          is_active: true,
+          order_index: nextHadithNumber,
+          is_published: true,
         })
 
         if (error) throw error
@@ -340,7 +348,7 @@ export default function TeacherHadithsPage() {
             Short Hadiths Studio
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Browse 40 authentic short Hadiths for kids, assign weekly learning goals, and track student memorization milestones.
+            Browse {hadiths.length} authentic short Hadiths for kids, assign weekly learning goals, and track student memorization milestones.
           </p>
         </div>
 
@@ -479,7 +487,7 @@ export default function TeacherHadithsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredHadiths.map((hadith) => {
               const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
-              const assignedCount = assignments.filter((a) => a.hadith_id === hadith.id && !a.completed_at).length
+              const assignedCount = assignments.filter((a) => a.hadith_id === hadith.id && a.status === "pending").length
               const completedCount = progressList.filter((p) => p.hadith_id === hadith.id && p.status === "memorized").length
 
               return (
@@ -488,7 +496,7 @@ export default function TeacherHadithsPage() {
                     <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
-                          {hadith.order_index}
+                          {hadith.hadith_number}
                         </span>
                         <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
                           <span>{topicInfo.icon}</span>
@@ -513,19 +521,19 @@ export default function TeacherHadithsPage() {
                       {/* English Translation */}
                       <div>
                         <p className="text-[11px] font-semibold text-muted-foreground uppercase">Meaning</p>
-                        <p className="text-sm font-medium text-foreground italic">&ldquo;{hadith.english_translation}&rdquo;</p>
+                        <p className="text-sm font-medium text-foreground italic">&ldquo;{hadith.english_text}&rdquo;</p>
                       </div>
 
                       {/* Urdu Translation */}
                       <div className="text-right" dir="rtl">
                         <p className="text-[11px] font-semibold text-muted-foreground">ترجمہ</p>
-                        <p className="text-sm font-medium text-foreground">{hadith.urdu_translation}</p>
+                        <p className="text-sm font-medium text-foreground">{hadith.urdu_text}</p>
                       </div>
 
                       {/* Kid Lesson */}
                       <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-start gap-2">
                         <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Kid&apos;s Lesson: </span>{hadith.kid_lesson}</p>
+                        <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Kid&apos;s Lesson: </span>{hadith.kids_lesson}</p>
                       </div>
 
                       {/* Reference */}
@@ -659,7 +667,7 @@ export default function TeacherHadithsPage() {
                 <SelectContent className="max-h-60">
                   {hadiths.map((h) => (
                     <SelectItem key={h.id} value={h.id} className="text-xs">
-                      #{h.order_index} · {h.title} ({h.english_translation.slice(0, 35)}...)
+                      #{h.hadith_number} · {h.english_text.slice(0, 45)}...
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -729,17 +737,6 @@ export default function TeacherHadithsPage() {
                 className="text-xs"
               />
             </div>
-
-            {/* Notes */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Teacher&apos;s Advice / Weekly Goal (Optional)</Label>
-              <Textarea
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="e.g. Read this 5 times every day after Fajr and practice smiling at your parents!"
-                className="text-xs min-h-[70px]"
-              />
-            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -770,16 +767,6 @@ export default function TeacherHadithsPage() {
           </DialogHeader>
 
           <div className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-1">
-            <div className="space-y-1">
-              <Label className="text-xs font-bold">Title / Topic Header *</Label>
-              <Input
-                value={customTitle}
-                onChange={(e) => setCustomTitle(e.target.value)}
-                placeholder="e.g. Cleanliness is Half of Faith"
-                className="text-xs"
-              />
-            </div>
-
             <div className="space-y-1">
               <Label className="text-xs font-bold">Arabic Text (with Tashkeel) *</Label>
               <Input
@@ -844,7 +831,7 @@ export default function TeacherHadithsPage() {
                 <Input
                   value={customReference}
                   onChange={(e) => setCustomReference(e.target.value)}
-                  placeholder="e.g. Sahih Muslim"
+                  placeholder="e.g. Sahih Muslim 223"
                   className="text-xs"
                 />
               </div>
@@ -855,7 +842,7 @@ export default function TeacherHadithsPage() {
               <Input
                 value={customNarrator}
                 onChange={(e) => setCustomNarrator(e.target.value)}
-                placeholder="e.g. Abu Malik al-Ash'ari"
+                placeholder="e.g. Abu Malik al-Ash'ari (RA)"
                 className="text-xs"
               />
             </div>

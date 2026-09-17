@@ -1,6 +1,7 @@
 export type HadithTopic =
   | "manners"
   | "cleanliness"
+  | "purity"
   | "knowledge"
   | "kindness"
   | "mercy"
@@ -14,19 +15,19 @@ export type HadithStatus = "reading" | "memorizing" | "memorized"
 
 export interface Hadith {
   id: string
-  title: string
+  hadith_number: number
+  title?: string
   arabic_text: string
-  english_translation: string
-  urdu_translation: string
-  kid_lesson: string
-  narrator: string
+  english_text: string
+  urdu_text: string
+  kids_lesson: string
+  narrator?: string | null
   reference: string
   topic: HadithTopic
   order_index: number
-  is_active: boolean
-  created_by?: string | null
-  created_at: string
-  updated_at: string
+  is_published: boolean
+  created_at?: string
+  updated_at?: string
 }
 
 export interface StudentHadithProgress {
@@ -35,21 +36,17 @@ export interface StudentHadithProgress {
   hadith_id: string
   status: HadithStatus
   memorized_at?: string | null
-  practice_count: number
-  created_at: string
-  updated_at: string
+  updated_at?: string
 }
 
 export interface HadithAssignment {
   id: string
-  teacher_id: string
-  student_id: string
   hadith_id: string
-  assigned_at: string
+  student_id: string
+  status: "pending" | "completed"
+  assigned_at?: string
   due_date?: string | null
-  notes?: string | null
-  completed_at?: string | null
-  hadith?: Hadith
+  hadiths?: Hadith
 }
 
 export interface HadithWithProgress extends Hadith {

@@ -48,7 +48,6 @@ export async function POST(request: Request) {
     student_id?: string
     hadith_id?: string
     status?: HadithStatus
-    increment_practice?: boolean
   }
 
   try {
@@ -60,7 +59,6 @@ export async function POST(request: Request) {
   const studentId = body.student_id?.trim()
   const hadithId = body.hadith_id?.trim()
   const status = body.status
-  const incrementPractice = !!body.increment_practice
 
   if (!studentId || !hadithId) {
     return NextResponse.json({ error: "student_id and hadith_id are required" }, { status: 400 })
@@ -86,16 +84,11 @@ export async function POST(request: Request) {
         ? existingProgress.memorized_at || now
         : existingProgress.memorized_at
 
-    const practiceCount = incrementPractice
-      ? (existingProgress.practice_count || 0) + 1
-      : existingProgress.practice_count || 0
-
     const { data: updated, error } = await admin
       .from("student_hadith_progress")
       .update({
         status: newStatus,
         memorized_at: memorizedAt,
-        practice_count: practiceCount,
         updated_at: now,
       })
       .eq("id", existingProgress.id)
@@ -110,7 +103,6 @@ export async function POST(request: Request) {
   } else {
     const newStatus = status || "reading"
     const memorizedAt = newStatus === "memorized" ? now : null
-    const practiceCount = incrementPractice ? 1 : 0
 
     const { data: inserted, error } = await admin
       .from("student_hadith_progress")
@@ -119,7 +111,6 @@ export async function POST(request: Request) {
         hadith_id: hadithId,
         status: newStatus,
         memorized_at: memorizedAt,
-        practice_count: practiceCount,
       })
       .select()
       .maybeSingle()
@@ -132,13 +123,13 @@ export async function POST(request: Request) {
   }
 
   // 2. Check if this hadith assignment exists and mark completed if memorized
-  if (savedProgress.status === "memorized") {
+  if (savedProgress?.status === "memorized") {
     await admin
       .from("hadith_assignments")
-      .update({ completed_at: now })
+      .update({ status: "completed" })
       .eq("student_id", studentId)
       .eq("hadith_id", hadithId)
-      .is("completed_at", null)
+      .eq("status", "pending")
   }
 
   // 3. Count total memorized Hadiths for this student & check milestone badges

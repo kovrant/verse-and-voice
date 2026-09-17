@@ -28,6 +28,7 @@ import {
 import type {
   Hadith,
   HadithStatus,
+  HadithTopic,
   HadithWithProgress,
   StudentHadithProgress,
 } from "@/lib/hadiths/types"
@@ -59,7 +60,7 @@ export default function StudentHadithsPage() {
     if (!student?.id) return
     try {
       const [hadithsRes, progressRes, assignmentsRes] = await Promise.all([
-        supabase.from("hadiths").select("*").eq("is_active", true).order("order_index", { ascending: true }),
+        supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
         supabase.from("student_hadith_progress").select("*").eq("student_id", student.id),
         supabase
           .from("hadith_assignments")
@@ -68,7 +69,21 @@ export default function StudentHadithsPage() {
           .order("assigned_at", { ascending: false }),
       ])
 
-      const hadithList = (hadithsRes.data as Hadith[]) || []
+      const rawHadiths = (hadithsRes.data as any[]) || []
+      const hadithList: Hadith[] = rawHadiths.map((h, index) => ({
+        id: h.id,
+        hadith_number: h.hadith_number || index + 1,
+        arabic_text: h.arabic_text || "",
+        english_text: h.english_text || h.english_translation || "",
+        urdu_text: h.urdu_text || h.urdu_translation || "",
+        kids_lesson: h.kids_lesson || h.kid_lesson || "",
+        narrator: h.narrator || "Prophet Muhammad (ﷺ)",
+        reference: h.reference || "",
+        topic: (h.topic as HadithTopic) || "general",
+        order_index: h.order_index || h.hadith_number || index + 1,
+        is_published: h.is_published !== false,
+      }))
+
       const pList = (progressRes.data as StudentHadithProgress[]) || []
       const aList = (assignmentsRes.data as any[]) || []
 
@@ -79,7 +94,7 @@ export default function StudentHadithsPage() {
 
       const assignedSet = new Set<string>()
       for (const a of aList) {
-        if (a.hadith_id) assignedSet.add(a.hadith_id)
+        if (a.hadith_id && a.status !== "completed") assignedSet.add(a.hadith_id)
       }
 
       setHadiths(hadithList)
@@ -125,12 +140,12 @@ export default function StudentHadithsPage() {
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
-        const matchTitle = h.title.toLowerCase().includes(q)
-        const matchEnglish = h.english_translation.toLowerCase().includes(q)
-        const matchUrdu = h.urdu_translation.includes(q)
-        const matchLesson = h.kid_lesson.toLowerCase().includes(q)
-        const matchArabic = h.arabic_text.includes(q)
-        if (!matchTitle && !matchEnglish && !matchUrdu && !matchLesson && !matchArabic) {
+        const matchEnglish = (h.english_text || "").toLowerCase().includes(q)
+        const matchUrdu = (h.urdu_text || "").includes(q)
+        const matchLesson = (h.kids_lesson || "").toLowerCase().includes(q)
+        const matchArabic = (h.arabic_text || "").includes(q)
+        const matchRef = (h.reference || "").toLowerCase().includes(q)
+        if (!matchEnglish && !matchUrdu && !matchLesson && !matchArabic && !matchRef) {
           return false
         }
       }
@@ -166,8 +181,6 @@ export default function StudentHadithsPage() {
           hadith_id: hadithId,
           status: newStatus,
           memorized_at: newStatus === "memorized" ? new Date().toISOString() : null,
-          practice_count: 1,
-          created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
       }
@@ -182,7 +195,6 @@ export default function StudentHadithsPage() {
           student_id: student.id,
           hadith_id: hadithId,
           status: newStatus,
-          increment_practice: true,
         }),
       })
 
@@ -357,10 +369,10 @@ export default function StudentHadithsPage() {
                 {featuredHadith.arabic_text}
               </p>
               <p className="text-sm sm:text-base font-medium text-muted-foreground italic max-w-2xl mx-auto">
-                &ldquo;{featuredHadith.english_translation}&rdquo;
+                &ldquo;{featuredHadith.english_text}&rdquo;
               </p>
               <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200" dir="rtl">
-                {featuredHadith.urdu_translation}
+                {featuredHadith.urdu_text}
               </p>
             </div>
 
@@ -370,7 +382,7 @@ export default function StudentHadithsPage() {
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">What I can do today:</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{featuredHadith.kid_lesson}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{featuredHadith.kids_lesson}</p>
               </div>
             </div>
           </CardContent>
@@ -491,7 +503,7 @@ export default function StudentHadithsPage() {
                   <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
-                        {hadith.order_index}
+                        {hadith.hadith_number}
                       </span>
                       <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
                         <span>{topicInfo.icon}</span>
@@ -577,7 +589,7 @@ export default function StudentHadithsPage() {
                     <div className="space-y-1">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Meaning</p>
                       <p className="text-sm font-medium text-foreground italic">
-                        &ldquo;{hadith.english_translation}&rdquo;
+                        &ldquo;{hadith.english_text}&rdquo;
                       </p>
                     </div>
 
@@ -585,7 +597,7 @@ export default function StudentHadithsPage() {
                     <div className="space-y-1 text-right" dir="rtl">
                       <p className="text-xs font-semibold text-muted-foreground tracking-wider">ترجمہ</p>
                       <p className="text-sm font-medium text-foreground">
-                        {hadith.urdu_translation}
+                        {hadith.urdu_text}
                       </p>
                     </div>
 
@@ -596,7 +608,7 @@ export default function StudentHadithsPage() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-bold text-foreground">What I can do:</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{hadith.kid_lesson}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{hadith.kids_lesson}</p>
                       </div>
                     </div>
 

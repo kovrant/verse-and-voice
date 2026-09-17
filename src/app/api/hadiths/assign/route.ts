@@ -8,11 +8,10 @@ interface AssignHadithRequestBody {
   hadith_id?: string
   student_ids?: string[]
   due_date?: string | null
-  notes?: string | null
 }
 
 export async function POST(request: Request) {
-  const { denied, user } = await requireTeacher()
+  const { denied } = await requireTeacher()
   if (denied) return denied
 
   let body: AssignHadithRequestBody
@@ -25,7 +24,6 @@ export async function POST(request: Request) {
   const hadithId = body.hadith_id?.trim()
   const targetStudentIds = Array.isArray(body.student_ids) ? body.student_ids : []
   const dueDate = body.due_date ? new Date(body.due_date).toISOString() : null
-  const notes = body.notes?.trim() || null
 
   if (!hadithId) {
     return NextResponse.json({ error: "hadith_id is required" }, { status: 400 })
@@ -36,13 +34,15 @@ export async function POST(request: Request) {
   // 1. Fetch Hadith info
   const { data: hadith, error: hadithError } = await admin
     .from("hadiths")
-    .select("id, title")
+    .select("id, hadith_number, english_text")
     .eq("id", hadithId)
     .maybeSingle()
 
   if (hadithError || !hadith) {
     return NextResponse.json({ error: "Hadith not found" }, { status: 404 })
   }
+
+  const hadithTitle = `Hadith #${hadith.hadith_number}: ${hadith.english_text?.slice(0, 30)}...`
 
   // 2. Fetch existing assignments for this hadith
   const { data: currentAssignments } = await admin
@@ -68,11 +68,10 @@ export async function POST(request: Request) {
   // 4. Insert new assignments
   if (newlyAdded.length > 0) {
     const rows = newlyAdded.map((studentId) => ({
-      teacher_id: user?.id || "admin",
       hadith_id: hadithId,
       student_id: studentId,
+      status: "pending",
       due_date: dueDate,
-      notes: notes,
       assigned_at: new Date().toISOString(),
     }))
 
@@ -84,13 +83,13 @@ export async function POST(request: Request) {
 
     // Notify all newly assigned students
     await Promise.allSettled(
-      newlyAdded.map((studentId) => notifyStudentHadithAssigned(studentId, hadith.title, hadith.id)),
+      newlyAdded.map((studentId) => notifyStudentHadithAssigned(studentId, hadithTitle, hadith.id)),
     )
   }
 
-  // 5. Update existing still-assigned rows with new due_date/notes if requested
+  // 5. Update existing still-assigned rows with new due_date if requested
   const preservedStudentIds = targetStudentIds.filter((id) => existingMap.has(id))
-  if (preservedStudentIds.length > 0 && (dueDate || notes)) {
+  if (preservedStudentIds.length > 0 && dueDate) {
     const preservedIds = preservedStudentIds
       .map((sid) => existingMap.get(sid)?.id)
       .filter(Boolean) as string[]
@@ -99,7 +98,6 @@ export async function POST(request: Request) {
       .from("hadith_assignments")
       .update({
         due_date: dueDate,
-        notes: notes,
       })
       .in("id", preservedIds)
   }
