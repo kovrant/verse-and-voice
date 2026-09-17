@@ -28,7 +28,6 @@ import {
 } from "@/lib/hadiths/hadith-engine"
 import type {
   Hadith,
-  HadithStatus,
   HadithTopic,
   HadithWithProgress,
   StudentHadithProgress,
@@ -54,10 +53,6 @@ export default function StudentHadithsPage() {
   // Memory Peek state: set of masked word indexes per hadithId: Map<hadithId, Set<number>>
   const [peekActiveMap, setPeekActiveMap] = useState<Map<string, boolean>>(new Map())
   const [maskedWordsMap, setMaskedWordsMap] = useState<Map<string, Set<number>>>(new Map())
-
-  // Milestone unlock celebration modal
-  const [awardedBadges, setAwardedBadges] = useState<string[]>([])
-  const [showBadgeModal, setShowBadgeModal] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!student?.id) return
@@ -156,63 +151,6 @@ export default function StudentHadithsPage() {
       return true
     })
   }, [hadithsWithProgress, selectedTopic, searchQuery])
-
-  // Update status handler
-  const handleUpdateStatus = async (hadithId: string, newStatus: HadithStatus) => {
-    if (!student?.id) return
-
-    // Optimistic update
-    setProgressMap((prev) => {
-      const next = new Map(prev)
-      const existing = next.get(hadithId)
-      if (existing) {
-        next.set(hadithId, {
-          ...existing,
-          status: newStatus,
-          memorized_at: newStatus === "memorized" ? new Date().toISOString() : existing.memorized_at,
-        })
-      } else {
-        next.set(hadithId, {
-          id: `temp-${Date.now()}`,
-          student_id: student.id,
-          hadith_id: hadithId,
-          status: newStatus,
-          memorized_at: newStatus === "memorized" ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        })
-      }
-      return next
-    })
-
-    try {
-      const res = await fetch("/api/hadiths/progress", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          student_id: student.id,
-          hadith_id: hadithId,
-          status: newStatus,
-        }),
-      })
-
-      const data = await res.json()
-      if (data.success && data.progress) {
-        setProgressMap((prev) => {
-          const next = new Map(prev)
-          next.set(hadithId, data.progress)
-          return next
-        })
-
-        if (data.newlyAwardedBadges && data.newlyAwardedBadges.length > 0) {
-          setAwardedBadges(data.newlyAwardedBadges)
-          setShowBadgeModal(true)
-        }
-      }
-    } catch (err) {
-      console.error("Failed to update hadith status:", err)
-      void loadData()
-    }
-  }
 
   // Toggle Memory Peek mode for a Hadith
   const toggleMemoryPeek = (hadithId: string, wordCount: number) => {
@@ -408,7 +346,7 @@ export default function StudentHadithsPage() {
                   <Sparkles className="h-4 w-4 text-amber-500" />
                   Your Teacher&apos;s Active Assignments ({assignedHadiths.length})
                 </p>
-                <span className="text-xs text-muted-foreground">Practice daily & tap &ldquo;Mark Memorized&rdquo; when ready!</span>
+                <span className="text-xs text-muted-foreground">Practice and recite to your teacher during your live class.</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -541,7 +479,7 @@ export default function StudentHadithsPage() {
                         </CardContent>
                       </div>
 
-                      {/* Bottom Controls */}
+                      {/* Bottom Controls - Read Only for Students */}
                       <div className="p-4 bg-secondary/30 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
                         {/* Memory Peek Toggle */}
                         <Button
@@ -559,21 +497,17 @@ export default function StudentHadithsPage() {
                           <span>{isPeekActive ? "Show Full Text" : "🎮 Practice with Memory Peek"}</span>
                         </Button>
 
-                        {/* Status Buttons */}
+                        {/* Read-Only Status Indicator */}
                         <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
-                          {currentStatus !== "memorized" ? (
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateStatus(hadith.id, "memorized")}
-                              className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5 shadow-sm"
-                            >
-                              <CheckCircle2 className="h-4 w-4" />
-                              <span>Mark as Memorized!</span>
-                            </Button>
-                          ) : (
+                          {currentStatus === "memorized" ? (
                             <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 py-1.5 px-3 text-xs font-bold flex items-center gap-1.5">
                               <CheckCircle2 className="h-4 w-4" />
-                              Memorized!
+                              Memorized
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 py-1.5 px-3 text-xs font-semibold flex items-center gap-1.5">
+                              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                              Assigned by Teacher
                             </Badge>
                           )}
                         </div>
@@ -782,7 +716,7 @@ export default function StudentHadithsPage() {
                     </CardContent>
                   </div>
 
-                  {/* Footer Controls */}
+                  {/* Footer Controls - Read-Only for Students */}
                   <div className="p-4 bg-secondary/20 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
                     <Button
                       variant="outline"
@@ -799,90 +733,29 @@ export default function StudentHadithsPage() {
                       <span>{isPeekActive ? "Show Full Text" : "Memory Peek"}</span>
                     </Button>
 
-                    <div className="flex items-center gap-1 w-full sm:w-auto justify-end">
-                      <button
-                        onClick={() => handleUpdateStatus(hadith.id, "reading")}
-                        className={cn(
-                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                          currentStatus === "reading"
-                            ? "bg-secondary text-foreground border-border shadow-sm"
-                            : "text-muted-foreground border-transparent hover:text-foreground",
-                        )}
-                      >
-                        📖 Reading
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(hadith.id, "memorizing")}
-                        className={cn(
-                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                          currentStatus === "memorizing"
-                            ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm"
-                            : "text-muted-foreground border-transparent hover:text-foreground",
-                        )}
-                      >
-                        🧠 Learning
-                      </button>
-                      <button
-                        onClick={() => handleUpdateStatus(hadith.id, "memorized")}
-                        className={cn(
-                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                          currentStatus === "memorized"
-                            ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                            : "text-muted-foreground border-transparent hover:text-foreground hover:bg-emerald-500/10",
-                        )}
-                      >
-                        ✅ Memorized!
-                      </button>
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                      {currentStatus === "memorized" ? (
+                        <Badge variant="secondary" className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 py-1 px-2.5 text-xs font-bold flex items-center gap-1">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Memorized
+                        </Badge>
+                      ) : hadith.is_assigned ? (
+                        <Badge variant="outline" className="bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30 py-1 px-2.5 text-xs font-semibold flex items-center gap-1">
+                          <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                          Assigned
+                        </Badge>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground font-medium flex items-center gap-1">
+                          <BookOpen className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          Library
+                        </span>
+                      )}
                     </div>
                   </div>
                 </Card>
               )
             })}
           </div>
-        </div>
-      )}
-
-      {/* Milestone Unlock Modal */}
-      {showBadgeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-200">
-          <Card className="w-full max-w-md border-emerald-500/40 bg-card shadow-2xl overflow-hidden text-center p-6 space-y-4">
-            <div className="flex h-16 w-16 mx-auto items-center justify-center rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 animate-bounce">
-              <Trophy className="h-9 w-9" />
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-xl font-bold text-foreground">Masha&apos;Allah! Milestone Reached! 🌟</h3>
-              <p className="text-xs text-muted-foreground">
-                You have unlocked new achievement badge{awardedBadges.length > 1 ? "s" : ""} in your trophy case:
-              </p>
-            </div>
-
-            <div className="space-y-2 py-2">
-              {awardedBadges.map((badgeTitle, idx) => (
-                <div
-                  key={idx}
-                  className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-3 text-left"
-                >
-                  <Award className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <div>
-                    <p className="text-sm font-bold text-foreground">{badgeTitle}</p>
-                    <p className="text-[11px] text-muted-foreground">Added to your Trophy Case</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <Link href="/student/achievements" className="flex-1">
-                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
-                  View Trophy Case
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={() => setShowBadgeModal(false)} className="flex-1">
-                Keep Practicing
-              </Button>
-            </div>
-          </Card>
         </div>
       )}
     </div>
