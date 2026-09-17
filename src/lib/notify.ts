@@ -329,4 +329,35 @@ export async function notifyStudentQuizAssigned(
   })
 }
 
+/**
+ * Notify a student that a Hadith of the Week / lesson has been assigned to them.
+ */
+export async function notifyStudentHadithAssigned(
+  studentId: string,
+  hadithTitle: string,
+  _hadithId?: string,
+): Promise<void> {
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("id")
+    .eq("student_id", studentId)
+    .maybeSingle()
+  if (!profile?.id) return
+
+  const title = `Hadith Assigned: ${hadithTitle}`
+  const body = `Your teacher assigned you a new Hadith to learn and memorize: "${hadithTitle}". Tap to practice!`
+
+  if (await alreadyNotified(admin, profile.id as string, "hadith_assigned", title)) return
+
+  await admin.from("notifications").insert({
+    recipient_id: profile.id,
+    type: "assignment",
+    title,
+    body,
+    link: `/student/hadiths`,
+    priority: "normal",
+  })
+}
+
 

@@ -1,4 +1,4 @@
-export type AchievementDomain = "quran" | "qaida" | "memorization" | "namaz" | "streak" | "quiz"
+export type AchievementDomain = "quran" | "qaida" | "memorization" | "namaz" | "streak" | "quiz" | "hadith"
 
 export type AchievementKind = "badge" | "certificate"
 

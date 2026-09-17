@@ -45,6 +45,7 @@ const navSections = [
     items: [
       { href: "/students", label: "Students", icon: Users },
       { href: "/class", label: "Class Session", icon: BookOpen },
+      { href: "/hadiths", label: "Short Hadiths", icon: BookAudio },
       { href: "/memorization", label: "Memorization", icon: BookMarked },
       { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
       { href: "/qaida", label: "Qaida", icon: SpellCheck },

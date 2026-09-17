@@ -299,6 +299,32 @@ export function TrophyCase({ earned, certificates, emptyHint }: TrophyCaseProps)
           </div>
         </DomainSection>
       ) : null}
+
+      {grouped.hadiths.length > 0 ? (
+        <DomainSection label="Hadith Milestones" icon={Award}>
+          <div className="flex flex-wrap gap-2">
+            {grouped.hadiths.map((item) => (
+              <div
+                key={item.slug}
+                className="inline-flex items-center gap-2.5 rounded-xl border border-emerald-500/30 bg-gradient-to-r from-emerald-500/15 via-card to-card px-3.5 py-2.5 shadow-sm"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/25 text-emerald-700 dark:text-emerald-300">
+                  <Award className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{item.title}</p>
+                  {item.description && (
+                    <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                  )}
+                  <p className="text-[10px] text-muted-foreground/70 mt-0.5 font-medium">
+                    Unlocked {format(new Date(item.earned_at), "MMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </DomainSection>
+      ) : null}
     </div>
   )
 }

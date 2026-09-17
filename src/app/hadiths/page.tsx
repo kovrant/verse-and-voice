@@ -1,0 +1,880 @@
+"use client"
+
+import {
+  Award,
+  BookOpen,
+  Clock,
+  Edit2,
+  GraduationCap,
+  Loader2,
+  Plus,
+  Search,
+  Send,
+  Sparkles,
+  Trash2,
+  Users,
+} from "lucide-react"
+import { useCallback, useEffect, useMemo, useState } from "react"
+
+import { PageLoading } from "@/components/page-loading"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { getHadithNextMilestone, HADITH_TOPICS } from "@/lib/hadiths/hadith-engine"
+import type {
+  Hadith,
+  HadithAssignment,
+  HadithTopic,
+  StudentHadithProgress,
+} from "@/lib/hadiths/types"
+import { supabase } from "@/lib/supabase"
+import { toast } from "@/lib/toast"
+import type { Student } from "@/lib/utils"
+import { cn } from "@/lib/utils"
+
+export default function TeacherHadithsPage() {
+  const [hadiths, setHadiths] = useState<Hadith[]>([])
+  const [students, setStudents] = useState<Student[]>([])
+  const [assignments, setAssignments] = useState<HadithAssignment[]>([])
+  const [progressList, setProgressList] = useState<StudentHadithProgress[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Tabs & Filters
+  const [activeTab, setActiveTab] = useState<"library" | "students">("library")
+  const [selectedTopic, setSelectedTopic] = useState<string>("all")
+  const [searchQuery, setSearchQuery] = useState<string>("")
+
+  // Assignment Modal
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedHadithForAssign, setSelectedHadithForAssign] = useState<Hadith | null>(null)
+  const [targetStudentIds, setTargetStudentIds] = useState<string[]>([])
+  const [dueDate, setDueDate] = useState<string>("")
+  const [notes, setNotes] = useState<string>("")
+  const [submittingAssign, setSubmittingAssign] = useState(false)
+
+  // Custom Hadith Modal
+  const [customModalOpen, setCustomModalOpen] = useState(false)
+  const [editingHadithId, setEditingHadithId] = useState<string | null>(null)
+  const [customTitle, setCustomTitle] = useState("")
+  const [customArabic, setCustomArabic] = useState("")
+  const [customEnglish, setCustomEnglish] = useState("")
+  const [customUrdu, setCustomUrdu] = useState("")
+  const [customLesson, setCustomLesson] = useState("")
+  const [customNarrator, setCustomNarrator] = useState("")
+  const [customReference, setCustomReference] = useState("")
+  const [customTopic, setCustomTopic] = useState<HadithTopic>("manners")
+  const [savingCustom, setSavingCustom] = useState(false)
+
+  const loadData = useCallback(async () => {
+    try {
+      const [hadithsRes, studentsRes, assignRes, progRes] = await Promise.all([
+        supabase.from("hadiths").select("*").eq("is_active", true).order("order_index", { ascending: true }),
+        supabase.from("students").select("*").eq("status", "active").order("name", { ascending: true }),
+        supabase.from("hadith_assignments").select("*, hadiths(*)").order("assigned_at", { ascending: false }),
+        supabase.from("student_hadith_progress").select("*"),
+      ])
+
+      setHadiths((hadithsRes.data as Hadith[]) || [])
+      setStudents((studentsRes.data as Student[]) || [])
+      setAssignments((assignRes.data as any[]) || [])
+      setProgressList((progRes.data as StudentHadithProgress[]) || [])
+    } catch (err) {
+      console.error("Error loading Hadith studio data:", err)
+      toast.error("Failed to load Hadith studio data")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    void loadData()
+  }, [loadData])
+
+  // Statistics
+  const stats = useMemo(() => {
+    const totalHadiths = hadiths.length
+    const totalStudents = students.length
+    const memorizedRows = progressList.filter((p) => p.status === "memorized")
+    const totalMemorizations = memorizedRows.length
+    const activeAssignments = assignments.filter((a) => !a.completed_at).length
+
+    return {
+      totalHadiths,
+      totalStudents,
+      totalMemorizations,
+      activeAssignments,
+    }
+  }, [hadiths, students, progressList, assignments])
+
+  // Filtered Hadiths Library
+  const filteredHadiths = useMemo(() => {
+    return hadiths.filter((h) => {
+      if (selectedTopic !== "all" && h.topic !== selectedTopic) return false
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase()
+        const matchTitle = h.title.toLowerCase().includes(q)
+        const matchEng = h.english_translation.toLowerCase().includes(q)
+        const matchUrdu = h.urdu_translation.includes(q)
+        const matchArabic = h.arabic_text.includes(q)
+        const matchLesson = h.kid_lesson.toLowerCase().includes(q)
+        if (!matchTitle && !matchEng && !matchUrdu && !matchArabic && !matchLesson) {
+          return false
+        }
+      }
+      return true
+    })
+  }, [hadiths, selectedTopic, searchQuery])
+
+  // Map student progress data for the Students Tracker Tab
+  const studentRows = useMemo(() => {
+    return students.map((student) => {
+      const studentProgress = progressList.filter((p) => p.student_id === student.id)
+      const memorizedCount = studentProgress.filter((p) => p.status === "memorized").length
+      const memorizingCount = studentProgress.filter((p) => p.status === "memorizing").length
+      const milestone = getHadithNextMilestone(memorizedCount)
+
+      // Active assignments for this student
+      const studentAssignments = assignments.filter(
+        (a) => a.student_id === student.id && !a.completed_at,
+      )
+
+      return {
+        student,
+        memorizedCount,
+        memorizingCount,
+        milestone,
+        activeAssignments: studentAssignments,
+      }
+    })
+  }, [students, progressList, assignments])
+
+  // Open Assign Modal
+  const openAssignModal = (hadith?: Hadith, specificStudentId?: string) => {
+    const targetHadith = hadith || hadiths[0] || null
+    setSelectedHadithForAssign(targetHadith)
+
+    if (specificStudentId) {
+      setTargetStudentIds([specificStudentId])
+    } else if (targetHadith) {
+      // Pre-select students currently assigned to this hadith
+      const currentlyAssigned = assignments
+        .filter((a) => a.hadith_id === targetHadith.id && !a.completed_at)
+        .map((a) => a.student_id)
+      setTargetStudentIds(currentlyAssigned)
+    } else {
+      setTargetStudentIds([])
+    }
+
+    setDueDate("")
+    setNotes("")
+    setAssignModalOpen(true)
+  }
+
+  // Handle Submit Assignment
+  const handleAssignSubmit = async () => {
+    if (!selectedHadithForAssign) {
+      toast.error("Please select a Hadith")
+      return
+    }
+
+    setSubmittingAssign(true)
+    try {
+      const res = await fetch("/api/hadiths/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hadith_id: selectedHadithForAssign.id,
+          student_ids: targetStudentIds,
+          due_date: dueDate || null,
+          notes: notes || null,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to assign Hadith")
+      }
+
+      toast.success(
+        `Assigned "${selectedHadithForAssign.title}" to ${targetStudentIds.length} student${targetStudentIds.length === 1 ? "" : "s"}`,
+      )
+      setAssignModalOpen(false)
+      void loadData()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to assign Hadith")
+    } finally {
+      setSubmittingAssign(false)
+    }
+  }
+
+  // Open Add/Edit Custom Hadith Modal
+  const openCustomModal = (hadith?: Hadith) => {
+    if (hadith) {
+      setEditingHadithId(hadith.id)
+      setCustomTitle(hadith.title)
+      setCustomArabic(hadith.arabic_text)
+      setCustomEnglish(hadith.english_translation)
+      setCustomUrdu(hadith.urdu_translation)
+      setCustomLesson(hadith.kid_lesson)
+      setCustomNarrator(hadith.narrator)
+      setCustomReference(hadith.reference)
+      setCustomTopic(hadith.topic)
+    } else {
+      setEditingHadithId(null)
+      setCustomTitle("")
+      setCustomArabic("")
+      setCustomEnglish("")
+      setCustomUrdu("")
+      setCustomLesson("")
+      setCustomNarrator("Prophet Muhammad (ﷺ)")
+      setCustomReference("Sahih al-Bukhari")
+      setCustomTopic("manners")
+    }
+    setCustomModalOpen(true)
+  }
+
+  // Handle Save Custom Hadith
+  const handleSaveCustomHadith = async () => {
+    if (!customTitle.trim() || !customArabic.trim() || !customEnglish.trim()) {
+      toast.error("Title, Arabic text, and English translation are required")
+      return
+    }
+
+    setSavingCustom(true)
+    try {
+      if (editingHadithId) {
+        const { error } = await supabase
+          .from("hadiths")
+          .update({
+            title: customTitle.trim(),
+            arabic_text: customArabic.trim(),
+            english_translation: customEnglish.trim(),
+            urdu_translation: customUrdu.trim(),
+            kid_lesson: customLesson.trim(),
+            narrator: customNarrator.trim() || "Prophet Muhammad (ﷺ)",
+            reference: customReference.trim() || "Sahih al-Bukhari",
+            topic: customTopic,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingHadithId)
+
+        if (error) throw error
+        toast.success("Hadith updated successfully")
+      } else {
+        const nextOrderIndex = hadiths.length > 0 ? Math.max(...hadiths.map((h) => h.order_index)) + 1 : 1
+        const { error } = await supabase.from("hadiths").insert({
+          title: customTitle.trim(),
+          arabic_text: customArabic.trim(),
+          english_translation: customEnglish.trim(),
+          urdu_translation: customUrdu.trim(),
+          kid_lesson: customLesson.trim(),
+          narrator: customNarrator.trim() || "Prophet Muhammad (ﷺ)",
+          reference: customReference.trim() || "Sahih al-Bukhari",
+          topic: customTopic,
+          order_index: nextOrderIndex,
+          is_active: true,
+        })
+
+        if (error) throw error
+        toast.success("New Hadith added to library")
+      }
+
+      setCustomModalOpen(false)
+      void loadData()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || "Failed to save Hadith")
+    } finally {
+      setSavingCustom(false)
+    }
+  }
+
+  // Delete Custom Hadith
+  const handleDeleteHadith = async (hadithId: string) => {
+    if (!confirm("Are you sure you want to remove this Hadith from the library?")) return
+    try {
+      const { error } = await supabase.from("hadiths").delete().eq("id", hadithId)
+      if (error) throw error
+      toast.success("Hadith removed")
+      void loadData()
+    } catch (err: any) {
+      console.error(err)
+      toast.error("Failed to delete Hadith")
+    }
+  }
+
+  if (loading) {
+    return <PageLoading variant="grid-cards" />
+  }
+
+  return (
+    <div className="space-y-6 pb-12">
+      {/* 1. Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Curriculum & Sunnah Studio</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+            Short Hadiths Studio
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Browse 40 authentic short Hadiths for kids, assign weekly learning goals, and track student memorization milestones.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={() => openCustomModal()}
+            variant="outline"
+            className="gap-2 border-border/80 hover:bg-secondary"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Add Custom Hadith</span>
+          </Button>
+          <Button
+            onClick={() => openAssignModal()}
+            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+          >
+            <Send className="h-4 w-4" />
+            <span>Assign Hadith of Week</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* 2. Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="border-border/80 bg-card/80">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalHadiths}</p>
+              <p className="text-xs text-muted-foreground">Hadiths in Library</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/80">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalStudents}</p>
+              <p className="text-xs text-muted-foreground">Enrolled Students</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/80">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              <Award className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalMemorizations}</p>
+              <p className="text-xs text-muted-foreground">Total Memorized</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/80 bg-card/80">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.activeAssignments}</p>
+              <p className="text-xs text-muted-foreground">Active Assignments</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* 3. Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+        <button
+          onClick={() => setActiveTab("library")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors",
+            activeTab === "library"
+              ? "bg-emerald-600 text-white shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+          )}
+        >
+          <BookOpen className="h-4 w-4" />
+          <span>Hadith Library ({hadiths.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("students")}
+          className={cn(
+            "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors",
+            activeTab === "students"
+              ? "bg-emerald-600 text-white shadow-sm"
+              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+          )}
+        >
+          <GraduationCap className="h-4 w-4" />
+          <span>Student Progress ({students.length})</span>
+        </button>
+      </div>
+
+      {/* 4. Tab 1: Hadith Library */}
+      {activeTab === "library" && (
+        <div className="space-y-4">
+          {/* Search & Topic Filters */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by topic, Arabic words, English, Urdu, or moral lesson..."
+                className="pl-9 bg-card"
+              />
+            </div>
+
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+              <select
+                value={selectedTopic}
+                onChange={(e) => setSelectedTopic(e.target.value)}
+                aria-label="Filter by Topic"
+                className="h-10 rounded-md border border-input bg-card px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="all">All Topics ({hadiths.length})</option>
+                {Object.entries(HADITH_TOPICS).map(([key, topic]) => (
+                  <option key={key} value={key}>
+                    {topic.icon} {topic.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Hadith Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredHadiths.map((hadith) => {
+              const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
+              const assignedCount = assignments.filter((a) => a.hadith_id === hadith.id && !a.completed_at).length
+              const completedCount = progressList.filter((p) => p.hadith_id === hadith.id && p.status === "memorized").length
+
+              return (
+                <Card key={hadith.id} className="flex flex-col justify-between border-border/80 bg-card hover:border-emerald-500/30 transition-all shadow-sm">
+                  <div>
+                    <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
+                          {hadith.order_index}
+                        </span>
+                        <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
+                          <span>{topicInfo.icon}</span>
+                          <span className="ml-1">{topicInfo.label}</span>
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span title="Completed by students">✅ {completedCount}</span>
+                        <span title="Currently assigned">🎯 {assignedCount}</span>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="p-4 space-y-3">
+                      {/* Arabic Text */}
+                      <div className="rounded-xl bg-secondary/30 p-3.5 border border-border/40 text-center">
+                        <p className="text-2xl font-bold font-amiri text-foreground leading-relaxed select-text" dir="rtl">
+                          {hadith.arabic_text}
+                        </p>
+                      </div>
+
+                      {/* English Translation */}
+                      <div>
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase">Meaning</p>
+                        <p className="text-sm font-medium text-foreground italic">&ldquo;{hadith.english_translation}&rdquo;</p>
+                      </div>
+
+                      {/* Urdu Translation */}
+                      <div className="text-right" dir="rtl">
+                        <p className="text-[11px] font-semibold text-muted-foreground">ترجمہ</p>
+                        <p className="text-sm font-medium text-foreground">{hadith.urdu_translation}</p>
+                      </div>
+
+                      {/* Kid Lesson */}
+                      <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-start gap-2">
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Kid&apos;s Lesson: </span>{hadith.kid_lesson}</p>
+                      </div>
+
+                      {/* Reference */}
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 pt-1">
+                        <span>Narrator: {hadith.narrator}</span>
+                        <span>{hadith.reference}</span>
+                      </div>
+                    </CardContent>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="p-3 bg-secondary/20 border-t border-border/50 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => openCustomModal(hadith)}
+                      >
+                        <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-destructive hover:bg-destructive/10"
+                        onClick={() => handleDeleteHadith(hadith.id)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5"
+                      onClick={() => openAssignModal(hadith)}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Assign to Students</span>
+                    </Button>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 5. Tab 2: Students Progress Tracker */}
+      {activeTab === "students" && (
+        <Card className="border-border/80">
+          <CardHeader className="py-4 border-b border-border/60">
+            <CardTitle className="text-base font-bold text-foreground">Student Hadith Progress & Milestones</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="divide-y divide-border/60">
+              {studentRows.map(({ student, memorizedCount, memorizingCount, milestone, activeAssignments }) => (
+                <div key={student.id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/20 transition-colors">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-sm text-foreground">{student.name}</p>
+                      <Badge variant="outline" className="text-[10px] bg-secondary border-border">
+                        {student.country || "Active"}
+                      </Badge>
+                      {activeAssignments.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold">
+                          {activeAssignments.length} active assignment{activeAssignments.length === 1 ? "" : "s"}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-muted-foreground">
+                      Target: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{milestone.badgeTitle}</span> ({memorizedCount} / {milestone.target} Hadiths)
+                    </p>
+
+                    {/* Progress Bar */}
+                    <div className="w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border/60 mt-1">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                        style={{ width: `${milestone.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right text-xs">
+                      <p className="font-bold text-foreground tabular-nums">✅ {memorizedCount} Memorized</p>
+                      <p className="text-muted-foreground tabular-nums">🧠 {memorizingCount} Learning</p>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="text-xs gap-1.5 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                      onClick={() => openAssignModal(undefined, student.id)}
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      <span>Assign Hadith</span>
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Assign Modal */}
+      <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">Assign Hadith of the Week</DialogTitle>
+            <DialogDescription>
+              Assign an authentic short Hadith to students with custom notes and due date.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            {/* Hadith Selector */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Selected Hadith</Label>
+              <Select
+                value={selectedHadithForAssign?.id || ""}
+                onValueChange={(val) => {
+                  const h = hadiths.find((item) => item.id === val)
+                  setSelectedHadithForAssign(h || null)
+                }}
+              >
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Choose a Hadith" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {hadiths.map((h) => (
+                    <SelectItem key={h.id} value={h.id} className="text-xs">
+                      #{h.order_index} · {h.title} ({h.english_translation.slice(0, 35)}...)
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Students Selector */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs font-bold">Target Students ({targetStudentIds.length}/{students.length})</Label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setTargetStudentIds(students.map((s) => s.id))}
+                    className="text-[11px] font-semibold text-emerald-600 hover:underline"
+                  >
+                    Select All
+                  </button>
+                  <span className="text-muted-foreground text-[11px]">|</span>
+                  <button
+                    type="button"
+                    onClick={() => setTargetStudentIds([])}
+                    className="text-[11px] font-semibold text-muted-foreground hover:underline"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2 space-y-1 bg-secondary/20">
+                {students.map((student) => {
+                  const isSelected = targetStudentIds.includes(student.id)
+                  return (
+                    <label
+                      key={student.id}
+                      className={cn(
+                        "flex items-center gap-2.5 p-2 rounded-md text-xs cursor-pointer transition-colors",
+                        isSelected ? "bg-emerald-500/15 text-foreground font-semibold" : "hover:bg-secondary text-muted-foreground",
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setTargetStudentIds((prev) => [...prev, student.id])
+                          } else {
+                            setTargetStudentIds((prev) => prev.filter((id) => id !== student.id))
+                          }
+                        }}
+                        className="rounded border-border text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <span>{student.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Due Date */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Target / Due Date (Optional)</Label>
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold">Teacher&apos;s Advice / Weekly Goal (Optional)</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="e.g. Read this 5 times every day after Fajr and practice smiling at your parents!"
+                className="text-xs min-h-[70px]"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setAssignModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignSubmit}
+              disabled={submittingAssign || targetStudentIds.length === 0}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+            >
+              {submittingAssign ? <Loader2 className="h-4 w-4 animate-spin" /> : "Assign Hadith"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Hadith Modal */}
+      <Dialog open={customModalOpen} onOpenChange={setCustomModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold">
+              {editingHadithId ? "Edit Hadith" : "Add Custom Short Hadith"}
+            </DialogTitle>
+            <DialogDescription>
+              Add an authentic short Hadith (3-8 words) for children with full vowel marks (Tashkeel).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-1">
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Title / Topic Header *</Label>
+              <Input
+                value={customTitle}
+                onChange={(e) => setCustomTitle(e.target.value)}
+                placeholder="e.g. Cleanliness is Half of Faith"
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Arabic Text (with Tashkeel) *</Label>
+              <Input
+                value={customArabic}
+                onChange={(e) => setCustomArabic(e.target.value)}
+                placeholder="e.g. الطُّهُورُ شَطْرُ الإِيمَانِ"
+                dir="rtl"
+                className="text-sm font-amiri"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">English Translation *</Label>
+              <Input
+                value={customEnglish}
+                onChange={(e) => setCustomEnglish(e.target.value)}
+                placeholder="e.g. Cleanliness is half of faith."
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Urdu Translation</Label>
+              <Input
+                value={customUrdu}
+                onChange={(e) => setCustomUrdu(e.target.value)}
+                placeholder="e.g. صفائی اور پاکیزگی آدھا ایمان ہے۔"
+                dir="rtl"
+                className="text-xs"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Kid&apos;s Daily Moral Lesson Takeaway *</Label>
+              <Textarea
+                value={customLesson}
+                onChange={(e) => setCustomLesson(e.target.value)}
+                placeholder="e.g. Wash your hands before eating and keep your room clean to make Allah happy!"
+                className="text-xs min-h-[60px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold">Topic Category</Label>
+                <Select value={customTopic} onValueChange={(val) => setCustomTopic(val as HadithTopic)}>
+                  <SelectTrigger className="text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(HADITH_TOPICS).map(([key, info]) => (
+                      <SelectItem key={key} value={key} className="text-xs">
+                        {info.icon} {info.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1">
+                <Label className="text-xs font-bold">Reference</Label>
+                <Input
+                  value={customReference}
+                  onChange={(e) => setCustomReference(e.target.value)}
+                  placeholder="e.g. Sahih Muslim"
+                  className="text-xs"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-xs font-bold">Narrator</Label>
+              <Input
+                value={customNarrator}
+                onChange={(e) => setCustomNarrator(e.target.value)}
+                placeholder="e.g. Abu Malik al-Ash'ari"
+                className="text-xs"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setCustomModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveCustomHadith}
+              disabled={savingCustom}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+            >
+              {savingCustom ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Hadith"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
