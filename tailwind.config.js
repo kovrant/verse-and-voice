@@ -98,7 +98,9 @@ const config = {
         display: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
         brand: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
         serif: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
-        arabic: ["var(--font-arabic)", "Amiri", "serif"],
+        arabic: ["'Scheherazade New'", "'Amiri'", "'Noto Naskh Arabic'", "var(--font-arabic)", "'Traditional Arabic'", "serif"],
+        hadith: ["'Scheherazade New'", "'Amiri'", "'Noto Naskh Arabic'", "var(--font-arabic)", "'Traditional Arabic'", "serif"],
+        amiri: ["'Scheherazade New'", "'Amiri'", "'Noto Naskh Arabic'", "var(--font-arabic)", "'Traditional Arabic'", "serif"],
       },
       borderRadius: {
         lg: "var(--radius-card)" /* 16px — cards */,

@@ -3,6 +3,7 @@
 import {
   Award,
   BookOpen,
+  Check,
   Clock,
   Edit2,
   GraduationCap,
@@ -66,7 +67,7 @@ export default function TeacherHadithsPage() {
   const [assignModalOpen, setAssignModalOpen] = useState(false)
   const [selectedHadithForAssign, setSelectedHadithForAssign] = useState<Hadith | null>(null)
   const [targetStudentIds, setTargetStudentIds] = useState<string[]>([])
-  const [dueDate, setDueDate] = useState<string>("")
+  const [studentSearch, setStudentSearch] = useState("")
   const [submittingAssign, setSubmittingAssign] = useState(false)
 
   // Custom Hadith Modal
@@ -85,7 +86,7 @@ export default function TeacherHadithsPage() {
     try {
       const [hadithsRes, studentsRes, assignRes, progRes] = await Promise.all([
         supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
-        supabase.from("students").select("*").eq("status", "active").order("name", { ascending: true }),
+        supabase.from("students").select("*").neq("status", "Left Uncompleted").order("name", { ascending: true }),
         supabase.from("hadith_assignments").select("*, hadiths(*)").order("assigned_at", { ascending: false }),
         supabase.from("student_hadith_progress").select("*"),
       ])
@@ -184,6 +185,7 @@ export default function TeacherHadithsPage() {
   const openAssignModal = (hadith?: Hadith, specificStudentId?: string) => {
     const targetHadith = hadith || hadiths[0] || null
     setSelectedHadithForAssign(targetHadith)
+    setStudentSearch("")
 
     if (specificStudentId) {
       setTargetStudentIds([specificStudentId])
@@ -197,7 +199,6 @@ export default function TeacherHadithsPage() {
       setTargetStudentIds([])
     }
 
-    setDueDate("")
     setAssignModalOpen(true)
   }
 
@@ -216,7 +217,6 @@ export default function TeacherHadithsPage() {
         body: JSON.stringify({
           hadith_id: selectedHadithForAssign.id,
           student_ids: targetStudentIds,
-          due_date: dueDate || null,
         }),
       })
 
@@ -237,6 +237,13 @@ export default function TeacherHadithsPage() {
       setSubmittingAssign(false)
     }
   }
+
+  // Filtered student list for assign modal
+  const filteredModalStudents = useMemo(() => {
+    if (!studentSearch.trim()) return students
+    const q = studentSearch.toLowerCase()
+    return students.filter((s) => s.name.toLowerCase().includes(q))
+  }, [students, studentSearch])
 
   // Open Add/Edit Custom Hadith Modal
   const openCustomModal = (hadith?: Hadith) => {
@@ -348,7 +355,7 @@ export default function TeacherHadithsPage() {
             Short Hadiths Studio
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Browse {hadiths.length} authentic short Hadiths for kids, assign weekly learning goals, and track student memorization milestones.
+            Browse {hadiths.length} authentic short Hadiths for kids, assign weekly learning goals to your students, and monitor their memorization milestones.
           </p>
         </div>
 
@@ -366,7 +373,7 @@ export default function TeacherHadithsPage() {
             className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
           >
             <Send className="h-4 w-4" />
-            <span>Assign Hadith of Week</span>
+            <span>Assign Hadith</span>
           </Button>
         </div>
       </div>
@@ -392,7 +399,7 @@ export default function TeacherHadithsPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalStudents}</p>
-              <p className="text-xs text-muted-foreground">Enrolled Students</p>
+              <p className="text-xs text-muted-foreground">Active Students</p>
             </div>
           </CardContent>
         </Card>
@@ -511,9 +518,9 @@ export default function TeacherHadithsPage() {
                     </CardHeader>
 
                     <CardContent className="p-4 space-y-3">
-                      {/* Arabic Text */}
-                      <div className="rounded-xl bg-secondary/30 p-3.5 border border-border/40 text-center">
-                        <p className="text-2xl font-bold font-amiri text-foreground leading-relaxed select-text" dir="rtl">
+                      {/* Arabic Text in Calligraphic Hadith Font */}
+                      <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 text-center">
+                        <p className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text" dir="rtl">
                           {hadith.arabic_text}
                         </p>
                       </div>
@@ -595,7 +602,7 @@ export default function TeacherHadithsPage() {
                     <div className="flex items-center gap-2">
                       <p className="font-bold text-sm text-foreground">{student.name}</p>
                       <Badge variant="outline" className="text-[10px] bg-secondary border-border">
-                        {student.country || "Active"}
+                        {student.status || "Reading"}
                       </Badge>
                       {activeAssignments.length > 0 && (
                         <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold">
@@ -640,74 +647,112 @@ export default function TeacherHadithsPage() {
         </Card>
       )}
 
-      {/* Assign Modal */}
+      {/* Clean & Focused Assign Modal */}
       <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Assign Hadith of the Week</DialogTitle>
+            <DialogTitle className="text-lg font-bold">Assign Hadith to Students</DialogTitle>
             <DialogDescription>
-              Assign an authentic short Hadith to students with custom notes and due date.
+              Select which students should learn and memorize this Hadith.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            {/* Hadith Selector */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Selected Hadith</Label>
-              <Select
-                value={selectedHadithForAssign?.id || ""}
-                onValueChange={(val) => {
-                  const h = hadiths.find((item) => item.id === val)
-                  setSelectedHadithForAssign(h || null)
-                }}
-              >
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Choose a Hadith" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {hadiths.map((h) => (
-                    <SelectItem key={h.id} value={h.id} className="text-xs">
-                      #{h.hadith_number} · {h.english_text.slice(0, 45)}...
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          {selectedHadithForAssign && (
+            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3.5 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                  Hadith #{selectedHadithForAssign.hadith_number}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {selectedHadithForAssign.reference}
+                </span>
+              </div>
+              <p className="font-hadith text-base text-foreground" dir="rtl">
+                {selectedHadithForAssign.arabic_text}
+              </p>
+              <p className="text-xs text-muted-foreground italic">
+                &ldquo;{selectedHadithForAssign.english_text}&rdquo;
+              </p>
+            </div>
+          )}
+
+          <div className="space-y-3 py-1">
+            {/* Search & Bulk Select Controls */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  value={studentSearch}
+                  onChange={(e) => setStudentSearch(e.target.value)}
+                  placeholder="Search students..."
+                  className="pl-8 h-8 text-xs bg-secondary/30"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setTargetStudentIds(students.map((s) => s.id))}
+                  className="px-2 py-1 rounded bg-secondary text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-secondary/80 transition-colors"
+                >
+                  Select All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTargetStudentIds([])}
+                  className="px-2 py-1 rounded bg-secondary text-[11px] font-semibold text-muted-foreground hover:bg-secondary/80 transition-colors"
+                >
+                  Clear
+                </button>
+              </div>
             </div>
 
-            {/* Students Selector */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-bold">Target Students ({targetStudentIds.length}/{students.length})</Label>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTargetStudentIds(students.map((s) => s.id))}
-                    className="text-[11px] font-semibold text-emerald-600 hover:underline"
-                  >
-                    Select All
-                  </button>
-                  <span className="text-muted-foreground text-[11px]">|</span>
-                  <button
-                    type="button"
-                    onClick={() => setTargetStudentIds([])}
-                    className="text-[11px] font-semibold text-muted-foreground hover:underline"
-                  >
-                    Clear
-                  </button>
+            {/* Students List */}
+            <div className="max-h-60 overflow-y-auto rounded-xl border border-border divide-y divide-border/60 bg-card">
+              {filteredModalStudents.length === 0 ? (
+                <div className="p-4 text-center text-xs text-muted-foreground">
+                  No students found.
                 </div>
-              </div>
-
-              <div className="max-h-40 overflow-y-auto rounded-lg border border-border p-2 space-y-1 bg-secondary/20">
-                {students.map((student) => {
+              ) : (
+                filteredModalStudents.map((student) => {
                   const isSelected = targetStudentIds.includes(student.id)
+                  const isMemorized = progressList.some(
+                    (p) => p.student_id === student.id && p.hadith_id === selectedHadithForAssign?.id && p.status === "memorized",
+                  )
+
                   return (
                     <label
                       key={student.id}
                       className={cn(
-                        "flex items-center gap-2.5 p-2 rounded-md text-xs cursor-pointer transition-colors",
-                        isSelected ? "bg-emerald-500/15 text-foreground font-semibold" : "hover:bg-secondary text-muted-foreground",
+                        "flex items-center justify-between p-3 cursor-pointer transition-colors select-none",
+                        isSelected
+                          ? "bg-emerald-500/10 text-foreground"
+                          : "hover:bg-secondary/40 text-muted-foreground",
                       )}
                     >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={cn(
+                            "flex h-5 w-5 items-center justify-center rounded-md border transition-all",
+                            isSelected
+                              ? "bg-emerald-600 border-emerald-600 text-white"
+                              : "border-input bg-card",
+                          )}
+                        >
+                          {isSelected && <Check className="h-3.5 w-3.5" />}
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-bold text-foreground">{student.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{student.status || "Reading"}</p>
+                        </div>
+                      </div>
+
+                      {isMemorized && (
+                        <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">
+                          Already Memorized
+                        </Badge>
+                      )}
+
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -718,25 +763,17 @@ export default function TeacherHadithsPage() {
                             setTargetStudentIds((prev) => prev.filter((id) => id !== student.id))
                           }
                         }}
-                        className="rounded border-border text-emerald-600 focus:ring-emerald-500"
+                        className="sr-only"
                       />
-                      <span>{student.name}</span>
                     </label>
                   )
-                })}
-              </div>
+                })
+              )}
             </div>
 
-            {/* Due Date */}
-            <div className="space-y-1.5">
-              <Label className="text-xs font-bold">Target / Due Date (Optional)</Label>
-              <Input
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="text-xs"
-              />
-            </div>
+            <p className="text-[11px] text-muted-foreground text-center">
+              Selected: <span className="font-bold text-foreground">{targetStudentIds.length}</span> of {students.length} students
+            </p>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
@@ -748,7 +785,7 @@ export default function TeacherHadithsPage() {
               disabled={submittingAssign || targetStudentIds.length === 0}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
             >
-              {submittingAssign ? <Loader2 className="h-4 w-4 animate-spin" /> : "Assign Hadith"}
+              {submittingAssign ? <Loader2 className="h-4 w-4 animate-spin" /> : `Assign to ${targetStudentIds.length} Student${targetStudentIds.length === 1 ? "" : "s"}`}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -774,7 +811,7 @@ export default function TeacherHadithsPage() {
                 onChange={(e) => setCustomArabic(e.target.value)}
                 placeholder="e.g. الطُّهُورُ شَطْرُ الإِيمَانِ"
                 dir="rtl"
-                className="text-sm font-amiri"
+                className="text-base font-hadith"
               />
             </div>
 

@@ -2,6 +2,7 @@
 
 import {
   Award,
+  BookMarked,
   BookOpen,
   CheckCircle2,
   Eye,
@@ -17,7 +18,7 @@ import { useCallback, useEffect, useMemo, useState } from "react"
 import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   calculateHadithStats,
@@ -43,9 +44,11 @@ export default function StudentHadithsPage() {
   const [assignedHadithIds, setAssignedHadithIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
 
-  // Filters
+  // Portal View Tab: "assigned" (Default) vs "library"
+  const [viewTab, setViewTab] = useState<"assigned" | "library">("assigned")
+
+  // Filters (for library view)
   const [selectedTopic, setSelectedTopic] = useState<string>("all")
-  const [selectedStatus, setSelectedStatus] = useState<string>("all")
   const [searchQuery, setSearchQuery] = useState<string>("")
 
   // Memory Peek state: set of masked word indexes per hadithId: Map<hadithId, Set<number>>
@@ -125,19 +128,20 @@ export default function StudentHadithsPage() {
     }))
   }, [hadiths, progressMap, assignedHadithIds])
 
+  // Assigned Hadiths
+  const assignedHadiths = useMemo(
+    () => hadithsWithProgress.filter((h) => h.is_assigned),
+    [hadithsWithProgress],
+  )
+
   // Stats
   const stats = useMemo(() => calculateHadithStats(hadithsWithProgress), [hadithsWithProgress])
   const milestone = useMemo(() => getHadithNextMilestone(stats.memorized), [stats.memorized])
 
-  // Filtered Hadiths
-  const filteredHadiths = useMemo(() => {
+  // Filtered Library Hadiths
+  const filteredLibraryHadiths = useMemo(() => {
     return hadithsWithProgress.filter((h) => {
       if (selectedTopic !== "all" && h.topic !== selectedTopic) return false
-      if (selectedStatus === "assigned" && !h.is_assigned) return false
-      if (selectedStatus === "memorized" && h.progress?.status !== "memorized") return false
-      if (selectedStatus === "memorizing" && h.progress?.status !== "memorizing") return false
-      if (selectedStatus === "reading" && h.progress?.status !== "reading" && h.progress != null) return false
-
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase()
         const matchEnglish = (h.english_text || "").toLowerCase().includes(q)
@@ -151,14 +155,7 @@ export default function StudentHadithsPage() {
       }
       return true
     })
-  }, [hadithsWithProgress, selectedTopic, selectedStatus, searchQuery])
-
-  // Featured / Assigned Hadith of the Week
-  const assignedHadiths = useMemo(
-    () => hadithsWithProgress.filter((h) => h.is_assigned),
-    [hadithsWithProgress],
-  )
-  const featuredHadith = assignedHadiths.length > 0 ? assignedHadiths[0] : hadithsWithProgress[0]
+  }, [hadithsWithProgress, selectedTopic, searchQuery])
 
   // Update status handler
   const handleUpdateStatus = async (hadithId: string, newStatus: HadithStatus) => {
@@ -297,7 +294,7 @@ export default function StudentHadithsPage() {
               Short Hadiths for Kids
             </h1>
             <p className="text-sm text-muted-foreground max-w-xl">
-              Learn, practice, and memorize precious words of Prophet Muhammad (ﷺ). Discover moral lessons for your daily life and earn beautiful milestone badges!
+              Learn, practice, and memorize precious words of Prophet Muhammad (ﷺ). Play the interactive Memory Peek game and earn milestone trophies!
             </p>
           </div>
 
@@ -338,8 +335,8 @@ export default function StudentHadithsPage() {
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Memorized</p>
             </div>
             <div className="rounded-xl bg-card/80 border border-border/80 px-3 py-1.5 shadow-sm">
-              <p className="text-lg font-bold text-amber-500 tabular-nums">{stats.memorizing}</p>
-              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Practicing</p>
+              <p className="text-lg font-bold text-amber-500 tabular-nums">{assignedHadiths.length}</p>
+              <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Assigned</p>
             </div>
             <div className="rounded-xl bg-card/80 border border-border/80 px-3 py-1.5 shadow-sm">
               <p className="text-lg font-bold text-blue-500 tabular-nums">{stats.total}</p>
@@ -349,335 +346,499 @@ export default function StudentHadithsPage() {
         </div>
       </div>
 
-      {/* 3. Featured / Assigned Hadith of the Week */}
-      {featuredHadith && (
-        <Card className="border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 via-card to-card shadow-sm overflow-hidden">
-          <CardHeader className="py-4 border-b border-border/60 bg-emerald-500/10 flex flex-row items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Star className="h-4 w-4 fill-amber-400 text-amber-500" />
-              <CardTitle className="text-sm font-bold text-foreground">
-                {featuredHadith.is_assigned ? "✨ Hadith Assigned by Teacher" : "🌟 Hadith Spotlight"}
-              </CardTitle>
-            </div>
-            <Badge variant="outline" className="text-xs bg-card/80 border-emerald-500/30 text-emerald-700 dark:text-emerald-300">
-              {HADITH_TOPICS[featuredHadith.topic]?.label || featuredHadith.topic}
-            </Badge>
-          </CardHeader>
-          <CardContent className="p-5 space-y-4">
-            <div className="text-center py-2 space-y-3">
-              <p className="text-2xl sm:text-3xl font-bold font-amiri text-foreground leading-relaxed" dir="rtl">
-                {featuredHadith.arabic_text}
-              </p>
-              <p className="text-sm sm:text-base font-medium text-muted-foreground italic max-w-2xl mx-auto">
-                &ldquo;{featuredHadith.english_text}&rdquo;
-              </p>
-              <p className="text-sm font-medium text-emerald-800 dark:text-emerald-200" dir="rtl">
-                {featuredHadith.urdu_text}
-              </p>
-            </div>
-
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex items-start gap-2.5">
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                <Sparkles className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-foreground">What I can do today:</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{featuredHadith.kids_lesson}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* 4. Filter & Search Bar */}
-      <div className="space-y-3">
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search Hadith by Arabic, English, Urdu, or moral lesson..."
-              className="pl-9 bg-card"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            <select
-              value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              aria-label="Filter by Status"
-              className="h-10 rounded-md border border-input bg-card px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="all">All Progress ({stats.total})</option>
-              {stats.assignedCount > 0 && <option value="assigned">Assigned ({stats.assignedCount})</option>}
-              <option value="memorized">Memorized ({stats.memorized})</option>
-              <option value="memorizing">Practicing ({stats.memorizing})</option>
-              <option value="reading">To Learn ({stats.reading})</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Topic Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+      {/* 3. View Switcher Tabs */}
+      <div className="flex items-center justify-between border-b border-border/80 pb-2">
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setSelectedTopic("all")}
+            onClick={() => setViewTab("assigned")}
             className={cn(
-              "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border",
-              selectedTopic === "all"
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-secondary/50",
+              "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all",
+              viewTab === "assigned"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
             )}
           >
-            All Topics ({hadiths.length})
+            <Star className="h-4 w-4 fill-current text-amber-300" />
+            <span>My Assigned Hadiths ({assignedHadiths.length})</span>
           </button>
-          {Object.entries(HADITH_TOPICS).map(([key, topic]) => {
-            const count = hadiths.filter((h) => h.topic === key).length
-            if (count === 0) return null
-            const isSelected = selectedTopic === key
-            return (
+
+          <button
+            onClick={() => setViewTab("library")}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all",
+              viewTab === "library"
+                ? "bg-emerald-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+            )}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Explore All Hadiths ({hadiths.length})</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Tab 1: Assigned Hadiths View (Default) */}
+      {viewTab === "assigned" && (
+        <div className="space-y-6">
+          {assignedHadiths.length === 0 ? (
+            <Card className="py-12 text-center border-dashed border-2">
+              <CardContent className="space-y-4 max-w-md mx-auto">
+                <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                  <BookMarked className="h-7 w-7" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-base font-bold text-foreground">No Hadiths Assigned Yet</h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    Your teacher has not assigned you a specific Hadith this week. As soon as your teacher assigns one, it will appear here for you to practice and memorize!
+                  </p>
+                </div>
+                <Button
+                  onClick={() => setViewTab("library")}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Browse Full Library & Read Ahead</span>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                  Your Teacher&apos;s Active Assignments ({assignedHadiths.length})
+                </p>
+                <span className="text-xs text-muted-foreground">Practice daily & tap &ldquo;Mark Memorized&rdquo; when ready!</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {assignedHadiths.map((hadith) => {
+                  const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
+                  const currentStatus = hadith.progress?.status || "reading"
+                  const isPeekActive = !!peekActiveMap.get(hadith.id)
+                  const maskedIndexes = maskedWordsMap.get(hadith.id) || new Set<number>()
+                  const words = splitArabicWords(hadith.arabic_text)
+
+                  return (
+                    <Card
+                      key={hadith.id}
+                      className={cn(
+                        "relative flex flex-col justify-between border-2 transition-all duration-200 shadow-md",
+                        currentStatus === "memorized"
+                          ? "border-emerald-500/60 bg-gradient-to-br from-emerald-500/15 via-card to-card"
+                          : "border-amber-500/50 bg-gradient-to-br from-amber-500/10 via-card to-card",
+                      )}
+                    >
+                      <div>
+                        {/* Top Bar */}
+                        <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2 bg-amber-500/10">
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-300">
+                              #{hadith.hadith_number}
+                            </span>
+                            <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
+                              <span>{topicInfo.icon}</span>
+                              <span className="ml-1">{topicInfo.label}</span>
+                            </Badge>
+                          </div>
+
+                          <Badge className="bg-amber-500 text-white text-[10px] font-bold">
+                            Assigned by Teacher
+                          </Badge>
+                        </CardHeader>
+
+                        <CardContent className="p-5 space-y-4">
+                          {/* Arabic Text Display in Calligraphic Font or Memory Peek */}
+                          <div className="rounded-2xl bg-card p-5 border border-border/60 text-center shadow-inner">
+                            {!isPeekActive ? (
+                              <p className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text leading-loose" dir="rtl">
+                                {hadith.arabic_text}
+                              </p>
+                            ) : (
+                              <div className="space-y-3">
+                                <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground mb-1">
+                                  <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                                    <Sparkles className="h-3.5 w-3.5" /> Memory Peek Active
+                                  </span>
+                                  <span>Tap words to hide / reveal</span>
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-center gap-2.5 py-1" dir="rtl">
+                                  {words.map((word, wIdx) => {
+                                    const isMasked = maskedIndexes.has(wIdx)
+                                    return (
+                                      <button
+                                        key={wIdx}
+                                        onClick={() => toggleWordMask(hadith.id, wIdx)}
+                                        className={cn(
+                                          "rounded-xl px-3.5 py-2 font-hadith text-2xl transition-all duration-200 border select-none cursor-pointer",
+                                          isMasked
+                                            ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-700 dark:text-emerald-300 font-bold tracking-widest shadow-inner"
+                                            : "bg-card border-border text-foreground hover:border-emerald-500 shadow-sm",
+                                        )}
+                                        title={isMasked ? "Tap to reveal word" : "Tap to hide word"}
+                                      >
+                                        {isMasked ? "•••" : word}
+                                      </button>
+                                    )
+                                  })}
+                                </div>
+
+                                <div className="flex items-center justify-center gap-2 pt-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                    onClick={() => maskAllWords(hadith.id, words.length)}
+                                  >
+                                    <EyeOff className="h-3 w-3" /> Hide All
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                    onClick={() => revealAllWords(hadith.id)}
+                                  >
+                                    <Eye className="h-3 w-3" /> Reveal All
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* English Translation */}
+                          <div className="space-y-1">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Meaning</p>
+                            <p className="text-sm font-medium text-foreground italic">
+                              &ldquo;{hadith.english_text}&rdquo;
+                            </p>
+                          </div>
+
+                          {/* Urdu Translation */}
+                          <div className="space-y-1 text-right" dir="rtl">
+                            <p className="text-xs font-semibold text-muted-foreground tracking-wider">ترجمہ</p>
+                            <p className="text-sm font-medium text-foreground">
+                              {hadith.urdu_text}
+                            </p>
+                          </div>
+
+                          {/* Kid's Daily Moral Action */}
+                          <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3.5 flex items-start gap-2.5">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                              <Sparkles className="h-3.5 w-3.5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-foreground">What I can do today:</p>
+                              <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{hadith.kids_lesson}</p>
+                            </div>
+                          </div>
+
+                          {/* Narrator & Reference */}
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground/80 pt-1 border-t border-border/40">
+                            <span>Narrated by {hadith.narrator}</span>
+                            <span className="font-medium text-foreground/70">{hadith.reference}</span>
+                          </div>
+                        </CardContent>
+                      </div>
+
+                      {/* Bottom Controls */}
+                      <div className="p-4 bg-secondary/30 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                        {/* Memory Peek Toggle */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toggleMemoryPeek(hadith.id, words.length)}
+                          className={cn(
+                            "h-9 text-xs font-semibold gap-1.5 w-full sm:w-auto border",
+                            isPeekActive
+                              ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+                              : "border-border hover:bg-secondary",
+                          )}
+                        >
+                          {isPeekActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                          <span>{isPeekActive ? "Show Full Text" : "🎮 Practice with Memory Peek"}</span>
+                        </Button>
+
+                        {/* Status Buttons */}
+                        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                          {currentStatus !== "memorized" ? (
+                            <Button
+                              size="sm"
+                              onClick={() => handleUpdateStatus(hadith.id, "memorized")}
+                              className="h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1.5 shadow-sm"
+                            >
+                              <CheckCircle2 className="h-4 w-4" />
+                              <span>Mark as Memorized!</span>
+                            </Button>
+                          ) : (
+                            <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-500/40 py-1.5 px-3 text-xs font-bold flex items-center gap-1.5">
+                              <CheckCircle2 className="h-4 w-4" />
+                              Memorized!
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Card>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 5. Tab 2: Full Hadith Library View */}
+      {viewTab === "library" && (
+        <div className="space-y-4">
+          {/* Search & Topic Filters */}
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Hadith by Arabic, English, Urdu, or moral lesson..."
+                className="pl-9 bg-card"
+              />
+            </div>
+
+            {/* Topic Pills */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
               <button
-                key={key}
-                onClick={() => setSelectedTopic(key)}
+                onClick={() => setSelectedTopic("all")}
                 className={cn(
-                  "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border flex items-center gap-1.5",
-                  isSelected
+                  "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border",
+                  selectedTopic === "all"
                     ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
                     : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-secondary/50",
                 )}
               >
-                <span>{topic.icon}</span>
-                <span>{topic.label.split(" ")[0]}</span>
-                <span className="text-[10px] opacity-70">({count})</span>
+                All Topics ({hadiths.length})
               </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* 5. Hadith Cards List */}
-      {filteredHadiths.length === 0 ? (
-        <Card className="py-12 text-center">
-          <CardContent className="space-y-3">
-            <BookOpen className="h-10 w-10 mx-auto text-muted-foreground/50" />
-            <p className="text-base font-semibold text-foreground">No Hadiths found</p>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              Try adjusting your search query or selecting a different topic filter.
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSelectedTopic("all")
-                setSelectedStatus("all")
-                setSearchQuery("")
-              }}
-            >
-              Reset Filters
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filteredHadiths.map((hadith) => {
-            const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
-            const currentStatus = hadith.progress?.status || "reading"
-            const isPeekActive = !!peekActiveMap.get(hadith.id)
-            const maskedIndexes = maskedWordsMap.get(hadith.id) || new Set<number>()
-            const words = splitArabicWords(hadith.arabic_text)
-
-            return (
-              <Card
-                key={hadith.id}
-                className={cn(
-                  "relative flex flex-col justify-between border transition-all duration-200 shadow-sm hover:shadow-md",
-                  currentStatus === "memorized"
-                    ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-card to-card"
-                    : hadith.is_assigned
-                    ? "border-amber-500/40 bg-gradient-to-br from-amber-500/5 via-card to-card"
-                    : "border-border/80 bg-card hover:border-emerald-500/30",
-                )}
-              >
-                <div>
-                  {/* Top Bar */}
-                  <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
-                        {hadith.hadith_number}
-                      </span>
-                      <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
-                        <span>{topicInfo.icon}</span>
-                        <span className="ml-1">{topicInfo.label}</span>
-                      </Badge>
-                    </div>
-
-                    <div className="flex items-center gap-1.5">
-                      {hadith.is_assigned && (
-                        <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold">
-                          Assigned
-                        </Badge>
-                      )}
-                      {currentStatus === "memorized" && (
-                        <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" />
-                          Memorized
-                        </Badge>
-                      )}
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="p-5 space-y-4">
-                    {/* Arabic Text Display or Interactive Memory Peek Game */}
-                    <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 text-center">
-                      {!isPeekActive ? (
-                        <p className="text-2xl sm:text-3xl font-bold font-amiri text-foreground leading-relaxed select-text" dir="rtl">
-                          {hadith.arabic_text}
-                        </p>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground mb-1">
-                            <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                              <Sparkles className="h-3 w-3" /> Memory Peek Mode
-                            </span>
-                            <span>Tap word to hide / reveal</span>
-                          </div>
-
-                          <div className="flex flex-wrap items-center justify-center gap-2 py-1" dir="rtl">
-                            {words.map((word, wIdx) => {
-                              const isMasked = maskedIndexes.has(wIdx)
-                              return (
-                                <button
-                                  key={wIdx}
-                                  onClick={() => toggleWordMask(hadith.id, wIdx)}
-                                  className={cn(
-                                    "rounded-lg px-3 py-1.5 font-amiri text-2xl transition-all duration-200 border select-none cursor-pointer",
-                                    isMasked
-                                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 font-bold tracking-widest shadow-inner hover:bg-emerald-500/30"
-                                      : "bg-card border-border/80 text-foreground hover:border-emerald-500/50 shadow-sm",
-                                  )}
-                                  title={isMasked ? "Tap to reveal word" : "Tap to hide word"}
-                                >
-                                  {isMasked ? "•••" : word}
-                                </button>
-                              )
-                            })}
-                          </div>
-
-                          <div className="flex items-center justify-center gap-2 pt-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                              onClick={() => maskAllWords(hadith.id, words.length)}
-                            >
-                              <EyeOff className="h-3 w-3" /> Hide All
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
-                              onClick={() => revealAllWords(hadith.id)}
-                            >
-                              <Eye className="h-3 w-3" /> Reveal All
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* English Translation */}
-                    <div className="space-y-1">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Meaning</p>
-                      <p className="text-sm font-medium text-foreground italic">
-                        &ldquo;{hadith.english_text}&rdquo;
-                      </p>
-                    </div>
-
-                    {/* Urdu Translation */}
-                    <div className="space-y-1 text-right" dir="rtl">
-                      <p className="text-xs font-semibold text-muted-foreground tracking-wider">ترجمہ</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {hadith.urdu_text}
-                      </p>
-                    </div>
-
-                    {/* Kid's Daily Moral Action */}
-                    <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex items-start gap-2.5">
-                      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mt-0.5">
-                        <Sparkles className="h-3.5 w-3.5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-foreground">What I can do:</p>
-                        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{hadith.kids_lesson}</p>
-                      </div>
-                    </div>
-
-                    {/* Narrator & Reference */}
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground/80 pt-1 border-t border-border/40">
-                      <span>Narrated by {hadith.narrator}</span>
-                      <span className="font-medium text-foreground/70">{hadith.reference}</span>
-                    </div>
-                  </CardContent>
-                </div>
-
-                {/* Footer Controls: Practice Mode & Progress Switcher */}
-                <div className="p-4 bg-secondary/20 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  {/* Memory Peek Trigger */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleMemoryPeek(hadith.id, words.length)}
+              {Object.entries(HADITH_TOPICS).map(([key, topic]) => {
+                const count = hadiths.filter((h) => h.topic === key).length
+                if (count === 0) return null
+                const isSelected = selectedTopic === key
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setSelectedTopic(key)}
                     className={cn(
-                      "h-8 text-xs font-semibold gap-1.5 w-full sm:w-auto border",
-                      isPeekActive
-                        ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
-                        : "border-border hover:bg-secondary",
+                      "shrink-0 rounded-full px-3.5 py-1.5 text-xs font-semibold transition-all border flex items-center gap-1.5",
+                      isSelected
+                        ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                        : "bg-card border-border/80 text-muted-foreground hover:text-foreground hover:bg-secondary/50",
                     )}
                   >
-                    {isPeekActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
-                    <span>{isPeekActive ? "Show Full Text" : "Memory Peek"}</span>
-                  </Button>
+                    <span>{topic.icon}</span>
+                    <span>{topic.label.split(" ")[0]}</span>
+                    <span className="text-[10px] opacity-70">({count})</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
 
-                  {/* 3-Stage Progress Buttons */}
-                  <div className="flex items-center gap-1 w-full sm:w-auto justify-end">
-                    <button
-                      onClick={() => handleUpdateStatus(hadith.id, "reading")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                        currentStatus === "reading"
-                          ? "bg-secondary text-foreground border-border shadow-sm"
-                          : "text-muted-foreground border-transparent hover:text-foreground",
-                      )}
-                    >
-                      📖 Reading
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(hadith.id, "memorizing")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                        currentStatus === "memorizing"
-                          ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm"
-                          : "text-muted-foreground border-transparent hover:text-foreground",
-                      )}
-                    >
-                      🧠 Learning
-                    </button>
-                    <button
-                      onClick={() => handleUpdateStatus(hadith.id, "memorized")}
-                      className={cn(
-                        "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
-                        currentStatus === "memorized"
-                          ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                          : "text-muted-foreground border-transparent hover:text-foreground hover:bg-emerald-500/10",
-                      )}
-                    >
-                      ✅ Memorized!
-                    </button>
+          {/* Library Cards List */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            {filteredLibraryHadiths.map((hadith) => {
+              const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
+              const currentStatus = hadith.progress?.status || "reading"
+              const isPeekActive = !!peekActiveMap.get(hadith.id)
+              const maskedIndexes = maskedWordsMap.get(hadith.id) || new Set<number>()
+              const words = splitArabicWords(hadith.arabic_text)
+
+              return (
+                <Card
+                  key={hadith.id}
+                  className={cn(
+                    "relative flex flex-col justify-between border transition-all duration-200 shadow-sm hover:shadow-md",
+                    currentStatus === "memorized"
+                      ? "border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 via-card to-card"
+                      : hadith.is_assigned
+                      ? "border-amber-500/40 bg-gradient-to-br from-amber-500/5 via-card to-card"
+                      : "border-border/80 bg-card hover:border-emerald-500/30",
+                  )}
+                >
+                  <div>
+                    {/* Top Bar */}
+                    <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
+                          {hadith.hadith_number}
+                        </span>
+                        <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
+                          <span>{topicInfo.icon}</span>
+                          <span className="ml-1">{topicInfo.label}</span>
+                        </Badge>
+                      </div>
+
+                      <div className="flex items-center gap-1.5">
+                        {hadith.is_assigned && (
+                          <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold">
+                            Assigned
+                          </Badge>
+                        )}
+                        {currentStatus === "memorized" && (
+                          <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" />
+                            Memorized
+                          </Badge>
+                        )}
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="p-5 space-y-4">
+                      {/* Arabic Text Display in Calligraphic Hadith Font */}
+                      <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 text-center">
+                        {!isPeekActive ? (
+                          <p className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text leading-loose" dir="rtl">
+                            {hadith.arabic_text}
+                          </p>
+                        ) : (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground mb-1">
+                              <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                                <Sparkles className="h-3 w-3" /> Memory Peek Mode
+                              </span>
+                              <span>Tap word to hide / reveal</span>
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-center gap-2 py-1" dir="rtl">
+                              {words.map((word, wIdx) => {
+                                const isMasked = maskedIndexes.has(wIdx)
+                                return (
+                                  <button
+                                    key={wIdx}
+                                    onClick={() => toggleWordMask(hadith.id, wIdx)}
+                                    className={cn(
+                                      "rounded-lg px-3 py-1.5 font-hadith text-2xl transition-all duration-200 border select-none cursor-pointer",
+                                      isMasked
+                                        ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-700 dark:text-emerald-300 font-bold tracking-widest shadow-inner hover:bg-emerald-500/30"
+                                        : "bg-card border-border/80 text-foreground hover:border-emerald-500/50 shadow-sm",
+                                    )}
+                                    title={isMasked ? "Tap to reveal word" : "Tap to hide word"}
+                                  >
+                                    {isMasked ? "•••" : word}
+                                  </button>
+                                )
+                              })}
+                            </div>
+
+                            <div className="flex items-center justify-center gap-2 pt-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                onClick={() => maskAllWords(hadith.id, words.length)}
+                              >
+                                <EyeOff className="h-3 w-3" /> Hide All
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-foreground"
+                                onClick={() => revealAllWords(hadith.id)}
+                              >
+                                <Eye className="h-3 w-3" /> Reveal All
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* English Translation */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Meaning</p>
+                        <p className="text-sm font-medium text-foreground italic">
+                          &ldquo;{hadith.english_text}&rdquo;
+                        </p>
+                      </div>
+
+                      {/* Urdu Translation */}
+                      <div className="space-y-1 text-right" dir="rtl">
+                        <p className="text-xs font-semibold text-muted-foreground tracking-wider">ترجمہ</p>
+                        <p className="text-sm font-medium text-foreground">
+                          {hadith.urdu_text}
+                        </p>
+                      </div>
+
+                      {/* Kid's Daily Moral Action */}
+                      <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3 flex items-start gap-2.5">
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 mt-0.5">
+                          <Sparkles className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-foreground">What I can do:</p>
+                          <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{hadith.kids_lesson}</p>
+                        </div>
+                      </div>
+
+                      {/* Narrator & Reference */}
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground/80 pt-1 border-t border-border/40">
+                        <span>Narrated by {hadith.narrator}</span>
+                        <span className="font-medium text-foreground/70">{hadith.reference}</span>
+                      </div>
+                    </CardContent>
                   </div>
-                </div>
-              </Card>
-            )
-          })}
+
+                  {/* Footer Controls */}
+                  <div className="p-4 bg-secondary/20 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleMemoryPeek(hadith.id, words.length)}
+                      className={cn(
+                        "h-8 text-xs font-semibold gap-1.5 w-full sm:w-auto border",
+                        isPeekActive
+                          ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40"
+                          : "border-border hover:bg-secondary",
+                      )}
+                    >
+                      {isPeekActive ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
+                      <span>{isPeekActive ? "Show Full Text" : "Memory Peek"}</span>
+                    </Button>
+
+                    <div className="flex items-center gap-1 w-full sm:w-auto justify-end">
+                      <button
+                        onClick={() => handleUpdateStatus(hadith.id, "reading")}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
+                          currentStatus === "reading"
+                            ? "bg-secondary text-foreground border-border shadow-sm"
+                            : "text-muted-foreground border-transparent hover:text-foreground",
+                        )}
+                      >
+                        📖 Reading
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(hadith.id, "memorizing")}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
+                          currentStatus === "memorizing"
+                            ? "bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm"
+                            : "text-muted-foreground border-transparent hover:text-foreground",
+                        )}
+                      >
+                        🧠 Learning
+                      </button>
+                      <button
+                        onClick={() => handleUpdateStatus(hadith.id, "memorized")}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-xs font-semibold transition-all border",
+                          currentStatus === "memorized"
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
+                            : "text-muted-foreground border-transparent hover:text-foreground hover:bg-emerald-500/10",
+                        )}
+                      >
+                        ✅ Memorized!
+                      </button>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
         </div>
       )}
 
