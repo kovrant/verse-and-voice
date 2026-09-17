@@ -28,6 +28,12 @@ describe("Hadith Engine", () => {
       HADITH_BADGE_SLUGS.CHAMPION,
       HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
     ])
+    expect(getEligibleHadithBadgeSlugs(50)).toEqual([
+      HADITH_BADGE_SLUGS.EXPLORER,
+      HADITH_BADGE_SLUGS.CHAMPION,
+      HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
+      HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
+    ])
   })
 
   it("calculates next milestone targets", () => {
@@ -46,9 +52,14 @@ describe("Hadith Engine", () => {
     expect(m15.percentage).toBe(50)
     expect(m15.isComplete).toBe(false)
 
-    const m40 = getHadithNextMilestone(40)
-    expect(m40.isComplete).toBe(true)
-    expect(m40.percentage).toBe(100)
+    const m40 = getHadithNextMilestone(45)
+    expect(m40.target).toBe(50)
+    expect(m40.percentage).toBe(90)
+    expect(m40.isComplete).toBe(false)
+
+    const m50 = getHadithNextMilestone(50)
+    expect(m50.isComplete).toBe(true)
+    expect(m50.percentage).toBe(100)
   })
 
   it("calculates collection stats", () => {

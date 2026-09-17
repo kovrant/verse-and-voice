@@ -106,6 +106,9 @@ export function getEligibleHadithBadgeSlugs(memorizedCount: number): string[] {
   if (memorizedCount >= 40) {
     slugs.push(HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR)
   }
+  if (memorizedCount >= 50) {
+    slugs.push(HADITH_BADGE_SLUGS.GRAND_SCHOLAR)
+  }
   return slugs
 }
 
@@ -119,13 +122,23 @@ export function getHadithNextMilestone(memorizedCount: number): {
   percentage: number
   isComplete: boolean
 } {
-  if (memorizedCount >= 40) {
+  if (memorizedCount >= 50) {
     return {
       current: memorizedCount,
-      target: 40,
-      badgeTitle: "Arba'in Scholar (40 Hadith Master)",
+      target: 50,
+      badgeTitle: "Grand Sunnah Scholar (50 Hadiths Master)",
       percentage: 100,
       isComplete: true,
+    }
+  }
+  if (memorizedCount >= 40) {
+    const target = 50
+    return {
+      current: memorizedCount,
+      target,
+      badgeTitle: "Grand Sunnah Scholar (50 Hadiths)",
+      percentage: Math.min(100, Math.round((memorizedCount / target) * 100)),
+      isComplete: false,
     }
   }
   if (memorizedCount >= 15) {

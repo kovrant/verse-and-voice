@@ -69,4 +69,5 @@ export const HADITH_BADGE_SLUGS = {
   EXPLORER: "hadith-explorer",
   CHAMPION: "hadith-champion",
   ARBAIN_SCHOLAR: "hadith-arbain-scholar",
+  GRAND_SCHOLAR: "hadith-grand-scholar",
 } as const

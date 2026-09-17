@@ -33,6 +33,14 @@ const HADITH_BADGE_DEFINITIONS: Record<
     kind: "badge",
     issuesCertificate: false,
   },
+  [HADITH_BADGE_SLUGS.GRAND_SCHOLAR]: {
+    slug: HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
+    title: "Grand Sunnah Scholar (50 Hadith Master)",
+    description: "Achieved the highest honor of memorizing 50 Short Hadiths for Kids",
+    domain: "hadith",
+    kind: "badge",
+    issuesCertificate: false,
+  },
 }
 
 export async function POST(request: Request) {
