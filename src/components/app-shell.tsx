@@ -1,13 +1,14 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useState } from "react"
 
 import { AchievementCelebrationProvider } from "@/components/achievement-celebration-provider"
 import { LiveClassProvider } from "@/components/live-class-provider"
 import { Sidebar } from "@/components/sidebar"
-import { StudentSidebar } from "@/components/student-sidebar"
-import { StudentTopBar, TeacherTopBar } from "@/components/topbar"
+import { StudentBackdrop } from "@/components/student-backdrop"
+import { StudentTabBar } from "@/components/student-tab-bar"
+import { StudentTopBar } from "@/components/student-topbar"
+import { TeacherTopBar } from "@/components/topbar"
 
 /**
  * Chooses the navigation shell + ambient background by route. The student
@@ -19,56 +20,45 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
   // Auth/entry pages hide the chrome (matches Sidebar returning null there).
   const isAuthArea = pathname === "/login" || pathname === "/admin"
-  const [collapsed, setCollapsed] = useState(false)
 
   const shell = (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {isStudentArea ? <StudentSidebar collapsed={collapsed} /> : <Sidebar />}
+    // Student: `isolate` (no bg) so the backdrop's -z-10 paints behind this
+    // shell but in front of the page root. The backdrop must live out here, not
+    // inside <main>: main's `contain: layout` would make `fixed` pin to main
+    // and scroll away after one screen.
+    <div
+      className={
+        isStudentArea
+          ? "relative isolate flex h-screen overflow-hidden"
+          : "flex h-screen overflow-hidden bg-background"
+      }
+    >
+      {isStudentArea && <StudentBackdrop />}
+      {isStudentArea ? <StudentTabBar /> : <Sidebar />}
       <main
         className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll"
         style={{ contain: "layout style" }}
       >
-        {isStudentArea ? (
-          // Soft pastel ambient — cheerful, gentle blobs. Clipped to the
-          // viewport so the off-screen blobs can't extend the scroll area
-          // (main has `contain: layout`, which would otherwise let these
-          // fixed blobs add phantom vertical/horizontal scroll).
-          <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-            <div className="absolute inset-0 bg-background" />
-            <div
-              className="absolute -top-32 -left-24 h-96 w-96 rounded-full opacity-40 blur-3xl"
-              style={{
-                background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.4), transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute top-1/4 -right-32 h-[28rem] w-[28rem] rounded-full opacity-35 blur-3xl"
-              style={{
-                background: "radial-gradient(circle, hsl(var(--c-s-500) / 0.4), transparent 70%)",
-              }}
-            />
-            <div
-              className="absolute -bottom-40 left-1/3 h-96 w-96 rounded-full opacity-30 blur-3xl"
-              style={{
-                background: "radial-gradient(circle, hsl(var(--c-p-500) / 0.35), transparent 70%)",
-              }}
-            />
-          </div>
-        ) : (
+        {!isStudentArea && (
           // Admin — clean, minimal.
           <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
         )}
-        {isStudentArea ? (
-          <StudentTopBar onToggleSidebar={() => setCollapsed((c) => !c)} />
-        ) : (
-          !isAuthArea && <TeacherTopBar />
-        )}
+        {isStudentArea ? <StudentTopBar /> : !isAuthArea && <TeacherTopBar />}
         {/* Grows to fill the height under the top bar so a page can `min-h-full`
             into the leftover space on tall viewports (tablets in portrait)
             instead of leaving a bottom void. Deliberately still a block, not a
             flex column: flex items with auto cross-axis margins don't stretch,
             which would collapse every `mx-auto max-w-*` page to fit-content. */}
-        <div className="relative shrink-0 grow p-4 lg:p-8">{children}</div>
+        {/* Student: bottom padding clears the fixed tab bar below lg. */}
+        <div
+          className={
+            isStudentArea
+              ? "relative shrink-0 grow p-4 pb-28 lg:p-8"
+              : "relative shrink-0 grow p-4 lg:p-8"
+          }
+        >
+          {children}
+        </div>
       </main>
     </div>
   )

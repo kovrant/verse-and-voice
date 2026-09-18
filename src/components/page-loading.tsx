@@ -47,8 +47,6 @@ export type PageLoadingVariant =
   | "pdf"
   | "rows"
   | "media"
-  | "widget-book"
-  | "widget-mem"
   | "pill"
 
 /**
@@ -197,11 +195,13 @@ export function PageLoading({
     case "student-home":
       return wrap(
         <>
-          <Skeleton className="h-11 w-64 rounded-xl" />
-          <Skeleton className="h-80 rounded-2xl" />
-          <div className="grid gap-[22px] sm:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-2xl" />
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-[84px] w-[84px] shrink-0 rounded-full" />
+            <Skeleton className="h-20 flex-1 rounded-[24px]" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-[150px] rounded-[26px]" />
             ))}
           </div>
         </>,
@@ -263,37 +263,6 @@ export function PageLoading({
             ))}
           </div>
         </>,
-      )
-
-    case "widget-book":
-      return (
-        <div className={cn("rounded-2xl border border-border bg-card p-5 shadow-soft", className)}>
-          <Skeleton className="mb-4 h-3 w-24 rounded" />
-          <div className="flex items-center gap-4">
-            <Skeleton className="h-32 w-24 shrink-0 rounded-[6px_12px_12px_6px]" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-6 w-40 rounded-lg" />
-              <Skeleton className="h-3 w-24 rounded" />
-              <Skeleton className="h-6 w-28 rounded-lg" />
-            </div>
-          </div>
-          <Skeleton className="mt-5 h-12 w-full rounded-[14px]" />
-        </div>
-      )
-
-    case "widget-mem":
-      return (
-        <div className={cn("rounded-2xl border border-border bg-card p-5 shadow-soft", className)}>
-          <Skeleton className="mb-4 h-3 w-32 rounded" />
-          <div className="flex items-center gap-[18px]">
-            <Skeleton className="h-[104px] w-[104px] shrink-0 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-6 w-40 rounded-lg" />
-              <Skeleton className="h-3 w-28 rounded" />
-            </div>
-          </div>
-          <Skeleton className="mt-5 h-12 w-full rounded-[14px]" />
-        </div>
       )
 
     case "pill":

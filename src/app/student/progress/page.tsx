@@ -4,9 +4,11 @@ import { format } from "date-fns"
 import { BookMarked, BookOpen, Trophy } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { JourneyPath } from "@/components/journey-path"
 import { PageLoading } from "@/components/page-loading"
 import {
   getChronologicalRoundNumber,
+  getDashboardProgress,
   QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
@@ -43,6 +45,7 @@ export default function StudentProgressPage() {
     if (aActive !== bActive) return bActive - aActive
     return b.started_at.localeCompare(a.started_at)
   })
+  const { isQaida, heroPara } = getDashboardProgress(rounds)
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
@@ -57,6 +60,33 @@ export default function StudentProgressPage() {
           <p className="text-sm text-muted-foreground">Your Quran and Qaida journey ✨</p>
         </div>
       </div>
+
+      {!isQaida && rounds.length > 0 && (
+        /* Winding para path. The tall variant is swapped in by CSS so the right
+           size is there on first paint; the wrapper carries the accessible name. */
+        <div className="rounded-[26px] border-[1.5px] border-border bg-card p-4 shadow-[0_5px_0_hsl(var(--border))] sm:p-6">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-heading text-[22px] font-bold text-primary">Your Quran journey</h2>
+            <span className="font-heading text-[18px] font-bold text-muted-foreground">
+              Para {heroPara} / 30
+            </span>
+          </div>
+          <div className="overflow-x-auto rounded-2xl bg-[hsl(var(--surface-alt))] px-4 pb-2 pt-4">
+            <div
+              className="min-w-[520px]"
+              role="img"
+              aria-label={`Quran journey — para ${heroPara} of 30`}
+            >
+              <div className="tall:hidden">
+                <JourneyPath done={heroPara} total={30} />
+              </div>
+              <div className="hidden tall:block">
+                <JourneyPath done={heroPara} total={30} tall />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Card className="relative overflow-hidden">
         <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500/50" />

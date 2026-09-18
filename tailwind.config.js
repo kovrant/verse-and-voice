@@ -59,12 +59,17 @@ const config = {
          * These override Tailwind's built-in color names so that ALL existing
          * class references (e.g. bg-emerald-500/10, text-amber-400, from-teal-600)
          * automatically follow the current theme without any class name changes.
+         * Shades with a `var(--x, <stock>)` fallback are only themed by the
+         * student palette; admin doesn't define them and keeps stock Tailwind.
          */
         emerald: {
+          200: "hsl(var(--c-p-200, 152 76% 80%) / <alpha-value>)",
           300: "hsl(var(--c-p-300) / <alpha-value>)",
           400: "hsl(var(--c-p-400) / <alpha-value>)",
           500: "hsl(var(--c-p-500) / <alpha-value>)",
           600: "hsl(var(--c-p-600) / <alpha-value>)",
+          700: "hsl(var(--c-p-700, 163 94% 24%) / <alpha-value>)",
+          800: "hsl(var(--c-p-800, 163 88% 20%) / <alpha-value>)",
           900: "hsl(var(--c-p-900) / <alpha-value>)",
         },
         teal: {
@@ -72,22 +77,31 @@ const config = {
           400: "hsl(var(--c-s-400) / <alpha-value>)",
           500: "hsl(var(--c-s-500) / <alpha-value>)",
           600: "hsl(var(--c-s-600) / <alpha-value>)",
+          700: "hsl(var(--c-s-700, 175 84% 26%) / <alpha-value>)",
           900: "hsl(var(--c-s-900) / <alpha-value>)",
         },
         amber: {
+          200: "hsl(var(--c-a-200, 48 97% 77%) / <alpha-value>)",
           300: "hsl(var(--c-a-300) / <alpha-value>)",
           400: "hsl(var(--c-a-400) / <alpha-value>)",
           500: "hsl(var(--c-a-500) / <alpha-value>)",
           600: "hsl(var(--c-a-600) / <alpha-value>)",
+          700: "hsl(var(--c-a-700, 26 90% 37%) / <alpha-value>)",
+          800: "hsl(var(--c-a-800, 23 83% 31%) / <alpha-value>)",
         },
         yellow: {
           300: "hsl(var(--c-y-300) / <alpha-value>)",
           400: "hsl(var(--c-y-400) / <alpha-value>)",
+          500: "hsl(var(--c-y-500, 45 93% 47%) / <alpha-value>)",
         },
         green: {
+          400: "hsl(var(--c-g-400, 142 69% 58%) / <alpha-value>)",
+          500: "hsl(var(--c-g-500, 142 71% 45%) / <alpha-value>)",
           600: "hsl(var(--c-g-600) / <alpha-value>)",
         },
         orange: {
+          400: "hsl(var(--c-o-400, 27 96% 61%) / <alpha-value>)",
+          500: "hsl(var(--c-o-500, 25 95% 53%) / <alpha-value>)",
           600: "hsl(var(--c-o-600) / <alpha-value>)",
         },
       },

@@ -169,159 +169,204 @@
     --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
   }
 
-  /* ── STUDENT — Forest Green (earthy) — light ──
-   * Warm parchment surfaces + deep forest primary. Every student component
-   * reads these tokens, so this block alone themes the whole portal.
-   * Extra earthy accents (--sage / --taupe) power bespoke pieces like the
-   * dashboard journey path. */
+  /* ── STUDENT — Forest & Terracotta — light ──
+   * Palette: #2E3A2F primary · #6B7F5B secondary (sage) · #D9C9B2 tertiary
+   * · #C96F4F accent · #F8F6EE background. Every student component reads
+   * these tokens, so this block alone themes the whole portal.
+   * Terracotta (--accent) is for highlights only — icons, badges, "you're
+   * here" markers — never primary buttons. Terracotta + white text is ~4.5:1,
+   * so keep it to large/bold text. */
   [data-portal="student"] {
-    --background: 42 33% 93%; /* #f3efe6 */
-    --foreground: 48 9% 15%; /* #2b2a24 ink */
+    --background: 48 42% 95%; /* #F8F6EE */
+    --foreground: 125 12% 14%; /* deeper than primary for body contrast */
     --card: 0 0% 100%;
-    --card-foreground: 48 9% 15%;
-    --surface-alt: 40 33% 94%; /* #f7f2e9 soft */
+    --card-foreground: 125 12% 14%;
+    --surface-alt: 42 30% 92%;
     --popover: 0 0% 100%;
-    --popover-foreground: 48 9% 15%;
-    --secondary: 39 37% 83%; /* #e4d9c4 beige */
-    --secondary-foreground: 145 22% 24%;
-    --muted: 40 33% 94%;
-    --muted-foreground: 35 11% 53%; /* #94897a */
-    --destructive: 8 55% 52%;
+    --popover-foreground: 125 12% 14%;
+    --secondary: 35 34% 77%; /* #D9C9B2 tertiary */
+    --secondary-foreground: 125 12% 20%;
+    --muted: 42 30% 92%;
+    --muted-foreground: 93 10% 38%; /* sage, darkened to pass AA on cream */
+    --destructive: 4 60% 48%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 20% 85%;
-    --border-strong: 40 16% 76%;
-    --input: 40 20% 85%;
+    --border: 35 25% 86%;
+    --border-strong: 35 22% 76%;
+    --input: 35 25% 86%;
     --radius: 0.75rem;
 
     /* Primary = deep forest */
-    --primary: 145 22% 24%; /* #2f4a3a forest */
-    --primary-hover: 145 24% 30%;
-    --primary-foreground: 37 37% 89%; /* #ede5d8 cream */
-    --ring: 145 22% 34%;
+    --primary: 125 12% 20%; /* #2E3A2F */
+    --primary-hover: 125 12% 27%;
+    --primary-foreground: 48 42% 95%; /* cream */
+    --ring: 93 17% 43%;
 
-    /* Accent = forest, soft fill = beige */
-    --accent: 145 22% 24%;
-    --accent-soft: 39 37% 83%;
-    --accent-foreground: 37 37% 89%;
+    /* Accent = terracotta (highlights only) */
+    --accent: 16 53% 55%; /* #C96F4F */
+    --accent-soft: 16 50% 92%;
+    --accent-foreground: 0 0% 100%;
     --gold: 36 55% 45%;
     --gold-foreground: 0 0% 100%;
 
     /* Earthy secondary accents */
-    --sage: 91 12% 43%; /* #6e7c61 */
-    --taupe: 35 14% 54%; /* #9b8d7a */
+    --sage: 93 17% 43%; /* #6B7F5B */
+    --taupe: 35 20% 60%; /* tertiary, deepened so it reads on cream */
 
-    /* Brand accent — forest + warm sand */
-    --brand: 145 28% 26%;
-    --brand-soft: 39 42% 70%;
+    --brand: 125 12% 20%;
+    --brand-soft: 35 34% 77%;
 
-    --success: 145 40% 34%;
+    --success: 110 22% 36%;
     --warning: 36 70% 46%;
-    --error: 8 55% 52%;
+    --error: 4 60% 48%;
 
-    /* Primary scale = greens (drives emerald-* accent classes + glows) */
-    --c-p-300: 145 18% 46%;
-    --c-p-400: 145 20% 38%;
-    --c-p-500: 145 22% 30%;
-    --c-p-600: 145 24% 24%;
-    --c-p-900: 145 28% 14%;
-    /* Secondary scale = sage */
-    --c-s-300: 90 12% 72%;
-    --c-s-400: 90 12% 60%;
-    --c-s-500: 91 12% 50%;
-    --c-s-600: 91 12% 40%;
-    --c-s-900: 91 14% 24%;
-    /* Accent scale = warm ochre (earthy amber) */
+    /* Primary scale = forest → sage (drives emerald-* classes + glows) */
+    --c-p-300: 100 16% 60%;
+    --c-p-400: 105 16% 48%;
+    --c-p-500: 112 16% 38%;
+    --c-p-600: 120 14% 29%;
+    --c-p-900: 125 12% 14%;
+    /* Secondary scale = sage (teal-* classes) */
+    --c-s-300: 93 16% 76%;
+    --c-s-400: 93 16% 62%;
+    --c-s-500: 93 17% 50%;
+    --c-s-600: 93 17% 43%;
+    --c-s-900: 110 14% 22%;
+    /* Accent scale = warm ochre (amber-* classes: stars, pending, revision) */
     --c-a-300: 40 55% 72%;
     --c-a-400: 38 58% 58%;
     --c-a-500: 36 60% 48%;
     --c-a-600: 34 62% 40%;
     --c-y-300: 44 62% 72%;
     --c-y-400: 42 64% 58%;
-    --c-g-600: 145 40% 34%;
-    --c-o-600: 14 66% 52%;
-    --c-p-rgb: 47 74 58;
-    --c-p-light-rgb: 110 124 97;
-    --c-a-rgb: 176 132 66;
-    --c-p-bg-glow: 145 20% 88%;
-    --c-a-bg-glow: 40 40% 90%;
+    --c-g-600: 110 22% 36%;
+    --c-o-600: 16 53% 50%; /* terracotta */
+    /* Kid "crayon box" — one colour per home card / section. Muted so they
+       sit with forest/sand; always used as tints behind dark text. */
+    --kid-sage: 93 21% 57%; /* #8FA97A Quran */
+    --kid-sky: 202 29% 61%; /* #7FA3B8 Class */
+    --kid-lavender: 266 22% 63%; /* #9D8BB5 Memorize */
+    --kid-caramel: 34 47% 60%; /* #C9A06B Hadiths */
+    --kid-coral: 16 61% 62%; /* #D98363 Quizzes */
+    --kid-saffron: 40 73% 59%; /* #E3B04B Trophies */
+    --kid-teal: 177 22% 54%; /* #6FA3A0 Stories */
+    --kid-rose: 0 37% 66%; /* #C98A8A Namaz */
 
-    --shadow-soft: 0 1px 2px rgba(40, 35, 25, 0.06), 0 1px 3px rgba(40, 35, 25, 0.05);
-    --shadow-soft-md: 0 2px 6px rgba(40, 35, 25, 0.08);
-    --shadow-soft-lg: 0 8px 24px rgba(40, 35, 25, 0.12);
+    /* Extra shades (admin falls back to stock Tailwind, see tailwind.config.js) */
+    --c-p-200: 95 20% 84%;
+    --c-p-700: 125 13% 24%;
+    --c-p-800: 125 12% 18%;
+    --c-s-700: 100 16% 34%;
+    --c-a-200: 42 60% 84%;
+    --c-a-700: 32 64% 32%;
+    --c-a-800: 30 62% 26%;
+    --c-y-500: 40 62% 48%;
+    --c-g-400: 100 18% 52%;
+    --c-g-500: 105 20% 42%;
+    --c-o-400: 16 60% 64%;
+    --c-o-500: 16 53% 55%;
+    --c-p-rgb: 46 58 47;
+    --c-p-light-rgb: 107 127 91;
+    --c-a-rgb: 201 111 79;
+    --c-p-bg-glow: 93 20% 88%;
+    --c-a-bg-glow: 20 45% 91%;
+
+    --shadow-soft: 0 1px 2px rgba(46, 58, 47, 0.06), 0 1px 3px rgba(46, 58, 47, 0.05);
+    --shadow-soft-md: 0 2px 6px rgba(46, 58, 47, 0.08);
+    --shadow-soft-lg: 0 8px 24px rgba(46, 58, 47, 0.12);
 
     --radius-button: 0.5rem; /* 8px */
     --radius-card: 0.75rem; /* 12px */
     --radius-input: 0.5rem; /* 8px */
   }
 
-  /* ── STUDENT — Ink & pearl (dark) ──
-   * Neutral warm surfaces, cream CTAs. Jade green only via emerald-* scale
-   * (--c-p-*), not on backgrounds — avoids olive/gold/mint takeover. */
+  /* ── STUDENT — Forest & Terracotta — dark ──
+   * Derived from the light palette: near-black forest surfaces, cream CTAs,
+   * terracotta lifted for dark backgrounds. */
   [data-portal="student"].dark {
-    --background: 40 4% 8%; /* #151413 */
-    --foreground: 40 20% 94%; /* #f3f0ea */
-    --card: 40 3% 11%; /* #1c1b1a */
-    --card-foreground: 40 20% 94%;
-    --surface-alt: 40 3% 13%;
-    --popover: 40 3% 11%;
-    --popover-foreground: 40 20% 94%;
-    --secondary: 40 3% 15%;
-    --secondary-foreground: 40 20% 94%;
-    --muted: 40 3% 13%;
-    --muted-foreground: 40 5% 56%; /* #918e88 */
-    --destructive: 0 65% 58%;
+    --background: 125 10% 8%;
+    --foreground: 48 30% 92%;
+    --card: 125 8% 11%;
+    --card-foreground: 48 30% 92%;
+    --surface-alt: 125 7% 13%;
+    --popover: 125 8% 11%;
+    --popover-foreground: 48 30% 92%;
+    --secondary: 125 6% 16%;
+    --secondary-foreground: 48 30% 92%;
+    --muted: 125 7% 13%;
+    --muted-foreground: 80 8% 60%;
+    --destructive: 6 62% 58%;
     --destructive-foreground: 0 0% 100%;
-    --border: 40 3% 19%;
-    --border-strong: 40 3% 25%;
-    --input: 40 3% 19%;
+    --border: 125 6% 19%;
+    --border-strong: 125 6% 26%;
+    --input: 125 6% 19%;
 
-    /* Buttons / links — pearl, not green or gold */
-    --primary: 40 20% 94%;
-    --primary-hover: 40 18% 88%;
-    --primary-foreground: 40 6% 9%;
-    --ring: 40 12% 72%;
+    /* Buttons / links — cream on forest-black */
+    --primary: 48 30% 92%;
+    --primary-hover: 48 24% 84%;
+    --primary-foreground: 125 12% 10%;
+    --ring: 93 18% 55%;
 
-    --accent: 156 34% 48%;
-    --accent-soft: 40 3% 15%;
-    --accent-foreground: 40 20% 94%;
+    --accent: 16 58% 62%;
+    --accent-soft: 16 25% 18%;
+    --accent-foreground: 125 12% 10%;
     --gold: 36 50% 52%;
-    --gold-foreground: 40 6% 9%;
+    --gold-foreground: 125 12% 10%;
 
-    --sage: 40 5% 52%;
-    --taupe: 40 5% 58%;
+    --sage: 93 18% 55%;
+    --taupe: 35 18% 62%;
 
-    --brand: 156 34% 48%;
-    --brand-soft: 40 5% 52%;
+    --brand: 93 18% 55%;
+    --brand-soft: 35 18% 62%;
 
-    --success: 156 38% 44%;
+    --success: 100 24% 52%;
     --warning: 36 70% 52%;
-    --error: 0 65% 58%;
+    --error: 6 62% 58%;
 
-    /* emerald-* utilities — restrained jade (live badges, progress chips) */
-    --c-p-300: 156 28% 62%;
-    --c-p-400: 156 30% 52%;
-    --c-p-500: 156 34% 44%;
-    --c-p-600: 156 36% 38%;
-    --c-p-900: 156 22% 16%;
-    /* teal-* utilities — warm neutral grays (not green-brown) */
-    --c-s-300: 40 4% 68%;
-    --c-s-400: 40 4% 56%;
-    --c-s-500: 40 4% 46%;
-    --c-s-600: 40 4% 36%;
-    --c-s-900: 40 3% 16%;
+    /* emerald-* utilities — sage-green (live badges, progress chips) */
+    --c-p-300: 95 22% 68%;
+    --c-p-400: 98 20% 58%;
+    --c-p-500: 100 20% 48%;
+    --c-p-600: 105 18% 40%;
+    --c-p-900: 120 14% 16%;
+    /* teal-* utilities — muted sage grays */
+    --c-s-300: 90 8% 68%;
+    --c-s-400: 90 8% 56%;
+    --c-s-500: 92 8% 46%;
+    --c-s-600: 95 8% 36%;
+    --c-s-900: 120 8% 16%;
     --c-a-300: 36 45% 68%;
     --c-a-400: 36 48% 58%;
     --c-a-500: 36 50% 48%;
     --c-a-600: 34 52% 40%;
     --c-y-300: 44 55% 68%;
     --c-y-400: 42 58% 58%;
-    --c-g-600: 156 38% 44%;
-    --c-o-600: 24 62% 52%;
-    --c-p-rgb: 243 240 234;
-    --c-p-light-rgb: 145 142 136;
-    --c-a-rgb: 184 148 88;
-    --c-p-bg-glow: 40 3% 12%;
-    --c-a-bg-glow: 40 3% 12%;
+    --c-g-600: 100 24% 52%;
+    --c-o-600: 16 58% 62%;
+    --kid-sage: 93 26% 58%;
+    --kid-sky: 202 34% 62%;
+    --kid-lavender: 266 28% 68%;
+    --kid-caramel: 34 50% 60%;
+    --kid-coral: 16 62% 64%;
+    --kid-saffron: 40 72% 58%;
+    --kid-teal: 177 28% 55%;
+    --kid-rose: 0 42% 68%;
+    --c-p-200: 90 24% 78%;
+    --c-p-700: 110 16% 32%;
+    --c-p-800: 120 14% 24%;
+    --c-s-700: 95 8% 30%;
+    --c-a-200: 40 55% 80%;
+    --c-a-700: 32 52% 34%;
+    --c-a-800: 30 50% 26%;
+    --c-y-500: 40 55% 52%;
+    --c-g-400: 98 22% 60%;
+    --c-g-500: 100 24% 52%;
+    --c-o-400: 16 62% 68%;
+    --c-o-500: 16 58% 62%;
+    --c-p-rgb: 240 236 222;
+    --c-p-light-rgb: 140 155 125;
+    --c-a-rgb: 214 138 110;
+    --c-p-bg-glow: 125 8% 12%;
+    --c-a-bg-glow: 16 12% 12%;
 
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.42);
     --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.48);
@@ -1064,12 +1109,12 @@
 
 /* Student login — warm forest stage behind the card */
 [data-portal="student"] .vv-login-stage {
-  background: linear-gradient(160deg, #eef3ec 0%, #e2ebd9 100%);
+  background: linear-gradient(160deg, hsl(var(--background)) 0%, hsl(var(--secondary) / 0.55) 100%);
   position: relative;
   overflow: hidden;
 }
 [data-portal="student"].dark .vv-login-stage {
-  background: linear-gradient(160deg, #181716 0%, #11100f 100%);
+  background: linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
   position: relative;
   overflow: hidden;
 }

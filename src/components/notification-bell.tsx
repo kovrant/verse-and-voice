@@ -48,7 +48,8 @@ function CategoryIcon({
 }
 
 /** Bell trigger + live dropdown feed, shared by the teacher and student top bars. */
-export function NotificationBell() {
+/** `kid`: the student portal's chunky colour-tile look (saffron tile, terracotta badge). */
+export function NotificationBell({ kid = false }: { kid?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
   const allHref = pathname.startsWith("/student") ? "/student/notifications" : "/notifications"
@@ -65,11 +66,28 @@ export function NotificationBell() {
         <button
           type="button"
           aria-label={unread ? `Notifications (${unread} unread)` : "Notifications"}
-          className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card data-[state=open]:text-foreground"
+          className={
+            kid
+              ? "group relative flex h-11 w-11 items-center justify-center rounded-[16px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.3)] text-[22px] shadow-[0_4px_0_hsl(var(--kid-saffron)/0.55)] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              : "relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card data-[state=open]:text-foreground"
+          }
         >
-          <Bell className="h-[18px] w-[18px]" />
+          {kid ? (
+            // Wiggles while there's something unread.
+            <span aria-hidden className={unread > 0 ? "animate-float-gentle" : undefined}>
+              🔔
+            </span>
+          ) : (
+            <Bell className="h-[18px] w-[18px]" />
+          )}
           {unread > 0 && (
-            <span className="absolute right-1.5 top-1.5 flex min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-[16px] text-primary-foreground ring-2 ring-background">
+            <span
+              className={
+                kid
+                  ? "absolute -right-1.5 -top-1.5 flex min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold leading-[20px] text-accent-foreground ring-2 ring-card"
+                  : "absolute right-1.5 top-1.5 flex min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-[16px] text-primary-foreground ring-2 ring-background"
+              }
+            >
               {unread > 9 ? "9+" : unread}
             </span>
           )}
@@ -80,7 +98,7 @@ export function NotificationBell() {
         <Popover.Content
           align="end"
           sideOffset={10}
-          className="z-50 flex max-h-[75vh] w-[23rem] flex-col overflow-hidden rounded-2xl border border-border bg-card p-0 shadow-soft-lg data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1"
+          className={`z-50 flex max-h-[75vh] w-[min(23rem,calc(100vw-1.5rem))] flex-col overflow-hidden bg-card p-0 shadow-soft-lg ${kid ? "rounded-[26px] border-[1.5px] border-border" : "rounded-2xl border border-border"} data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1`}
         >
           <div className="flex items-center justify-between gap-2 border-b border-border px-4 py-3 bg-card">
             <div className="flex items-center gap-2">

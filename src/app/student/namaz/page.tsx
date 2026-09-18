@@ -142,7 +142,7 @@ export default function StudentNamazPage() {
           <div className="mx-auto w-full max-w-sm space-y-4">
             {viewStep.image_url && (
               <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-                <div className="flex items-end justify-center bg-[#f3ede3] px-3 pt-3 pb-2">
+                <div className="flex items-end justify-center bg-[hsl(var(--surface-alt))] px-3 pt-3 pb-2">
                   <img
                     src={viewStep.image_url}
                     alt={viewStep.title}

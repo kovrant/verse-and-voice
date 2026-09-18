@@ -97,10 +97,10 @@ const JUZ_SURAHS = [
   "An-Nabaʾ 1",
 ]
 
-// Verse & Voice teal — used to make completed ticks and the current-para badge pop.
-const ACCENT = "#37beae"
-const ACCENT_DIM = "rgba(55, 190, 174, 0.16)"
-const ACCENT_BORDER = "rgba(55, 190, 174, 0.5)"
+// Terracotta accent — makes completed ticks and the current-para badge pop.
+const ACCENT = "hsl(var(--accent))"
+const ACCENT_DIM = "hsl(var(--accent) / 0.16)"
+const ACCENT_BORDER = "hsl(var(--accent) / 0.5)"
 
 type ParaState = "done" | "current" | "next" | "neutral"
 
@@ -330,7 +330,7 @@ export default function StudentQuranPage() {
                 {state === "current" ? (
                   <span
                     className="rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]"
-                    style={{ background: ACCENT, color: "#04181b" }}
+                    style={{ background: ACCENT, color: "hsl(var(--accent-foreground))" }}
                   >
                     You&apos;re here
                   </span>
