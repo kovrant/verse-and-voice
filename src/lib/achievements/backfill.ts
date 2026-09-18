@@ -108,18 +108,14 @@ export async function backfillStudentAchievements(
     await syncNamazComplete(db, studentId)
   }
 
-  const { data: hadithProgress } = await db
+  const { count: hadithMemorizedCount } = await db
     .from("student_hadith_progress")
-    .select("status, hadiths(id, hadith_number, english_text, topic)")
+    .select("id", { count: "exact", head: true })
     .eq("student_id", studentId)
     .eq("status", "memorized")
 
-  const memorizedHadiths = (hadithProgress ?? [])
-    .map((row) => (Array.isArray(row.hadiths) ? row.hadiths[0] : row.hadiths))
-    .filter(Boolean) as { id: string; hadith_number: number; english_text?: string; topic?: string }[]
-
-  for (const h of memorizedHadiths) {
-    await syncHadithMemorized(db, studentId, h, memorizedHadiths.length)
+  if (hadithMemorizedCount && hadithMemorizedCount > 0) {
+    await syncHadithMemorized(db, studentId, hadithMemorizedCount)
   }
 
   const after = await countAchievements(db, studentId)

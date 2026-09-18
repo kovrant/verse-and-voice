@@ -15,7 +15,6 @@ import {
   totalParas,
 } from "./completion/quran"
 import {
-  hadithItemSlug,
   khatmSlug,
   memLessonSlug,
   memPartSlug,
@@ -239,34 +238,14 @@ export const HADITH_MILESTONE_DEFINITIONS: Record<
   },
 }
 
-/** Sync Hadith progress → individual Hadith item badge + milestone badges. */
+/** Sync Hadith progress → milestone badges. */
 export async function syncHadithMemorized(
   db: SupabaseClient,
   studentId: string,
-  hadith: { id: string; hadith_number: number; english_text?: string; topic?: string },
   totalMemorized: number,
 ): Promise<string[]> {
   const newlyAwarded: string[] = []
   try {
-    // 1. Award individual Hadith item badge
-    const itemSlug = hadithItemSlug(hadith.hadith_number)
-    const itemTitle = `Hadith #${hadith.hadith_number} Memorized`
-    const excerpt = hadith.english_text ? ` ("${hadith.english_text.slice(0, 75)}...")` : ""
-    const itemDesc = `Memorized Hadith #${hadith.hadith_number}${excerpt}`
-
-    const itemRes = await awardAchievement(db, studentId, itemSlug, `hadith:${hadith.id}`, {
-      slug: itemSlug,
-      title: itemTitle,
-      description: itemDesc,
-      domain: "hadith",
-      kind: "badge",
-      issuesCertificate: false,
-    })
-    if (itemRes.awarded) {
-      newlyAwarded.push(itemTitle)
-    }
-
-    // 2. Award milestone badges
     const eligibleSlugs = getEligibleHadithBadgeSlugs(totalMemorized)
     for (const slug of eligibleSlugs) {
       const def = HADITH_MILESTONE_DEFINITIONS[slug]

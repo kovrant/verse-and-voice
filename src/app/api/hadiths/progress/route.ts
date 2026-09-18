@@ -95,33 +95,16 @@ export async function POST(request: Request) {
 
   // 3. Count total memorized Hadiths for this student & award trophies/badges
   let newlyAwardedBadges: string[] = []
-  let totalMemorized = 0
+  const { count: memorizedCount } = await admin
+    .from("student_hadith_progress")
+    .select("id", { count: "exact", head: true })
+    .eq("student_id", studentId)
+    .eq("status", "memorized")
 
-  if (savedProgress?.status === "memorized") {
-    const [{ count: memorizedCount }, { data: hadithData }] = await Promise.all([
-      admin
-        .from("student_hadith_progress")
-        .select("id", { count: "exact", head: true })
-        .eq("student_id", studentId)
-        .eq("status", "memorized"),
-      admin
-        .from("hadiths")
-        .select("id, hadith_number, english_text, topic")
-        .eq("id", hadithId)
-        .maybeSingle(),
-    ])
+  const totalMemorized = memorizedCount || 0
 
-    totalMemorized = memorizedCount || 0
-    if (hadithData) {
-      newlyAwardedBadges = await syncHadithMemorized(admin, studentId, hadithData, totalMemorized)
-    }
-  } else {
-    const { count: memorizedCount } = await admin
-      .from("student_hadith_progress")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", studentId)
-      .eq("status", "memorized")
-    totalMemorized = memorizedCount || 0
+  if (savedProgress?.status === "memorized" && totalMemorized > 0) {
+    newlyAwardedBadges = await syncHadithMemorized(admin, studentId, totalMemorized)
   }
 
   return NextResponse.json({
