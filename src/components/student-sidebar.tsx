@@ -38,7 +38,7 @@ const baseNavItems = [
   { href: "/student/notifications", label: "Notifications", icon: Bell, exact: false },
   { href: "/student/classes", label: "Classes", icon: History, exact: false, live: true },
   { href: "/student/attendance", label: "Attendance", icon: CalendarCheck, exact: false },
-  { href: "/student/hadiths", label: "Short Hadiths", icon: BookAudio, exact: false },
+  { href: "/student/hadiths", label: "Hadiths", icon: BookAudio, exact: false },
   { href: "/student/memorization", label: "Memorization", icon: BookMarked, exact: false },
   { href: "/student/namaz", label: "Namaz", icon: Moon, exact: false, requiresNamaz: true },
   { href: "/student/progress", label: "My Progress", icon: BookOpen, exact: false },

@@ -224,7 +224,7 @@ export const HADITH_MILESTONE_DEFINITIONS: Record<
   [HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR]: {
     slug: HADITH_BADGE_SLUGS.ARBAIN_SCHOLAR,
     title: "Arba'in Scholar (40 Hadith Master)",
-    description: "Completed the noble milestone of memorizing 40 Short Hadiths for Kids",
+    description: "Completed the noble milestone of memorizing 40 Hadiths",
     domain: "hadith",
     kind: "badge",
     issuesCertificate: false,
@@ -232,7 +232,7 @@ export const HADITH_MILESTONE_DEFINITIONS: Record<
   [HADITH_BADGE_SLUGS.GRAND_SCHOLAR]: {
     slug: HADITH_BADGE_SLUGS.GRAND_SCHOLAR,
     title: "Grand Sunnah Scholar (50 Hadith Master)",
-    description: "Achieved the highest honor of memorizing 50 Short Hadiths for Kids",
+    description: "Achieved the highest honor of memorizing 50 Hadiths",
     domain: "hadith",
     kind: "badge",
     issuesCertificate: false,

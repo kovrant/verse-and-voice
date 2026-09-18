@@ -229,7 +229,7 @@ export default function StudentHadithsPage() {
               <span>Sunnah of the Beloved Prophet (ﷺ)</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Short Hadiths for Kids
+              Hadiths
             </h1>
             <p className="text-sm text-muted-foreground max-w-xl">
               Learn, practice, and memorize precious words of Prophet Muhammad (ﷺ). Play the interactive Memory Peek game and earn milestone trophies!

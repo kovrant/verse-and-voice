@@ -405,10 +405,10 @@ export default function TeacherHadithsPage() {
             <span>Curriculum & Sunnah Studio</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            Short Hadiths Studio
+            Hadiths Studio
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Browse {hadiths.length} authentic short Hadiths for kids, assign weekly learning goals to your students, and monitor their memorization milestones.
+            Browse {hadiths.length} authentic Hadiths, assign weekly learning goals to your students, and monitor their memorization milestones.
           </p>
         </div>
 
@@ -967,10 +967,10 @@ export default function TeacherHadithsPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-lg font-bold">
-              {editingHadithId ? "Edit Hadith" : "Add Custom Short Hadith"}
+              {editingHadithId ? "Edit Hadith" : "Add Custom Hadith"}
             </DialogTitle>
             <DialogDescription>
-              Add an authentic short Hadith (3-8 words) for children with full vowel marks (Tashkeel).
+              Add an authentic Hadith with full vowel marks (Tashkeel).
             </DialogDescription>
           </DialogHeader>
 
