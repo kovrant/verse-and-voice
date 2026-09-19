@@ -1107,46 +1107,72 @@
   }
 }
 
-/* Student login — warm forest stage behind the card */
-[data-portal="student"] .vv-login-stage {
-  background: linear-gradient(160deg, hsl(var(--background)) 0%, hsl(var(--secondary) / 0.55) 100%);
-  position: relative;
-  overflow: hidden;
+/* ── Student login: pop-in entrance, speech bubble, "oops" wiggle ── */
+@keyframes vv-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.12) rotate(4deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
 }
-[data-portal="student"].dark .vv-login-stage {
-  background: linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
-  position: relative;
-  overflow: hidden;
+@keyframes vv-bubble {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-
-/* ── Dynamic Children's Login Background Animations ─────────────────── */
-@keyframes ambient-drift-1 {
+@keyframes vv-wiggle {
   0%,
   100% {
-    transform: translate(0, 0) scale(1);
+    transform: translateX(0);
   }
-  50% {
-    transform: translate(24px, -18px) scale(1.06);
+  20%,
+  60% {
+    transform: translateX(-6px);
   }
-}
-
-@keyframes ambient-drift-2 {
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(-20px, 22px) scale(1.1);
+  40%,
+  80% {
+    transform: translateX(6px);
   }
 }
-
-@keyframes ambient-drift-3 {
+/* Login button: light sweeping across the pill. */
+@keyframes vv-shine {
   0%,
-  100% {
-    transform: translate(0, 0) scale(1);
+  55% {
+    transform: translateX(0) skewX(-12deg);
   }
-  50% {
-    transform: translate(16px, 24px) scale(1.04);
+  100% {
+    transform: translateX(650%) skewX(-12deg);
+  }
+}
+.vv-shine {
+  animation: vv-shine 3.4s ease-in-out infinite;
+}
+.animate-vv-pop {
+  animation: vv-pop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.animate-vv-bubble {
+  animation: vv-bubble 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.animate-vv-wiggle {
+  animation: vv-wiggle 0.45s ease-in-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-vv-pop,
+  .animate-vv-bubble,
+  .animate-vv-wiggle,
+  .vv-shine {
+    animation: none;
   }
 }
 
@@ -1182,18 +1208,6 @@
   }
 }
 
-.animate-ambient-1 {
-  animation: ambient-drift-1 12s ease-in-out infinite;
-}
-
-.animate-ambient-2 {
-  animation: ambient-drift-2 16s ease-in-out infinite;
-}
-
-.animate-ambient-3 {
-  animation: ambient-drift-3 14s ease-in-out infinite;
-}
-
 .animate-float-gentle {
   animation: float-gentle 6s ease-in-out infinite;
 }
@@ -1207,12 +1221,47 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-ambient-1,
-  .animate-ambient-2,
-  .animate-ambient-3,
   .animate-float-gentle,
   .animate-float-reverse,
   .animate-twinkle {
     animation: none !important;
+  }
+}
+
+/* ── Verse & Voice logo: the waveform "talks", the ayah star twinkles ── */
+.vv-logo--animated .vv-logo-bar {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vv-talk 1.2s ease-in-out infinite;
+}
+.vv-logo--animated .vv-logo-star {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: vv-twinkle 3s ease-in-out infinite;
+}
+@keyframes vv-talk {
+  0%,
+  100% {
+    transform: scaleY(0.5);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes vv-twinkle {
+  0%,
+  100% {
+    transform: scale(0.75) rotate(0deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.05) rotate(22deg);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vv-logo--animated .vv-logo-bar,
+  .vv-logo--animated .vv-logo-star {
+    animation: none;
   }
 }

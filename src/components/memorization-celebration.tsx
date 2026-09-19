@@ -3,17 +3,9 @@
 /* eslint-disable @next/next/no-img-element -- remote Supabase URLs; next/image isn't worth it here */
 
 import { Sparkles, Star, X } from "lucide-react"
-import Link from "next/link"
 import { useEffect } from "react"
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogPortal,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
 
 /** A win worth showing the student. */
 export type Celebration =
@@ -54,7 +46,7 @@ function StarBurst() {
       {STARS.map((s, i) => (
         <span
           key={i}
-          className="star-burst absolute left-1/2 top-1/2 text-amber-400"
+          className="star-burst absolute left-1/2 top-1/2 text-[hsl(var(--kid-saffron))]"
           style={
             {
               "--burst-x": s.x,
@@ -93,21 +85,18 @@ const CONFETTI = Array.from({ length: 18 }, (_, i) => ({
   delay: `${(i % 6) * 180}ms`,
   fall: `${2600 + (i % 5) * 400}ms`,
   spin: `${((i % 4) + 1) * 360}deg`,
-  color: ["#f6c46a", "#7d9c84", "#e8927c", "#9db8d6"][i % 4],
+  // The crayon box: saffron, sage, coral, sky, lavender, teal.
+  color: ["#E3B04B", "#8FA97A", "#D98363", "#7FA3B8", "#9D8BB5", "#6FA3A0"][i % 6],
 }))
 
 /*
- * Rendered through the dialog's portal rather than inside its content: the
- * content is translate-centred, and a transformed ancestor makes `fixed`
- * resolve against it — the confetti would fall inside the little card instead
- * of across the screen.
+ * Passed to KidModal as `extra`, so it renders in the dialog's portal but outside
+ * the translate-centred card: a transformed ancestor makes `fixed` resolve
+ * against it, and the confetti would fall inside the card instead of the screen.
  */
 function Confetti() {
   return (
-    <span
-      aria-hidden
-      className="pointer-events-none fixed inset-0 z-[60] overflow-hidden"
-    >
+    <span aria-hidden className="pointer-events-none fixed inset-0 z-[60] overflow-hidden">
       {CONFETTI.map((c, i) => (
         <span
           key={i}
@@ -160,25 +149,31 @@ export function MemCelebration({
         aria-live="polite"
         className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
       >
-        <div className="celebrate-pop pointer-events-auto relative flex w-full max-w-sm items-center gap-3 rounded-2xl border border-amber-500/40 bg-gradient-to-r from-amber-500/15 via-card to-card p-3 pr-10 shadow-soft-lg">
+        <div
+          className="celebrate-pop pointer-events-auto relative flex w-full max-w-sm items-center gap-3 rounded-[24px] border-[1.5px] border-[hsl(var(--kid-sage)/0.55)] p-3 pr-10 shadow-[0_5px_0_hsl(var(--kid-sage)/0.55),0_18px_36px_-16px_rgba(0,0,0,0.3)]"
+          style={{
+            background:
+              "linear-gradient(100deg, hsl(var(--kid-sage) / 0.3), hsl(var(--kid-sage) / 0.08)), hsl(var(--card))",
+          }}
+        >
           <div className="relative flex-shrink-0">
             <StarBurst />
             {/* The page stays visible — a child should see which one they just
                 finished — with the tick as a badge over its corner. */}
-            <div className="relative h-16 w-16 overflow-hidden rounded-xl border border-border bg-white">
+            <div className="relative h-16 w-16 overflow-hidden rounded-[16px] border-[1.5px] border-border bg-white">
               <img src={current.imageUrl} alt="" className="h-full w-full object-contain p-1" />
             </div>
-            <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-emerald-500 text-white shadow-md ring-2 ring-card">
+            <span className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md ring-2 ring-card">
               <DrawnCheck className="h-4 w-4" />
             </span>
           </div>
 
           <div className="min-w-0">
-            <p className="flex items-center gap-1.5 font-heading text-base font-extrabold text-foreground">
-              <Sparkles className="h-4 w-4 flex-shrink-0 text-amber-500" />
+            <p className="flex items-center gap-1.5 font-heading text-[17px] font-bold text-primary">
+              <Sparkles className="h-4 w-4 flex-shrink-0 text-[hsl(var(--kid-saffron))]" />
               {current.label} memorized!
             </p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-[13px] font-semibold text-muted-foreground">
               {current.lessonTitle} — {current.done} of {current.total} parts done
             </p>
           </div>
@@ -187,7 +182,7 @@ export function MemCelebration({
             type="button"
             onClick={onDismiss}
             aria-label="Dismiss"
-            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
@@ -197,53 +192,47 @@ export function MemCelebration({
   }
 
   return (
-    <Dialog open onOpenChange={(open) => !open && onDismiss()}>
-      <DialogPortal>
-        <Confetti />
-      </DialogPortal>
-      <DialogContent className="max-w-md bg-gradient-to-b from-amber-500/15 to-card text-center">
-        <DialogHeader className="items-center text-center sm:text-center">
-          <div className="relative mx-auto mb-1 flex h-28 w-28 items-center justify-center">
-            <StarBurst />
-            <span className="medal-drop relative flex h-28 w-28 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-amber-400/35 blur-xl" />
-              <span className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-amber-200 to-amber-500 text-6xl shadow-lg ring-4 ring-amber-300/40">
-                🏅
-              </span>
+    <KidModal
+      open
+      onOpenChange={(open) => !open && onDismiss()}
+      color="saffron"
+      extra={<Confetti />}
+      hero={
+        <span className="relative flex h-28 w-28 items-center justify-center">
+          <StarBurst />
+          <span className="medal-drop relative flex h-28 w-28 items-center justify-center">
+            <span className="absolute inset-0 rounded-full bg-[hsl(var(--kid-saffron)/0.45)] blur-xl" />
+            <span className="relative flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-white/70 bg-gradient-to-br from-[hsl(var(--kid-saffron)/0.5)] to-[hsl(var(--kid-saffron))] text-6xl shadow-[0_5px_0_hsl(36_60%_42%)]">
+              🏅
             </span>
-          </div>
-          <DialogTitle className="font-heading text-3xl">MashaAllah!</DialogTitle>
-          <DialogDescription className="text-base">
-            You memorized <span className="font-bold text-foreground">{current.title}</span> —
-            all {current.total} parts.
-          </DialogDescription>
-        </DialogHeader>
-
-        {current.imageUrl && (
-          <img
-            src={current.imageUrl}
-            alt=""
-            className="mx-auto max-h-32 w-full rounded-xl bg-white object-contain p-2"
-          />
-        )}
-
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="h-11 flex-1 rounded-xl border border-border bg-card text-sm font-bold text-muted-foreground transition-colors hover:bg-secondary"
-          >
-            Keep going
-          </button>
-          <Link
-            href="/student/progress"
-            onClick={onDismiss}
-            className="flex h-11 flex-1 items-center justify-center rounded-xl bg-primary text-sm font-bold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary-hover))]"
-          >
-            See my progress
-          </Link>
-        </div>
-      </DialogContent>
-    </Dialog>
+          </span>
+        </span>
+      }
+      title="MashaAllah!"
+      description={
+        <>
+          You memorized <span className="font-extrabold text-foreground">{current.title}</span>
+          {" — "}all {current.total} parts.
+        </>
+      }
+    >
+      {current.imageUrl && (
+        <img
+          src={current.imageUrl}
+          alt=""
+          className="mx-auto max-h-32 w-full rounded-[20px] border-[1.5px] border-border bg-white object-contain p-2"
+        />
+      )}
+      <KidButton
+        href="/student/progress"
+        onClick={onDismiss}
+        pad={<QuranBookIcon className="h-7 w-7" />}
+      >
+        See my progress
+      </KidButton>
+      <KidButton variant="soft" onClick={onDismiss}>
+        Keep going
+      </KidButton>
+    </KidModal>
   )
 }

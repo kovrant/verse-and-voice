@@ -1,13 +1,17 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
-import { BookOpen, Eye, EyeOff, Loader2, Lock, Moon, Sun, User as UserIcon } from "lucide-react"
+import { Eye, EyeOff, Lock, User as UserIcon } from "lucide-react"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
 import { Brand } from "@/components/brand"
-import { LoginBackground } from "@/components/login-background"
-import { useTheme } from "@/components/theme-provider"
+import { BrandLogo } from "@/components/brand-logo"
+import { KidButton, QuranBookIcon } from "@/components/kid-ui"
+import { StudentBackdrop } from "@/components/student-backdrop"
+import { type MascotMood, MoonMascot } from "@/components/student-mascot"
+import type { KidColor } from "@/components/student-nav"
+import { DayNightSwitch } from "@/components/student-topbar"
 import { detectDevice } from "@/lib/device-detection"
 import { isLoginDisabled, resolveLoginEmail, studentPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
@@ -27,7 +31,6 @@ export default function StudentLoginPage() {
 function StudentLoginForm() {
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get("redirectTo") || "/student"
-  const { dark, toggleDark } = useTheme()
 
   const [identifier, setIdentifier] = useState("")
   const [password, setPassword] = useState("")
@@ -81,7 +84,13 @@ function StudentLoginForm() {
         await finishLogin(recovered)
         return
       }
-      setError(error.message)
+      // Supabase's "Invalid login credentials" means little to a child.
+      setError(
+        /invalid login/i.test(error.message)
+          ? "That username or password isn't right. Try again!"
+          : error.message,
+      )
+      setShakeKey((k) => k + 1)
       setLoading(false)
       return
     }
@@ -90,126 +99,177 @@ function StudentLoginForm() {
   }
 
   const fieldClass =
-    "h-[50px] w-full rounded-2xl border-2 border-border bg-[hsl(var(--surface-alt))] pl-12 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/60 hover:border-primary/40 focus-visible:border-primary focus-visible:ring-4 focus-visible:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50"
+    "h-[56px] w-full rounded-[20px] border-[1.5px] border-border bg-[hsl(var(--surface-alt))] pl-[60px] text-[15px] font-semibold text-foreground outline-none transition-colors placeholder:font-normal placeholder:text-muted-foreground/60 hover:border-[hsl(var(--kid)/0.6)] focus-visible:border-[hsl(var(--kid))] focus-visible:bg-card focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid)/0.25)] disabled:cursor-not-allowed disabled:opacity-50"
+
+  const [passwordFocused, setPasswordFocused] = useState(false)
+  // Bumped on every failed attempt so the card re-runs its "oops" wiggle.
+  const [shakeKey, setShakeKey] = useState(0)
+
+  // Hilal reacts to what's happening: excited while signing in, eyes shut
+  // while the password is typed ("I won't peek!"), awake otherwise.
+  const blocked = error === CONTACT_TEACHER_MESSAGE
+  const mood: MascotMood = loading
+    ? "excited"
+    : passwordFocused && !showPassword
+      ? "sleepy"
+      : "awake"
+  const bubble = loading
+    ? "Bismillah! ✨"
+    : blocked
+      ? "Please ask your teacher 💌"
+      : error
+        ? "Oops! Let's try again"
+        : passwordFocused && !showPassword
+          ? "I won't peek! ✋"
+          : "Assalamu Alaikum! 👋"
 
   return (
-    <div className="vv-login-stage -m-4 -mt-16 grid min-h-dvh place-items-center px-4 py-10 lg:-m-8">
-      {/* Dynamic Children's Ambient Background */}
-      <LoginBackground />
+    <div className="relative isolate -m-4 grid min-h-dvh place-items-center overflow-hidden px-4 py-10 lg:-m-8">
+      <StudentBackdrop />
 
-      <div className="relative w-full max-w-[360px] animate-fade-in-up">
-        {/* Light / dark toggle */}
-        <button
-          type="button"
-          onClick={toggleDark}
-          title={dark ? "Switch to light mode" : "Switch to dark mode"}
-          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-          className="absolute right-0 top-1 z-20 flex h-10 w-10 items-center justify-center rounded-xl border border-border/60 bg-card text-foreground shadow-soft transition-transform hover:scale-105 active:scale-95"
-        >
-          {dark ? <Moon className="h-[18px] w-[18px]" /> : <Sun className="h-[18px] w-[18px]" />}
-        </button>
+      <DayNightSwitch className="absolute right-4 top-4 z-20 sm:right-8 sm:top-8" />
 
-        {/* Prominent Brand Header */}
-        <div className="mb-6 text-center">
-          <div className="mx-auto mb-3.5 flex h-[58px] w-[58px] items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-soft-md ring-4 ring-primary/15">
-            <BookOpen className="h-[28px] w-[28px]" strokeWidth={1.8} />
-          </div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground sm:text-[32px]">
-            <Brand amp="text-brand" />
+      <div className="relative w-full max-w-[380px]">
+        {/* Brand: the talking logo pops in */}
+        <div className="mb-3 text-center">
+          <BrandLogo
+            animated
+            className="mx-auto h-[104px] w-[104px] animate-vv-pop drop-shadow-[0_8px_16px_rgba(46,58,47,0.15)]"
+          />
+          <h1 className="mt-2 font-heading text-[34px] font-bold leading-none tracking-tight text-primary">
+            <Brand amp="text-accent" />
           </h1>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
-            Quran Academy
+          <p className="mt-1.5 text-[13px] font-extrabold uppercase tracking-[0.22em] text-muted-foreground">
+            Read · Recite · Shine ✨
           </p>
         </div>
 
-        {/* Form Card */}
-        <div className="rounded-[28px] border border-border/60 bg-card p-6 shadow-soft-lg">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3.5" noValidate>
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-extrabold text-foreground">Username</span>
-              <span className="relative">
-                <UserIcon
-                  className="pointer-events-none absolute left-4 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <input
-                  type="text"
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  placeholder="your username"
-                  required
-                  value={identifier}
-                  onChange={(e) => setIdentifier(e.target.value)}
-                  disabled={loading}
-                  className={fieldClass}
-                />
-              </span>
-            </label>
+        {/* Hilal peeks over the card with a speech bubble */}
+        <div className="relative z-10 flex items-end gap-2 pl-3" style={{ marginBottom: -18 }}>
+          <MoonMascot mood={mood} className="h-[78px] w-[78px] flex-shrink-0 animate-float-gentle" />
+          <span
+            key={bubble}
+            className="mb-9 animate-vv-bubble rounded-[18px] rounded-bl-[6px] border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[15px] font-bold text-primary shadow-[0_3px_0_hsl(var(--border))]"
+            aria-live="polite"
+          >
+            {bubble}
+          </span>
+        </div>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-extrabold text-foreground">Password</span>
-              <span className="relative">
-                <Lock
-                  className="pointer-events-none absolute left-4 top-1/2 h-[17px] w-[17px] -translate-y-1/2 text-muted-foreground"
-                  aria-hidden="true"
-                />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  disabled={loading}
-                  className={`${fieldClass} pr-11`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  disabled={loading}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-1.5 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
-                >
-                  {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
-                </button>
-              </span>
-            </label>
+        {/* Form card */}
+        <div
+          key={shakeKey}
+          className={`rounded-[30px] border-[1.5px] border-border bg-card p-6 pt-7 shadow-[0_6px_0_hsl(var(--border)),0_24px_48px_-24px_hsl(var(--primary)/0.35)] ${shakeKey ? "animate-vv-wiggle" : "animate-fade-in-up"}`}
+        >
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+            <KidField label="Username" color="sky" icon={<UserIcon className="h-5 w-5" />}>
+              <input
+                type="text"
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="your username"
+                required
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                disabled={loading}
+                className={fieldClass}
+              />
+            </KidField>
+
+            <KidField label="Password" color="lavender" icon={<Lock className="h-5 w-5" />}>
+              <input
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setPasswordFocused(true)}
+                onBlur={() => setPasswordFocused(false)}
+                disabled={loading}
+                className={`${fieldClass} pr-12`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                disabled={loading}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[14px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground disabled:opacity-50"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </KidField>
 
             {error && (
               <div
                 role="alert"
                 aria-live="polite"
-                className="flex items-center gap-3 rounded-2xl border-2 border-destructive/25 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+                className="flex items-center gap-3 rounded-[18px] border-[1.5px] px-4 py-3 text-[14px] font-bold text-foreground"
+                style={{
+                  background: "hsl(var(--kid-coral) / 0.18)",
+                  borderColor: "hsl(var(--kid-coral) / 0.5)",
+                }}
               >
-                {error === CONTACT_TEACHER_MESSAGE && (
-                  <Lock
-                    className="h-5 w-5 flex-shrink-0 animate-lock-shake"
-                    strokeWidth={2.25}
-                    aria-hidden="true"
-                  />
-                )}
+                <Lock
+                  className={`h-5 w-5 flex-shrink-0 text-accent ${blocked ? "animate-lock-shake" : ""}`}
+                  strokeWidth={2.25}
+                  aria-hidden="true"
+                />
                 <span>{error}</span>
               </div>
             )}
 
-            <button
+            <KidButton
               type="submit"
               disabled={loading}
-              className="mt-0.5 flex h-[50px] items-center justify-center gap-2 rounded-2xl bg-primary text-[15px] font-extrabold text-primary-foreground transition-colors hover:bg-[hsl(var(--primary-hover))] disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-1"
+              pad={
+                <QuranBookIcon
+                  className={
+                    loading
+                      ? "h-[30px] w-[30px] animate-bounce motion-reduce:animate-none"
+                      : "h-[30px] w-[30px] transition-transform duration-300 group-hover:-rotate-6 group-hover:scale-110"
+                  }
+                />
+              }
             >
-              {loading ? (
-                <>
-                  <Loader2 className="h-[18px] w-[18px] animate-spin" aria-hidden="true" />
-                  Signing in…
-                </>
-              ) : (
-                "Let's go! 🚀"
-              )}
-            </button>
+              {loading ? "Opening your book…" : "Let's go!"}
+            </KidButton>
           </form>
         </div>
       </div>
     </div>
+  )
+}
+
+/** Labelled input with a crayon-colour icon tile; the border lights up in that colour on focus. */
+function KidField({
+  label,
+  color,
+  icon,
+  children,
+}: {
+  label: string
+  color: KidColor
+  icon: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <label
+      className="flex flex-col gap-1.5"
+      style={{ "--kid": `var(--kid-${color})` } as React.CSSProperties}
+    >
+      <span className="pl-1 text-[13px] font-extrabold text-foreground">{label}</span>
+      <span className="relative">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-[14px] bg-[hsl(var(--kid)/0.3)] text-foreground"
+        >
+          {icon}
+        </span>
+        {children}
+      </span>
+    </label>
   )
 }

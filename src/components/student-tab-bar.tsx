@@ -5,8 +5,8 @@ import { usePathname } from "next/navigation"
 import type { CSSProperties } from "react"
 
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
+import { BrandLogo } from "@/components/brand-logo"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
-import { MoonMascot, useMascotMood } from "@/components/student-mascot"
 import {
   isPathActive,
   type KidColor,
@@ -29,7 +29,6 @@ export function StudentTabBar() {
   const { student } = useStudent()
   const isQaida = useIsQaida(student?.id)
   const { hasUnseen: hasUnseenTrophies } = useAchievementCelebrations()
-  const mascotMood = useMascotMood()
 
   // Hidden during a live class (StudentLiveClass flips `visible` off).
   if (!visible) return null
@@ -92,9 +91,9 @@ export function StudentTabBar() {
       <Link
         href="/student"
         aria-label="Home"
-        className="mb-3 hidden rounded-full transition-transform hover:-rotate-6 hover:scale-105 lg:block"
+        className="mb-3 hidden rounded-[22px] transition-transform hover:-rotate-6 hover:scale-105 lg:block"
       >
-        <MoonMascot mood={mascotMood} className="h-[68px] w-[68px]" />
+        <BrandLogo animated className="h-[68px] w-[68px]" />
       </Link>
 
       {tabs.map((tab) => (

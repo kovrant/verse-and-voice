@@ -41,6 +41,9 @@ interface SyncedPdfViewerProps {
   remotePointer?: PointerState | null
   /** Whether this viewer allows clicking to place a pointer (default: true). */
   allowPointing?: boolean
+  /** Student-portal look for the toolbar and the area around the page. The
+   *  Quran page itself renders identically either way. */
+  kid?: boolean
   /** Called (throttled) with the current in-page scroll ratio (0..1) as the user scrolls. */
   onScrollRatio?: (ratio: number) => void
   /** A remote scroll position to apply. */
@@ -78,6 +81,7 @@ export function SyncedPdfViewer({
   onPointerChange,
   remotePointer,
   allowPointing = true,
+  kid = false,
 }: SyncedPdfViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const pageContainerRef = useRef<HTMLDivElement>(null)
@@ -283,15 +287,35 @@ export function SyncedPdfViewer({
   const atFirst = page <= 1
   const atLast = numPages > 0 && page >= numPages
 
-  const iconBtn =
-    "flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+  const iconBtn = kid
+    ? "flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-[hsl(var(--kid-sage)/0.3)] disabled:opacity-35 disabled:pointer-events-none"
+    : "flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
+  // Kid look: each control group is a floating chunky pill.
+  const kidPill =
+    "rounded-full border-[1.5px] border-border bg-card/90 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm"
+  const modeBtn = (active: boolean) =>
+    kid
+      ? `flex h-7 sm:h-8 items-center gap-1.5 rounded-full px-2 sm:px-2.5 text-[13px] font-bold transition-all ${
+          active
+            ? "bg-[hsl(var(--kid-sage)/0.45)] text-foreground"
+            : "text-muted-foreground hover:text-foreground"
+        }`
+      : `flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
+          active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+        }`
 
   return (
-    <div className="flex h-full min-h-0 flex-col bg-background">
+    <div className={`flex h-full min-h-0 flex-col ${kid ? "" : "bg-background"}`}>
       {/* Quran Toolbar — responsive, clean wrap/flex */}
-      <div className="flex items-center justify-between gap-1.5 border-b border-border bg-card px-2.5 py-1.5 sm:px-3 sm:py-2">
+      <div
+        className={
+          kid
+            ? "flex items-center justify-between gap-1.5 px-2 pb-2 pt-1 sm:gap-2 sm:px-4"
+            : "flex items-center justify-between gap-1.5 border-b border-border bg-card px-2.5 py-1.5 sm:px-3 sm:py-2"
+        }
+      >
         {/* Left: Page Navigation */}
-        <div className="flex items-center gap-0.5 sm:gap-1">
+        <div className={`flex items-center gap-0.5 sm:gap-1 ${kid ? `${kidPill} p-0.5` : ""}`}>
           <button
             type="button"
             onClick={() => go(page - 1)}
@@ -302,7 +326,13 @@ export function SyncedPdfViewer({
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <span className="min-w-[65px] sm:min-w-[90px] text-center text-xs sm:text-sm font-semibold tabular-nums text-foreground">
+          <span
+            className={
+              kid
+                ? "min-w-[44px] sm:min-w-[96px] text-center font-heading text-[15px] sm:text-[17px] font-bold tabular-nums text-primary"
+                : "min-w-[65px] sm:min-w-[90px] text-center text-xs sm:text-sm font-semibold tabular-nums text-foreground"
+            }
+          >
             <span className="hidden sm:inline">Page </span>
             {page}
             {numPages ? <span className="text-muted-foreground font-normal"> / {numPages}</span> : null}
@@ -322,7 +352,14 @@ export function SyncedPdfViewer({
         {/* Right: View Mode & Zoom & Pointer Controls */}
         <div className="flex items-center gap-1 sm:gap-1.5">
           {followingLabel ? (
-            <span className="hidden md:inline-flex mr-1 items-center rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+            <span
+              className={
+                kid
+                  ? "hidden md:inline-flex mr-1 items-center gap-1.5 rounded-full border-[1.5px] border-[hsl(var(--kid-sage)/0.5)] bg-[hsl(var(--kid-sage)/0.22)] px-3 py-1.5 text-[13px] font-bold text-foreground"
+                  : "hidden md:inline-flex mr-1 items-center rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground"
+              }
+            >
+              {kid && <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--kid-sage))]" />}
               {followingLabel}
             </span>
           ) : null}
@@ -345,7 +382,11 @@ export function SyncedPdfViewer({
           ) : null}
 
           {/* View Mode Segmented Controls */}
-          <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5">
+          <div
+            className={
+              kid ? `flex items-center ${kidPill} p-1` : "flex items-center rounded-lg border border-border bg-muted/50 p-0.5"
+            }
+          >
             <button
               type="button"
               onClick={() => {
@@ -353,11 +394,7 @@ export function SyncedPdfViewer({
                 setZoom(1)
               }}
               title="Standard Mushaf Width (~740px — 16-Line Reading Width)"
-              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
-                fitMode === "standard"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={modeBtn(fitMode === "standard")}
             >
               <BookOpen className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Standard</span>
@@ -369,11 +406,7 @@ export function SyncedPdfViewer({
                 setZoom(1)
               }}
               title="Fit to Width"
-              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
-                fitMode === "width"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={modeBtn(fitMode === "width")}
             >
               <Maximize2 className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Fit Width</span>
@@ -385,11 +418,7 @@ export function SyncedPdfViewer({
                 setZoom(1)
               }}
               title="Fit Full Page (Fit 16 Lines vertically)"
-              className={`flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
-                fitMode === "page"
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={modeBtn(fitMode === "page")}
             >
               <Minimize2 className="h-3.5 w-3.5" />
               <span className="hidden md:inline">Full Page</span>
@@ -397,7 +426,13 @@ export function SyncedPdfViewer({
           </div>
 
           {/* Zoom Controls */}
-          <div className="flex items-center gap-0.5 border-l border-border pl-1 sm:pl-1.5">
+          <div
+            className={
+              kid
+                ? `flex items-center gap-0.5 ${kidPill} p-0.5`
+                : "flex items-center gap-0.5 border-l border-border pl-1 sm:pl-1.5"
+            }
+          >
             <button
               type="button"
               onClick={() => setZoom((z) => Math.max(0.6, +(z - 0.15).toFixed(2)))}
@@ -415,7 +450,11 @@ export function SyncedPdfViewer({
               onClick={() => setZoom(1)}
               title="Click to reset zoom to 100%"
               aria-label="Reset zoom to 100%"
-              className="h-6 sm:h-7 min-w-[38px] sm:min-w-[48px] rounded-md px-1 text-center text-[11px] sm:text-xs font-bold tabular-nums text-foreground transition-colors hover:bg-muted"
+              className={
+                kid
+                  ? "hidden sm:block h-8 min-w-[52px] rounded-full px-1 text-center text-[13px] font-extrabold tabular-nums text-foreground transition-colors hover:bg-[hsl(var(--kid-sage)/0.3)]"
+                  : "h-6 sm:h-7 min-w-[38px] sm:min-w-[48px] rounded-md px-1 text-center text-[11px] sm:text-xs font-bold tabular-nums text-foreground transition-colors hover:bg-muted"
+              }
             >
               {Math.round(zoom * 100)}%
             </button>
@@ -437,7 +476,7 @@ export function SyncedPdfViewer({
       {/* PDF Scroll Canvas — minimal padding on mobile for maximum Quran text size */}
       <div
         ref={scrollRef}
-        className="relative flex-1 min-h-0 overflow-auto bg-muted/40 p-1 sm:p-3 md:p-4"
+        className={`relative flex-1 min-h-0 overflow-auto p-1 sm:p-3 md:p-4 ${kid ? "" : "bg-muted/40"}`}
       >
         {errored ? (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

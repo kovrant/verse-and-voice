@@ -1,11 +1,10 @@
 "use client"
 
-import { Radio } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
 
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
+import { MoonMascot } from "@/components/student-mascot"
 import { detectDevice } from "@/lib/device-detection"
 import { toast } from "@/lib/toast"
 import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
@@ -176,44 +175,38 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
 
-      <Dialog open={alertOpen} onOpenChange={setAlertOpen}>
-        <DialogContent className="max-w-sm overflow-hidden rounded-[24px] border border-border bg-card p-0 text-center">
-          <div className="flex flex-col items-center gap-4 px-7 pb-7 pt-9">
-            <span className="relative flex h-16 w-16 items-center justify-center">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500/30" />
-              <span className="relative inline-flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600">
-                <Radio className="h-7 w-7" strokeWidth={2.25} />
-              </span>
+      <KidModal
+        open={alertOpen}
+        onOpenChange={setAlertOpen}
+        color="sky"
+        hero={
+          <span className="relative flex flex-col items-center">
+            {/* Hilal, excited, inside a "broadcasting" ring */}
+            <span className="relative flex h-[112px] w-[112px] items-center justify-center">
+              <span className="absolute inset-2 animate-ping rounded-full bg-[hsl(var(--kid-coral)/0.35)] motion-reduce:animate-none" />
+              <span className="absolute inset-0 rounded-full border-[3px] border-dashed border-[hsl(var(--kid-coral)/0.5)]" />
+              <MoonMascot mood="excited" className="relative h-[96px] w-[96px]" />
             </span>
-
-            <div className="space-y-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-emerald-600">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live now
-              </span>
-              <DialogTitle className="text-xl font-bold text-foreground">
-                Your class has started
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
-                Your teacher is waiting. Join to follow along in real time.
-              </DialogDescription>
-            </div>
-
-            <div className="mt-1 flex w-full flex-col gap-2">
-              <Button size="lg" className="w-full text-base font-semibold" onClick={joinFromAlert}>
-                Join now
-              </Button>
-              <button
-                type="button"
-                onClick={() => setAlertOpen(false)}
-                className="w-full rounded-lg py-2 text-sm font-semibold text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Maybe later
-              </button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <span className="-mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+              Live now
+            </span>
+          </span>
+        }
+        title="Your class has started!"
+        description="Your teacher is waiting for you. Join now and read along together."
+      >
+        <KidButton onClick={joinFromAlert} pad={<QuranBookIcon className="h-7 w-7" />}>
+          Join class
+        </KidButton>
+        <button
+          type="button"
+          onClick={() => setAlertOpen(false)}
+          className="rounded-full py-1.5 text-[15px] font-bold text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Maybe later
+        </button>
+      </KidModal>
     </LiveClassContext.Provider>
   )
 }

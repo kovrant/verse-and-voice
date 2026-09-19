@@ -1,12 +1,14 @@
 "use client"
 
-import { BookOpen, LogOut } from "lucide-react"
+import { LogOut } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
+import { QuranBookIcon } from "@/components/kid-ui"
 import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { StudentBackdrop } from "@/components/student-backdrop"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
 import type { NavState, PointerState } from "@/lib/use-class-channel"
@@ -132,40 +134,44 @@ export function StudentLiveClass() {
   const fileUrl = mediaMap[para]
 
   return (
-    <div className="fixed inset-0 z-[70] flex flex-col bg-background">
-      {/* Header */}
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
-        <div className="flex items-center gap-3">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-bold text-emerald-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            LIVE
+    // `isolate` so the backdrop's -z-10 stays inside this overlay, behind its content.
+    <div className="fixed inset-0 z-[70] isolate flex flex-col">
+      <StudentBackdrop />
+
+      {/* Header — floating chunky pills, like the rest of the student portal */}
+      <div className="flex items-center justify-between gap-3 px-3 pb-2 pt-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+            Live
           </span>
-          <span className="text-sm font-semibold text-foreground">
+          <span className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+            <QuranBookIcon className="h-5 w-5" />
             {ready ? (
-              <>
-                Para <span className="text-primary">{para}</span>
-                <span className="text-muted-foreground text-xs"> / 30</span>
-              </>
+              <span className="font-heading text-[16px] font-bold text-primary">
+                Para {para}
+                <span className="text-[13px] font-semibold text-muted-foreground"> / 30</span>
+              </span>
             ) : (
-              <span className="text-muted-foreground">Connecting…</span>
+              <span className="text-[14px] font-semibold text-muted-foreground">Connecting…</span>
             )}
           </span>
 
           {/* Teacher bookmark / pointer indicator */}
           {remotePointer?.line ? (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
-              <span>📍</span>
-              <span>Line {remotePointer.line}</span>
-            </div>
+            <span className="hidden animate-fade-in items-center gap-1.5 rounded-full border-[1.5px] border-[hsl(var(--kid-saffron)/0.55)] bg-[hsl(var(--kid-saffron)/0.25)] px-3 py-1.5 text-[13px] font-bold text-foreground sm:inline-flex">
+              <span aria-hidden>📍</span>
+              Teacher is on line {remotePointer.line}
+            </span>
           ) : null}
         </div>
         <button
           type="button"
           onClick={leave}
-          className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-muted-foreground shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:text-destructive active:translate-y-[3px] active:shadow-none"
         >
           <LogOut className="h-4 w-4" />
-          Leave
+          Leave class
         </button>
       </div>
 
@@ -180,13 +186,16 @@ export function StudentLiveClass() {
           followingLabel="Synced with teacher"
           remotePointer={remotePointer}
           allowPointing={false}
+          kid
         />
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-            <BookOpen className="h-7 w-7 text-muted-foreground" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[hsl(var(--kid-sage)/0.3)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.5)]">
+            <QuranBookIcon className="h-10 w-10" />
           </div>
-          <p className="text-lg font-medium">Para {para} isn&apos;t available</p>
+          <p className="font-heading text-[22px] font-bold text-primary">
+            Para {para} isn&apos;t available
+          </p>
           <p className="text-sm text-muted-foreground">
             This para&apos;s PDF hasn&apos;t been uploaded yet.
           </p>
