@@ -32,8 +32,7 @@ function DoodleShape({ shape }: { shape: Shape }) {
 /**
  * Student portal background: soft colour clouds plus a sprinkle of drifting
  * doodles in the crayon colours. Fixed to the viewport and clipped so the
- * off-screen clouds can't add scroll. AppShell renders it outside <main> on
- * purpose (see there). Motion uses the float utilities, which respect
+ * off-screen clouds can't add scroll. Motion uses the float utilities, which respect
  * prefers-reduced-motion.
  */
 export function StudentBackdrop() {

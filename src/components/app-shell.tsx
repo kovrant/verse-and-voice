@@ -23,9 +23,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const shell = (
     // Student: `isolate` (no bg) so the backdrop's -z-10 paints behind this
-    // shell but in front of the page root. The backdrop must live out here, not
-    // inside <main>: main's `contain: layout` would make `fixed` pin to main
-    // and scroll away after one screen.
+    // shell but in front of the page root.
+    // Never put `contain`/`transform`/`filter` on <main>: any of them makes it
+    // the containing block for `fixed` descendants, so full-screen views (Quran
+    // reader, live class, Namaz) would pin to the scroll area and slide away
+    // with it, leaving empty space and the tab bar on top.
     <div
       className={
         isStudentArea
@@ -35,10 +37,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     >
       {isStudentArea && <StudentBackdrop />}
       {isStudentArea ? <StudentTabBar /> : <Sidebar />}
-      <main
-        className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll"
-        style={{ contain: "layout style" }}
-      >
+      <main className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll">
         {!isStudentArea && (
           // Admin — clean, minimal.
           <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
