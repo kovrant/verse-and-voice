@@ -110,19 +110,16 @@ export function StudentTabBar() {
               ? "font-extrabold text-foreground"
               : "font-bold text-muted-foreground hover:text-foreground",
           )}
-          style={
-            {
-              "--kid": `var(--kid-${tab.color})`,
-              background: tab.active ? "hsl(var(--kid) / 0.16)" : undefined,
-            } as CSSProperties
-          }
+          // Every tab has the same shape (tile + label); the active one only gets a
+          // stronger tile, a bold label and a dot — no box around the whole tab.
+          style={{ "--kid": `var(--kid-${tab.color})` } as CSSProperties}
         >
           <span
             className={cn(
               "relative flex h-10 w-12 items-center justify-center rounded-[16px] text-[22px] transition-transform lg:h-12 lg:w-14 lg:text-[26px]",
               "group-hover:-rotate-6 group-hover:scale-105",
               tab.active
-                ? "bg-[hsl(var(--kid)/0.45)] shadow-[0_4px_0_hsl(var(--kid)/0.6)]"
+                ? "bg-[hsl(var(--kid)/0.55)] shadow-[0_4px_0_hsl(var(--kid)/0.7)] ring-2 ring-[hsl(var(--kid)/0.35)] ring-offset-2 ring-offset-card"
                 : "bg-[hsl(var(--kid)/0.2)]",
             )}
             aria-hidden
@@ -135,7 +132,15 @@ export function StudentTabBar() {
               />
             )}
           </span>
-          {tab.label}
+          <span className="relative">
+            {tab.label}
+            {tab.active && (
+              <span
+                aria-hidden
+                className="absolute -bottom-2 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-[hsl(var(--kid))]"
+              />
+            )}
+          </span>
         </Link>
       ))}
     </nav>
