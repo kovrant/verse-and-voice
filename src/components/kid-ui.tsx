@@ -359,3 +359,88 @@ export function QaidaLettersIcon({ className }: { className?: string }) {
     </span>
   )
 }
+
+/** Small stat tile: emoji + big number, short label underneath (stacked so three fit a phone). */
+export function KidStat({
+  emoji,
+  value,
+  label,
+  color,
+}: {
+  emoji: string
+  value: ReactNode
+  label: string
+  color: KidColor
+}) {
+  return (
+    <div
+      className="flex min-w-0 flex-1 flex-col items-center rounded-[18px] border-[1.5px] border-[hsl(var(--kid)/0.4)] bg-card/80 px-2 py-2.5 text-center shadow-[0_3px_0_hsl(var(--kid)/0.45)]"
+      style={kidVar(color)}
+    >
+      <span className="flex items-center gap-1.5">
+        <span aria-hidden className="text-[17px] leading-none">
+          {emoji}
+        </span>
+        <span className="font-heading text-[22px] font-bold leading-none text-primary">
+          {value}
+        </span>
+      </span>
+      <span className="mt-1 text-[12px] font-bold leading-tight text-muted-foreground">
+        {label}
+      </span>
+    </div>
+  )
+}
+
+/** Chunky pill tabs; the active tab fills with the page's crayon colour. */
+export function KidTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+  color,
+}: {
+  tabs: { key: T; label: string; emoji?: string; count?: number }[]
+  value: T
+  onChange: (key: T) => void
+  color: KidColor
+}) {
+  return (
+    <div
+      role="tablist"
+      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border-[1.5px] border-border bg-card/90 p-1 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm"
+      style={kidVar(color)}
+    >
+      {tabs.map((t) => {
+        const active = t.key === value
+        return (
+          <button
+            key={t.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(t.key)}
+            className={cn(
+              "flex flex-shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-[14px] font-bold transition-colors",
+              active
+                ? "bg-[hsl(var(--kid)/0.45)] text-foreground"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t.emoji && <span aria-hidden>{t.emoji}</span>}
+            {t.label}
+            {typeof t.count === "number" && (
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-[12px] font-extrabold",
+                  active ? "bg-card/70" : "bg-secondary/70",
+                )}
+              >
+                {t.count}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
