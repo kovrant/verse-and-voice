@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 import Link from "next/link"
 import type { CSSProperties, ReactNode } from "react"
 
+import { type MascotMood, MoonMascot } from "@/components/student-mascot"
 import type { KidColor } from "@/components/student-nav"
 import { cn } from "@/lib/utils"
 
@@ -214,5 +215,124 @@ export function KidModal({
         </DialogPrimitive.Content>
       </DialogPrimitive.Portal>
     </DialogPrimitive.Root>
+  )
+}
+
+/** Inline style that tints a storybook surface in a crayon colour. */
+function kidVar(color: KidColor): CSSProperties {
+  return { "--kid": `var(--kid-${color})` } as CSSProperties
+}
+
+/**
+ * Student page header: big emoji tile in the section's crayon colour (the same
+ * colour as its home card), a Baloo title and a friendly one-liner. `right`
+ * holds page-level actions or a summary.
+ */
+export function KidPageHeader({
+  emoji,
+  color,
+  title,
+  subtitle,
+  right,
+  className,
+}: {
+  emoji: string
+  color: KidColor
+  title: ReactNode
+  subtitle?: ReactNode
+  right?: ReactNode
+  className?: string
+}) {
+  return (
+    <div
+      className={cn("mb-6 flex flex-wrap items-center justify-between gap-4", className)}
+      style={kidVar(color)}
+    >
+      <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+        <span
+          aria-hidden
+          className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[20px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-[hsl(var(--kid)/0.3)] text-[30px] shadow-[0_4px_0_hsl(var(--kid)/0.5)] sm:h-16 sm:w-16 sm:text-[34px]"
+        >
+          {emoji}
+        </span>
+        <div className="min-w-0">
+          <h1 className="font-heading text-[28px] font-bold leading-none tracking-tight text-primary sm:text-[34px]">
+            {title}
+          </h1>
+          {subtitle && (
+            <p className="mt-1.5 text-[14px] font-semibold leading-snug text-muted-foreground sm:text-[15px]">
+              {subtitle}
+            </p>
+          )}
+        </div>
+      </div>
+      {right}
+    </div>
+  )
+}
+
+/**
+ * Storybook surface: rounded card with a chunky bottom edge. With `color` it
+ * gets a soft crayon tint and matching edge; without, it's a plain white card
+ * with a neutral edge.
+ */
+export function KidCard({
+  color,
+  className,
+  children,
+  style,
+}: {
+  color?: KidColor
+  className?: string
+  children: ReactNode
+  style?: CSSProperties
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-[26px] border-[1.5px] p-4 sm:p-5",
+        color
+          ? "border-[hsl(var(--kid)/0.45)] shadow-[0_5px_0_hsl(var(--kid)/0.5)]"
+          : "border-border bg-card shadow-[0_5px_0_hsl(var(--border))]",
+        className,
+      )}
+      style={
+        color
+          ? {
+              ...kidVar(color),
+              background:
+                "linear-gradient(160deg, hsl(var(--kid) / 0.22), hsl(var(--kid) / 0.08)), hsl(var(--card))",
+              ...style,
+            }
+          : style
+      }
+    >
+      {children}
+    </div>
+  )
+}
+
+/**
+ * Friendly empty / error state with Hilal the moon. Use in place of the old
+ * "🙈 We couldn't load…" boxes.
+ */
+export function KidEmpty({
+  title,
+  text,
+  mood = "awake",
+  children,
+}: {
+  title: ReactNode
+  text?: ReactNode
+  mood?: MascotMood
+  children?: ReactNode
+}) {
+  return (
+    <KidCard className="mx-auto mt-8 flex max-w-md flex-col items-center px-6 py-9 text-center">
+      <MoonMascot mood={mood} className="h-24 w-24 animate-float-gentle" />
+      <p className="mt-3 font-heading text-[22px] font-bold leading-tight text-primary">{title}</p>
+      {text && <p className="mt-1.5 text-[15px] font-semibold text-muted-foreground">{text}</p>}
+      {children && <div className="mt-5 w-full">{children}</div>}
+    </KidCard>
   )
 }

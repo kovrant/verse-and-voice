@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 
+import { KidEmpty } from "@/components/kid-ui"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { type QaidaItem, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
@@ -51,37 +52,45 @@ export default function StudentQaidaPage() {
 
   if (error || !student) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-card p-12 text-center shadow-soft">
-        <div className="mb-3 text-5xl">🙈</div>
-        <p className="mb-1 font-bold">We couldn&apos;t load your profile</p>
-        <p className="text-sm text-muted-foreground">{error || "Please contact your teacher."}</p>
-      </div>
+      <KidEmpty
+        mood="sleepy"
+        title="We couldn't load your profile"
+        text={error || "Please ask your teacher for help."}
+      />
     )
   }
 
   if (!assigned) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-card p-12 text-center shadow-soft">
-        <div className="mb-3 text-5xl">📖</div>
-        <p className="mb-1 font-bold">Your Qaida is on its way</p>
-        <p className="text-sm text-muted-foreground">
-          Your teacher hasn&apos;t assigned a Qaida yet. It&apos;ll appear here as soon as they do.
-        </p>
-      </div>
+      <KidEmpty
+        title="Your Qaida is on its way"
+        text="Your teacher hasn't given you a Qaida yet. It will appear here as soon as they do."
+      />
     )
   }
 
   return (
-    <div className="mx-auto flex h-[calc(100vh-7rem)] max-w-5xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-soft animate-fade-in-up">
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
-        <span className="truncate text-sm font-semibold text-foreground">
-          {assigned.title}
-          {assigned.category ? (
-            <span className="text-muted-foreground"> · {assigned.category}</span>
-          ) : null}
+    // Height leaves room for the top bar, and on phones for the floating tab bar.
+    <div className="mx-auto flex h-[calc(100dvh-12.5rem)] max-w-5xl flex-col animate-fade-in-up lg:h-[calc(100dvh-8.5rem)]">
+      <div className="flex items-center gap-2 pb-2">
+        <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+          <span aria-hidden className="text-[18px] leading-none">
+            🔤
+          </span>
+          <span className="truncate font-heading text-[16px] font-bold text-primary">
+            {assigned.title}
+            {assigned.category ? (
+              <span className="text-[14px] font-semibold text-muted-foreground">
+                {" "}
+                · {assigned.category}
+              </span>
+            ) : null}
+          </span>
         </span>
       </div>
-      <SyncedPdfViewer fileUrl={assigned.file_url} page={page} onPageChange={setPage} />
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] border-[1.5px] border-[hsl(var(--kid-sage)/0.45)] bg-card/60 pt-2 shadow-[0_5px_0_hsl(var(--kid-sage)/0.5)] backdrop-blur-sm">
+        <SyncedPdfViewer fileUrl={assigned.file_url} page={page} onPageChange={setPage} kid />
+      </div>
     </div>
   )
 }

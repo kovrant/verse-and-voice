@@ -4,8 +4,10 @@ import { ArrowLeft } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useMemo, useRef, useState } from "react"
 
+import { KidButton, KidCard, KidEmpty, KidPageHeader, QuranBookIcon } from "@/components/kid-ui"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { computeProgress, getStudentStage, type QuranRound } from "@/components/quran-progress"
+import { StudentBackdrop } from "@/components/student-backdrop"
 import { logActivity } from "@/lib/activity-log"
 import { loadBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
@@ -96,11 +98,6 @@ const JUZ_SURAHS = [
   "Al-Mulk 1",
   "An-Nabaʾ 1",
 ]
-
-// Terracotta accent — makes completed ticks and the current-para badge pop.
-const ACCENT = "hsl(var(--accent))"
-const ACCENT_DIM = "hsl(var(--accent) / 0.16)"
-const ACCENT_BORDER = "hsl(var(--accent) / 0.5)"
 
 type ParaState = "done" | "current" | "next" | "neutral"
 
@@ -236,71 +233,84 @@ export default function StudentQuranPage() {
 
   if (error || !student) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-card p-12 text-center shadow-soft">
-        <div className="mb-3 text-5xl">🙈</div>
-        <p className="mb-1 font-bold">We couldn&apos;t load your profile</p>
-        <p className="text-sm text-muted-foreground">{error || "Please contact your teacher."}</p>
-      </div>
+      <KidEmpty
+        mood="sleepy"
+        title="We couldn't load your profile"
+        text={error || "Please ask your teacher for help."}
+      />
     )
   }
 
+  // One tap back into reading: the current para, or para 1 before any progress.
+  const continuePara = currentPara ?? (prog.noProgress ? 1 : null)
+  const continueMedia = continuePara ? media[continuePara] : undefined
+
   return (
-    <div className="mx-auto max-w-6xl animate-fade-in-up text-foreground">
-      {/* Header */}
-      <div className="flex flex-wrap items-end justify-between gap-6">
-        <div>
-          <div className="mb-4 inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-            <span className="h-px w-6 bg-[hsl(var(--border-strong))]" />
-            Recitation Library
-          </div>
-          <h1
-            className="font-heading font-bold leading-none tracking-tight text-foreground"
-            style={{ fontSize: "clamp(30px, 6vw, 52px)" }}
-          >
-            Quran
-          </h1>
-          <p className="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground">
-            All thirty ajzāʾ of the Muṣḥaf. Tap a para to open its PDF, review its opening surah, or
-            pick up where you left off.
+    <div className="mx-auto max-w-5xl animate-fade-in-up text-foreground">
+      <KidPageHeader
+        emoji="📖"
+        color="sage"
+        title="Quran"
+        subtitle="Tap a para to open it and start reading"
+      />
+
+      {/* Where am I + continue */}
+      <KidCard color="sage" className="mb-7 flex flex-wrap items-center gap-4 sm:gap-6">
+        <span
+          aria-hidden
+          className="flex h-[78px] w-[78px] flex-shrink-0 items-center justify-center rounded-full"
+          style={{
+            background: `conic-gradient(hsl(var(--kid-sage)) ${pct}%, hsl(var(--kid-sage) / 0.22) 0)`,
+          }}
+        >
+          <span className="flex h-[62px] w-[62px] flex-col items-center justify-center rounded-full bg-card">
+            <span className="font-heading text-[26px] font-bold leading-none text-primary">
+              {prog.allDone ? "🏆" : (continuePara ?? "–")}
+            </span>
+          </span>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">
+            {prog.allDone ? "MashaAllah!" : prog.noProgress ? "Start here" : "You're on"}
           </p>
-        </div>
-
-        <div className="flex flex-col items-start gap-3.5 sm:items-end">
-          {currentPara && (
-            <div className="inline-flex items-center gap-2.5 rounded-full border border-[hsl(var(--border-strong))] bg-card px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-              Currently on Para {currentPara}
+          <p className="truncate font-heading text-[22px] font-bold leading-tight text-primary sm:text-[24px]">
+            {prog.allDone
+              ? "You finished the whole Quran"
+              : continuePara
+                ? `Para ${continuePara} · ${JUZ_NAMES[continuePara - 1]}`
+                : "Pick a para to begin"}
+          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            <div className="h-2.5 max-w-[220px] flex-1 overflow-hidden rounded-full bg-[hsl(var(--kid-sage)/0.25)]">
+              <div
+                className="h-full rounded-full bg-[hsl(var(--kid-sage))]"
+                style={{ width: `${pct}%` }}
+              />
             </div>
-          )}
-          <div className="flex w-[260px] max-w-full flex-col gap-2">
-            <div className="flex justify-between text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span>{totalDone} / 30 completed</span>
-              <span className="text-foreground">{pct}%</span>
-            </div>
-            <div className="h-[6px] overflow-hidden rounded-full border border-border bg-secondary">
-              <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
-            </div>
+            <span className="text-[13px] font-bold text-muted-foreground">
+              {totalDone} of 30 done
+            </span>
           </div>
         </div>
-      </div>
+        {continuePara && continueMedia && (
+          <KidButton
+            onClick={() => openPara(continuePara, continueMedia.file_url)}
+            pad={<QuranBookIcon className="h-7 w-7" />}
+            className="w-full sm:w-auto sm:px-8"
+          >
+            {prog.noProgress ? "Start reading" : "Continue reading"}
+          </KidButton>
+        )}
+      </KidCard>
 
-      {/* Para grid */}
-      <div
-        className="mt-11 grid gap-4"
-        style={{ gridTemplateColumns: "repeat(auto-fill, minmax(196px, 1fr))" }}
-      >
+      {/* Para tiles */}
+      <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 sm:gap-4 lg:grid-cols-6">
         {PARAS.map((n) => {
           const m = media[n]
           const available = !!m
           const state = paraState(n)
           const isCurrent = state === "current"
-
-          const tone =
-            state === "current"
-              ? "border-primary bg-secondary ring-2 ring-primary shadow-soft"
-              : state === "next"
-                ? "border-border bg-card opacity-70 hover:opacity-100"
-                : "border-border bg-card"
+          const isDone = state === "done"
 
           return (
             <button
@@ -309,79 +319,73 @@ export default function StudentQuranPage() {
               onClick={available ? () => openPara(n, m.file_url) : undefined}
               disabled={!available}
               ref={isCurrent ? currentRef : undefined}
+              title={`${JUZ_NAMES[n - 1]} — starts at ${JUZ_SURAHS[n - 1]}`}
               aria-label={
                 available
-                  ? `Open Para ${n} (${JUZ_NAMES[n - 1]}) PDF${isCurrent ? " — your current para" : ""}`
+                  ? `Open Para ${n} (${JUZ_NAMES[n - 1]})${isCurrent ? " — your current para" : isDone ? " — done" : ""}`
                   : `Para ${n} (${JUZ_NAMES[n - 1]}) — not uploaded yet`
               }
               className={cn(
-                "group flex min-h-[196px] flex-col rounded-2xl border p-5 text-left transition-all",
-                tone,
+                "relative flex flex-col items-center rounded-[22px] border-[1.5px] px-2 pb-3 pt-4 text-center transition-transform",
                 available
-                  ? "cursor-pointer hover:-translate-y-0.5 hover:border-[hsl(var(--border-strong))]"
-                  : "cursor-default",
+                  ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+                  : "cursor-default border-dashed opacity-60",
+                isCurrent
+                  ? "border-accent shadow-[0_5px_0_hsl(16_48%_44%/0.7)] ring-4 ring-[hsl(var(--kid-coral)/0.2)]"
+                  : isDone
+                    ? "border-[hsl(var(--kid-sage)/0.5)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.55)]"
+                    : "border-border bg-card shadow-[0_4px_0_hsl(var(--border))]",
               )}
+              style={
+                isCurrent
+                  ? {
+                      background:
+                        "linear-gradient(160deg, hsl(var(--kid-coral) / 0.28), hsl(var(--kid-coral) / 0.1)), hsl(var(--card))",
+                    }
+                  : isDone
+                    ? {
+                        background:
+                          "linear-gradient(160deg, hsl(var(--kid-sage) / 0.28), hsl(var(--kid-sage) / 0.1)), hsl(var(--card))",
+                      }
+                    : undefined
+              }
             >
-              {/* Top row: para label + state badge */}
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                  Para {String(n).padStart(2, "0")}
+              {isCurrent && (
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-foreground shadow-[0_2px_0_hsl(16_48%_40%)]">
+                  You&apos;re here
                 </span>
-                {state === "current" ? (
-                  <span
-                    className="rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.14em]"
-                    style={{ background: ACCENT, color: "hsl(var(--accent-foreground))" }}
-                  >
-                    You&apos;re here
-                  </span>
-                ) : state === "done" ? (
-                  <span
-                    className="flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold"
-                    style={{
-                      color: ACCENT,
-                      background: ACCENT_DIM,
-                      border: `1px solid ${ACCENT_BORDER}`,
-                    }}
-                  >
-                    ✓
-                  </span>
-                ) : null}
-              </div>
-
-              {/* Number + juzʾ name */}
-              <div className="mt-3.5">
+              )}
+              {isDone && (
                 <span
-                  className={cn(
-                    "font-heading text-[46px] font-extrabold leading-none tracking-tight",
-                    state === "current"
-                      ? "text-primary"
-                      : state === "next"
-                        ? "text-muted-foreground"
-                        : "text-foreground",
-                  )}
+                  aria-hidden
+                  className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground"
                 >
-                  {n}
+                  ✓
                 </span>
-              </div>
-              <div className="mt-1.5 text-[14.5px] font-semibold leading-tight text-muted-foreground">
-                {JUZ_NAMES[n - 1]}
-              </div>
-
-              {/* Footer: opening surah + open/unavailable affordance */}
-              <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-4">
-                <span className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {JUZ_SURAHS[n - 1]}
-                </span>
-                {available ? (
-                  <span className="inline-flex shrink-0 items-center gap-1 text-[10.5px] font-semibold tracking-wide text-foreground">
-                    Open PDF ↗
-                  </span>
-                ) : (
-                  <span className="shrink-0 text-[10.5px] font-medium tracking-wide text-muted-foreground/60">
-                    Not uploaded
-                  </span>
+              )}
+              <span
+                className={cn(
+                  "flex h-12 w-12 items-center justify-center rounded-full font-heading text-[22px] font-bold",
+                  isCurrent
+                    ? "bg-accent text-accent-foreground"
+                    : isDone
+                      ? "bg-[hsl(var(--kid-sage)/0.45)] text-primary"
+                      : "bg-secondary/60 text-muted-foreground",
                 )}
-              </div>
+              >
+                {n}
+              </span>
+              <span
+                className={cn(
+                  "mt-2 line-clamp-2 text-[12.5px] font-bold leading-tight",
+                  state === "next" ? "text-muted-foreground" : "text-foreground",
+                )}
+              >
+                {JUZ_NAMES[n - 1]}
+              </span>
+              {!available && (
+                <span className="mt-1 text-[11px] font-bold text-muted-foreground">Soon</span>
+              )}
             </button>
           )
         })}
@@ -389,22 +393,29 @@ export default function StudentQuranPage() {
 
       {/* In-app PDF reader (opens over the list; Back / Esc returns here) */}
       {viewing && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-background">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-4 py-2.5">
+        <div className="fixed inset-0 z-50 isolate flex flex-col">
+          <StudentBackdrop />
+          <div className="flex items-center justify-between gap-2 px-3 pb-2 pt-3 sm:px-4">
             <button
               type="button"
               onClick={() => setViewing(null)}
-              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
             >
               <ArrowLeft className="h-4 w-4" />
               All paras
             </button>
-            <span className="truncate text-sm font-semibold text-foreground">
-              Para {viewing.para}
-              <span className="text-muted-foreground"> · {JUZ_NAMES[viewing.para - 1]}</span>
+            <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+              <QuranBookIcon className="h-5 w-5 flex-shrink-0" />
+              <span className="truncate font-heading text-[16px] font-bold text-primary">
+                Para {viewing.para}
+                <span className="hidden text-[14px] font-semibold text-muted-foreground sm:inline">
+                  {" "}
+                  · {JUZ_NAMES[viewing.para - 1]}
+                </span>
+              </span>
             </span>
-            {/* Spacer to keep the title centered against the back button. */}
-            <span className="hidden w-[104px] sm:block" />
+            {/* Spacer keeps the title centred against the back button on wide screens. */}
+            <span className="hidden w-[124px] sm:block" />
           </div>
           <SyncedPdfViewer
             fileUrl={viewing.fileUrl}
@@ -412,6 +423,7 @@ export default function StudentQuranPage() {
             onPageChange={handleViewerPageChange}
             initialPointer={bookmarkPointer}
             allowPointing={false}
+            kid
           />
         </div>
       )}
