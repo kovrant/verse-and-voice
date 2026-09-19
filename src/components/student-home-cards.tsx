@@ -167,8 +167,11 @@ export function StudentHomeCards({
   readRing,
   classTime,
   classDays,
+  hasQaida = false,
 }: {
   studentId: string
+  /** A Qaida is assigned. Quran-stage students can still have one, so it gets its own card. */
+  hasQaida?: boolean
   classTime: string | null
   classDays: number[] | null
   isQaida: boolean
@@ -196,6 +199,17 @@ export function StudentHomeCards({
       color: "sage",
       ring: readRing,
     },
+    ...(hasQaida && !isQaida
+      ? [
+          {
+            href: "/student/qaida",
+            label: "Qaida",
+            status: "Letters & sounds",
+            art: "🔤",
+            color: "sage" as const,
+          },
+        ]
+      : []),
     {
       href: "/student/classes",
       label: "Class",

@@ -49,7 +49,8 @@ export function StudentTabBar() {
       href: read.href,
       label: read.label,
       art: isQaida ? "🔤" : "📖",
-      active: isPathActive(pathname, read.href),
+      // Quran and Qaida share the one "read" tab.
+      active: isPathActive(pathname, "/student/quran") || isPathActive(pathname, "/student/qaida"),
       color: "sage",
     },
     {

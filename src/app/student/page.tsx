@@ -65,6 +65,7 @@ export default function StudentDashboardPage() {
         readRing={isQaida ? undefined : { value: heroTotal / 30, label: heroPara }}
         classTime={student.class_time}
         classDays={student.class_days}
+        hasQaida={!!student.qaida_media_id}
       />
     </div>
   )
