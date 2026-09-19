@@ -886,8 +886,13 @@
   }
 }
 
+/* `backwards`, never `forwards`: this wraps whole pages, and a held last frame
+   keeps a transform (even translateY(0)) on the wrapper, which makes it the
+   containing block for `fixed` children — the full-screen Quran reader would
+   scroll away with the page instead of covering the screen. After the run the
+   element just falls back to its own styles, which match the end frame. */
 .animate-fade-in-up {
-  animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fade-in-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 .animate-float {

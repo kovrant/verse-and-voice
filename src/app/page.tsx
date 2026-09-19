@@ -182,7 +182,7 @@ export default function Dashboard() {
         {statCards.map((stat, i) => (
           <Card
             key={stat.label}
-            className="group relative overflow-hidden bg-card border border-border opacity-0 animate-fade-in-up [animation-fill-mode:forwards]"
+            className="group relative overflow-hidden bg-card border border-border animate-fade-in-up"
             style={{ animationDelay: `${i * 80}ms` }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
