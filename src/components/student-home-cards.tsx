@@ -3,9 +3,10 @@
 import { ChevronRight, Radio } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { type CSSProperties, useEffect, useState } from "react"
+import { type CSSProperties, type ReactNode, useEffect, useState } from "react"
 
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
+import { QaidaLettersIcon } from "@/components/kid-ui"
 import { useLiveClass } from "@/components/live-class-provider"
 import { MoonMascot, useMascotMood } from "@/components/student-mascot"
 import { type KidColor, readDestination, useHasNamaz } from "@/components/student-nav"
@@ -148,7 +149,7 @@ type HomeCard = {
   label: string
   status: string
   /** Emoji illustration. ponytail: emoji stand in for real card art — swap for SVG illustrations later. */
-  art: string
+  art: ReactNode
   color: KidColor
   ring?: { value: number; label: string | number }
   isNew?: boolean
@@ -195,7 +196,7 @@ export function StudentHomeCards({
       href: read.href,
       label: read.label,
       status: readStatus,
-      art: isQaida ? "🔤" : "📖",
+      art: isQaida ? <QaidaLettersIcon className="text-[20px]" /> : "📖",
       color: "sage",
       ring: readRing,
     },
@@ -205,7 +206,7 @@ export function StudentHomeCards({
             href: "/student/qaida",
             label: "Qaida",
             status: "Letters & sounds",
-            art: "🔤",
+            art: <QaidaLettersIcon className="text-[20px]" />,
             color: "sage" as const,
           },
         ]

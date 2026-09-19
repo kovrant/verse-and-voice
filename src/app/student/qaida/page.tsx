@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 
-import { KidEmpty } from "@/components/kid-ui"
+import { KidEmpty, QaidaLettersIcon } from "@/components/kid-ui"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
 import { type QaidaItem, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
@@ -74,9 +74,7 @@ export default function StudentQaidaPage() {
     <div className="mx-auto flex h-[calc(100dvh-12.5rem)] max-w-5xl flex-col animate-fade-in-up lg:h-[calc(100dvh-8.5rem)]">
       <div className="flex items-center gap-2 pb-2">
         <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
-          <span aria-hidden className="text-[18px] leading-none">
-            🔤
-          </span>
+          <QaidaLettersIcon className="text-[15px]" />
           <span className="truncate font-heading text-[16px] font-bold text-primary">
             {assigned.title}
             {assigned.category ? (

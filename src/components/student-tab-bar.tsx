@@ -2,10 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import type { CSSProperties } from "react"
+import type { CSSProperties, ReactNode } from "react"
 
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
 import { BrandLogo } from "@/components/brand-logo"
+import { QaidaLettersIcon } from "@/components/kid-ui"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import {
   isPathActive,
@@ -39,7 +40,7 @@ export function StudentTabBar() {
   const tabs: {
     href: string
     label: string
-    art: string
+    art: ReactNode
     active: boolean
     color: KidColor
     dot?: boolean
@@ -48,7 +49,7 @@ export function StudentTabBar() {
     {
       href: read.href,
       label: read.label,
-      art: isQaida ? "🔤" : "📖",
+      art: isQaida ? <QaidaLettersIcon className="text-[17px] lg:text-[20px]" /> : "📖",
       // Quran and Qaida share the one "read" tab.
       active: isPathActive(pathname, "/student/quran") || isPathActive(pathname, "/student/qaida"),
       color: "sage",

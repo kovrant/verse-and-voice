@@ -336,3 +336,26 @@ export function KidEmpty({
     </KidCard>
   )
 }
+
+/**
+ * Qaida mark: the first letters a child learns (alif, ba, ta), drawn in the
+ * Arabic font. Used instead of the 🔤 emoji, which phones render as "abc".
+ */
+export function QaidaLettersIcon({ className }: { className?: string }) {
+  return (
+    <span
+      aria-hidden
+      dir="rtl"
+      lang="ar"
+      className={cn(
+        "inline-flex items-center gap-[0.12em] font-arabic font-bold leading-none text-primary",
+        className,
+      )}
+    >
+      {/* Separate spans so the letters stay isolated forms, not a joined word. */}
+      <span>ا</span>
+      <span>ب</span>
+      <span>ت</span>
+    </span>
+  )
+}
