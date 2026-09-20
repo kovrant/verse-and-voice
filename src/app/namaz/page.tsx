@@ -31,6 +31,7 @@ export default function NamazAdminPage() {
   const [adding, setAdding] = useState(false)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [partTitle, setPartTitle] = useState("")
+  const [partArabic, setPartArabic] = useState("")
   const [uploading, setUploading] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const uploadStepId = useRef<string | null>(null)
@@ -118,14 +119,26 @@ export default function NamazAdminPage() {
     const { error } = await supabase.from("namaz_step_parts").insert({
       step_id: stepId,
       title,
+      arabic_text: partArabic.trim() || null,
       order_index: existing.length,
     })
     if (error) toast.error(error.message)
     else {
       setPartTitle("")
+      setPartArabic("")
       toast.success("Part added")
       await load()
     }
+  }
+
+  /** Arabic for a part — saved on blur, so the teacher can fix a word and click away. */
+  async function savePartArabic(partId: string, value: string) {
+    const { error } = await supabase
+      .from("namaz_step_parts")
+      .update({ arabic_text: value.trim() || null })
+      .eq("id", partId)
+    if (error) toast.error(error.message)
+    else await load()
   }
 
   async function deletePart(partId: string) {
@@ -176,7 +189,11 @@ export default function NamazAdminPage() {
               ))}
             </div>
             <Button onClick={addStep} disabled={adding || !newTitle.trim()}>
-              {adding ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4 mr-1" />}
+              {adding ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-1" />
+              )}
               Add
             </Button>
           </div>
@@ -264,28 +281,56 @@ export default function NamazAdminPage() {
               {open && (
                 <div className="rounded-xl border border-border/50 bg-secondary/20 p-3 space-y-2">
                   {stepParts.map((p) => (
-                    <div key={p.id} className="flex items-center justify-between text-sm">
-                      <span>{p.title}</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-6 text-destructive"
-                        onClick={() => deletePart(p.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                    <div
+                      key={p.id}
+                      className="space-y-1.5 border-b border-border/40 pb-2 last:border-0"
+                    >
+                      <div className="flex items-center justify-between text-sm">
+                        <span>{p.title}</span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-6 text-destructive"
+                          onClick={() => deletePart(p.id)}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <textarea
+                        dir="rtl"
+                        lang="ar"
+                        defaultValue={p.arabic_text ?? ""}
+                        onBlur={(e) => {
+                          if (e.target.value.trim() !== (p.arabic_text ?? "").trim()) {
+                            void savePartArabic(p.id, e.target.value)
+                          }
+                        }}
+                        placeholder="Arabic the student recites (optional)"
+                        rows={2}
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 font-hadith text-lg leading-loose text-foreground outline-none placeholder:font-sans placeholder:text-xs placeholder:text-muted-foreground focus-visible:border-primary"
+                      />
                     </div>
                   ))}
-                  <div className="flex gap-2">
+                  <div className="space-y-2">
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Part e.g. Atahiyatu"
+                        value={partTitle}
+                        onChange={(e) => setPartTitle(e.target.value)}
+                        className="h-8 text-sm"
+                      />
+                      <Button size="sm" className="h-8" onClick={() => addPart(step.id)}>
+                        Add
+                      </Button>
+                    </div>
                     <Input
-                      placeholder="Part e.g. Atahiyatu"
-                      value={partTitle}
-                      onChange={(e) => setPartTitle(e.target.value)}
-                      className="h-8 text-sm"
+                      dir="rtl"
+                      lang="ar"
+                      placeholder="Arabic (optional)"
+                      value={partArabic}
+                      onChange={(e) => setPartArabic(e.target.value)}
+                      className="h-9 font-hadith text-base"
                     />
-                    <Button size="sm" className="h-8" onClick={() => addPart(step.id)}>
-                      Add
-                    </Button>
                   </div>
                 </div>
               )}

@@ -20,8 +20,15 @@ const steps: NamazStep[] = [
 ]
 
 const parts: NamazStepPart[] = [
-  { id: "p1", step_id: "s2", title: "Sana", order_index: 0, image_url: null },
-  { id: "p2", step_id: "s2", title: "Al-Fatiha", order_index: 1, image_url: null },
+  { id: "p1", step_id: "s2", title: "Sana", order_index: 0, image_url: null, arabic_text: null },
+  {
+    id: "p2",
+    step_id: "s2",
+    title: "Al-Fatiha",
+    order_index: 1,
+    image_url: null,
+    arabic_text: null,
+  },
 ]
 
 function stepRow(overrides: Partial<StudentNamazStep>): StudentNamazStep {
@@ -118,10 +125,33 @@ describe("revision clickability", () => {
 
 describe("partRevisionStats", () => {
   it("sorts by revision_count descending", () => {
-    const stats = partRevisionStats(parts, new Map([
-      ["p1", { id: "a", student_id: "st1", part_id: "p1", revision_assigned_at: null, last_revised_at: "x", revision_count: 7 }],
-      ["p2", { id: "b", student_id: "st1", part_id: "p2", revision_assigned_at: null, last_revised_at: "y", revision_count: 2 }],
-    ]))
+    const stats = partRevisionStats(
+      parts,
+      new Map([
+        [
+          "p1",
+          {
+            id: "a",
+            student_id: "st1",
+            part_id: "p1",
+            revision_assigned_at: null,
+            last_revised_at: "x",
+            revision_count: 7,
+          },
+        ],
+        [
+          "p2",
+          {
+            id: "b",
+            student_id: "st1",
+            part_id: "p2",
+            revision_assigned_at: null,
+            last_revised_at: "y",
+            revision_count: 2,
+          },
+        ],
+      ]),
+    )
     expect(stats[0].part.title).toBe("Sana")
     expect(stats[0].revision_count).toBe(7)
   })
