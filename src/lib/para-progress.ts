@@ -43,10 +43,7 @@ function writeLocalBookmark(studentId: string, paraNumber: number, bookmark: Par
  * Load saved page and bookmark (line + coordinates) for a student and para.
  * Checks Supabase student_para_progress, with localStorage fallback.
  */
-export async function loadBookmark(
-  studentId: string,
-  paraNumber: number,
-): Promise<ParaBookmark> {
+export async function loadBookmark(studentId: string, paraNumber: number): Promise<ParaBookmark> {
   try {
     const { data, error } = await supabase
       .from("student_para_progress")
@@ -154,6 +151,26 @@ export async function loadLastPage(studentId: string, paraNumber: number): Promi
   return bm.page
 }
 
+/**
+ * Update the reading page WITHOUT touching a stored bookmark.
+ *
+ * Page turns used to be saved as "page X, no bookmark", which wiped the line the
+ * teacher had marked, so the next class had nothing to show. A bookmark now
+ * survives until the teacher sets a new one or clears it: while one exists this
+ * is a no-op, so the class resumes exactly where the bookmark is.
+ */
+export async function savePageKeepingBookmark(
+  studentId: string,
+  paraNumber: number,
+  page: number,
+  totalPages?: number,
+): Promise<void> {
+  const existing = await loadBookmark(studentId, paraNumber)
+  if (typeof existing.line === "number") return
+
+  await saveBookmark(studentId, paraNumber, { page }, totalPages)
+}
+
 export async function saveLastPage(
   studentId: string,
   paraNumber: number,
@@ -174,4 +191,3 @@ export async function saveLastPage(
     totalPages,
   )
 }
-

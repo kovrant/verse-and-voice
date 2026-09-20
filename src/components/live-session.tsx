@@ -36,11 +36,11 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { loadBookmark,saveBookmark } from "@/lib/para-progress"
+import { loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
-import { type PointerState,useClassChannel } from "@/lib/use-class-channel"
+import { type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.
@@ -262,12 +262,16 @@ export default function LiveSession({
     (pointer: PointerState | null) => {
       setCurrentPointer(pointer)
       sendPointer(pointer)
-      void saveBookmark(student.id, currentParaNumber, {
-        page: pdfPage,
-        line: pointer?.line,
-        x: pointer?.x,
-        y: pointer?.y,
-      })
+      // The viewer also reports null when the page turns, which must NOT wipe the
+      // stored bookmark — only an explicit clear (the X) or a new bookmark writes.
+      if (pointer) {
+        void saveBookmark(student.id, currentParaNumber, {
+          page: pdfPage,
+          line: pointer.line,
+          x: pointer.x,
+          y: pointer.y,
+        })
+      }
     },
     [sendPointer, student.id, currentParaNumber, pdfPage],
   )
@@ -275,12 +279,7 @@ export default function LiveSession({
   // Debounced save of the current page for this para.
   useEffect(() => {
     const t = setTimeout(() => {
-      saveBookmark(student.id, currentParaNumber, {
-        page: pdfPage,
-        line: currentPointerRef.current?.line,
-        x: currentPointerRef.current?.x,
-        y: currentPointerRef.current?.y,
-      })
+      void savePageKeepingBookmark(student.id, currentParaNumber, pdfPage)
     }, 1200)
     return () => clearTimeout(t)
   }, [student.id, currentParaNumber, pdfPage])

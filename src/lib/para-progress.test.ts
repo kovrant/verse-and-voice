@@ -10,7 +10,7 @@ vi.mock("@/lib/supabase", () => ({
   supabase: mockSupabase,
 }))
 
-import { loadBookmark, loadLastPage, saveBookmark } from "./para-progress"
+import { loadBookmark, loadLastPage, saveBookmark, savePageKeepingBookmark } from "./para-progress"
 
 describe("para-progress", () => {
   beforeEach(() => {
@@ -139,5 +139,57 @@ describe("para-progress", () => {
     )
     expect(mockEq).toHaveBeenCalledWith("id", "p1")
   })
-})
 
+  // A page turn used to be saved as "this page, no bookmark", which wiped the line
+  // the teacher had marked — so the next class had nothing to show.
+  it("savePageKeepingBookmark leaves a stored bookmark alone", async () => {
+    mockSupabase.from.mockReturnValueOnce({
+      select: () => ({
+        eq: () => ({
+          eq: () => ({
+            maybeSingle: async () => ({
+              data: {
+                last_page: 5,
+                last_line: 1,
+                last_pointer_x: 0.4,
+                last_pointer_y: 0.2,
+                updated_at: "2026-09-20T10:00:00.000Z",
+              },
+              error: null,
+            }),
+          }),
+        }),
+      }),
+    })
+
+    await savePageKeepingBookmark("s1", 2, 9)
+
+    // Only the read happened: no update/insert was attempted.
+    expect(mockSupabase.from).toHaveBeenCalledTimes(1)
+  })
+
+  it("savePageKeepingBookmark stores the page when there is no bookmark", async () => {
+    const update = vi.fn(() => ({ eq: async () => ({ error: null }) }))
+    mockSupabase.from
+      // loadBookmark → no row yet
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }),
+        }),
+      })
+      // saveBookmark → find existing row
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({ maybeSingle: async () => ({ data: { id: "row1" }, error: null }) }),
+          }),
+        }),
+      })
+      // saveBookmark → update it
+      .mockReturnValueOnce({ update })
+
+    await savePageKeepingBookmark("s1", 3, 12)
+
+    expect(update).toHaveBeenCalledWith(expect.objectContaining({ last_page: 12 }))
+  })
+})

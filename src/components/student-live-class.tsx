@@ -28,7 +28,7 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, sendNav, subscribeNav, subscribePointer, leave } = useLiveClass()
+  const { peerNav, peerPointer, sendNav, subscribeNav, subscribePointer, leave } = useLiveClass()
   const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
 
   // Hide the app sidebar and topbar for the duration of the live session; restore on unmount.
@@ -39,7 +39,8 @@ export function StudentLiveClass() {
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
-  const [remotePointer, setRemotePointer] = useState<PointerState | null>(null)
+  // Seeded from the provider so a bookmark set before this screen mounted still shows.
+  const [remotePointer, setRemotePointer] = useState<PointerState | null>(peerPointer)
   const [synced, setSynced] = useState(false)
   const [mediaMap, setMediaMap] = useState<Record<number, string>>({})
   const [mediaLoaded, setMediaLoaded] = useState(false)

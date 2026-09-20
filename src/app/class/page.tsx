@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { classTimeToMinutes } from "@/lib/class-time"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { saveBookmark } from "@/lib/para-progress"
+import { saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
@@ -230,12 +230,18 @@ function ClassPageContent() {
 
     // Save the exact bookmark position for this para
     if (data.endingPara && data.endingPage) {
-      await saveBookmark(selected!.id, data.endingPara, {
-        page: data.endingPage,
-        line: data.endingLine,
-        x: data.endingPointerX,
-        y: data.endingPointerY,
-      }).catch(() => {})
+      // With a bookmark, save it; without one, keep whatever the teacher marked
+      // earlier rather than overwriting it with "no bookmark".
+      const save =
+        typeof data.endingLine === "number"
+          ? saveBookmark(selected!.id, data.endingPara, {
+              page: data.endingPage,
+              line: data.endingLine,
+              x: data.endingPointerX,
+              y: data.endingPointerY,
+            })
+          : savePageKeepingBookmark(selected!.id, data.endingPara, data.endingPage)
+      await save.catch(() => {})
     }
 
     // Automatically sync the active Quran round's asc_completed if advanced

@@ -20,6 +20,8 @@ interface LiveClassContextValue {
   live: boolean
   /** The teacher's last-known position (para/page). */
   peerNav: NavState | null
+  /** The teacher's last-known bookmark, kept so a late-joining viewer still sees it. */
+  peerPointer: PointerState | null
   studentId: string | null
   /** Has this student joined the live viewer (tracked as present)? */
   joined: boolean
@@ -42,6 +44,7 @@ interface LiveClassContextValue {
 const LiveClassContext = createContext<LiveClassContextValue>({
   live: false,
   peerNav: null,
+  peerPointer: null,
   studentId: null,
   joined: false,
   join: () => {},
@@ -66,6 +69,10 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const { student } = useStudent()
   const studentId = student?.id ?? null
   const [joined, setJoined] = useState(false)
+  // Held as state, like peerNav: the teacher re-sends the bookmark the moment a
+  // student joins, which lands before the live viewer has mounted its listener.
+  // Without this the message is dispatched to nobody and the bookmark is lost.
+  const [peerPointer, setPeerPointer] = useState<PointerState | null>(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [deviceInfo] = useState(() => (typeof window !== "undefined" ? detectDevice() : null))
 
@@ -84,6 +91,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     closingRef.current = true
     toast("Class ended", { description: "Your teacher ended the class." })
     setJoined(false)
+    setPeerPointer(null)
   }, [])
 
   const { live, peerNav, sendNav, sendScroll, sendPointer } = useClassChannel({
@@ -94,7 +102,10 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     present: joined, // listen-only until the student joins
     onNav: (nav) => navCbs.current.forEach((fn) => fn(nav)),
     onScroll: (ratio) => scrollCbs.current.forEach((fn) => fn(ratio)),
-    onPointer: (pointer) => pointerCbs.current.forEach((fn) => fn(pointer)),
+    onPointer: (pointer) => {
+      setPeerPointer(pointer)
+      pointerCbs.current.forEach((fn) => fn(pointer))
+    },
     onEnd: endNow, // explicit "class ended" from the teacher → close immediately
   })
 
@@ -116,8 +127,16 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       pointerCbs.current.delete(fn)
     }
   }, [])
-  const join = useCallback(() => setJoined(true), [])
-  const leave = useCallback(() => setJoined(false), [])
+  // Clear the remembered bookmark on join/leave: the teacher pushes the current
+  // one right after we join, and a stale one from the last class must not flash.
+  const join = useCallback(() => {
+    setPeerPointer(null)
+    setJoined(true)
+  }, [])
+  const leave = useCallback(() => {
+    setPeerPointer(null)
+    setJoined(false)
+  }, [])
 
   // Reset the close guards on each fresh join.
   useEffect(() => {
@@ -161,6 +180,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       value={{
         live,
         peerNav,
+        peerPointer,
         studentId,
         joined,
         join,
