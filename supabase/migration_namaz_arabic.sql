@@ -24,7 +24,9 @@ WITH seed(step_title, part_title, arabic) AS (
     ('Qiyam', 'Al-Ikhlas',
      'قُلْ هُوَ اللَّهُ أَحَدٌ ۝ اللَّهُ الصَّمَدُ ۝ لَمْ يَلِدْ وَلَمْ يُولَدْ ۝ وَلَمْ يَكُنْ لَهُ كُفُوًا أَحَدٌ'),
     ('Ruku', 'Subhana Rabi Yal Azeem', 'سُبْحَانَ رَبِّيَ الْعَظِيمِ'),
-    ('Qawmah', 'Sami Allah', 'سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ، رَبَّنَا وَلَكَ الْحَمْدُ'),
+    ('Qawmah', 'Sami Allah', 'سَمِعَ اللَّهُ لِمَنْ حَمِدَهُ'),
+    ('Qawmah', 'Rabbana wa lakal Hamd',
+     'رَبَّنَا وَلَكَ الْحَمْدُ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ'),
     ('Sujood', 'Subhana Rabi Yal Ala', 'سُبْحَانَ رَبِّيَ الْأَعْلَى'),
     ('Jalsa', 'Dua', 'اللَّهُمَّ اغْفِرْ لِي وَارْحَمْنِي وَاهْدِنِي وَعَافِنِي وَارْزُقْنِي'),
     ('Second Sujood', 'Subhana Rabi Yal Ala', 'سُبْحَانَ رَبِّيَ الْأَعْلَى'),
@@ -42,3 +44,12 @@ JOIN namaz_steps s ON s.title = seed.step_title
 WHERE p.step_id = s.id
   AND p.title = seed.part_title
   AND (p.arabic_text IS NULL OR p.arabic_text = '');
+
+-- Qawmah is two things a child says, one standing up and one after: keep them as
+-- separate parts so each gets its own card.
+INSERT INTO namaz_step_parts (step_id, title, order_index, arabic_text)
+SELECT s.id, 'Rabbana wa lakal Hamd', 1,
+       'رَبَّنَا وَلَكَ الْحَمْدُ حَمْدًا كَثِيرًا طَيِّبًا مُبَارَكًا فِيهِ'
+FROM namaz_steps s
+WHERE s.title = 'Qawmah'
+ON CONFLICT (step_id, title) DO NOTHING;
