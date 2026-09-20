@@ -50,7 +50,7 @@ export function KidButton({
 }: KidButtonProps) {
   const primary = variant === "primary"
   const classes = cn(
-    "group relative flex h-[58px] items-center justify-center overflow-hidden rounded-full font-heading text-[19px] font-bold transition-transform",
+    "group relative flex h-[58px] items-center justify-center gap-2 overflow-hidden rounded-full px-7 font-heading text-[19px] font-bold transition-transform",
     "hover:-translate-y-0.5 active:translate-y-[4px] active:!shadow-none disabled:cursor-wait",
     // Soft coral focus outline instead of the global hard one (the modal auto-focuses
     // its first button). An outline, not a ring: the inline box-shadow would hide a ring.
