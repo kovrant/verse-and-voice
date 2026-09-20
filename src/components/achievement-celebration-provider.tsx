@@ -16,8 +16,8 @@ import {
   readSeenAchievementIds,
   writeSeenAchievementIds,
 } from "@/lib/achievements/celebrations"
+import { kidToast } from "@/lib/kid-toast"
 import { supabase } from "@/lib/supabase"
-import { toast } from "@/lib/toast"
 import { useStudent } from "@/lib/use-student"
 
 interface EarnedAchievement {
@@ -59,13 +59,12 @@ function celebrateNew(earned: EarnedAchievement[], toastedRef: Set<string>) {
   for (const e of fresh) toastedRef.add(e.id)
 
   const extra = fresh.length - 1
-  const description =
-    extra > 0 ? `${lead.title} (+${extra} more)` : lead.title
+  const description = extra > 0 ? `${lead.title} (+${extra} more)` : lead.title
 
   if (lead.issuesCertificate) {
-    toast.success("Certificate earned!", { description, duration: 6000 })
+    kidToast("You earned a certificate!", { emoji: "📜", description, duration: 6000 })
   } else {
-    toast.success("New trophy!", { description, duration: 5000 })
+    kidToast("New trophy — MashaAllah!", { emoji: "🏆", description })
   }
 }
 

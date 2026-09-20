@@ -6,7 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
 import { MoonMascot } from "@/components/student-mascot"
 import { detectDevice } from "@/lib/device-detection"
-import { toast } from "@/lib/toast"
+import { kidToast } from "@/lib/kid-toast"
 import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"
@@ -89,7 +89,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const endNow = useCallback(() => {
     if (closingRef.current) return
     closingRef.current = true
-    toast("Class ended", { description: "Your teacher ended the class." })
+    kidToast("Class finished", { emoji: "🏫", color: "sky", description: "See you next class!" })
     setJoined(false)
     setPeerPointer(null)
   }, [])

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react"
 
 import { DAY_LABELS } from "@/components/class-days-picker"
 import { formatClassTimeLocal } from "@/lib/class-time"
+import { kidToast } from "@/lib/kid-toast"
 import {
   computeStreak,
   milestoneStorageKey,
@@ -14,7 +15,6 @@ import {
   type WeekDayStatus,
 } from "@/lib/streak"
 import { supabase } from "@/lib/supabase"
-import { toast } from "@/lib/toast"
 import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
@@ -72,9 +72,10 @@ function celebrateMilestones(studentId: string, current: number) {
   if (pending.length === 0) return
   const top = pending[pending.length - 1]
   localStorage.setItem(key, String(top))
-  toast.success(`${top}-day streak — MashaAllah! 🔥`, {
-    description: "Keep showing up to class. You've got this.",
-    duration: 5000,
+  kidToast(`${top} days in a row — MashaAllah!`, {
+    emoji: "🔥",
+    color: "coral",
+    description: "Keep coming to class. You've got this!",
   })
 }
 
