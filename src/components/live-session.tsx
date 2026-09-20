@@ -170,15 +170,10 @@ export default function LiveSession({
     sendPointer(null)
     loadBookmark(student.id, next).then((bm) => {
       if (currentParaRef.current === next) {
-        if (bm.page > 1) setPdfPage(bm.page)
         if (typeof bm.line === "number") {
-          const pointer: PointerState = {
-            x: bm.x ?? 0.5,
-            y: bm.y ?? 0.5,
-            line: bm.line,
-          }
-          setCurrentPointer(pointer)
-          sendPointer(pointer)
+          restoreBookmark({ x: bm.x ?? 0.5, y: bm.y ?? 0.5, line: bm.line }, bm.page)
+        } else if (bm.page > 1) {
+          setPdfPage(bm.page)
         }
       }
     })
@@ -222,6 +217,17 @@ export default function LiveSession({
       sendNav({ paraNumber: currentParaNumber, page: pdfPage })
       if (currentPointerRef.current) {
         sendPointer(currentPointerRef.current)
+      } else {
+        // Nothing on screen: send whatever bookmark is stored for this para, so a
+        // student joining a fresh class still sees where they stopped last time.
+        const para = currentParaRef.current
+        void loadBookmark(student.id, para).then((bm) => {
+          if (currentParaRef.current !== para || typeof bm.line !== "number") return
+          restoreBookmark(
+            { x: bm.x ?? 0.5, y: bm.y ?? 0.5, line: bm.line },
+            bm.page !== pdfPageRef.current ? bm.page : undefined,
+          )
+        })
       }
       if (joinNotifiedRef.current) return
       joinNotifiedRef.current = true
@@ -257,9 +263,37 @@ export default function LiveSession({
   // ── Persist the reading position & bookmark (student_para_progress) ──
   const currentParaRef = useRef(currentParaNumber)
   currentParaRef.current = currentParaNumber
+  const pdfPageRef = useRef(pdfPage)
+  pdfPageRef.current = pdfPage
+
+  // Restoring a bookmark also sets the page, and the viewer answers a page change
+  // with "pointer cleared" — which used to wipe the bookmark we had just restored,
+  // leaving nothing to send when the student joined. Ignore that one clear.
+  const restoringRef = useRef(false)
+
+  /**
+   * Put a stored bookmark back on screen (and on the student's screen).
+   * Setting the page makes the viewer report "pointer cleared"; `restoringRef`
+   * swallows that one, and the re-set a moment later (a fresh object, so the
+   * viewer re-applies it) puts the highlight back after the page has settled.
+   */
+  const restoreBookmark = useCallback(
+    (pointer: PointerState, page?: number) => {
+      restoringRef.current = true
+      if (typeof page === "number" && page > 0) setPdfPage(page)
+      setCurrentPointer(pointer)
+      sendPointer(pointer)
+      setTimeout(() => {
+        restoringRef.current = false
+        setCurrentPointer({ ...pointer })
+      }, 250)
+    },
+    [sendPointer],
+  )
 
   const handlePointerChange = useCallback(
     (pointer: PointerState | null) => {
+      if (!pointer && restoringRef.current) return
       setCurrentPointer(pointer)
       sendPointer(pointer)
       // The viewer also reports null when the page turns, which must NOT wipe the
@@ -291,19 +325,14 @@ export default function LiveSession({
     resumedRef.current = true
     loadBookmark(student.id, initialParaNumber).then((bm) => {
       if (currentParaRef.current === initialParaNumber) {
-        if (bm.page > 1) setPdfPage(bm.page)
         if (typeof bm.line === "number") {
-          const pointer: PointerState = {
-            x: bm.x ?? 0.5,
-            y: bm.y ?? 0.5,
-            line: bm.line,
-          }
-          setCurrentPointer(pointer)
-          sendPointer(pointer)
+          restoreBookmark({ x: bm.x ?? 0.5, y: bm.y ?? 0.5, line: bm.line }, bm.page)
+        } else if (bm.page > 1) {
+          setPdfPage(bm.page)
         }
       }
     })
-  }, [student.id, initialParaNumber, sendPointer])
+  }, [student.id, initialParaNumber, restoreBookmark])
 
   // Memorization
   const memorizing = memItems.filter((m) => m.status === "memorizing")
