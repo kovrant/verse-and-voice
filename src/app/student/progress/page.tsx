@@ -3,7 +3,6 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { JourneyPath } from "@/components/journey-path"
 import { KidCard, KidEmpty, KidPageHeader, KidStat, QaidaLettersIcon } from "@/components/kid-ui"
 import { PageLoading } from "@/components/page-loading"
 import {
@@ -13,6 +12,7 @@ import {
   getStudentStage,
   type QuranRound,
 } from "@/components/quran-progress"
+import { QuranStones } from "@/components/quran-stones"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn, parseLocalDate } from "@/lib/utils"
@@ -140,19 +140,12 @@ export default function StudentProgressPage() {
                   Para {heroPara} / 30
                 </span>
               </div>
-              <div className="overflow-x-auto rounded-2xl bg-[hsl(var(--surface-alt))] px-4 pb-2 pt-4">
-                <div
-                  className="min-w-[520px]"
-                  role="img"
-                  aria-label={`Quran journey — para ${heroPara} of 30`}
-                >
-                  <div className="tall:hidden">
-                    <JourneyPath done={heroPara} total={30} />
-                  </div>
-                  <div className="hidden tall:block">
-                    <JourneyPath done={heroPara} total={30} tall />
-                  </div>
-                </div>
+              <div
+                className="rounded-2xl bg-[hsl(var(--surface-alt))] px-3 pb-4 pt-7 sm:px-4"
+                role="img"
+                aria-label={`Quran journey — para ${heroPara} of 30, ${heroPara - 1} finished`}
+              >
+                <QuranStones done={heroPara} total={30} />
               </div>
             </KidCard>
           )}
