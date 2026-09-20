@@ -1,31 +1,14 @@
 "use client"
 
-import {
-  AnimatePresence,
-  motion,
-} from "framer-motion"
-import {
-  ArrowLeft,
-  ArrowRight,
-  Award,
-  CheckCircle2,
-  Flame,
-  HelpCircle,
-  Lightbulb,
-  RotateCcw,
-  Sparkles,
-  Trophy,
-  XCircle,
-} from "lucide-react"
+import { AnimatePresence, motion } from "framer-motion"
+import { ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { useParams, useSearchParams } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
 import { useAchievementCelebrations } from "@/components/achievement-celebration-provider"
+import { KidButton, KidCard, KidEmpty, KidStat } from "@/components/kid-ui"
 import { PageLoading } from "@/components/page-loading"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import type { Quiz, QuizGradeResult, QuizQuestion } from "@/lib/quizzes/types"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
@@ -120,8 +103,7 @@ export default function StudentQuizPlayerPage() {
       const selectedSet = new Set(selectedMultiIds)
       const correctSet = new Set(correctIds)
       correct =
-        selectedSet.size === correctSet.size &&
-        [...selectedSet].every((id) => correctSet.has(id))
+        selectedSet.size === correctSet.size && [...selectedSet].every((id) => correctSet.has(id))
     } else {
       answerVal = selectedOptionId || ""
       const correctOption = currentQuestion.options.find((o) => o.is_correct)
@@ -203,33 +185,28 @@ export default function StudentQuizPlayerPage() {
 
   if (isNotAssigned) {
     return (
-      <div className="py-16 text-center space-y-4 max-w-md mx-auto">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
-          <Award className="h-7 w-7" />
-        </div>
-        <h2 className="text-xl font-bold">Quest Not Assigned</h2>
-        <p className="text-sm text-muted-foreground">
-          This quiz quest is not currently assigned to your account. Ask your teacher to assign it to you!
-        </p>
-        <Link href="/student/quizzes">
-          <Button variant="outline">Back to My Quests</Button>
-        </Link>
-      </div>
+      <KidEmpty
+        title="This quest isn't yours yet"
+        text="Ask your teacher to give you this quiz, then it will show up in your quests."
+      >
+        <KidButton href="/student/quizzes" variant="soft" className="w-full">
+          ← Back to my quests
+        </KidButton>
+      </KidEmpty>
     )
   }
 
   if (!quiz || questions.length === 0) {
     return (
-      <div className="py-16 text-center space-y-4">
-        <HelpCircle className="h-12 w-12 text-muted-foreground mx-auto" />
-        <h2 className="text-xl font-bold">Quest Not Found</h2>
-        <p className="text-sm text-muted-foreground">
-          This quiz might have been deleted or is currently not published.
-        </p>
-        <Link href="/student/quizzes">
-          <Button variant="outline">Back to Quests</Button>
-        </Link>
-      </div>
+      <KidEmpty
+        mood="sleepy"
+        title="Quest not found"
+        text="This quiz may have been removed. Let's go back and pick another one."
+      >
+        <KidButton href="/student/quizzes" variant="soft" className="w-full">
+          ← Back to my quests
+        </KidButton>
+      </KidEmpty>
     )
   }
 
@@ -238,93 +215,79 @@ export default function StudentQuizPlayerPage() {
     const passed = gradeResult.passed
 
     return (
-      <div className="max-w-xl mx-auto py-8 sm:py-12 space-y-6 text-center">
+      <div className="mx-auto max-w-xl py-6 animate-fade-in-up">
         <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
+          initial={{ scale: 0.85, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", duration: 0.6 }}
-          className={`relative overflow-hidden rounded-3xl border p-8 sm:p-10 shadow-soft-lg ${
-            passed
-              ? "border-amber-500/40 bg-gradient-to-b from-amber-500/15 via-card to-card"
-              : "border-border/80 bg-card"
-          }`}
         >
-          {/* Confetti Icon */}
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-amber-500/20 text-amber-600 dark:text-amber-400 mb-5 shadow-inner">
-            {passed ? (
-              <Trophy className="h-10 w-10 animate-bounce" />
-            ) : (
-              <Sparkles className="h-10 w-10 text-amber-500" />
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl font-black text-foreground">
-              {passed ? "MashaAllah! Quest Completed!" : "Great Effort!"}
+          <KidCard color={passed ? "saffron" : "sky"} className="px-5 py-7 text-center sm:px-7">
+            <span aria-hidden className="mx-auto block text-[72px] leading-none">
+              {passed ? "🏆" : "💪"}
+            </span>
+            <h1 className="mt-3 font-heading text-[28px] font-bold leading-tight text-primary sm:text-[32px]">
+              {passed ? "MashaAllah!" : "Good try!"}
             </h1>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="mx-auto mt-2 max-w-[22rem] text-[15px] font-semibold text-muted-foreground">
               {passed
-                ? `You scored ${gradeResult.percentage}% and earned the ${quiz.badge_title} badge!`
-                : `You scored ${gradeResult.percentage}%. The pass mark is ${quiz.passing_score}%. Try again to master this quest and unlock your badge!`}
+                ? `You won the ${quiz.badge_title} badge!`
+                : `You need ${quiz.passing_score}% to win the badge. Have another go — you can do it!`}
             </p>
-          </div>
 
-          {/* Badge Unlock Box */}
-          {passed && (
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="mt-6 flex items-center justify-center gap-3 rounded-2xl bg-amber-500/15 border border-amber-500/30 p-4"
-            >
-              <Award className="h-8 w-8 text-amber-600 dark:text-amber-400 shrink-0" />
-              <div className="text-left">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-amber-700 dark:text-amber-300">
-                  Badge Unlocked
+            <div className="mx-auto mt-5 flex max-w-[20rem] gap-2.5">
+              <KidStat
+                emoji="✅"
+                value={`${gradeResult.score}/${gradeResult.totalQuestions}`}
+                label="Right answers"
+                color="sage"
+              />
+              <KidStat
+                emoji="📊"
+                value={`${gradeResult.percentage}%`}
+                label="Your score"
+                color={passed ? "saffron" : "sky"}
+              />
+            </div>
+
+            {passed && (
+              <motion.div
+                initial={{ y: 16, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mx-auto mt-5 flex max-w-[20rem] items-center justify-center gap-3 rounded-[20px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.28)] p-3.5"
+              >
+                <span aria-hidden className="text-[30px] leading-none">
+                  🏅
                 </span>
-                <p className="font-bold text-base text-foreground">{quiz.badge_title}</p>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Score Stats */}
-          <div className="grid grid-cols-2 gap-3 mt-6 pt-6 border-t border-border/60">
-            <div className="rounded-xl bg-secondary/60 p-3">
-              <p className="text-xs text-muted-foreground">Score</p>
-              <p className="text-xl font-black text-foreground">
-                {gradeResult.score} / {gradeResult.totalQuestions}
-              </p>
-            </div>
-            <div className="rounded-xl bg-secondary/60 p-3">
-              <p className="text-xs text-muted-foreground">Percentage</p>
-              <p className="text-xl font-black text-foreground">{gradeResult.percentage}%</p>
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 mt-8">
-            <Button
-              onClick={handleRetake}
-              variant="outline"
-              className="flex-1 gap-2 border-border/80 font-semibold"
-            >
-              <RotateCcw className="h-4 w-4" />
-              Retake Quest
-            </Button>
-
-            {passed ? (
-              <Link href="/student/achievements" className="flex-1">
-                <Button className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold gap-2 shadow-sm">
-                  <Trophy className="h-4 w-4" />
-                  View Trophy Case
-                </Button>
-              </Link>
-            ) : (
-              <Link href="/student/quizzes" className="flex-1">
-                <Button className="w-full bg-primary font-bold">Back to Quests</Button>
-              </Link>
+                <div className="text-left">
+                  <p className="text-[11.5px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                    New badge
+                  </p>
+                  <p className="font-heading text-[18px] font-bold text-primary">
+                    {quiz.badge_title}
+                  </p>
+                </div>
+              </motion.div>
             )}
-          </div>
+
+            <div className="mt-6 flex flex-col gap-3">
+              {passed ? (
+                <KidButton
+                  href="/student/achievements"
+                  pad={<span className="text-[20px]">🏆</span>}
+                >
+                  See my badge
+                </KidButton>
+              ) : (
+                <KidButton onClick={handleRetake} pad={<span className="text-[20px]">▶</span>}>
+                  Try again
+                </KidButton>
+              )}
+              <KidButton href="/student/quizzes" variant="soft">
+                ← Back to my quests
+              </KidButton>
+            </div>
+          </KidCard>
         </motion.div>
       </div>
     )
@@ -332,40 +295,40 @@ export default function StudentQuizPlayerPage() {
 
   // ── ACTIVE GAMEPLAY SCREEN ──
   return (
-    <div className="max-w-2xl mx-auto py-4 sm:py-8 space-y-6">
-      {/* Top Header Bar */}
-      <div className="flex items-center justify-between gap-4">
+    <div className="mx-auto max-w-2xl animate-fade-in-up pb-6">
+      {/* Top bar: exit, streak, question count */}
+      <div className="mb-3 flex items-center justify-between gap-2">
         <Link
           href="/student/quizzes"
-          className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 text-[13.5px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
         >
           <ArrowLeft className="h-4 w-4" />
-          Exit Quest
+          Exit
         </Link>
 
-        {/* Streak Counter */}
         {streak > 1 && (
-          <motion.div
+          <motion.span
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="flex items-center gap-1.5 rounded-full bg-orange-500/15 border border-orange-500/30 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-400"
+            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]"
           >
-            <Flame className="h-4 w-4 fill-orange-500 text-orange-500 animate-pulse" />
-            {streak} Streak!
-          </motion.div>
+            🔥 {streak} in a row!
+          </motion.span>
         )}
 
-        <div className="text-right">
-          <span className="text-xs font-bold text-muted-foreground">
-            Question {currentIndex + 1} of {totalQuestions}
-          </span>
-        </div>
+        <span className="rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[14px] font-bold text-primary shadow-[0_3px_0_hsl(var(--border))]">
+          {currentIndex + 1} / {totalQuestions}
+        </span>
       </div>
 
-      {/* Progress Bar */}
-      <Progress value={progressPercent} className="h-2.5 bg-secondary rounded-full" />
+      {/* Progress */}
+      <div className="mb-5 h-3 overflow-hidden rounded-full bg-[hsl(var(--kid-coral)/0.2)]">
+        <div
+          className="h-full rounded-full bg-[hsl(var(--kid-coral))] transition-all duration-300"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
 
-      {/* Question Card */}
       <AnimatePresence mode="wait">
         <motion.div
           key={currentQuestion.id || currentIndex}
@@ -373,15 +336,13 @@ export default function StudentQuizPlayerPage() {
           animate={{ x: 0, opacity: 1 }}
           exit={{ x: -20, opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="space-y-6"
         >
-          <Card className="border-border/80 bg-card shadow-soft p-6 sm:p-8">
-            <h2 className="text-lg sm:text-xl font-extrabold text-foreground leading-snug">
+          <KidCard className="p-5 sm:p-6">
+            <h2 className="font-heading text-[21px] font-bold leading-snug text-primary sm:text-[24px]">
               {currentQuestion.question_text}
             </h2>
 
-            {/* Options List */}
-            <div className="grid grid-cols-1 gap-3 mt-6">
+            <div className="mt-5 grid grid-cols-1 gap-3">
               {currentQuestion.options.map((option, optIdx) => {
                 const letters = ["A", "B", "C", "D", "E"]
                 const isSelected =
@@ -389,20 +350,26 @@ export default function StudentQuizPlayerPage() {
                     ? selectedMultiIds.includes(option.id)
                     : selectedOptionId === option.id
 
-                let stateClasses = "border-border/70 hover:border-amber-500/60 hover:bg-secondary/40"
-
+                // After checking: right answer sage, a wrong pick rose, the rest fade.
+                let tone =
+                  "border-border bg-card shadow-[0_4px_0_hsl(var(--border))] hover:-translate-y-0.5"
+                let letterTone = "bg-secondary/70 text-muted-foreground"
                 if (isAnswerChecked) {
                   if (option.is_correct) {
-                    stateClasses =
-                      "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold"
-                  } else if (isSelected && !option.is_correct) {
-                    stateClasses =
-                      "border-rose-500 bg-rose-500/15 text-rose-800 dark:text-rose-200 font-semibold"
+                    tone =
+                      "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.3)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.55)]"
+                    letterTone = "bg-primary text-primary-foreground"
+                  } else if (isSelected) {
+                    tone =
+                      "border-[hsl(var(--kid-rose)/0.7)] bg-[hsl(var(--kid-rose)/0.3)] shadow-[0_4px_0_hsl(var(--kid-rose)/0.6)]"
+                    letterTone = "bg-[hsl(var(--kid-rose))] text-white"
                   } else {
-                    stateClasses = "border-border/40 opacity-50"
+                    tone = "border-border bg-card opacity-50"
                   }
                 } else if (isSelected) {
-                  stateClasses = "border-amber-500 bg-amber-500/15 font-bold ring-2 ring-amber-500/30"
+                  tone =
+                    "border-accent bg-[hsl(var(--kid-coral)/0.25)] shadow-[0_4px_0_hsl(16_48%_44%/0.7)]"
+                  letterTone = "bg-accent text-accent-foreground"
                 }
 
                 return (
@@ -421,27 +388,17 @@ export default function StudentQuizPlayerPage() {
                         setSelectedOptionId(option.id)
                       }
                     }}
-                    className={`flex items-center gap-3.5 w-full p-4 rounded-2xl border text-left transition-all text-sm sm:text-base ${stateClasses}`}
+                    className={`flex w-full min-h-[64px] items-center gap-3.5 rounded-[20px] border-[1.5px] p-3.5 text-left text-[16px] font-bold text-foreground transition-all active:translate-y-[3px] active:shadow-none ${tone}`}
                   >
                     <span
-                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${
-                        isSelected
-                          ? "bg-amber-500 text-white"
-                          : "bg-secondary text-muted-foreground"
-                      }`}
+                      className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-heading text-[16px] font-bold ${letterTone}`}
                     >
                       {letters[optIdx] || optIdx + 1}
                     </span>
-
                     <span className="flex-1">{option.text}</span>
-
                     {isAnswerChecked && (
-                      <span className="shrink-0">
-                        {option.is_correct ? (
-                          <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                        ) : isSelected ? (
-                          <XCircle className="h-5 w-5 text-rose-600 dark:text-rose-400" />
-                        ) : null}
+                      <span aria-hidden className="flex-shrink-0 text-[22px]">
+                        {option.is_correct ? "✅" : isSelected ? "❌" : ""}
                       </span>
                     )}
                   </button>
@@ -449,62 +406,55 @@ export default function StudentQuizPlayerPage() {
               })}
             </div>
 
-            {/* Did You Know? Learning Fact Toast */}
             {isAnswerChecked && currentQuestion.explanation && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mt-6 flex items-start gap-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4 text-xs sm:text-sm text-foreground"
+                className="mt-5 flex items-start gap-3 rounded-[18px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.45)] bg-[hsl(var(--kid-saffron)/0.2)] p-3.5"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 mt-0.5">
-                  <Lightbulb className="h-4 w-4" />
-                </div>
-                <div className="space-y-0.5">
-                  <p className="font-bold text-amber-700 dark:text-amber-300">Did you know?</p>
-                  <p className="text-muted-foreground">{currentQuestion.explanation}</p>
+                <span aria-hidden className="text-[22px] leading-none">
+                  💡
+                </span>
+                <div className="min-w-0">
+                  <p className="text-[13px] font-extrabold text-foreground">Did you know?</p>
+                  <p className="mt-0.5 text-[14px] font-semibold leading-snug text-muted-foreground">
+                    {currentQuestion.explanation}
+                  </p>
                 </div>
               </motion.div>
             )}
-          </Card>
+          </KidCard>
         </motion.div>
       </AnimatePresence>
 
-      {/* Bottom Action Footer */}
-      <div className="flex items-center justify-end gap-3 pt-2">
+      <div className="mt-5">
         {!isAnswerChecked ? (
-          <Button
-            size="lg"
+          <KidButton
             onClick={handleCheckAnswer}
             disabled={
               currentQuestion.question_type === "multi_choice"
                 ? selectedMultiIds.length === 0
                 : !selectedOptionId
             }
-            className="w-full sm:w-auto min-w-[140px] bg-amber-500 hover:bg-amber-600 text-white font-bold gap-2 shadow-sm"
+            className="w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
-            Check Answer
-          </Button>
+            Check my answer
+          </KidButton>
         ) : (
-          <Button
-            size="lg"
+          <KidButton
             onClick={handleNextQuestion}
             disabled={isSubmitting}
-            className="w-full sm:w-auto min-w-[140px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 shadow-sm"
+            className="w-full"
+            pad={
+              <span className="text-[20px]">{currentIndex < totalQuestions - 1 ? "▶" : "🏆"}</span>
+            }
           >
-            {currentIndex < totalQuestions - 1 ? (
-              <>
-                Next Question
-                <ArrowRight className="h-4 w-4" />
-              </>
-            ) : isSubmitting ? (
-              "Calculating Score..."
-            ) : (
-              <>
-                Finish Quest
-                <Trophy className="h-4 w-4" />
-              </>
-            )}
-          </Button>
+            {currentIndex < totalQuestions - 1
+              ? "Next question"
+              : isSubmitting
+                ? "Counting your score…"
+                : "Finish quest"}
+          </KidButton>
         )}
       </div>
     </div>
