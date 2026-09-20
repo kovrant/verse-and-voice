@@ -260,7 +260,7 @@ export default function StudentQuizPlayerPage() {
                   🏅
                 </span>
                 <div className="text-left">
-                  <p className="text-[11.5px] font-extrabold uppercase tracking-wider text-muted-foreground">
+                  <p className="text-[11.5px] font-extrabold uppercase tracking-wider text-foreground/70">
                     New badge
                   </p>
                   <p className="font-heading text-[18px] font-bold text-primary">
@@ -417,7 +417,7 @@ export default function StudentQuizPlayerPage() {
                 </span>
                 <div className="min-w-0">
                   <p className="text-[13px] font-extrabold text-foreground">Did you know?</p>
-                  <p className="mt-0.5 text-[14px] font-semibold leading-snug text-muted-foreground">
+                  <p className="mt-0.5 text-[14px] font-semibold leading-snug text-foreground/85">
                     {currentQuestion.explanation}
                   </p>
                 </div>

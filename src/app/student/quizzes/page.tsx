@@ -219,7 +219,7 @@ function QuestCard({
           <p className="truncate text-[13.5px] font-extrabold text-foreground">
             {quiz.badge_title}
           </p>
-          <p className="text-[12px] font-semibold text-muted-foreground">
+          <p className="text-[12px] font-semibold text-foreground/75">
             {best ? `Your best: ${best.percentage}%` : `Pass mark: ${quiz.passing_score}%`}
           </p>
         </div>

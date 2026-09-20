@@ -507,7 +507,7 @@ function HadithCard({
           </span>
           <div className="min-w-0">
             <p className="text-[13px] font-extrabold text-foreground">What I can do today</p>
-            <p className="mt-0.5 text-[14px] font-semibold leading-snug text-muted-foreground">
+            <p className="mt-0.5 text-[14px] font-semibold leading-snug text-foreground/85">
               {hadith.kids_lesson}
             </p>
           </div>
