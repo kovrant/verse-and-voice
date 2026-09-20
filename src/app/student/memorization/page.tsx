@@ -5,7 +5,7 @@
 import { format } from "date-fns"
 import { useCallback, useEffect, useState } from "react"
 
-import { KidCard, KidEmpty, KidPageHeader, KidStat } from "@/components/kid-ui"
+import { KidCard, KidEmpty, KidPageHeader, KidTabs } from "@/components/kid-ui"
 import { type Celebration, MemCelebration } from "@/components/memorization-celebration"
 import {
   loadChunksFor,
@@ -124,6 +124,8 @@ export default function StudentMemorizationPage() {
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const [expandedMemorized, setExpandedMemorized] = useState<Set<string>>(new Set())
   const [queue, setQueue] = useState<Celebration[]>([])
+  // null = follow the data (open "To learn" when there's something to learn).
+  const [tabChoice, setTabChoice] = useState<"learn" | "done" | null>(null)
   const studentId = student?.id ?? null
 
   const load = useCallback(async () => {
@@ -191,12 +193,19 @@ export default function StudentMemorizationPage() {
     const match = hash.match(/^#mem-(.+)$/)
     if (!match) return
     const id = match[1]
-    const el = document.getElementById(`mem-${id}`)
-    if (!el) return
-    el.scrollIntoView({ behavior: "smooth", block: "center" })
+    const item = items.find((m) => m.id === id)
+    if (!item) return
+    // The item may live under the other tab — switch first, then scroll to it.
+    setTabChoice(item.status === "memorized" && !item.revision_assigned_at ? "done" : "learn")
     setHighlightId(id)
+    const scroll = setTimeout(() => {
+      document.getElementById(`mem-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })
+    }, 50)
     const t = setTimeout(() => setHighlightId(null), 2000)
-    return () => clearTimeout(t)
+    return () => {
+      clearTimeout(scroll)
+      clearTimeout(t)
+    }
   }, [loadingItems, items])
 
   if (loading || loadingItems) return <PageLoading variant="student-simple" student />
@@ -205,6 +214,8 @@ export default function StudentMemorizationPage() {
   const memorized = items.filter((m) => m.status === "memorized")
   const revisionAssigned = memorized.filter((m) => m.revision_assigned_at)
   const revisionBucket = memorized.filter((m) => !m.revision_assigned_at)
+  const toLearn = revisionAssigned.length + memorizing.length
+  const tab = tabChoice ?? (toLearn > 0 || revisionBucket.length === 0 ? "learn" : "done")
   const celebration = queue[0] ?? null
   const celebratingId = celebration?.kind === "part" ? celebration.id : null
 
@@ -224,23 +235,30 @@ export default function StudentMemorizationPage() {
         color="lavender"
         title="Memorize"
         subtitle="Surahs and duas you're learning by heart"
-        right={
-          items.length > 0 ? (
-            <div className="flex w-full gap-2.5 sm:w-auto">
-              <KidStat emoji="🌱" value={memorizing.length} label="Learning" color="lavender" />
-              <KidStat
-                emoji="🔁"
-                value={revisionAssigned.length}
-                label="Practise"
-                color="saffron"
-              />
-              <KidStat emoji="✅" value={memorized.length} label="All done" color="sage" />
-            </div>
-          ) : undefined
-        }
       />
 
-      {revisionAssigned.length > 0 && (
+      {items.length > 0 && (
+        <div className="mb-5">
+          <KidTabs
+            color="lavender"
+            value={tab}
+            onChange={setTabChoice}
+            tabs={[
+              { key: "learn", label: "To learn", emoji: "🌱", count: toLearn },
+              { key: "done", label: "Done", emoji: "✅", count: revisionBucket.length },
+            ]}
+          />
+        </div>
+      )}
+
+      {tab === "learn" && toLearn === 0 && (
+        <KidEmpty
+          title="Nothing to learn right now"
+          text="You've said them all! Look under Done to see everything you know by heart."
+        />
+      )}
+
+      {tab === "learn" && revisionAssigned.length > 0 && (
         <section className="mb-8">
           <SectionTitle emoji="🔁" title="Practise again" count={revisionAssigned.length} />
           <div className="space-y-4">
@@ -299,7 +317,7 @@ export default function StudentMemorizationPage() {
         </section>
       )}
 
-      {memorizing.length > 0 && (
+      {tab === "learn" && memorizing.length > 0 && (
         <section className="mb-8">
           <SectionTitle emoji="🌱" title="Learning now" count={memorizing.length} />
           <div className="space-y-4">
@@ -364,9 +382,8 @@ export default function StudentMemorizationPage() {
         </section>
       )}
 
-      {revisionBucket.length > 0 && (
+      {tab === "done" && revisionBucket.length > 0 && (
         <section className="mb-8">
-          <SectionTitle emoji="✅" title="All done" count={revisionBucket.length} />
           <div className="space-y-3">
             {revisionBucket.map((item) => {
               const chunks = chunksByItem[item.catalog_id] || []
