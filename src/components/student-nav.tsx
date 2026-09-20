@@ -20,7 +20,6 @@ export type KidColor =
 export const ME_PATHS = [
   "/student/me",
   "/student/progress",
-  "/student/classes",
   "/student/attendance",
   "/student/notifications",
   "/student/fees",
