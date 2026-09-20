@@ -53,3 +53,10 @@ SELECT s.id, 'Rabbana wa lakal Hamd', 1,
 FROM namaz_steps s
 WHERE s.title = 'Qawmah'
 ON CONFLICT (step_id, title) DO NOTHING;
+
+-- Salam had no parts, so a child saw no words at all for the last step.
+INSERT INTO namaz_step_parts (step_id, title, order_index, arabic_text)
+SELECT s.id, 'Assalamu Alaikum', 0, 'السَّلَامُ عَلَيْكُمْ وَرَحْمَةُ اللَّهِ'
+FROM namaz_steps s
+WHERE s.title = 'Salam'
+ON CONFLICT (step_id, title) DO NOTHING;
