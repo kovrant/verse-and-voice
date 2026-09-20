@@ -3,11 +3,11 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs */
 
 import { ArrowLeft, Download, FileText } from "lucide-react"
-import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { ArabicText } from "@/components/arabic-text"
+import { KidButton, KidCard, KidEmpty } from "@/components/kid-ui"
 import { Markdown } from "@/components/markdown"
 import { PageLoading } from "@/components/page-loading"
 import { logActivity } from "@/lib/activity-log"
@@ -74,20 +74,15 @@ export default function StudentHistoryReaderPage() {
 
   if (notFound || !story) {
     return (
-      <div className="mx-auto mt-10 max-w-md rounded-2xl border border-border bg-card p-12 text-center shadow-soft">
-        <div className="mb-3 text-5xl">🔍</div>
-        <p className="mb-1 font-bold text-foreground">Story not found</p>
-        <p className="mb-4 text-sm text-muted-foreground">
-          This story may have been removed or isn&apos;t available.
-        </p>
-        <Link
-          href="/student/history"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Islamic History
-        </Link>
-      </div>
+      <KidEmpty
+        title="We can't find that story"
+        text="It may have been taken off the shelf. Let's look at the other ones!"
+        mood="sleepy"
+      >
+        <KidButton href="/student/history" variant="soft" className="w-full">
+          ← All stories
+        </KidButton>
+      </KidEmpty>
     )
   }
 
@@ -95,67 +90,78 @@ export default function StudentHistoryReaderPage() {
   const isPdf = story.file_type === "pdf" || story.file_url?.toLowerCase().endsWith(".pdf")
 
   return (
-    <article className="mx-auto max-w-3xl animate-fade-in-up text-foreground">
-      {/* Back */}
+    <article className="mx-auto max-w-3xl animate-fade-in-up pb-6">
+      {/* Back to the shelf */}
       <button
         type="button"
         onClick={() => router.push("/student/history")}
-        className="mb-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+        className="mb-5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
       >
         <ArrowLeft className="h-4 w-4" />
-        Islamic History
+        All stories
       </button>
 
       {/* Cover */}
       {story.cover_image_url ? (
-        <div className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-2xl border border-border bg-secondary">
-          <img
-            src={story.cover_image_url}
-            alt={story.title}
-            className="h-full w-full object-cover"
-          />
+        <div className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] shadow-[0_5px_0_hsl(var(--kid-teal)/0.5)]">
+          <img src={story.cover_image_url} alt="" className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="mb-6 flex aspect-[21/9] w-full items-center justify-center rounded-2xl border border-border bg-secondary text-6xl">
+        <div className="mb-6 flex aspect-[21/9] w-full items-center justify-center rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] text-[64px] shadow-[0_5px_0_hsl(var(--kid-teal)/0.5)]">
           {CATEGORY_ICON[story.category] ?? "📜"}
         </div>
       )}
 
       {/* Tags */}
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="rounded-full bg-secondary px-3 py-1 text-[12px] font-semibold text-muted-foreground">
-          {CATEGORY_ICON[story.category]} {story.category}
+        <span className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3 py-1 text-[12.5px] font-bold text-foreground">
+          <span aria-hidden>{CATEGORY_ICON[story.category] ?? "📜"}</span>
+          {story.category}
         </span>
         {monthTag && (
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-[12px] font-semibold text-primary">
-            {monthTag.name}
+          <span className="rounded-full bg-[hsl(var(--kid-saffron)/0.45)] px-3 py-1 text-[12.5px] font-extrabold text-foreground">
+            🌙 {monthTag.name}
           </span>
         )}
       </div>
 
       {/* Title */}
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="font-heading text-[clamp(26px,6vw,38px)] font-extrabold leading-tight tracking-tight text-foreground">
+      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="font-heading text-[clamp(28px,6vw,40px)] font-bold leading-tight tracking-tight text-primary">
           {story.title}
         </h1>
         {story.arabic_title && (
-          <ArabicText className="text-[26px] text-primary">{story.arabic_title}</ArabicText>
+          <ArabicText className="text-[26px] text-foreground/80">{story.arabic_title}</ArabicText>
         )}
       </div>
 
-      {/* Summary */}
+      {/* Summary — the "once upon a time" line */}
       {story.summary && (
-        <p className="mb-6 border-l-4 border-primary/40 pl-4 text-[16px] italic leading-relaxed text-muted-foreground">
-          {story.summary}
-        </p>
+        <div className="mb-6 flex items-start gap-3 rounded-[20px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.18)] p-4">
+          <span aria-hidden className="text-[22px] leading-none">
+            🏮
+          </span>
+          <p className="text-[16px] font-semibold leading-relaxed text-foreground/85">
+            {story.summary}
+          </p>
+        </div>
       )}
 
-      {/* Body */}
+      {/* Body — a page of the storybook */}
       {story.content ? (
-        <Markdown content={story.content} />
+        <KidCard className="px-5 py-5 sm:px-7 sm:py-6">
+          <Markdown
+            content={story.content}
+            className="text-[17px] text-foreground/90 sm:text-[18px] [&_li]:leading-[1.8] [&_p]:my-4 [&_p]:leading-[1.85]"
+          />
+        </KidCard>
       ) : (
         !story.file_url && (
-          <p className="text-muted-foreground">This story doesn&apos;t have any content yet.</p>
+          <KidEmpty
+            title="This story is still being written"
+            text="Your teacher hasn't added the words yet — check back soon!"
+            mood="sleepy"
+          />
         )
       )}
 
@@ -163,19 +169,19 @@ export default function StudentHistoryReaderPage() {
       {story.file_url && (
         <div className="mt-8">
           {isPdf ? (
-            <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft">
-              <div className="flex items-center justify-between border-b border-border px-5 py-3">
-                <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+            <div className="overflow-hidden rounded-[26px] border-[1.5px] border-border bg-card shadow-[0_5px_0_hsl(var(--border))]">
+              <div className="flex items-center justify-between gap-3 border-b-[1.5px] border-border px-4 py-3 sm:px-5">
+                <span className="flex items-center gap-2 text-[14.5px] font-bold text-foreground">
                   <FileText className="h-4 w-4" />
-                  Attached document
+                  Something extra to read
                 </span>
                 <a
                   href={story.file_url}
                   download
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-secondary"
+                  className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3 py-1.5 text-[12.5px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
                 >
                   <Download className="h-3.5 w-3.5" />
-                  Download
+                  Save it
                 </a>
               </div>
               <iframe src={story.file_url} className="w-full" style={{ height: "70vh" }} />
@@ -185,10 +191,10 @@ export default function StudentHistoryReaderPage() {
               href={story.file_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-soft hover:bg-secondary"
+              className="inline-flex items-center gap-2 rounded-[18px] border-[1.5px] border-border bg-card px-4 py-3 text-[15px] font-bold text-foreground shadow-[0_4px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
             >
               <FileText className="h-4 w-4" />
-              Open attached file ↗
+              Open the extra file ↗
             </a>
           )}
         </div>
