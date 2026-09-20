@@ -145,7 +145,7 @@ export default function StudentProgressPage() {
                 role="img"
                 aria-label={`Quran journey — para ${heroPara} of 30, ${heroPara - 1} finished`}
               >
-                <QuranStones done={heroPara} total={30} />
+                <QuranStones done={heroPara} total={30} studentId={student?.id} />
               </div>
             </KidCard>
           )}

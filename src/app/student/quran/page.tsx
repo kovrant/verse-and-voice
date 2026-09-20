@@ -2,7 +2,8 @@
 
 import { ArrowLeft } from "lucide-react"
 import dynamic from "next/dynamic"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 
 import { KidButton, KidCard, KidEmpty, KidPageHeader, QuranBookIcon } from "@/components/kid-ui"
 import { InlineLoader, PageLoading } from "@/components/page-loading"
@@ -102,6 +103,16 @@ const JUZ_SURAHS = [
 type ParaState = "done" | "current" | "next" | "neutral"
 
 export default function StudentQuranPage() {
+  // useSearchParams (the ?para= deep link) needs a Suspense boundary, as on /login.
+  return (
+    <Suspense fallback={<PageLoading variant="grid-dense" student count={30} />}>
+      <StudentQuranGrid />
+    </Suspense>
+  )
+}
+
+function StudentQuranGrid() {
+  const searchParams = useSearchParams()
   const { student, loading: studentLoading, error } = useStudent()
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [media, setMedia] = useState<Record<number, ParaMedia>>({})
@@ -221,6 +232,19 @@ export default function StudentQuranPage() {
     const doneFromEnd = prog.desc > 0 && n > 30 - prog.desc
     return doneFromStart || doneFromEnd ? "done" : "next"
   }
+
+  // Deep link: /student/quran?para=7 opens that para once its PDF is known.
+  // Used by the stepping stones on My progress.
+  const deepLinkedRef = useRef(false)
+  useEffect(() => {
+    if (deepLinkedRef.current || !mediaLoaded) return
+    const wanted = Number(searchParams.get("para"))
+    if (!wanted || wanted < 1 || wanted > 30) return
+    const m = media[wanted]
+    if (!m) return
+    deepLinkedRef.current = true
+    openPara(wanted, m.file_url)
+  }, [mediaLoaded, media, searchParams]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Bring the current para into view once everything is loaded.
   useEffect(() => {
