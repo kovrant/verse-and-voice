@@ -15,18 +15,23 @@ import { DayNightSwitch } from "@/components/student-topbar"
 import { useStudent } from "@/lib/use-student"
 
 const LINKS = [
-  { href: "/student/progress", label: "My Progress", hint: "Quran rounds so far", icon: BookOpen },
+  {
+    href: "/student/progress",
+    label: "My progress",
+    hint: "How far you have come",
+    icon: BookOpen,
+  },
   { href: "/student/classes", label: "Classes", hint: "Past and live classes", icon: History },
   {
     href: "/student/attendance",
-    label: "Attendance",
-    hint: "Days you joined",
+    label: "My class days",
+    hint: "Days you came to class",
     icon: CalendarCheck,
   },
   {
     href: "/student/notifications",
-    label: "Notifications",
-    hint: "Messages from your teacher",
+    label: "Messages",
+    hint: "Notes and news from your teacher",
     icon: Bell,
   },
   { href: "/student/fees", label: "Fees", hint: "For your parents", icon: CreditCard },

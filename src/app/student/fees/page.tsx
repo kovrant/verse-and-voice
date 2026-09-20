@@ -1,13 +1,11 @@
 "use client"
 
 import { format } from "date-fns"
-import { CreditCard } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { FeeDisplay } from "@/components/fee-display"
+import { KidCard, KidEmpty, KidPageHeader, KidStat } from "@/components/kid-ui"
 import { PageLoading } from "@/components/page-loading"
-import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
@@ -39,95 +37,110 @@ export default function StudentFeesPage() {
   const unpaidCount = fees.filter((f) => !f.is_paid).length
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 animate-fade-in-up">
-      <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/25 text-amber-600 flex-shrink-0">
-          <CreditCard className="h-6 w-6" strokeWidth={2.25} />
-        </div>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Fees</h1>
-          <p className="text-sm text-muted-foreground">Your monthly fee status.</p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-3xl animate-fade-in-up pb-6">
+      <KidPageHeader
+        emoji="🧾"
+        color="sky"
+        title="Fees"
+        subtitle="Your monthly fee — this page is for your parents."
+      />
 
-      <div className="flex flex-wrap items-center gap-4 text-sm rounded-xl border border-border/50 bg-card px-4 py-3">
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-emerald-400" />
-          <span className="text-muted-foreground">Paid</span>
-          <span className="font-semibold">{paidCount}</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-amber-400" />
-          <span className="text-muted-foreground">Unpaid</span>
-          <span className="font-semibold">{unpaidCount}</span>
-        </span>
-        <span className="text-muted-foreground/40">|</span>
-        <FeeDisplay amount={student.fee} currency={student.fee_currency} rates={rates} size="sm" />
-        <span className="text-muted-foreground text-xs">/ month</span>
-      </div>
-
-      <Card className="overflow-hidden">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <CreditCard className="h-4 w-4 text-emerald-400" />
-            <CardTitle>Payment History</CardTitle>
+      {/* Monthly fee + how the months stand */}
+      <KidCard color="sky" className="mb-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[12px] font-extrabold uppercase tracking-[0.14em] text-muted-foreground">
+              Monthly fee
+            </p>
+            <div className="mt-1">
+              <FeeDisplay
+                amount={student.fee}
+                currency={student.fee_currency}
+                rates={rates}
+                size="lg"
+                kid
+              />
+            </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {fees.length === 0 ? (
-            <div className="text-center py-10">
-              <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-                <CreditCard className="h-6 w-6 text-muted-foreground" />
+          <p className="text-[14px] font-bold text-foreground/85">per month</p>
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2.5">
+          <KidStat emoji="✅" value={paidCount} label="Months paid" color="sage" />
+          <KidStat emoji="⏳" value={unpaidCount} label="Not paid yet" color="saffron" />
+        </div>
+
+        {unpaidCount > 0 && (
+          <p className="mt-3.5 rounded-[16px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.22)] px-3.5 py-2.5 text-[14px] font-bold text-foreground">
+            {unpaidCount === 1 ? "1 month is" : `${unpaidCount} months are`} still to be paid. The
+            months are listed below.
+          </p>
+        )}
+      </KidCard>
+
+      {/* Month by month */}
+      <div className="mb-3 flex items-center gap-2.5">
+        <span aria-hidden className="text-[22px] leading-none">
+          📅
+        </span>
+        <h2 className="font-heading text-[22px] font-bold text-primary">Month by month</h2>
+      </div>
+
+      {fees.length === 0 ? (
+        <KidEmpty
+          title="No fee records yet"
+          text="When your teacher records a monthly fee, it will show up here."
+        />
+      ) : (
+        <ul className="space-y-3">
+          {fees.map((fee) => (
+            <li key={fee.id}>
+              <div
+                className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-[22px] border-[1.5px] p-3.5"
+                style={{
+                  borderColor: `hsl(var(--kid-${fee.is_paid ? "sage" : "saffron"}) / 0.45)`,
+                  background: `linear-gradient(160deg, hsl(var(--kid-${
+                    fee.is_paid ? "sage" : "saffron"
+                  }) / 0.2), hsl(var(--kid-${
+                    fee.is_paid ? "sage" : "saffron"
+                  }) / 0.07)), hsl(var(--card))`,
+                  boxShadow: `0 4px 0 hsl(var(--kid-${fee.is_paid ? "sage" : "saffron"}) / 0.45)`,
+                }}
+              >
+                <span
+                  aria-hidden
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-[14px] text-[22px]"
+                  style={{
+                    background: `hsl(var(--kid-${fee.is_paid ? "sage" : "saffron"}) / 0.35)`,
+                  }}
+                >
+                  {fee.is_paid ? "✅" : "⏳"}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block font-heading text-[18px] font-bold leading-tight text-primary">
+                    {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
+                  </span>
+                  <span className="block text-[13px] font-semibold text-foreground/85">
+                    {fee.is_paid
+                      ? fee.paid_at
+                        ? `Paid on ${format(new Date(fee.paid_at), "MMM d, yyyy")}`
+                        : "Paid"
+                      : "Not paid yet"}
+                  </span>
+                </span>
+                <span
+                  className="flex-shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-extrabold text-foreground"
+                  style={{
+                    background: `hsl(var(--kid-${fee.is_paid ? "sage" : "saffron"}) / 0.45)`,
+                  }}
+                >
+                  {fee.is_paid ? "Paid" : "Unpaid"}
+                </span>
               </div>
-              <p className="text-muted-foreground">No fee records yet</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border/50">
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                    >
-                      Month
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                    >
-                      Status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-5 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider"
-                    >
-                      Paid Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fees.map((fee) => (
-                    <tr key={fee.id} className="border-b border-border/30 last:border-0">
-                      <td className="px-5 py-3.5 font-medium text-sm">
-                        {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <Badge variant={fee.is_paid ? "success" : "warning"}>
-                          {fee.is_paid ? "Paid" : "Unpaid"}
-                        </Badge>
-                      </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-                        {fee.paid_at ? format(new Date(fee.paid_at), "MMM d, yyyy") : "--"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }
