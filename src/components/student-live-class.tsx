@@ -9,6 +9,7 @@ import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { StudentBackdrop } from "@/components/student-backdrop"
+import { StudentTajweedAlert } from "@/components/student-tajweed-alert"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
 import type { NavState, PointerState } from "@/lib/use-class-channel"
@@ -28,7 +29,16 @@ const SyncedPdfViewer = dynamic(
  * student's own page turns (after syncing) so the teacher follows too.
  */
 export function StudentLiveClass() {
-  const { peerNav, peerPointer, sendNav, subscribeNav, subscribePointer, leave } = useLiveClass()
+  const {
+    peerNav,
+    peerPointer,
+    sendNav,
+    subscribeNav,
+    subscribePointer,
+    activeTajweedRule,
+    dismissTajweedRule,
+    leave,
+  } = useLiveClass()
   const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
 
   // Hide the app sidebar and topbar for the duration of the live session; restore on unmount.
@@ -202,6 +212,9 @@ export function StudentLiveClass() {
           </p>
         </div>
       )}
+
+      {/* Real-time Tajweed & Pronunciation Rule Reminder from Teacher */}
+      <StudentTajweedAlert rule={activeTajweedRule} onDismiss={dismissTajweedRule} />
     </div>
   )
 }

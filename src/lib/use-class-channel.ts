@@ -4,6 +4,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
+import type { TajweedRule } from "@/lib/tajweed/rules"
 import { ensureRealtimeAuth } from "@/lib/use-current-user"
 
 export interface NavState {
@@ -47,6 +48,8 @@ interface UseClassChannelOptions {
   onPointer?: (pointer: PointerState | null) => void
   /** Fired when the other party explicitly ends the class. */
   onEnd?: () => void
+  /** Fired when the other party triggers a real-time Tajweed or reading rule reminder. */
+  onTajweedRule?: (rule: TajweedRule) => void
   /** Fired when the other role newly joins (presence join) — e.g. so the
    * teacher can push its authoritative position to a fresh joiner. */
   onPeerJoin?: () => void
@@ -65,6 +68,8 @@ interface ClassChannel {
   sendScroll: (ratio: number) => void
   /** Broadcast a laser pointer / line highlight position on the current page. */
   sendPointer: (pointer: PointerState | null) => void
+  /** Broadcast a real-time Tajweed rule card reminder to the peer. */
+  sendTajweedRule: (rule: TajweedRule) => void
   /** Broadcast an explicit "class ended" signal and leave presence immediately. */
   endClass: () => Promise<void>
 }
@@ -98,6 +103,7 @@ export function useClassChannel({
   onScroll,
   onPointer,
   onEnd,
+  onTajweedRule,
   onPeerJoin,
 }: UseClassChannelOptions): ClassChannel {
   const [clientId] = useState(genId)
@@ -111,6 +117,7 @@ export function useClassChannel({
   const onScrollRef = useRef(onScroll)
   const onPointerRef = useRef(onPointer)
   const onEndRef = useRef(onEnd)
+  const onTajweedRuleRef = useRef(onTajweedRule)
   const onPeerJoinRef = useRef(onPeerJoin)
   // After an explicit end, ignore stale teacher presence until they join again.
   const classEndedRef = useRef(false)
@@ -120,8 +127,9 @@ export function useClassChannel({
     onScrollRef.current = onScroll
     onPointerRef.current = onPointer
     onEndRef.current = onEnd
+    onTajweedRuleRef.current = onTajweedRule
     onPeerJoinRef.current = onPeerJoin
-  }, [onNav, onScroll, onPointer, onEnd, onPeerJoin])
+  }, [onNav, onScroll, onPointer, onEnd, onTajweedRule, onPeerJoin])
 
   // Channel lifecycle — deliberately does NOT depend on `present` so joining
   // (track) doesn't tear down and rebuild the channel.
@@ -214,6 +222,13 @@ export function useClassChannel({
         setLive(false)
         setPeerNav(null)
         onEndRef.current?.()
+      })
+      .on("broadcast", { event: "tajweed_rule" }, ({ payload }) => {
+        if (!payload || (payload as { by?: string }).by === clientId) return
+        const { rule } = payload as { rule?: TajweedRule }
+        if (rule) {
+          onTajweedRuleRef.current?.(rule)
+        }
       })
 
     // Guard the (possibly deferred) subscribe against this effect being torn
@@ -320,6 +335,23 @@ export function useClassChannel({
     [clientId],
   )
 
+  const sendTajweedRule = useCallback(
+    (rule: TajweedRule) => {
+      const ch = channelRef.current
+      if (!ch || !subscribedRef.current) return
+      ch.send({
+        type: "broadcast",
+        event: "tajweed_rule",
+        payload: {
+          by: clientId,
+          rule,
+          timestamp: Date.now(),
+        },
+      })
+    },
+    [clientId],
+  )
+
   const endClass = useCallback(async () => {
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
@@ -333,5 +365,5 @@ export function useClassChannel({
     await new Promise((resolve) => setTimeout(resolve, 250))
   }, [clientId])
 
-  return { live, peerNav, peerDevice, sendNav, sendScroll, sendPointer, endClass }
+  return { live, peerNav, peerDevice, sendNav, sendScroll, sendPointer, sendTajweedRule, endClass }
 }

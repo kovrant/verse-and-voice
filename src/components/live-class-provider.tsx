@@ -7,6 +7,7 @@ import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
 import { MoonMascot } from "@/components/student-mascot"
 import { detectDevice } from "@/lib/device-detection"
 import { kidToast } from "@/lib/kid-toast"
+import type { TajweedRule } from "@/lib/tajweed/rules"
 import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"
@@ -39,6 +40,10 @@ interface LiveClassContextValue {
   subscribeScroll: (fn: ScrollListener) => () => void
   /** Subscribe to the teacher's pointer events; returns an unsubscribe fn. */
   subscribePointer: (fn: PointerListener) => () => void
+  /** Currently active real-time Tajweed rule alert sent by teacher. */
+  activeTajweedRule: TajweedRule | null
+  /** Dismiss the current Tajweed rule alert. */
+  dismissTajweedRule: () => void
 }
 
 const LiveClassContext = createContext<LiveClassContextValue>({
@@ -55,6 +60,8 @@ const LiveClassContext = createContext<LiveClassContextValue>({
   subscribeNav: () => () => {},
   subscribeScroll: () => () => {},
   subscribePointer: () => () => {},
+  activeTajweedRule: null,
+  dismissTajweedRule: () => {},
 })
 
 export const useLiveClass = () => useContext(LiveClassContext)
@@ -73,6 +80,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   // student joins, which lands before the live viewer has mounted its listener.
   // Without this the message is dispatched to nobody and the bookmark is lost.
   const [peerPointer, setPeerPointer] = useState<PointerState | null>(null)
+  const [activeTajweedRule, setActiveTajweedRule] = useState<TajweedRule | null>(null)
   const [alertOpen, setAlertOpen] = useState(false)
   const [deviceInfo] = useState(() => (typeof window !== "undefined" ? detectDevice() : null))
 
@@ -92,6 +100,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     kidToast("Class finished", { emoji: "🏫", color: "sky", description: "See you next class!" })
     setJoined(false)
     setPeerPointer(null)
+    setActiveTajweedRule(null)
   }, [])
 
   const { live, peerNav, sendNav, sendScroll, sendPointer } = useClassChannel({
@@ -105,6 +114,9 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     onPointer: (pointer) => {
       setPeerPointer(pointer)
       pointerCbs.current.forEach((fn) => fn(pointer))
+    },
+    onTajweedRule: (rule) => {
+      setActiveTajweedRule(rule)
     },
     onEnd: endNow, // explicit "class ended" from the teacher → close immediately
   })
@@ -135,7 +147,12 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   }, [])
   const leave = useCallback(() => {
     setPeerPointer(null)
+    setActiveTajweedRule(null)
     setJoined(false)
+  }, [])
+
+  const dismissTajweedRule = useCallback(() => {
+    setActiveTajweedRule(null)
   }, [])
 
   // Reset the close guards on each fresh join.
@@ -191,6 +208,8 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
         subscribeNav,
         subscribeScroll,
         subscribePointer,
+        activeTajweedRule,
+        dismissTajweedRule,
       }}
     >
       {children}

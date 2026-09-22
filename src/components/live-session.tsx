@@ -24,6 +24,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { InlineLoader } from "@/components/page-loading"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { TeacherTajweedTray } from "@/components/teacher-tajweed-tray"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -39,6 +40,7 @@ import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
 import { loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
+import type { TajweedRule } from "@/lib/tajweed/rules"
 import { toast } from "@/lib/toast"
 import { type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
@@ -116,6 +118,7 @@ export default function LiveSession({
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
+  const [sessionRules, setSessionRules] = useState<string[]>([])
   const [showEndDialog, setShowEndDialog] = useState(false)
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
@@ -195,8 +198,9 @@ export default function LiveSession({
     live: studentJoined,
     peerDevice,
     sendNav,
-    sendScroll,
+    sendScroll: _sendScroll,
     sendPointer,
+    sendTajweedRule,
     endClass,
   } = useClassChannel({
     studentId: student.id,
@@ -238,6 +242,15 @@ export default function LiveSession({
       }).catch(() => {})
     },
   })
+
+  const handleSendTajweedRule = useCallback(
+    (rule: TajweedRule) => {
+      sendTajweedRule(rule)
+      const label = `${rule.title} (${rule.nameUrdu})`
+      setSessionRules((prev) => (prev.includes(label) ? prev : [...prev, label]))
+    },
+    [sendTajweedRule],
+  )
 
   // Announce the class going live to the student (durable notification) once.
   // The ref only skips the round-trip within one mount — StrictMode, HMR and
@@ -436,6 +449,13 @@ export default function LiveSession({
 
   const canAdvance = activeRound && currentParaNumber >= (activeRound.asc_completed || 1)
 
+  const openEndDialog = () => {
+    if (!notes.trim() && sessionRules.length > 0) {
+      setNotes(`Practiced Tajweed rules: ${sessionRules.join(", ")}`)
+    }
+    setShowEndDialog(true)
+  }
+
   // End class
   async function handleEndClass() {
     setSaving(true)
@@ -585,13 +605,29 @@ export default function LiveSession({
           <Button
             variant="destructive"
             size="sm"
-            onClick={() => setShowEndDialog(true)}
+            onClick={openEndDialog}
             className="gap-1.5"
           >
             <Square className="h-3 w-3 fill-current" />
             End Class
           </Button>
         </div>
+      </div>
+
+      {/* Real-time Tajweed & Reading Mistake Quick-Bar */}
+      <div className="border-b border-border/80 bg-card/70 px-4 py-1.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground shrink-0 flex items-center gap-1">
+            <span>✨</span>
+            <span className="hidden sm:inline">Tajweed & Rules:</span>
+          </span>
+          <TeacherTajweedTray onSendRule={handleSendTajweedRule} disabled={!studentJoined} />
+        </div>
+        {sessionRules.length > 0 && (
+          <span className="hidden xl:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full shrink-0 border border-emerald-500/20">
+            <span>Practiced: {sessionRules.length} rule{sessionRules.length > 1 ? "s" : ""}</span>
+          </span>
+        )}
       </div>
 
       {/* Main content */}
@@ -922,6 +958,42 @@ export default function LiveSession({
                       className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground"
                     >
                       {title}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Tajweed Rules Practiced */}
+            {sessionRules.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span
+                    className="text-[11px] font-semibold uppercase text-muted-foreground"
+                    style={{ letterSpacing: "0.08em" }}
+                  >
+                    Tajweed Rules Practiced
+                  </span>
+                  {!notes.includes("Practiced Tajweed rules") && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const ruleText = `Practiced Tajweed rules: ${sessionRules.join(", ")}`
+                        setNotes((prev) => (prev ? `${prev}\n${ruleText}` : ruleText))
+                      }}
+                      className="text-[11px] font-bold text-primary hover:underline"
+                    >
+                      + Insert into notes
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {sessionRules.map((ruleTitle, i) => (
+                    <span
+                      key={i}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                    >
+                      {ruleTitle}
                     </span>
                   ))}
                 </div>
