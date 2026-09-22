@@ -43,11 +43,11 @@ export function StudentTajweedAlert({ rule, onDismiss }: StudentTajweedAlertProp
           <div className="flex items-center gap-3">
             {/* Arabic Symbol Badge */}
             <span
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[20px] border-[1.5px] font-arabic text-2xl font-bold text-foreground"
+              className="flex h-12 min-w-[48px] max-w-[180px] px-3 shrink-0 items-center justify-center rounded-[18px] border-[1.5px] font-arabic text-xl font-bold text-foreground whitespace-nowrap overflow-hidden text-ellipsis"
               style={{
                 background: `hsl(var(--kid-${rule.color}) / 0.35)`,
                 borderColor: `hsl(var(--kid-${rule.color}) / 0.7)`,
-                boxShadow: `0 4px 0 hsl(var(--kid-${rule.color}) / 0.5)`,
+                boxShadow: `0 3px 0 hsl(var(--kid-${rule.color}) / 0.5)`,
               }}
             >
               {rule.arabicSymbol}

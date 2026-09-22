@@ -24,7 +24,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { InlineLoader } from "@/components/page-loading"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
-import { TeacherTajweedTray } from "@/components/teacher-tajweed-tray"
+import { TeacherTajweedPanel } from "@/components/teacher-tajweed-panel"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -116,6 +116,7 @@ export default function LiveSession({
   const [startedAt] = useState(() => new Date())
   const [elapsed, setElapsed] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [tajweedOpen, setTajweedOpen] = useState(false)
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
   const [sessionRules, setSessionRules] = useState<string[]>([])
@@ -578,7 +579,45 @@ export default function LiveSession({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Tajweed Rules Left Drawer Toggle */}
+          <Button
+            variant={tajweedOpen ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setTajweedOpen((prev) => {
+                const next = !prev
+                if (next && typeof window !== "undefined" && window.innerWidth < 1400) {
+                  setSidebarOpen(false)
+                }
+                return next
+              })
+            }}
+            className={cn(
+              "gap-1.5 h-8 font-semibold text-xs rounded-full transition-all",
+              tajweedOpen
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent shadow-sm"
+                : "border-border hover:bg-muted text-foreground",
+            )}
+            title="Toggle Tajweed & Reading Rules menu (Left)"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+            <span className="hidden sm:inline">Tajweed Rules</span>
+            <span className="sm:hidden">Rules</span>
+            {sessionRules.length > 0 && (
+              <span
+                className={cn(
+                  "flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full text-[10px] font-bold",
+                  tajweedOpen
+                    ? "bg-white/25 text-white"
+                    : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+                )}
+              >
+                {sessionRules.length}
+              </span>
+            )}
+          </Button>
+
           {/* Timer — white pill, deep ink digits */}
           <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
             <Clock className="h-3.5 w-3.5 text-primary" />
@@ -591,8 +630,17 @@ export default function LiveSession({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => {
+              setSidebarOpen((prev) => {
+                const next = !prev
+                if (next && typeof window !== "undefined" && window.innerWidth < 1400) {
+                  setTajweedOpen(false)
+                }
+                return next
+              })
+            }}
             className="h-8 w-8 p-0"
+            title={sidebarOpen ? "Hide session details" : "Show session details"}
           >
             {sidebarOpen ? (
               <PanelLeftClose className="h-4 w-4" />
@@ -614,24 +662,17 @@ export default function LiveSession({
         </div>
       </div>
 
-      {/* Real-time Tajweed & Reading Mistake Quick-Bar */}
-      <div className="border-b border-border/80 bg-card/70 px-4 py-1.5 flex items-center justify-between gap-3 overflow-x-auto no-scrollbar shadow-[0_1px_2px_rgba(0,0,0,0.02)] backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted-foreground shrink-0 flex items-center gap-1">
-            <span>✨</span>
-            <span className="hidden sm:inline">Tajweed & Rules:</span>
-          </span>
-          <TeacherTajweedTray onSendRule={handleSendTajweedRule} disabled={!studentJoined} />
-        </div>
-        {sessionRules.length > 0 && (
-          <span className="hidden xl:inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-500/10 px-2.5 py-0.5 rounded-full shrink-0 border border-emerald-500/20">
-            <span>Practiced: {sessionRules.length} rule{sessionRules.length > 1 ? "s" : ""}</span>
-          </span>
-        )}
-      </div>
-
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
+        {/* Left Tajweed Panel */}
+        {tajweedOpen && (
+          <TeacherTajweedPanel
+            onSendRule={handleSendTajweedRule}
+            onClose={() => setTajweedOpen(false)}
+            disabled={!studentJoined}
+          />
+        )}
+
         {/* Sidebar */}
         {sidebarOpen && (
           <div className="w-80 border-r border-border bg-card overflow-y-auto flex-shrink-0">
