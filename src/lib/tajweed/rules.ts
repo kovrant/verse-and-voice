@@ -143,8 +143,9 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "A Khari Zer is equal to a Yaa Maddah. Stretch the 'Ee' sound gently for 2 counts.",
     commonMistake: "Reading it fast like a normal Zer without elongation.",
     examples: [
-      { arabic: "بِهِۦ", transliteration: "Bi-hee", note: "Stretch 'hee' for 2 counts" },
-      { arabic: "عِبَادِهِۦ", transliteration: "I-baa-di-hee", note: "2 counts on the end" },
+      { arabic: "بِهٖ", transliteration: "Bi-hee", note: "Stretch 'hee' with Khari Zer for 2 counts" },
+      { arabic: "عِبَادِهٖ", transliteration: "I-baa-di-hee", note: "Khari Zer on Haa stretched for 2 counts" },
+      { arabic: "فِيهٖ", transliteration: "Fee-hee", note: "Stretch 'hee' with Khari Zer for 2 counts" },
     ],
     color: "teal",
     isQuickPick: false,
@@ -162,8 +163,9 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "An Ulta Pesh is equal to a Waw Maddah. Round your lips and stretch the 'Oo' sound for 2 counts.",
     commonMistake: "Skipping the stretch and reading it like a normal short Pesh.",
     examples: [
-      { arabic: "دَاوُۥدُ", transliteration: "Daa-woo-du", note: "Stretch 'woo' for 2 counts" },
-      { arabic: "لَهُۥ", transliteration: "La-hoo", note: "Stretch 'hoo' for 2 counts" },
+      { arabic: "لَهٗ", transliteration: "La-hoo", note: "Stretch 'hoo' with Ulta Pesh for 2 counts" },
+      { arabic: "دَاوٗدُ", transliteration: "Daa-woo-du", note: "Stretch 'woo' with Ulta Pesh for 2 counts" },
+      { arabic: "رَسُولُهٗ", transliteration: "Ra-soo-lu-hoo", note: "Stretch 'hoo' with Ulta Pesh for 2 counts" },
     ],
     color: "sky",
     isQuickPick: false,

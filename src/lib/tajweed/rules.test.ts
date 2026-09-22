@@ -56,4 +56,18 @@ describe("Tajweed Rules Catalog", () => {
     const emptyResults = searchRules("")
     expect(emptyResults.length).toBe(TAJWEED_RULES.length)
   })
+
+  it("ensures khari-zer and ulta-pesh use genuine diacritics in examples", () => {
+    const khariZer = TAJWEED_RULES.find((r) => r.id === "khari-zer")
+    expect(khariZer).toBeDefined()
+    // U+0656 is Arabic Subscript Alef (Khari Zer)
+    const hasKhariZerDiacritic = khariZer!.examples.some((ex) => ex.arabic.includes("\u0656"))
+    expect(hasKhariZerDiacritic).toBe(true)
+
+    const ultaPesh = TAJWEED_RULES.find((r) => r.id === "ulta-pesh")
+    expect(ultaPesh).toBeDefined()
+    // U+0657 is Arabic Inverted Damma (Ulta Pesh)
+    const hasUltaPeshDiacritic = ultaPesh!.examples.some((ex) => ex.arabic.includes("\u0657"))
+    expect(hasUltaPeshDiacritic).toBe(true)
+  })
 })
