@@ -1,11 +1,10 @@
 "use client"
 
-import { Check, Search, Sparkles, X } from "lucide-react"
-import { useMemo, useState } from "react"
+import { Check, ChevronDown, ChevronUp, Search, Sparkles, X } from "lucide-react"
+import React, { useMemo, useState } from "react"
 
 import { Input } from "@/components/ui/input"
 import {
-  getQuickPickRules,
   searchRules,
   TAJWEED_CATEGORIES,
   type TajweedCategory,
@@ -15,22 +14,23 @@ import { cn } from "@/lib/utils"
 
 interface TeacherTajweedPanelProps {
   onSendRule: (rule: TajweedRule) => void
-  onClose?: () => void
   disabled?: boolean
   className?: string
+  sessionRulesCount?: number
+  sessionFooter?: React.ReactNode
 }
 
 export function TeacherTajweedPanel({
   onSendRule,
-  onClose,
   disabled,
   className,
+  sessionRulesCount = 0,
+  sessionFooter,
 }: TeacherTajweedPanelProps) {
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<TajweedCategory | "all">("all")
   const [justSentId, setJustSentId] = useState<string | null>(null)
-
-  const quickPicks = useMemo(() => getQuickPickRules(), [])
+  const [footerOpen, setFooterOpen] = useState(false)
 
   const filteredRules = useMemo(() => {
     let list = searchRules(search)
@@ -49,31 +49,33 @@ export function TeacherTajweedPanel({
   }
 
   return (
-    <div
+    <aside
+      aria-label="Teacher Tajweed Rules Deck"
       className={cn(
-        "flex w-80 flex-shrink-0 flex-col border-r border-border bg-card overflow-hidden",
+        "flex w-80 sm:w-84 flex-shrink-0 flex-col border-r border-border bg-card overflow-hidden h-full",
         className,
       )}
     >
-      {/* Top Header with title and close button */}
+      {/* Sidebar Header */}
       <div className="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/20">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md bg-amber-500/15 text-amber-600">
-            <Sparkles className="h-3.5 w-3.5" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
+            <Sparkles className="h-4 w-4" />
           </span>
-          <span className="font-heading text-[15px] font-bold text-foreground">
-            Tajweed Rules
-          </span>
+          <div>
+            <h2 className="font-heading text-sm font-bold text-foreground leading-none">
+              Tajweed Rules
+            </h2>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              Tap card to pop up on student screen
+            </p>
+          </div>
         </div>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close Tajweed panel"
-            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          >
-            <X className="h-4 w-4" />
-          </button>
+
+        {sessionRulesCount > 0 && (
+          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+            <span>{sessionRulesCount} sent</span>
+          </span>
         )}
       </div>
 
@@ -85,14 +87,14 @@ export function TeacherTajweedPanel({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search rule (zaber, qalqala...)"
-            className="h-8 pl-8 pr-7 text-xs"
+            placeholder="Search rule (zabar, qalqalah, noon...)"
+            className="h-8.5 pl-8 pr-7 text-xs rounded-xl"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
             >
               <X className="h-3 w-3" />
             </button>
@@ -100,14 +102,14 @@ export function TeacherTajweedPanel({
         </div>
 
         {/* Category horizontal scroll tabs */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar pb-0.5 text-[11px]">
+        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5 text-[11px]">
           <button
             type="button"
             onClick={() => setSelectedCategory("all")}
             className={cn(
-              "rounded-full px-2 py-0.5 font-semibold transition-colors shrink-0",
+              "rounded-full px-2.5 py-1 font-semibold transition-colors shrink-0",
               selectedCategory === "all"
-                ? "bg-primary text-primary-foreground"
+                ? "bg-primary text-primary-foreground shadow-xs"
                 : "bg-secondary/70 text-muted-foreground hover:bg-secondary hover:text-foreground",
             )}
           >
@@ -119,9 +121,9 @@ export function TeacherTajweedPanel({
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold transition-colors shrink-0",
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold transition-colors shrink-0",
                 selectedCategory === cat.id
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "bg-secondary/70 text-muted-foreground hover:bg-secondary hover:text-foreground",
               )}
             >
@@ -132,121 +134,97 @@ export function TeacherTajweedPanel({
         </div>
       </div>
 
-      {/* Scrollable Rules List (Top-to-Bottom / Upside-down) */}
-      <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
-        {/* If no search and on 'all', show quick picks section at the top */}
-        {!search && selectedCategory === "all" && (
-          <div className="mb-2">
-            <div className="px-2 py-1 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-              ⚡ Common Mistakes (Quick Pick)
-            </div>
-            <div className="grid grid-cols-2 gap-1.5 pt-0.5">
-              {quickPicks.map((rule) => {
-                const isSent = justSentId === rule.id
-                return (
-                  <button
-                    key={`qp-${rule.id}`}
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => handleSend(rule)}
-                    className={cn(
-                      "flex items-center justify-between rounded-lg border px-2.5 py-1.5 text-left text-xs font-semibold transition-all",
-                      "active:scale-95 disabled:pointer-events-none disabled:opacity-50",
-                      isSent
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
-                        : "border-border/80 bg-secondary/40 text-foreground hover:border-primary/50 hover:bg-secondary",
-                    )}
-                  >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-arabic text-sm font-bold text-primary shrink-0">
-                        {rule.arabicSymbol}
-                      </span>
-                      <span className="truncate text-[11px] font-bold">{rule.nameUrdu}</span>
-                    </div>
-                    {isSent ? (
-                      <Check className="h-3 w-3 shrink-0 text-emerald-600 animate-fade-in" />
-                    ) : (
-                      <span className="text-[10px] text-muted-foreground font-normal shrink-0">
-                        {rule.title.split(" ")[0]}
-                      </span>
-                    )}
-                  </button>
-                )
-              })}
-            </div>
-            <div className="my-2 h-px bg-border/60" />
-          </div>
-        )}
-
-        {/* Filtered Rules */}
+      {/* Scrollable Rules Card Deck (Vertical Stack matching sketch) */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 no-scrollbar">
         {filteredRules.length === 0 ? (
-          <div className="py-8 text-center text-xs text-muted-foreground">
+          <div className="py-12 text-center text-xs text-muted-foreground">
             No rules found matching &quot;{search}&quot;.
           </div>
         ) : (
-          <div className="space-y-1">
-            {!search && selectedCategory === "all" && (
-              <div className="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-muted-foreground">
-                All Rules ({filteredRules.length})
-              </div>
-            )}
-            {filteredRules.map((rule) => {
-              const isSent = justSentId === rule.id
-              return (
-                <button
-                  key={rule.id}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => handleSend(rule)}
-                  className={cn(
-                    "w-full flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-all",
-                    "active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
-                    isSent
-                      ? "border-emerald-500 bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 shadow-sm"
-                      : "border-border/60 bg-card hover:border-primary/40 hover:bg-secondary/50",
-                  )}
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    {/* Compact Symbol Badge */}
-                    <span className="flex h-7 min-w-[28px] max-w-[80px] px-1 shrink-0 items-center justify-center rounded-md bg-secondary/80 font-arabic text-sm font-bold text-primary truncate">
-                      {rule.arabicSymbol}
+          filteredRules.map((rule) => {
+            const isSent = justSentId === rule.id
+            return (
+              <button
+                key={rule.id}
+                type="button"
+                disabled={disabled}
+                onClick={() => handleSend(rule)}
+                className={cn(
+                  "group relative w-full text-left rounded-[16px] border-2 transition-all duration-150 p-3.5 flex flex-col justify-between",
+                  "shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]",
+                  "disabled:pointer-events-none disabled:opacity-50",
+                  isSent
+                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/30"
+                    : "border-border/80 bg-card hover:border-primary/60 text-foreground",
+                )}
+              >
+                {/* Card Top: Arabic Symbol Badge + Tap to send indicator */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span
+                    className="flex h-10 min-w-[42px] max-w-[140px] px-3 items-center justify-center rounded-[12px] border font-arabic text-xl font-bold whitespace-nowrap overflow-hidden text-ellipsis shadow-xs"
+                    style={{
+                      background: `hsl(var(--kid-${rule.color}) / 0.25)`,
+                      borderColor: `hsl(var(--kid-${rule.color}) / 0.6)`,
+                      color: "hsl(var(--foreground))",
+                    }}
+                  >
+                    {rule.arabicSymbol}
+                  </span>
+
+                  {isSent ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 animate-fade-in">
+                      <Check className="h-3.5 w-3.5 stroke-[3]" />
+                      <span>Sent ✓</span>
                     </span>
+                  ) : (
+                    <span className="rounded-full bg-secondary/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                      Tap to send
+                    </span>
+                  )}
+                </div>
 
-                    {/* Small Names */}
-                    <div className="min-w-0 truncate">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <span className="text-xs font-bold text-foreground truncate">
-                          {rule.title}
-                        </span>
-                        <span className="font-arabic text-xs font-bold text-primary shrink-0">
-                          {rule.nameUrdu}
-                        </span>
-                      </div>
-                      <span className="block text-[10px] text-muted-foreground truncate">
-                        {rule.shortCue}
-                      </span>
-                    </div>
+                {/* Card Bottom: Urdu Name + English Title + Short Cue */}
+                <div>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="font-arabic text-[17px] font-bold leading-tight text-foreground">
+                      {rule.nameUrdu}
+                    </span>
+                    <span className="font-heading text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                      {rule.title}
+                    </span>
                   </div>
-
-                  {/* Sent Check or Tap Hint */}
-                  <div className="shrink-0 ml-1">
-                    {isSent ? (
-                      <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 animate-fade-in">
-                        <Check className="h-3 w-3" />
-                        <span>Sent</span>
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-semibold text-primary/70 opacity-0 group-hover:opacity-100 transition-opacity">
-                        Send
-                      </span>
-                    )}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
+                  <p className="mt-1 text-[11px] font-medium text-muted-foreground truncate">
+                    💡 {rule.shortCue}
+                  </p>
+                </div>
+              </button>
+            )
+          })
         )}
       </div>
-    </div>
+
+      {/* Optional Collapsible Session Details Footer */}
+      {sessionFooter && (
+        <div className="border-t border-border/80 bg-muted/20">
+          <button
+            type="button"
+            onClick={() => setFooterOpen(!footerOpen)}
+            className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <span>Session Details & Progress</span>
+            {footerOpen ? (
+              <ChevronDown className="h-3.5 w-3.5" />
+            ) : (
+              <ChevronUp className="h-3.5 w-3.5" />
+            )}
+          </button>
+          {footerOpen && (
+            <div className="p-3 border-t border-border/60 max-h-48 overflow-y-auto text-xs space-y-2 bg-card">
+              {sessionFooter}
+            </div>
+          )}
+        </div>
+      )}
+    </aside>
   )
 }

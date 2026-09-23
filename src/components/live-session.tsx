@@ -2,19 +2,13 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
-import { differenceInCalendarDays, format } from "date-fns"
 import {
   ArrowUpRight,
-  BookMarked,
   BookOpen,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock,
-  PanelLeftClose,
-  PanelLeftOpen,
-  RotateCcw,
-  Shuffle,
   Sparkles,
   Square,
 } from "lucide-react"
@@ -116,7 +110,6 @@ export default function LiveSession({
   const [startedAt] = useState(() => new Date())
   const [elapsed, setElapsed] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [tajweedOpen, setTajweedOpen] = useState(false)
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
   const [sessionRules, setSessionRules] = useState<string[]>([])
@@ -580,35 +573,27 @@ export default function LiveSession({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Tajweed Rules Left Drawer Toggle */}
+          {/* Tajweed Cards Deck Toggle */}
           <Button
-            variant={tajweedOpen ? "default" : "outline"}
+            variant={sidebarOpen ? "default" : "outline"}
             size="sm"
-            onClick={() => {
-              setTajweedOpen((prev) => {
-                const next = !prev
-                if (next && typeof window !== "undefined" && window.innerWidth < 1400) {
-                  setSidebarOpen(false)
-                }
-                return next
-              })
-            }}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
               "gap-1.5 h-8 font-semibold text-xs rounded-full transition-all",
-              tajweedOpen
-                ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent shadow-sm"
+              sidebarOpen
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent shadow-xs"
                 : "border-border hover:bg-muted text-foreground",
             )}
-            title="Toggle Tajweed & Reading Rules menu (Left)"
+            title={sidebarOpen ? "Hide Tajweed Cards Deck" : "Show Tajweed Cards Deck"}
           >
             <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            <span className="hidden sm:inline">Tajweed Rules</span>
+            <span className="hidden sm:inline">Tajweed Deck</span>
             <span className="sm:hidden">Rules</span>
             {sessionRules.length > 0 && (
               <span
                 className={cn(
                   "flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full text-[10px] font-bold",
-                  tajweedOpen
+                  sidebarOpen
                     ? "bg-white/25 text-white"
                     : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
                 )}
@@ -626,29 +611,6 @@ export default function LiveSession({
             </span>
           </div>
 
-          {/* Sidebar toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              setSidebarOpen((prev) => {
-                const next = !prev
-                if (next && typeof window !== "undefined" && window.innerWidth < 1400) {
-                  setTajweedOpen(false)
-                }
-                return next
-              })
-            }}
-            className="h-8 w-8 p-0"
-            title={sidebarOpen ? "Hide session details" : "Show session details"}
-          >
-            {sidebarOpen ? (
-              <PanelLeftClose className="h-4 w-4" />
-            ) : (
-              <PanelLeftOpen className="h-4 w-4" />
-            )}
-          </Button>
-
           {/* End Class */}
           <Button
             variant="destructive"
@@ -664,235 +626,81 @@ export default function LiveSession({
 
       {/* Main content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Tajweed Panel */}
-        {tajweedOpen && (
+        {/* Left Sidebar: Teacher Tajweed Card Deck */}
+        {sidebarOpen && (
           <TeacherTajweedPanel
             onSendRule={handleSendTajweedRule}
-            onClose={() => setTajweedOpen(false)}
             disabled={!studentJoined}
-          />
-        )}
-
-        {/* Sidebar */}
-        {sidebarOpen && (
-          <div className="w-80 border-r border-border bg-card overflow-y-auto flex-shrink-0">
-            <div className="p-5 space-y-5">
-              {/* Quick Actions */}
-              {canAdvance && (
-                <div className="space-y-2.5">
-                  <p
-                    className="text-[11px] font-semibold uppercase text-muted-foreground"
-                    style={{ letterSpacing: "0.08em" }}
-                  >
-                    Quick Actions
-                  </p>
+            sessionRulesCount={sessionRules.length}
+            sessionFooter={
+              <div className="space-y-2.5">
+                {canAdvance && (
                   <button
                     type="button"
                     onClick={advancePara}
-                    className="group w-full flex items-center justify-center gap-2 rounded-[10px] px-[14px] py-2.5 bg-card border border-primary text-primary text-sm font-semibold transition-colors hover:bg-primary hover:text-primary-foreground"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
-                    <ArrowUpRight className="h-4 w-4 transition-colors" />
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                     Advance to Para {currentParaNumber + 1}
                   </button>
-                </div>
-              )}
-
-              {/* Current progress — inline, no panel */}
-              {activeRound && (
-                <>
-                  {canAdvance && <div className="h-px bg-border" />}
-                  <div className="space-y-1">
-                    <p
-                      className="text-[11px] font-semibold uppercase text-muted-foreground"
-                      style={{ letterSpacing: "0.08em" }}
-                    >
-                      Current Progress
-                    </p>
-                    <p className="text-sm text-foreground">
-                      Student is on Para{" "}
-                      <span className="text-primary font-bold">
-                        {activeRound.asc_completed || 1}
-                      </span>
-                    </p>
-                    {activeRound.desc_completed > 0 && (
-                      <p className="text-xs text-muted-foreground">
-                        From end: {activeRound.desc_completed} paras
-                      </p>
-                    )}
+                )}
+                {activeRound && (
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Current Round</span>
+                    <span className="font-bold text-foreground">
+                      Para {activeRound.asc_completed || 1}
+                    </span>
                   </div>
-                </>
-              )}
-
-              {/* Memorization */}
-              {memItems.length > 0 && (
-                <>
-                  <div className="h-px bg-border" />
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-1.5">
-                      <BookMarked className="h-3.5 w-3.5 text-primary" />
-                      <p
-                        className="text-[11px] font-semibold uppercase text-muted-foreground"
-                        style={{ letterSpacing: "0.08em" }}
+                )}
+                {memorizing.length > 0 && (
+                  <div className="text-xs pt-1 border-t border-border/50">
+                    <span className="text-muted-foreground block text-[10px] font-semibold uppercase">Currently Memorizing:</span>
+                    <span className="font-medium text-foreground">
+                      {memorizing.map((m) => m.memorization_catalog?.title).filter(Boolean).join(", ")}
+                    </span>
+                  </div>
+                )}
+                {memorized.length > 0 && (
+                  <div className="space-y-1.5 pt-1 border-t border-border/50">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Revision ({memorized.length})</span>
+                      <button
+                        type="button"
+                        onClick={pickRevision}
+                        className="text-primary font-bold hover:underline"
                       >
-                        Memorization
-                      </p>
+                        🎲 Pick Random
+                      </button>
                     </div>
-
-                    {memorizing.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p
-                          className="text-[10px] font-semibold uppercase flex items-center gap-1 text-muted-foreground"
-                          style={{ letterSpacing: "0.08em" }}
+                    {revisionPick && (
+                      <div className="rounded-lg border border-border/70 bg-card p-2 text-xs flex items-center justify-between gap-1">
+                        <span className="font-semibold truncate">
+                          {revisionPick.memorization_catalog?.title}
+                        </span>
+                        <Button
+                          size="sm"
+                          className="h-6 px-2 text-[10px]"
+                          onClick={() => markRevised(revisionPick.id)}
                         >
-                          <Sparkles className="h-2.5 w-2.5 text-primary" />
-                          Currently Memorizing
-                        </p>
-                        {memorizing.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center gap-2 rounded-[10px] border border-border bg-card px-3 py-2.5"
-                          >
-                            {item.memorization_catalog?.image_url && (
-                              <img
-                                src={item.memorization_catalog.image_url}
-                                alt=""
-                                className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
-                              />
-                            )}
-                            <p className="text-sm font-medium text-foreground">
-                              {item.memorization_catalog?.title}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {memorized.length > 0 && (
-                      <div className="space-y-1.5">
-                        <p
-                          className="text-[10px] font-semibold uppercase flex items-center gap-1 text-muted-foreground"
-                          style={{ letterSpacing: "0.08em" }}
-                        >
-                          <Check className="h-2.5 w-2.5 text-primary" />
-                          Revision bucket ({memorized.length})
-                        </p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {memorized.map((item) => (
-                            <span
-                              key={item.id}
-                              className={cn(
-                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border bg-card text-muted-foreground",
-                                item.revision_assigned_at
-                                  ? "border-amber-500/40 text-amber-700 dark:text-amber-300"
-                                  : "border-border",
-                              )}
-                            >
-                              {item.memorization_catalog?.title}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Revision Picker */}
-                    {memorized.length > 0 && (
-                      <div className="pt-1">
-                        {revisionPick ? (
-                          <div className="rounded-[10px] border border-border bg-card p-3 space-y-2">
-                            <div className="flex items-center gap-1.5">
-                              <RotateCcw className="h-3 w-3 text-primary" />
-                              <p
-                                className="text-[10px] font-semibold uppercase text-muted-foreground"
-                                style={{ letterSpacing: "0.08em" }}
-                              >
-                                Revision Pick
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {revisionPick.memorization_catalog?.image_url && (
-                                <img
-                                  src={revisionPick.memorization_catalog.image_url}
-                                  alt=""
-                                  className="h-10 w-10 rounded-lg object-cover flex-shrink-0"
-                                />
-                              )}
-                              <p className="text-base font-bold text-foreground">
-                                {revisionPick.memorization_catalog?.title}
-                              </p>
-                            </div>
-                            {revisionPick.last_revised_at && (
-                              <p className="text-[10px] text-muted-foreground">
-                                Last: {format(new Date(revisionPick.last_revised_at), "MMM d")} (
-                                {differenceInCalendarDays(
-                                  new Date(),
-                                  new Date(revisionPick.last_revised_at),
-                                )}
-                                d ago)
-                              </p>
-                            )}
-                            <div className="flex gap-1.5">
-                              <Button
-                                size="sm"
-                                className="h-7 text-xs"
-                                onClick={() => markRevised(revisionPick.id)}
-                              >
-                                <Check className="h-3 w-3 mr-1" />
-                                Revised
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 text-xs"
-                                onClick={pickRevision}
-                              >
-                                <Shuffle className="h-3 w-3 mr-1" />
-                                Another
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={pickRevision}
-                            className="w-full text-xs"
-                          >
-                            <Shuffle className="h-3 w-3 mr-1.5" />
-                            Pick Revision
-                          </Button>
-                        )}
+                          <Check className="h-3 w-3 mr-0.5" />
+                          Done
+                        </Button>
                       </div>
                     )}
                   </div>
-                </>
-              )}
-
-              {/* This Session — inline, no panel */}
-              <div className="h-px bg-border" />
-              <div className="space-y-1.5">
-                <p
-                  className="text-[11px] font-semibold uppercase text-muted-foreground"
-                  style={{ letterSpacing: "0.08em" }}
-                >
-                  This Session
-                </p>
-                <div className="text-sm space-y-0.5">
-                  <p className="text-muted-foreground">
-                    Paras viewed:{" "}
-                    <span className="font-bold text-foreground tabular-nums">
-                      {parasViewed.size}
-                    </span>
-                  </p>
-                  <p className="text-muted-foreground">
-                    Revisions done:{" "}
-                    <span className="font-bold text-foreground tabular-nums">
-                      {revisionsThisSession.length}
-                    </span>
-                  </p>
+                )}
+                <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/40 flex justify-between">
+                  <span>
+                    Paras viewed: <strong className="text-foreground">{parasViewed.size}</strong>
+                  </span>
+                  <span>
+                    Revisions:{" "}
+                    <strong className="text-foreground">{revisionsThisSession.length}</strong>
+                  </span>
                 </div>
               </div>
-            </div>
-          </div>
+            }
+          />
         )}
 
         {/* Quran Para Viewer */}
