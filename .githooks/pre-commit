@@ -1,0 +1,5 @@
+#!/bin/sh
+# Quran Academy pre-commit hook:
+# Enforces OKF documentation when new modules or migrations are added.
+
+node scripts/check-okf-sync.mjs
