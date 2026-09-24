@@ -60,7 +60,7 @@ const user = session?.user ?? null
 The visual identity switches completely between portals:
 * **Portal Data Attribute:** `<html data-portal="admin|student">` is stamped before first paint via an inline script in `src/app/layout.tsx`.
 * **CSS Palettes:** `src/app/globals.css` defines distinct CSS variable tokens for admin vs student (including dark mode variants).
-* **Fonts:** Self-hosted under `src/app/fonts/`. **Never import Google Fonts via external CDNs.**
+* **Fonts:** All five faces self-hosted under `src/app/fonts/` and registered with `next/font/local` in `src/app/layout.tsx`. **Never import Google Fonts via external CDNs.** See [Student Portal Design System](student-design-system.md) for the Arabic stack.
 * **Shell Switching (`src/components/app-shell.tsx`):**
   * Toggles distinct navigation depending on whether the route starts with `/student`: the teacher keeps a sidebar (`src/components/sidebar.tsx`); the student portal has **no sidebar** and uses a card-first home plus an always-visible tab bar.
   * Wraps the student portal inside `LiveClassProvider` to listen for teacher presence.

@@ -28,7 +28,30 @@ const body = localFont({
   display: "swap",
 })
 
-// Amiri — Arabic / Quranic text only (classical Naskh).
+// Scheherazade New — the primary Quranic/Arabic face (first in every Arabic
+// stack). Arabic subset only: Latin falls through to the next family.
+const scheherazade = localFont({
+  src: [
+    { path: "./fonts/scheherazade-new-arabic-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/scheherazade-new-arabic-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/scheherazade-new-arabic-700.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-scheherazade",
+  display: "swap",
+})
+
+// Noto Naskh Arabic — fallback Naskh. Arabic subset only.
+const naskh = localFont({
+  src: [
+    { path: "./fonts/noto-naskh-arabic-400.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/noto-naskh-arabic-600.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/noto-naskh-arabic-700.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-naskh",
+  display: "swap",
+})
+
+// Amiri — classical Naskh, and the only Arabic face that also carries Latin.
 const arabic = localFont({
   src: [
     { path: "./fonts/amiri-latin-400.woff2", weight: "400", style: "normal" },
@@ -58,7 +81,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${heading.variable} ${body.variable} ${arabic.variable} ${body.className}`}>
+      <body className={`${heading.variable} ${body.variable} ${scheherazade.variable} ${naskh.variable} ${arabic.variable} ${body.className}`}>
         {/* Set the portal palette (and admin dark mode) before first paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{

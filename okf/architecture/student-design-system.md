@@ -126,4 +126,9 @@ The portal has **no sidebar**. Children navigate by recognition, not by reading 
 3. **Never restyle the Quran/Qaida PDF rendering.** The mushaf page itself is off limits; only the chrome around it (`synced-pdf-viewer`'s pills and buttons) takes the `kid` treatment. See [Live Interactive Class](../domain/live-class-session.md).
 4. **Dark mode contrast.** `text-muted-foreground` is unreadable inside a tinted crayon panel; use `text-foreground/85` there.
 5. **A global `button:focus-visible` rule outranks `outline-none`.** `KidButton` therefore sets an explicit `focus-visible:[outline:3px_solid_hsl(var(--kid-coral)/0.55)]`.
-6. **Fonts.** The UI faces (Baloo 2, Nunito Sans, Amiri) are self-hosted under `src/app/fonts/` and loaded via `next/font`. *Drift:* `src/app/globals.css` line 1 still `@import`s Amiri, Noto Naskh Arabic and Scheherazade New from `fonts.googleapis.com`, contradicting the "no external font CDN" rule stated in [Dual-Portal Routing](dual-portal-routing.md). Nothing new should rely on that import; the Arabic faces should be self-hosted and the `@import` dropped.
+6. **Fonts are self-hosted; never add a CDN `@import` or `<link>`.** All five faces live in `src/app/fonts/` and are registered with `next/font/local` in `src/app/layout.tsx`: Baloo 2 (`--font-heading`), Nunito Sans (`--font-body`), Scheherazade New (`--font-scheherazade`), Noto Naskh Arabic (`--font-naskh`) and Amiri (`--font-arabic`). Every `variable` class must be on `<body>` or the stack silently falls through to `serif`.
+7. **Arabic stacks reference the variables, not family names.** `next/font` mangles the family to a hashed name (`__scheherazade_a9f61e`), so a bare `'Scheherazade New'` in a stack matches nothing. The one stack, used by `font-arabic` / `font-hadith` / `font-amiri` in `tailwind.config.js` and the matching utility in `globals.css`, is:
+   ```
+   var(--font-scheherazade), var(--font-arabic), var(--font-naskh), 'Traditional Arabic', serif
+   ```
+   Scheherazade New and Noto Naskh Arabic ship the **Arabic subset only** (400/600/700), so Latin characters fall through to Amiri, which carries both scripts.

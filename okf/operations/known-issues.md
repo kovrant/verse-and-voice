@@ -52,9 +52,3 @@ This catalog serves as the canonical record of active defects and architectural 
 * **Defect:** Uses unpaginated `.select("*")` on `students`.
 * **Consequence:** Silently truncates at PostgREST's 1,000-row limit once total academy enrollment exceeds 1,000.
 * **Remediation:** Convert to `fetchAllRows("students", ...)` from `src/lib/supabase.ts`.
-
-### 6. Arabic Fonts Loaded from the Google Fonts CDN
-* **Location:** `src/app/globals.css:1`
-* **Defect:** An `@import url('https://fonts.googleapis.com/css2?family=Amiri…&family=Noto+Naskh+Arabic…&family=Scheherazade+New…')` sits at the top of the stylesheet, contradicting the self-hosted-fonts rule stated in [Dual-Portal Routing](../architecture/dual-portal-routing.md) and [Student Portal Design System](../architecture/student-design-system.md).
-* **Consequence:** A render-blocking third-party request on every page load, a privacy leak to Google on behalf of every student, and unstyled Arabic if the CDN is blocked or offline. The UI faces (Baloo 2, Nunito Sans, Amiri) are already self-hosted under `src/app/fonts/`, so the two mechanisms are inconsistent.
-* **Remediation:** Self-host the three Arabic faces alongside the existing `.woff2` files and delete the `@import`.
