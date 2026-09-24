@@ -37,6 +37,8 @@ interface SyncedPdfViewerProps {
   initialPointer?: PointerState | null
   /** Called with the laser pointer position (0..1 ratio of page, line 1..15). */
   onPointerChange?: (pointer: PointerState | null) => void
+  /** Called when the user explicitly clears / toggles off the active pointer or bookmark. */
+  onPointerClear?: () => void
   /** A remote pointer position to display and scroll into view. */
   remotePointer?: PointerState | null
   /** Whether this viewer allows clicking to place a pointer (default: true). */
@@ -79,6 +81,7 @@ export function SyncedPdfViewer({
   followingLabel,
   initialPointer,
   onPointerChange,
+  onPointerClear,
   remotePointer,
   allowPointing = true,
   kid = false,
@@ -233,6 +236,7 @@ export function SyncedPdfViewer({
       if (localPointer && localPointer.line === line) {
         setLocalPointer(null)
         onPointerChange?.(null)
+        onPointerClear?.()
         return
       }
 
@@ -245,13 +249,14 @@ export function SyncedPdfViewer({
       setLocalPointer(newPointer)
       onPointerChange?.(newPointer)
     },
-    [allowPointing, onPointerChange, localPointer],
+    [allowPointing, onPointerChange, onPointerClear, localPointer],
   )
 
   const clearPointer = useCallback(() => {
     setLocalPointer(null)
     onPointerChange?.(null)
-  }, [onPointerChange])
+    onPointerClear?.()
+  }, [onPointerChange, onPointerClear])
 
   // Keyboard navigation.
   useEffect(() => {

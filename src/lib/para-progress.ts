@@ -152,6 +152,58 @@ export async function loadLastPage(studentId: string, paraNumber: number): Promi
 }
 
 /**
+ * Clear any active line/coordinate bookmark for a student and para,
+ * while preserving the current reading page.
+ * Persists to localStorage immediately and Supabase student_para_progress.
+ */
+export async function clearBookmark(
+  studentId: string,
+  paraNumber: number,
+  page?: number,
+): Promise<void> {
+  const existing = readLocalBookmark(studentId, paraNumber)
+  const currentPage = typeof page === "number" && page > 0 ? page : existing?.page ?? 1
+  const timestamp = new Date().toISOString()
+  const bm: ParaBookmark = {
+    page: currentPage,
+    line: null,
+    x: null,
+    y: null,
+    updatedAt: timestamp,
+  }
+  writeLocalBookmark(studentId, paraNumber, bm)
+
+  const patch: Record<string, unknown> = {
+    last_page: currentPage,
+    last_line: null,
+    last_pointer_x: null,
+    last_pointer_y: null,
+    updated_at: timestamp,
+  }
+
+  try {
+    const { data } = await supabase
+      .from("student_para_progress")
+      .select("id")
+      .eq("student_id", studentId)
+      .eq("para_number", paraNumber)
+      .maybeSingle()
+
+    if (data?.id) {
+      const res = await supabase.from("student_para_progress").update(patch).eq("id", data.id)
+      if (res.error) throw res.error
+    } else {
+      const res = await supabase
+        .from("student_para_progress")
+        .insert({ student_id: studentId, para_number: paraNumber, ...patch })
+      if (res.error) throw res.error
+    }
+  } catch {
+    // Best-effort DB write — local storage already cached the cleared bookmark
+  }
+}
+
+/**
  * Update the reading page WITHOUT touching a stored bookmark.
  *
  * Page turns used to be saved as "page X, no bookmark", which wiped the line the

@@ -11,6 +11,7 @@ import {
   Clock,
   Sparkles,
   Square,
+  X,
 } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -31,7 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
+import { clearBookmark, loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { supabase } from "@/lib/supabase"
 import type { TajweedRule } from "@/lib/tajweed/rules"
@@ -215,17 +216,6 @@ export default function LiveSession({
       sendNav({ paraNumber: currentParaNumber, page: pdfPage })
       if (currentPointerRef.current) {
         sendPointer(currentPointerRef.current)
-      } else {
-        // Nothing on screen: send whatever bookmark is stored for this para, so a
-        // student joining a fresh class still sees where they stopped last time.
-        const para = currentParaRef.current
-        void loadBookmark(student.id, para).then((bm) => {
-          if (currentParaRef.current !== para || typeof bm.line !== "number") return
-          restoreBookmark(
-            { x: bm.x ?? 0.5, y: bm.y ?? 0.5, line: bm.line },
-            bm.page !== pdfPageRef.current ? bm.page : undefined,
-          )
-        })
       }
       if (joinNotifiedRef.current) return
       joinNotifiedRef.current = true
@@ -297,6 +287,12 @@ export default function LiveSession({
     },
     [sendPointer],
   )
+
+  const handleClearPointer = useCallback(() => {
+    setCurrentPointer(null)
+    sendPointer(null)
+    void clearBookmark(student.id, currentParaNumber, pdfPage)
+  }, [student.id, currentParaNumber, pdfPage, sendPointer])
 
   const handlePointerChange = useCallback(
     (pointer: PointerState | null) => {
@@ -568,6 +564,15 @@ export default function LiveSession({
             <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
               <span>📍</span>
               <span>Bookmark: Line {currentPointer.line}</span>
+              <button
+                type="button"
+                onClick={handleClearPointer}
+                aria-label="Remove bookmark"
+                title="Remove bookmark"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 transition-colors"
+              >
+                <X className="h-3 w-3" />
+              </button>
             </div>
           ) : null}
         </div>
@@ -718,6 +723,7 @@ export default function LiveSession({
                 }}
                 initialPointer={currentPointer}
                 onPointerChange={handlePointerChange}
+                onPointerClear={handleClearPointer}
               />
             ) : (
               <div className="flex-1 flex items-center justify-center overflow-auto p-4">

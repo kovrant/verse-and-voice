@@ -10,7 +10,13 @@ vi.mock("@/lib/supabase", () => ({
   supabase: mockSupabase,
 }))
 
-import { loadBookmark, loadLastPage, saveBookmark, savePageKeepingBookmark } from "./para-progress"
+import {
+  clearBookmark,
+  loadBookmark,
+  loadLastPage,
+  saveBookmark,
+  savePageKeepingBookmark,
+} from "./para-progress"
 
 describe("para-progress", () => {
   beforeEach(() => {
@@ -191,5 +197,36 @@ describe("para-progress", () => {
     await savePageKeepingBookmark("s1", 3, 12)
 
     expect(update).toHaveBeenCalledWith(expect.objectContaining({ last_page: 12 }))
+  })
+
+  it("clearBookmark sets last_line, last_pointer_x, and last_pointer_y to null while preserving page", async () => {
+    const mockEq = vi.fn().mockResolvedValue({ error: null })
+    const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq })
+
+    mockSupabase.from
+      .mockReturnValueOnce({
+        select: () => ({
+          eq: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: { id: "p1" }, error: null }),
+            }),
+          }),
+        }),
+      })
+      .mockReturnValueOnce({
+        update: mockUpdate,
+      })
+
+    await clearBookmark("s1", 2, 5)
+
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        last_page: 5,
+        last_line: null,
+        last_pointer_x: null,
+        last_pointer_y: null,
+      }),
+    )
+    expect(mockEq).toHaveBeenCalledWith("id", "p1")
   })
 })
