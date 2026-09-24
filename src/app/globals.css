@@ -734,47 +734,6 @@
       0 4px 12px rgb(var(--c-a-rgb) / 0.28);
   }
 
-  /* Chunky kid-friendly button */
-  .btn-chunky {
-    position: relative;
-    border-radius: var(--radius-button);
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    transition:
-      transform 120ms cubic-bezier(0.22, 1, 0.36, 1),
-      box-shadow 120ms cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow:
-      0 4px 0 0 rgb(var(--c-p-rgb) / 0.55),
-      0 6px 12px -2px rgb(var(--c-p-rgb) / 0.25);
-  }
-  .btn-chunky:hover {
-    transform: translateY(-1px);
-    box-shadow:
-      0 5px 0 0 rgb(var(--c-p-rgb) / 0.65),
-      0 8px 16px -2px rgb(var(--c-p-rgb) / 0.35);
-  }
-  .btn-chunky:active {
-    transform: translateY(3px);
-    box-shadow:
-      0 1px 0 0 rgb(var(--c-p-rgb) / 0.55),
-      0 2px 4px -1px rgb(var(--c-p-rgb) / 0.2);
-  }
-  .btn-chunky-accent {
-    box-shadow:
-      0 4px 0 0 rgb(var(--c-a-rgb) / 0.55),
-      0 6px 12px -2px rgb(var(--c-a-rgb) / 0.25);
-  }
-  .btn-chunky-accent:hover {
-    box-shadow:
-      0 5px 0 0 rgb(var(--c-a-rgb) / 0.65),
-      0 8px 16px -2px rgb(var(--c-a-rgb) / 0.35);
-  }
-  .btn-chunky-accent:active {
-    box-shadow:
-      0 1px 0 0 rgb(var(--c-a-rgb) / 0.55),
-      0 2px 4px -1px rgb(var(--c-a-rgb) / 0.2);
-  }
-
   /* Nav/sidebar shadow utilities */
   .shadow-nav-active {
     box-shadow:
