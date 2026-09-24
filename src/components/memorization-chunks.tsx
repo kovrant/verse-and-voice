@@ -267,15 +267,14 @@ function MemPartPath({
             className={cn(
               "flex flex-shrink-0 items-center justify-center gap-1 rounded-full tabular-nums transition-all",
               kid
-                ? "h-11 min-w-11 border-[1.5px] px-3 font-heading text-[15px] font-bold hover:-translate-y-0.5 active:translate-y-[3px] active:!shadow-none"
+                ? "h-11 min-w-11 border-[1.5px] px-3 font-heading text-[15px] font-bold hover:-translate-y-0.5 active:scale-[0.99]"
                 : "h-10 min-w-10 px-3 text-xs font-bold",
               kid && [
                 state === "done" &&
-                  "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.45)] text-foreground shadow-[0_3px_0_hsl(var(--kid-sage)/0.55)]",
+                  "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.45)] text-foreground shadow-soft",
                 state === "current" &&
-                  "border-[hsl(var(--kid-saffron)/0.7)] bg-[hsl(var(--kid-saffron)/0.55)] text-foreground shadow-[0_3px_0_hsl(var(--kid-saffron)/0.7)]",
-                state === "upcoming" &&
-                  "border-border bg-card text-muted-foreground shadow-[0_3px_0_hsl(var(--border))]",
+                  "border-[hsl(var(--kid-saffron)/0.7)] bg-[hsl(var(--kid-saffron)/0.55)] text-foreground shadow-soft",
+                state === "upcoming" && "border-border bg-card text-muted-foreground shadow-soft",
                 selected && state !== "current" && "ring-2 ring-foreground/15",
               ],
               !kid && [
@@ -359,7 +358,7 @@ function MemPartHero({
         className={cn(
           "group relative w-full overflow-hidden bg-white transition-all",
           kid
-            ? "rounded-[20px] border-[1.5px] border-border shadow-[0_4px_0_hsl(var(--border))] hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+            ? "rounded-[20px] border-[1.5px] border-border shadow-soft hover:-translate-y-0.5 active:scale-[0.99]"
             : "rounded-2xl border border-border shadow-soft hover:border-amber-500/40",
         )}
       >
@@ -549,7 +548,7 @@ export function MemStudentLesson({
           className={cn(
             "block w-full overflow-hidden bg-white",
             kid
-              ? "rounded-[20px] border-[1.5px] border-border shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+              ? "rounded-[20px] border-[1.5px] border-border shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
               : "rounded-xl border border-border/60",
           )}
           aria-label={`View full ${title}`}

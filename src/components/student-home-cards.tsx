@@ -350,7 +350,7 @@ export function StudentGreeting({ name, subtitle }: { name: string; subtitle: st
         mood={mood}
         className="h-[84px] w-[84px] flex-shrink-0 animate-float-gentle sm:h-[104px] sm:w-[104px]"
       />
-      <div className="relative min-w-0 rounded-[24px] rounded-bl-[8px] border-[1.5px] border-border bg-card px-4 py-3 shadow-[0_4px_0_hsl(var(--border))] sm:px-6 sm:py-4">
+      <div className="relative min-w-0 rounded-[24px] rounded-bl-[8px] border-[1.5px] border-border bg-card px-4 py-3 shadow-soft sm:px-6 sm:py-4">
         <div
           className="font-heading font-bold leading-[1.05] tracking-tight text-primary"
           style={{ fontSize: "clamp(22px, 6vw, 34px)" }}

@@ -135,7 +135,7 @@ function StreakPillInner({
           title={`${n}-day class streak`}
           className={cn(
             "inline-flex h-10 items-center gap-1.5 rounded-full border border-border bg-card px-3.5 font-heading text-[16px] font-bold",
-            "shadow-[0_3px_0_hsl(var(--border))] transition-transform active:translate-y-[2px] active:shadow-none",
+            "shadow-soft transition-transform active:scale-[0.99]",
             n > 0 ? "text-foreground" : "text-muted-foreground",
           )}
         >

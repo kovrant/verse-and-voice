@@ -385,7 +385,7 @@ export function NotificationsView({ kid = false }: { kid?: boolean }) {
               <button
                 type="button"
                 onClick={() => void markAllRead()}
-                className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+                className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 <CheckCheck className="h-4 w-4" />
                 Read them all
@@ -541,7 +541,7 @@ export function NotificationsView({ kid = false }: { kid?: boolean }) {
               placeholder="Search your messages…"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-[0_3px_0_hsl(var(--border))] outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-sky))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-sky)/0.25)]"
+              className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-soft outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-sky))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-sky)/0.25)]"
             />
           ) : (
             <Input
@@ -799,15 +799,15 @@ function KidNotificationItem({
       <div
         onClick={onOpen}
         className={cn(
-          "flex cursor-pointer flex-col gap-2.5 rounded-[22px] border-[1.5px] p-3.5 transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none",
-          isUnread ? "" : "border-border bg-card shadow-[0_3px_0_hsl(var(--border))]",
+          "flex cursor-pointer flex-col gap-2.5 rounded-[22px] border-[1.5px] p-3.5 transition-transform hover:-translate-y-0.5 active:scale-[0.99]",
+          isUnread ? "" : "border-border bg-card shadow-soft",
         )}
         style={
           isUnread
             ? {
                 borderColor: `hsl(var(--kid-${color}) / 0.5)`,
                 background: `linear-gradient(160deg, hsl(var(--kid-${color}) / 0.24), hsl(var(--kid-${color}) / 0.09)), hsl(var(--card))`,
-                boxShadow: `0 4px 0 hsl(var(--kid-${color}) / 0.5)`,
+                boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
               }
             : undefined
         }

@@ -101,7 +101,7 @@ export default function StudentQuizzesPage() {
         right={
           <Link
             href="/student/achievements"
-            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
           >
             <span aria-hidden>🏆</span> Trophy case
           </Link>

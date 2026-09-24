@@ -300,7 +300,7 @@ export default function StudentQuizPlayerPage() {
       <div className="mb-3 flex items-center justify-between gap-2">
         <Link
           href="/student/quizzes"
-          className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 text-[13.5px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+          className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 text-[13.5px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
         >
           <ArrowLeft className="h-4 w-4" />
           Exit
@@ -310,13 +310,13 @@ export default function StudentQuizPlayerPage() {
           <motion.span
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]"
+            className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-soft"
           >
             🔥 {streak} in a row!
           </motion.span>
         )}
 
-        <span className="rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[14px] font-bold text-primary shadow-[0_3px_0_hsl(var(--border))]">
+        <span className="rounded-full border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[14px] font-bold text-primary shadow-soft">
           {currentIndex + 1} / {totalQuestions}
         </span>
       </div>
@@ -351,24 +351,22 @@ export default function StudentQuizPlayerPage() {
                     : selectedOptionId === option.id
 
                 // After checking: right answer sage, a wrong pick rose, the rest fade.
-                let tone =
-                  "border-border bg-card shadow-[0_4px_0_hsl(var(--border))] hover:-translate-y-0.5"
+                let tone = "border-border bg-card shadow-soft hover:-translate-y-0.5"
                 let letterTone = "bg-secondary/70 text-muted-foreground"
                 if (isAnswerChecked) {
                   if (option.is_correct) {
                     tone =
-                      "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.3)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.55)]"
+                      "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.3)] shadow-soft"
                     letterTone = "bg-primary text-primary-foreground"
                   } else if (isSelected) {
                     tone =
-                      "border-[hsl(var(--kid-rose)/0.7)] bg-[hsl(var(--kid-rose)/0.3)] shadow-[0_4px_0_hsl(var(--kid-rose)/0.6)]"
+                      "border-[hsl(var(--kid-rose)/0.7)] bg-[hsl(var(--kid-rose)/0.3)] shadow-soft"
                     letterTone = "bg-[hsl(var(--kid-rose))] text-white"
                   } else {
                     tone = "border-border bg-card opacity-50"
                   }
                 } else if (isSelected) {
-                  tone =
-                    "border-accent bg-[hsl(var(--kid-coral)/0.25)] shadow-[0_4px_0_hsl(16_48%_44%/0.7)]"
+                  tone = "border-accent bg-[hsl(var(--kid-coral)/0.25)] shadow-soft"
                   letterTone = "bg-accent text-accent-foreground"
                 }
 
@@ -388,7 +386,7 @@ export default function StudentQuizPlayerPage() {
                         setSelectedOptionId(option.id)
                       }
                     }}
-                    className={`flex w-full min-h-[64px] items-center gap-3.5 rounded-[20px] border-[1.5px] p-3.5 text-left text-[16px] font-bold text-foreground transition-all active:translate-y-[3px] active:shadow-none ${tone}`}
+                    className={`flex w-full min-h-[64px] items-center gap-3.5 rounded-[20px] border-[1.5px] p-3.5 text-left text-[16px] font-bold text-foreground transition-all active:scale-[0.99] ${tone}`}
                   >
                     <span
                       className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full font-heading text-[16px] font-bold ${letterTone}`}

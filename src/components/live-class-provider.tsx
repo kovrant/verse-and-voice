@@ -226,7 +226,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
               <span className="absolute inset-0 rounded-full border-[3px] border-dashed border-[hsl(var(--kid-coral)/0.5)]" />
               <MoonMascot mood="excited" className="relative h-[96px] w-[96px]" />
             </span>
-            <span className="-mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]">
+            <span className="-mt-2 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-soft">
               <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
               Live now
             </span>

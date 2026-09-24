@@ -149,7 +149,7 @@ function StudentLoginForm() {
           <MoonMascot mood={mood} className="h-[78px] w-[78px] flex-shrink-0 animate-float-gentle" />
           <span
             key={bubble}
-            className="mb-9 animate-vv-bubble rounded-[18px] rounded-bl-[6px] border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[15px] font-bold text-primary shadow-[0_3px_0_hsl(var(--border))]"
+            className="mb-9 animate-vv-bubble rounded-[18px] rounded-bl-[6px] border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[15px] font-bold text-primary shadow-soft"
             aria-live="polite"
           >
             {bubble}
@@ -159,7 +159,7 @@ function StudentLoginForm() {
         {/* Form card */}
         <div
           key={shakeKey}
-          className={`rounded-[30px] border-[1.5px] border-border bg-card p-6 pt-7 shadow-[0_6px_0_hsl(var(--border)),0_24px_48px_-24px_hsl(var(--primary)/0.35)] ${shakeKey ? "animate-vv-wiggle" : "animate-fade-in-up"}`}
+          className={`rounded-[30px] border-[1.5px] border-border bg-card p-6 pt-7 shadow-soft-lg ${shakeKey ? "animate-vv-wiggle" : "animate-fade-in-up"}`}
         >
           <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
             <KidField label="Username" color="sky" icon={<UserIcon className="h-5 w-5" />}>

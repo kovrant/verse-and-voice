@@ -197,7 +197,7 @@ export default function StudentAchievementsPage() {
         <div className="flex items-center gap-4">
           <span
             aria-hidden
-            className="flex h-[70px] w-[70px] flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-card text-[34px] shadow-[0_4px_0_hsl(var(--kid-saffron)/0.5)]"
+            className="flex h-[70px] w-[70px] flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-card text-[34px] shadow-soft"
           >
             <span className="animate-float-gentle">{shelfCount > 0 ? "🏆" : "🌱"}</span>
           </span>

@@ -62,7 +62,7 @@ function FreshPill() {
   )
 }
 
-/** One earned trophy on the student's shelf: chunky tinted tile with a big emoji. */
+/** One earned trophy on the student's shelf: a tinted tile with a big emoji. */
 function KidTrophyTile({
   color,
   emoji,
@@ -80,7 +80,7 @@ function KidTrophyTile({
 }) {
   return (
     <div
-      className="flex items-start gap-3 rounded-[20px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-[hsl(var(--kid)/0.18)] px-3.5 py-3 shadow-[0_4px_0_hsl(var(--kid)/0.5)] transition-transform hover:-translate-y-0.5"
+      className="flex items-start gap-3 rounded-[20px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-[hsl(var(--kid)/0.18)] px-3.5 py-3 shadow-soft transition-transform hover:-translate-y-0.5"
       style={{ "--kid": `var(--kid-${color})` } as CSSProperties}
     >
       <span aria-hidden className={cn("text-[26px] leading-none", fresh && "animate-float-gentle")}>
@@ -119,7 +119,7 @@ function ParaGrid({ paras, kid = false }: { paras: number[]; kid?: boolean }) {
                 : "flex h-7 items-center justify-center rounded-md text-[10px] font-bold tabular-nums",
               kid
                 ? done
-                  ? "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.45)] text-foreground shadow-[0_2px_0_hsl(var(--kid-sage)/0.55)]"
+                  ? "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.45)] text-foreground shadow-soft"
                   : "border-dashed border-[hsl(var(--border-strong))] bg-secondary/30 text-muted-foreground"
                 : done
                   ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300"
@@ -186,7 +186,7 @@ function MemLessonRow({
     <div
       className={cn(
         kid
-          ? "rounded-[20px] border-[1.5px] border-[hsl(var(--kid-lavender)/0.5)] bg-[hsl(var(--kid-lavender)/0.18)] px-3.5 py-3 shadow-[0_4px_0_hsl(var(--kid-lavender)/0.5)]"
+          ? "rounded-[20px] border-[1.5px] border-[hsl(var(--kid-lavender)/0.5)] bg-[hsl(var(--kid-lavender)/0.18)] px-3.5 py-3 shadow-soft"
           : "rounded-xl border border-border/60 bg-card/50 px-3 py-2.5",
       )}
     >
@@ -442,7 +442,7 @@ export function TrophyCase({ earned, certificates, emptyHint, kid = false }: Tro
         <DomainSection label="Quran" icon={BookText} emoji="📖" kid={kid}>
           {kid ? (
             <div
-              className="rounded-[24px] border-[1.5px] border-[hsl(var(--kid-sage)/0.45)] p-4 shadow-[0_5px_0_hsl(var(--kid-sage)/0.5)] sm:p-5"
+              className="rounded-[24px] border-[1.5px] border-[hsl(var(--kid-sage)/0.45)] p-4 shadow-soft sm:p-5"
               style={{
                 background:
                   "linear-gradient(160deg, hsl(var(--kid-sage) / 0.22), hsl(var(--kid-sage) / 0.08)), hsl(var(--card))",

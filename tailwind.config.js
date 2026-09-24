@@ -128,6 +128,7 @@ const config = {
       },
       boxShadow: {
         soft: "0 4px 12px rgba(61, 64, 91, 0.08)",
+        "soft-md": "0 6px 18px rgba(61, 64, 91, 0.09)",
         "soft-lg": "0 8px 24px rgba(61, 64, 91, 0.10)",
       },
       keyframes: {

@@ -52,7 +52,7 @@ export function DayNightSwitch({ className }: { className?: string }) {
       style={{
         background: dark ? "hsl(var(--kid-lavender) / 0.45)" : "hsl(var(--kid-sky) / 0.4)",
         borderColor: dark ? "hsl(var(--kid-lavender) / 0.6)" : "hsl(var(--kid-sky) / 0.6)",
-        boxShadow: `0 4px 0 hsl(var(--kid-${dark ? "lavender" : "sky"}) / 0.55)`,
+        boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
       }}
     >
       {/* Night-time stars on the track */}
@@ -117,12 +117,12 @@ export function StudentTopBar() {
               type="button"
               aria-label="My menu"
               title={student?.name || username || "My menu"}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] font-heading text-[19px] font-bold text-foreground transition-transform hover:-translate-y-0.5 hover:rotate-6 active:translate-y-[3px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:rotate-6"
+              className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] font-heading text-[19px] font-bold text-foreground transition-transform hover:-translate-y-0.5 hover:rotate-6 active:scale-[0.99] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:rotate-6"
               style={
                 {
                   background: `hsl(var(--kid-${color}) / 0.45)`,
                   borderColor: `hsl(var(--kid-${color}) / 0.7)`,
-                  boxShadow: `0 4px 0 hsl(var(--kid-${color}) / 0.6)`,
+                  boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
                 } as CSSProperties
               }
             >
@@ -146,7 +146,7 @@ export function StudentTopBar() {
                     {
                       background: `hsl(var(--kid-${color}) / 0.45)`,
                       borderColor: `hsl(var(--kid-${color}) / 0.7)`,
-                      boxShadow: `0 4px 0 hsl(var(--kid-${color}) / 0.6)`,
+                      boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
                     } as CSSProperties
                   }
                 >

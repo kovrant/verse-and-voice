@@ -172,8 +172,8 @@ export default function StudentProgressPage() {
                   className={cn(
                     "flex items-center gap-3.5 rounded-[22px] border-[1.5px] p-3",
                     isActive
-                      ? "border-[hsl(var(--kid-sky)/0.45)] shadow-[0_4px_0_hsl(var(--kid-sky)/0.5)]"
-                      : "border-[hsl(var(--kid-sage)/0.45)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.5)]",
+                      ? "border-[hsl(var(--kid-sky)/0.45)] shadow-soft"
+                      : "border-[hsl(var(--kid-sage)/0.45)] shadow-soft",
                   )}
                   style={{
                     background: `linear-gradient(160deg, hsl(var(--kid-${tone}) / 0.2), hsl(var(--kid-${tone}) / 0.07)), hsl(var(--card))`,

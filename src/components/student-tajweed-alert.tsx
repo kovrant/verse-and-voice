@@ -31,11 +31,11 @@ export function StudentTajweedAlert({ rule, onDismiss }: StudentTajweedAlertProp
       <div
         className={cn(
           "relative overflow-hidden rounded-[26px] border-[2px] border-border bg-card p-5 shadow-2xl backdrop-blur-md",
-          "shadow-[0_8px_0_hsl(var(--border)),0_20px_40px_-10px_hsl(var(--primary)/0.25)]",
+          "shadow-soft-lg",
         )}
         style={{
           borderColor: `hsl(var(--kid-${rule.color}) / 0.7)`,
-          boxShadow: `0 8px 0 hsl(var(--kid-${rule.color}) / 0.6), 0 20px 40px -10px rgba(0,0,0,0.3)`,
+          boxShadow: "0 20px 40px -10px rgba(0,0,0,0.3)",
         }}
       >
         {/* Top Header */}
@@ -47,7 +47,7 @@ export function StudentTajweedAlert({ rule, onDismiss }: StudentTajweedAlertProp
               style={{
                 background: `hsl(var(--kid-${rule.color}) / 0.35)`,
                 borderColor: `hsl(var(--kid-${rule.color}) / 0.7)`,
-                boxShadow: `0 3px 0 hsl(var(--kid-${rule.color}) / 0.5)`,
+                boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
               }}
             >
               {rule.arabicSymbol}
@@ -134,7 +134,7 @@ export function StudentTajweedAlert({ rule, onDismiss }: StudentTajweedAlertProp
               background: `hsl(var(--kid-${rule.color}) / 0.45)`,
               borderColor: `hsl(var(--kid-${rule.color}) / 0.8)`,
               borderWidth: "1.5px",
-              boxShadow: `0 4px 0 hsl(var(--kid-${rule.color}) / 0.65)`,
+              boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
             }}
           >
             <Check className="h-4 w-4 stroke-[3]" />

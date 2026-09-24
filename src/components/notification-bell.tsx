@@ -48,7 +48,7 @@ function CategoryIcon({
 }
 
 /** Bell trigger + live dropdown feed, shared by the teacher and student top bars. */
-/** `kid`: the student portal's chunky colour-tile look (saffron tile, terracotta badge). */
+/** `kid`: the student portal's colour-tile look (saffron tile, terracotta badge). */
 export function NotificationBell({ kid = false }: { kid?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -68,7 +68,7 @@ export function NotificationBell({ kid = false }: { kid?: boolean }) {
           aria-label={unread ? `Notifications (${unread} unread)` : "Notifications"}
           className={
             kid
-              ? "group relative flex h-11 w-11 items-center justify-center rounded-[16px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.3)] text-[22px] shadow-[0_4px_0_hsl(var(--kid-saffron)/0.55)] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+              ? "group relative flex h-11 w-11 items-center justify-center rounded-[16px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.3)] text-[22px] shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
               : "relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card data-[state=open]:text-foreground"
           }
         >

@@ -149,14 +149,14 @@ export function StudentLiveClass() {
     <div className="fixed inset-0 z-[70] isolate flex flex-col">
       <StudentBackdrop />
 
-      {/* Header — floating chunky pills, like the rest of the student portal */}
+      {/* Header — floating pills, like the rest of the student portal */}
       <div className="flex items-center justify-between gap-3 px-3 pb-2 pt-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-soft">
             <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
             Live
           </span>
-          <span className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+          <span className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
             <QuranBookIcon className="h-5 w-5" />
             {ready ? (
               <span className="font-heading text-[16px] font-bold text-primary">
@@ -179,7 +179,7 @@ export function StudentLiveClass() {
         <button
           type="button"
           onClick={leave}
-          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-muted-foreground shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:text-destructive active:translate-y-[3px] active:shadow-none"
+          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-muted-foreground shadow-soft backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:text-destructive active:scale-[0.99]"
         >
           <LogOut className="h-4 w-4" />
           Leave class
@@ -201,7 +201,7 @@ export function StudentLiveClass() {
         />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[hsl(var(--kid-sage)/0.3)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.5)]">
+          <div className="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[hsl(var(--kid-sage)/0.3)] shadow-soft">
             <QuranBookIcon className="h-10 w-10" />
           </div>
           <p className="font-heading text-[22px] font-bold text-primary">

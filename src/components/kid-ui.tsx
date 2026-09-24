@@ -37,7 +37,7 @@ type KidButtonProps = {
 )
 
 /**
- * The student portal's chunky button. `primary` is the sunrise pill (coral →
+ * The student portal's big friendly button. `primary` is the sunrise pill (coral →
  * saffron, shine sweep, optional icon pad); `soft` is the quiet secondary.
  * Pass `href` to render a link.
  */
@@ -51,20 +51,20 @@ export function KidButton({
   const primary = variant === "primary"
   const classes = cn(
     "group relative flex h-[58px] items-center justify-center gap-2 overflow-hidden rounded-full px-7 font-heading text-[19px] font-bold transition-transform",
-    "hover:-translate-y-0.5 active:translate-y-[4px] active:!shadow-none disabled:cursor-wait",
+    "hover:-translate-y-0.5 active:scale-[0.99] disabled:cursor-wait",
     // Soft coral focus outline instead of the global hard one (the modal auto-focuses
     // its first button). An outline, not a ring: the inline box-shadow would hide a ring.
     "focus-visible:[outline:3px_solid_hsl(var(--kid-coral)/0.55)] focus-visible:[outline-offset:3px]",
     primary
       ? "text-[hsl(125_12%_16%)]"
-      : "border-[1.5px] border-border bg-card text-muted-foreground shadow-[0_4px_0_hsl(var(--border))] hover:text-foreground",
+      : "border-[1.5px] border-border bg-card text-muted-foreground shadow-soft hover:text-foreground",
     className,
   )
   const style: CSSProperties | undefined = primary
     ? {
         color: INK,
         background: "linear-gradient(100deg, hsl(var(--kid-coral)), hsl(var(--kid-saffron)))",
-        boxShadow: "0 5px 0 hsl(16 48% 44%), 0 14px 28px -12px hsl(var(--kid-coral) / 0.8)",
+        boxShadow: "0 10px 24px -12px hsl(var(--kid-coral) / 0.8)",
       }
     : undefined
 
@@ -127,8 +127,8 @@ const BAND_DOODLES = [
 ]
 
 /**
- * Storybook popup for the student portal: rounded card with a chunky coloured
- * edge, a colour band holding the `hero` (mascot, medal…), then title, text and
+ * Storybook popup for the student portal: a soft-shadowed rounded card with
+ * a colour band holding the `hero` (mascot, medal…), then title, text and
  * actions. Built on Radix Dialog, so focus trap, Escape and aria come for free.
  * `extra` renders inside the portal but outside the card (e.g. full-screen
  * confetti — `fixed` inside the transformed card would be clipped to it).
@@ -161,7 +161,7 @@ export function KidModal({
           className="fixed left-1/2 top-1/2 z-50 w-[min(25rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 focus:outline-none"
           style={{ "--kid": `var(--kid-${color})` } as CSSProperties}
         >
-          <div className="celebrate-pop overflow-hidden rounded-[32px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-card text-center shadow-[0_8px_0_hsl(var(--kid)/0.55),0_30px_60px_-20px_rgba(0,0,0,0.35)]">
+          <div className="celebrate-pop overflow-hidden rounded-[32px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-card text-center shadow-soft-lg">
             {/* Colour band with the hero */}
             <div
               className="relative flex justify-center px-6 pb-4 pt-7"
@@ -251,7 +251,7 @@ export function KidPageHeader({
       <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
         <span
           aria-hidden
-          className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[20px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-[hsl(var(--kid)/0.3)] text-[30px] shadow-[0_4px_0_hsl(var(--kid)/0.5)] sm:h-16 sm:w-16 sm:text-[34px]"
+          className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-[20px] border-[1.5px] border-[hsl(var(--kid)/0.5)] bg-[hsl(var(--kid)/0.3)] text-[30px] shadow-soft sm:h-16 sm:w-16 sm:text-[34px]"
         >
           {emoji}
         </span>
@@ -272,9 +272,8 @@ export function KidPageHeader({
 }
 
 /**
- * Storybook surface: rounded card with a chunky bottom edge. With `color` it
- * gets a soft crayon tint and matching edge; without, it's a plain white card
- * with a neutral edge.
+ * Storybook surface: rounded card with a soft shadow. With `color` it gets a
+ * crayon tint and matching border; without, it's a plain white card.
  */
 export function KidCard({
   color,
@@ -291,9 +290,7 @@ export function KidCard({
     <div
       className={cn(
         "rounded-[26px] border-[1.5px] p-4 sm:p-5",
-        color
-          ? "border-[hsl(var(--kid)/0.45)] shadow-[0_5px_0_hsl(var(--kid)/0.5)]"
-          : "border-border bg-card shadow-[0_5px_0_hsl(var(--border))]",
+        color ? "border-[hsl(var(--kid)/0.45)] shadow-soft" : "border-border bg-card shadow-soft",
         className,
       )}
       style={
@@ -374,7 +371,7 @@ export function KidStat({
 }) {
   return (
     <div
-      className="flex min-w-0 flex-1 flex-col items-center rounded-[18px] border-[1.5px] border-[hsl(var(--kid)/0.4)] bg-card/80 px-2 py-2.5 text-center shadow-[0_3px_0_hsl(var(--kid)/0.45)]"
+      className="flex min-w-0 flex-1 flex-col items-center rounded-[18px] border-[1.5px] border-[hsl(var(--kid)/0.4)] bg-card/80 px-2 py-2.5 text-center shadow-soft"
       style={kidVar(color)}
     >
       <span className="flex items-center gap-1.5">
@@ -392,7 +389,7 @@ export function KidStat({
   )
 }
 
-/** Chunky pill tabs; the active tab fills with the page's crayon colour. */
+/** Pill tabs; the active tab fills with the page's crayon colour. */
 export function KidTabs<T extends string>({
   tabs,
   value,
@@ -407,7 +404,7 @@ export function KidTabs<T extends string>({
   return (
     <div
       role="tablist"
-      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border-[1.5px] border-border bg-card/90 p-1 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm"
+      className="inline-flex max-w-full gap-1 overflow-x-auto rounded-full border-[1.5px] border-border bg-card/90 p-1 shadow-soft backdrop-blur-sm"
       style={kidVar(color)}
     >
       {tabs.map((t) => {

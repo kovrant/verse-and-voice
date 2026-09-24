@@ -83,12 +83,12 @@ export function QuranStones({
             <div
               className={cn(
                 "flex aspect-square items-center justify-center rounded-[14px] border-[1.5px] font-heading text-[14px] font-bold transition-transform sm:text-[15px]",
-                openable && "hover:-translate-y-0.5 active:translate-y-[2px] active:shadow-none",
+                openable && "hover:-translate-y-0.5 active:scale-[0.99]",
                 isFresh && "celebrate-pop",
                 isHere
-                  ? "border-accent bg-accent text-accent-foreground shadow-[0_3px_0_hsl(16_48%_44%)] ring-4 ring-[hsl(var(--kid-coral)/0.25)]"
+                  ? "border-accent bg-accent text-accent-foreground shadow-soft ring-4 ring-[hsl(var(--kid-coral)/0.25)]"
                   : isDone
-                    ? "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.4)] text-primary shadow-[0_3px_0_hsl(var(--kid-sage)/0.55)]"
+                    ? "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.4)] text-primary shadow-soft"
                     : isMilestone || isLast
                       ? "border-[hsl(var(--kid-saffron)/0.6)] bg-card text-muted-foreground"
                       : "border-dashed border-border bg-card/70 text-muted-foreground",

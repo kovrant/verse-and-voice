@@ -39,15 +39,14 @@ function statusMeta(status: AttendanceDayStatus): {
       return {
         label: "Came to class",
         emoji: "✅",
-        panel:
-          "border-[hsl(var(--kid-sage)/0.45)] bg-[hsl(var(--kid-sage)/0.16)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.5)]",
+        panel: "border-[hsl(var(--kid-sage)/0.45)] bg-[hsl(var(--kid-sage)/0.16)] shadow-soft",
         chip: "bg-[hsl(var(--kid-sage)/0.4)] text-foreground",
       }
     case "missed":
       return {
         label: "No class yet",
         emoji: "🌙",
-        panel: "border-border bg-card shadow-[0_4px_0_hsl(var(--border))]",
+        panel: "border-border bg-card shadow-soft",
         chip: "bg-secondary/70 text-muted-foreground",
       }
     case "upcoming":
@@ -67,7 +66,7 @@ function statusMeta(status: AttendanceDayStatus): {
   }
 }
 
-/** Chunky round arrow for the month stepper. */
+/** Round arrow for the month stepper. */
 function MonthArrow({
   label,
   disabled,
@@ -85,7 +84,7 @@ function MonthArrow({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none"
+      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] border-border bg-card text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99] disabled:pointer-events-none disabled:opacity-40 disabled:shadow-none"
     >
       {children}
     </button>
@@ -168,7 +167,7 @@ export default function StudentAttendancePage() {
       ) : (
         <>
           {/* Month stepper */}
-          <div className="mb-5 flex items-center justify-between gap-3 rounded-[22px] border-[1.5px] border-border bg-card px-3 py-2.5 shadow-[0_4px_0_hsl(var(--border))]">
+          <div className="mb-5 flex items-center justify-between gap-3 rounded-[22px] border-[1.5px] border-border bg-card px-3 py-2.5 shadow-soft">
             <MonthArrow
               label="Previous month"
               onClick={() => setView((v) => shiftMonth(v.year, v.month, -1))}
@@ -308,7 +307,7 @@ export default function StudentAttendancePage() {
                   return (
                     <div
                       key={session.id}
-                      className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[20px] border-[1.5px] border-border bg-card px-4 py-3 shadow-[0_3px_0_hsl(var(--border))]"
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[20px] border-[1.5px] border-border bg-card px-4 py-3 shadow-soft"
                     >
                       <p className="font-heading text-[16px] font-bold text-primary">
                         {format(started, "EEE, MMM d · h:mm a")}

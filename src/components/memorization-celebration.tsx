@@ -150,7 +150,7 @@ export function MemCelebration({
         className="pointer-events-none fixed inset-x-0 bottom-4 z-50 flex justify-center px-4"
       >
         <div
-          className="celebrate-pop pointer-events-auto relative flex w-full max-w-sm items-center gap-3 rounded-[24px] border-[1.5px] border-[hsl(var(--kid-sage)/0.55)] p-3 pr-10 shadow-[0_5px_0_hsl(var(--kid-sage)/0.55),0_18px_36px_-16px_rgba(0,0,0,0.3)]"
+          className="celebrate-pop pointer-events-auto relative flex w-full max-w-sm items-center gap-3 rounded-[24px] border-[1.5px] border-[hsl(var(--kid-sage)/0.55)] p-3 pr-10 shadow-soft-lg"
           style={{
             background:
               "linear-gradient(100deg, hsl(var(--kid-sage) / 0.3), hsl(var(--kid-sage) / 0.08)), hsl(var(--card))",
@@ -202,7 +202,7 @@ export function MemCelebration({
           <StarBurst />
           <span className="medal-drop relative flex h-28 w-28 items-center justify-center">
             <span className="absolute inset-0 rounded-full bg-[hsl(var(--kid-saffron)/0.45)] blur-xl" />
-            <span className="relative flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-white/70 bg-gradient-to-br from-[hsl(var(--kid-saffron)/0.5)] to-[hsl(var(--kid-saffron))] text-6xl shadow-[0_5px_0_hsl(36_60%_42%)]">
+            <span className="relative flex h-28 w-28 items-center justify-center rounded-full border-[3px] border-white/70 bg-gradient-to-br from-[hsl(var(--kid-saffron)/0.5)] to-[hsl(var(--kid-saffron))] text-6xl shadow-soft">
               🏅
             </span>
           </span>

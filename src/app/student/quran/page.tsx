@@ -352,13 +352,13 @@ function StudentQuranGrid() {
               className={cn(
                 "relative flex flex-col items-center rounded-[22px] border-[1.5px] px-2 pb-3 pt-4 text-center transition-transform",
                 available
-                  ? "cursor-pointer hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+                  ? "cursor-pointer hover:-translate-y-0.5 active:scale-[0.99]"
                   : "cursor-default border-dashed opacity-60",
                 isCurrent
-                  ? "border-accent shadow-[0_5px_0_hsl(16_48%_44%/0.7)] ring-4 ring-[hsl(var(--kid-coral)/0.2)]"
+                  ? "border-accent shadow-soft ring-4 ring-[hsl(var(--kid-coral)/0.2)]"
                   : isDone
-                    ? "border-[hsl(var(--kid-sage)/0.5)] shadow-[0_4px_0_hsl(var(--kid-sage)/0.55)]"
-                    : "border-border bg-card shadow-[0_4px_0_hsl(var(--border))]",
+                    ? "border-[hsl(var(--kid-sage)/0.5)] shadow-soft"
+                    : "border-border bg-card shadow-soft",
               )}
               style={
                 isCurrent
@@ -375,7 +375,7 @@ function StudentQuranGrid() {
               }
             >
               {isCurrent && (
-                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-foreground shadow-[0_2px_0_hsl(16_48%_40%)]">
+                <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-accent-foreground shadow-soft">
                   You&apos;re here
                 </span>
               )}
@@ -423,12 +423,12 @@ function StudentQuranGrid() {
             <button
               type="button"
               onClick={() => setViewing(null)}
-              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+              className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-soft backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
             >
               <ArrowLeft className="h-4 w-4" />
               All paras
             </button>
-            <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+            <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
               <QuranBookIcon className="h-5 w-5 flex-shrink-0" />
               <span className="truncate font-heading text-[16px] font-bold text-primary">
                 Para {viewing.para}

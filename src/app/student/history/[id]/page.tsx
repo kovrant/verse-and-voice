@@ -95,7 +95,7 @@ export default function StudentHistoryReaderPage() {
       <button
         type="button"
         onClick={() => router.push("/student/history")}
-        className="mb-5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+        className="mb-5 inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
       >
         <ArrowLeft className="h-4 w-4" />
         All stories
@@ -103,11 +103,11 @@ export default function StudentHistoryReaderPage() {
 
       {/* Cover */}
       {story.cover_image_url ? (
-        <div className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] shadow-[0_5px_0_hsl(var(--kid-teal)/0.5)]">
+        <div className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] shadow-soft">
           <img src={story.cover_image_url} alt="" className="h-full w-full object-cover" />
         </div>
       ) : (
-        <div className="mb-6 flex aspect-[21/9] w-full items-center justify-center rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] text-[64px] shadow-[0_5px_0_hsl(var(--kid-teal)/0.5)]">
+        <div className="mb-6 flex aspect-[21/9] w-full items-center justify-center rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] text-[64px] shadow-soft">
           {CATEGORY_ICON[story.category] ?? "📜"}
         </div>
       )}
@@ -169,7 +169,7 @@ export default function StudentHistoryReaderPage() {
       {story.file_url && (
         <div className="mt-8">
           {isPdf ? (
-            <div className="overflow-hidden rounded-[26px] border-[1.5px] border-border bg-card shadow-[0_5px_0_hsl(var(--border))]">
+            <div className="overflow-hidden rounded-[26px] border-[1.5px] border-border bg-card shadow-soft">
               <div className="flex items-center justify-between gap-3 border-b-[1.5px] border-border px-4 py-3 sm:px-5">
                 <span className="flex items-center gap-2 text-[14.5px] font-bold text-foreground">
                   <FileText className="h-4 w-4" />
@@ -178,7 +178,7 @@ export default function StudentHistoryReaderPage() {
                 <a
                   href={story.file_url}
                   download
-                  className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3 py-1.5 text-[12.5px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+                  className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3 py-1.5 text-[12.5px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
                 >
                   <Download className="h-3.5 w-3.5" />
                   Save it
@@ -191,7 +191,7 @@ export default function StudentHistoryReaderPage() {
               href={story.file_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-[18px] border-[1.5px] border-border bg-card px-4 py-3 text-[15px] font-bold text-foreground shadow-[0_4px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+              className="inline-flex items-center gap-2 rounded-[18px] border-[1.5px] border-border bg-card px-4 py-3 text-[15px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
             >
               <FileText className="h-4 w-4" />
               Open the extra file ↗

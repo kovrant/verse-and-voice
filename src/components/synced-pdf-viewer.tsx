@@ -295,9 +295,9 @@ export function SyncedPdfViewer({
   const iconBtn = kid
     ? "flex h-8 w-8 sm:h-9 sm:w-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-[hsl(var(--kid-sage)/0.3)] disabled:opacity-35 disabled:pointer-events-none"
     : "flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
-  // Kid look: each control group is a floating chunky pill.
+  // Kid look: each control group is a floating pill.
   const kidPill =
-    "rounded-full border-[1.5px] border-border bg-card/90 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm"
+    "rounded-full border-[1.5px] border-border bg-card/90 shadow-soft backdrop-blur-sm"
   const modeBtn = (active: boolean) =>
     kid
       ? `flex h-7 sm:h-8 items-center gap-1.5 rounded-full px-2 sm:px-2.5 text-[13px] font-bold transition-all ${

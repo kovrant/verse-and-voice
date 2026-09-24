@@ -15,7 +15,7 @@ export function NamazStepCard({
   onClick,
 }: {
   title: string
-  /** Student-portal look: chunky storybook tile. Teacher pages keep the original. */
+  /** Student-portal look: storybook tile. Teacher pages keep the original. */
   kid?: boolean
   imageUrl?: string | null
   cardColor: string
@@ -36,7 +36,7 @@ export function NamazStepCard({
           : "min-h-[140px] w-full rounded-2xl border p-4 shadow-soft sm:min-h-[160px] sm:p-5",
         kid
           ? clickable
-            ? "cursor-pointer border-border shadow-[0_5px_0_hsl(var(--border))] hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+            ? "cursor-pointer border-border shadow-soft hover:-translate-y-0.5 active:scale-[0.99]"
             : "cursor-not-allowed border-dashed border-border opacity-55"
           : clickable
             ? "cursor-pointer hover:-translate-y-1 hover:shadow-lg border-border/40"

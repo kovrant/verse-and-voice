@@ -104,7 +104,7 @@ export default function StudentFeesPage() {
                   }) / 0.2), hsl(var(--kid-${
                     fee.is_paid ? "sage" : "saffron"
                   }) / 0.07)), hsl(var(--card))`,
-                  boxShadow: `0 4px 0 hsl(var(--kid-${fee.is_paid ? "sage" : "saffron"}) / 0.45)`,
+                  boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
                 }}
               >
                 <span

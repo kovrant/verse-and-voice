@@ -227,7 +227,7 @@ export default function StudentHadithsPage() {
         right={
           <Link
             href="/student/achievements"
-            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card px-4 py-2 text-[14px] font-bold text-foreground shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
           >
             <span aria-hidden>🏆</span> Trophy case
           </Link>
@@ -318,7 +318,7 @@ export default function StudentHadithsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search a word or a lesson…"
-              className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-[0_3px_0_hsl(var(--border))] outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-caramel))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-caramel)/0.25)]"
+              className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-soft outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-caramel))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-caramel)/0.25)]"
             />
           </div>
 
@@ -453,7 +453,7 @@ function HadithCard({
                       "select-none rounded-[14px] border-[1.5px] px-3 py-1.5 font-hadith text-[24px] transition-transform active:scale-95",
                       hidden
                         ? "border-[hsl(var(--kid-caramel)/0.55)] bg-[hsl(var(--kid-caramel)/0.3)] font-bold tracking-widest text-muted-foreground"
-                        : "border-border bg-card text-foreground shadow-[0_2px_0_hsl(var(--border))]",
+                        : "border-border bg-card text-foreground shadow-soft",
                     )}
                   >
                     {hidden ? "•••" : word}
@@ -523,10 +523,10 @@ function HadithCard({
         type="button"
         onClick={onTogglePeek}
         className={cn(
-          "inline-flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] font-heading text-[16px] font-bold transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none",
+          "inline-flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] font-heading text-[16px] font-bold transition-transform hover:-translate-y-0.5 active:scale-[0.99]",
           peekActive
-            ? "border-[hsl(var(--kid-caramel)/0.6)] bg-[hsl(var(--kid-caramel)/0.35)] text-foreground shadow-[0_4px_0_hsl(var(--kid-caramel)/0.55)]"
-            : "border-border bg-card text-foreground shadow-[0_4px_0_hsl(var(--border))]",
+            ? "border-[hsl(var(--kid-caramel)/0.6)] bg-[hsl(var(--kid-caramel)/0.35)] text-foreground shadow-soft"
+            : "border-border bg-card text-foreground shadow-soft",
         )}
       >
         {peekActive ? "👀 Show the whole hadith" : "🎮 Play the memory game"}

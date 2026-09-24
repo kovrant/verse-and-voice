@@ -126,7 +126,7 @@ export default function StudentClassesPage() {
             </>
           )}
           {streakTease && (
-            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-[0_3px_0_hsl(16_48%_40%)]">
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-soft">
               🔥 Keep your {streak.current}-day streak — join today&apos;s class
             </p>
           )}
@@ -193,11 +193,11 @@ function LessonLink({
   return (
     <Link
       href={`/student/memorization#mem-${item.id}`}
-      className="flex items-center gap-3.5 rounded-[22px] border-[1.5px] p-3 transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+      className="flex items-center gap-3.5 rounded-[22px] border-[1.5px] p-3 transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
       style={{
         borderColor: `hsl(var(--kid-${color}) / 0.45)`,
         background: `linear-gradient(160deg, hsl(var(--kid-${color}) / 0.22), hsl(var(--kid-${color}) / 0.08)), hsl(var(--card))`,
-        boxShadow: `0 4px 0 hsl(var(--kid-${color}) / 0.5)`,
+        boxShadow: "0 4px 12px rgba(61, 64, 91, 0.08)",
       }}
     >
       {item.memorization_catalog?.image_url ? (

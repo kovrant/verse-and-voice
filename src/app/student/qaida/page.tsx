@@ -73,7 +73,7 @@ export default function StudentQaidaPage() {
     // Height leaves room for the top bar, and on phones for the floating tab bar.
     <div className="mx-auto flex h-[calc(100dvh-12.5rem)] max-w-5xl flex-col animate-fade-in-up lg:h-[calc(100dvh-8.5rem)]">
       <div className="flex items-center gap-2 pb-2">
-        <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+        <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
           <QaidaLettersIcon className="text-[15px]" />
           <span className="truncate font-heading text-[16px] font-bold text-primary">
             {assigned.title}
@@ -86,7 +86,7 @@ export default function StudentQaidaPage() {
           </span>
         </span>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] border-[1.5px] border-[hsl(var(--kid-sage)/0.45)] bg-card/60 pt-2 shadow-[0_5px_0_hsl(var(--kid-sage)/0.5)] backdrop-blur-sm">
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[28px] border-[1.5px] border-[hsl(var(--kid-sage)/0.45)] bg-card/60 pt-2 shadow-soft backdrop-blur-sm">
         <SyncedPdfViewer fileUrl={assigned.file_url} page={page} onPageChange={setPage} kid />
       </div>
     </div>

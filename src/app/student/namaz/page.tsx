@@ -141,12 +141,12 @@ export default function StudentNamazPage() {
           <button
             type="button"
             onClick={() => setViewStep(null)}
-            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-soft backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
           >
             <ArrowLeft className="h-4 w-4" />
             All steps
           </button>
-          <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-[0_3px_0_hsl(var(--border))] backdrop-blur-sm">
+          <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
             <span aria-hidden className="text-[17px] leading-none">
               🕌
             </span>

@@ -103,7 +103,7 @@ export default function StudentHistoryPage() {
               <Link
                 key={s.id}
                 href={`/student/history/${s.id}`}
-                className="group flex items-center gap-3 rounded-[18px] border-[1.5px] border-border bg-card p-2.5 shadow-[0_3px_0_hsl(var(--border))] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+                className="group flex items-center gap-3 rounded-[18px] border-[1.5px] border-border bg-card p-2.5 shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-[14px] bg-[hsl(var(--kid-teal)/0.28)] text-xl">
                   {s.cover_image_url ? (
@@ -137,7 +137,7 @@ export default function StudentHistoryPage() {
             placeholder="Look for a story…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-[0_3px_0_hsl(var(--border))] outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-teal))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-teal)/0.25)]"
+            className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-soft outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-teal))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-teal)/0.25)]"
           />
         </div>
 
@@ -188,7 +188,7 @@ export default function StudentHistoryPage() {
 
 /**
  * One story as a book on the shelf: cover on top, title + a peek of the story
- * underneath, with a chunky teal edge. A Link, so it can't be a `KidCard`
+ * underneath, in a teal-bordered card. A Link, so it can't be a `KidCard`
  * (that renders a div) — it copies KidCard's shape instead.
  */
 function StoryBookCard({ story }: { story: HistoryStory }) {
@@ -197,7 +197,7 @@ function StoryBookCard({ story }: { story: HistoryStory }) {
   return (
     <Link
       href={`/student/history/${story.id}`}
-      className="group flex flex-col overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-card shadow-[0_5px_0_hsl(var(--kid-teal)/0.5)] transition-transform hover:-translate-y-0.5 active:translate-y-[3px] active:shadow-none"
+      className="group flex flex-col overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-card shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
     >
       {/* Cover */}
       <div className="relative aspect-[2/1] w-full overflow-hidden bg-[hsl(var(--kid-teal)/0.25)] sm:aspect-[16/9]">
@@ -213,7 +213,7 @@ function StoryBookCard({ story }: { story: HistoryStory }) {
           </span>
         )}
         {monthTag && (
-          <span className="absolute right-3 top-3 rounded-full bg-[hsl(var(--kid-saffron)/0.92)] px-2.5 py-1 text-[11.5px] font-extrabold text-[hsl(125_12%_16%)] shadow-[0_2px_0_hsl(var(--kid-saffron))]">
+          <span className="absolute right-3 top-3 rounded-full bg-[hsl(var(--kid-saffron)/0.92)] px-2.5 py-1 text-[11.5px] font-extrabold text-[hsl(125_12%_16%)] shadow-soft">
             {monthTag.name}
           </span>
         )}

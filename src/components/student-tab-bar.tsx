@@ -36,7 +36,7 @@ export function StudentTabBar() {
 
   const read = readDestination(isQaida)
   // Every tab has its section's crayon colour (same as its home card) and an
-  // emoji, like the cards. The active one gets a stronger tile + pressable edge.
+  // emoji, like the cards. The active one gets a stronger tile + a ring.
   const tabs: {
     href: string
     label: string
@@ -84,7 +84,7 @@ export function StudentTabBar() {
       className={cn(
         // Phones / tablets: floating bar above the bottom edge.
         "fixed inset-x-3 bottom-3 z-40 flex rounded-[28px] border-[1.5px] border-border bg-card/90 px-1.5 py-1.5 backdrop-blur-md",
-        "shadow-[0_5px_0_hsl(var(--border)),0_12px_30px_-12px_hsl(var(--primary)/0.25)]",
+        "shadow-soft-lg",
         "mb-[env(safe-area-inset-bottom)]",
         // Desktop: floating rail card on the left.
         "lg:static lg:z-auto lg:my-4 lg:ml-4 lg:w-[100px] lg:flex-shrink-0 lg:flex-col lg:items-center lg:gap-1.5 lg:rounded-[32px] lg:px-2 lg:py-4",
@@ -119,7 +119,7 @@ export function StudentTabBar() {
               "relative flex h-10 w-12 items-center justify-center rounded-[16px] text-[22px] transition-transform lg:h-12 lg:w-14 lg:text-[26px]",
               "group-hover:-rotate-6 group-hover:scale-105",
               tab.active
-                ? "bg-[hsl(var(--kid)/0.55)] shadow-[0_4px_0_hsl(var(--kid)/0.7)] ring-2 ring-[hsl(var(--kid)/0.35)] ring-offset-2 ring-offset-card"
+                ? "bg-[hsl(var(--kid)/0.55)] shadow-soft ring-2 ring-[hsl(var(--kid)/0.35)] ring-offset-2 ring-offset-card"
                 : "bg-[hsl(var(--kid)/0.2)]",
             )}
             aria-hidden
