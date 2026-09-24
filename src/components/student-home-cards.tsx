@@ -286,10 +286,8 @@ export function StudentHomeCards({
           href={card.href}
           className={cn(
             "group relative flex min-h-[150px] flex-col justify-between rounded-[26px] border-[1.5px] p-3.5 sm:p-5",
-            // Chunky "pressable" bottom edge, like a storybook button.
-            "shadow-[0_5px_0_hsl(var(--kid)/0.55)] transition-all",
-            "hover:-translate-y-0.5 hover:shadow-[0_7px_0_hsl(var(--kid)/0.55)]",
-            "active:translate-y-[3px] active:shadow-[0_2px_0_hsl(var(--kid)/0.55)]",
+            // Plain card: a soft shadow, no raised bottom edge (kids disliked it).
+            "shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-soft-lg active:scale-[0.99]",
           )}
           style={
             {
