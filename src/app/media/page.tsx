@@ -45,6 +45,7 @@ import {
   storagePathFromPublicUrl,
   titleFromFilename,
 } from "@/lib/media-upload"
+import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 
@@ -186,7 +187,7 @@ export default function MediaPage() {
 
     const { error: uploadError } = await supabase.storage
       .from("media")
-      .upload(fileName, file, { cacheControl: "3600" })
+      .upload(fileName, file, { cacheControl: CACHE_FOREVER })
 
     if (uploadError) {
       toast.error("Upload failed: " + uploadError.message)
@@ -254,7 +255,7 @@ export default function MediaPage() {
 
       const { error: uploadError } = await supabase.storage
         .from("media")
-        .upload(fileName, file, { cacheControl: "3600" })
+        .upload(fileName, file, { cacheControl: CACHE_FOREVER })
 
       if (uploadError) {
         failed.push(`${title}: ${uploadError.message}`)

@@ -38,6 +38,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { getHijriMonthInfo, HIJRI_MONTHS } from "@/lib/hijri"
 import { CATEGORIES, CATEGORY_ICON, type HistoryStory } from "@/lib/history"
+import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 
@@ -118,7 +119,7 @@ export default function HistoryAdminPage() {
     const fileName = `history/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error } = await supabase.storage
       .from("memorization-images")
-      .upload(fileName, file, { cacheControl: "3600", upsert: false })
+      .upload(fileName, file, { cacheControl: CACHE_FOREVER, upsert: false })
     if (error) {
       console.error("Upload error:", error)
       return null

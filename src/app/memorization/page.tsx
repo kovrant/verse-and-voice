@@ -39,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { type CatalogItem } from "@/lib/memorization"
+import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 
@@ -80,7 +81,7 @@ async function uploadChunkImages(
     const path = `chunks/${catalogId}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error: upErr } = await supabase.storage
       .from("memorization-images")
-      .upload(path, file, { cacheControl: "3600", upsert: false })
+      .upload(path, file, { cacheControl: CACHE_FOREVER, upsert: false })
     if (upErr) {
       toast.error(upErr.message)
     } else {
@@ -210,7 +211,7 @@ export default function MemorizationPage() {
 
     const { error } = await supabase.storage
       .from("memorization-images")
-      .upload(fileName, file, { cacheControl: "3600", upsert: false })
+      .upload(fileName, file, { cacheControl: CACHE_FOREVER, upsert: false })
 
     if (error) {
       console.error("Upload error:", error)

@@ -18,6 +18,7 @@ import {
   type NamazStepPart,
   partsForStep,
 } from "@/lib/namaz"
+import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
@@ -96,7 +97,7 @@ export default function NamazAdminPage() {
     const path = `namaz/${stepId}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error: upErr } = await supabase.storage
       .from("memorization-images")
-      .upload(path, file, { cacheControl: "3600", upsert: true })
+      .upload(path, file, { cacheControl: CACHE_FOREVER, upsert: true })
     if (upErr) {
       toast.error(upErr.message)
       setUploading(null)

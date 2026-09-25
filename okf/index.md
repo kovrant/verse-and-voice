@@ -54,6 +54,7 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 
 ### 4. Operations & Maintenance
 * [Development Standards & Testing](operations/development-standards.md): Ponytail principles, testing pure helpers with Vitest, formatting, and linting.
+* [Object Storage, Caching & Egress](operations/storage-and-caching.md): What lives in Supabase Storage, the immutable-object caching rule that governs egress, the storage scripts, and the decision to stay on Supabase rather than migrate.
 * [Known Issues & Tech Debt](operations/known-issues.md): Active defect catalog (absorbed from `BUGS.md`) and planned remediation paths.
 
 ---
