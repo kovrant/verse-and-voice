@@ -51,3 +51,11 @@ tags:
 * **Decision Recorded:** Stay on Supabase. Google Drive rejected as a serving origin (no Range support, per-file download quotas, no CORS, no stable direct URL). Video goes to YouTube rather than object storage. Revisit at ~800 MB stored or if video must be self-hosted, in which case Cloudflare R2.
 * **Measurement:** 155 objects, 261.4 MB, 26% of the 1 GB free tier. The 30 para PDFs are 96% of stored bytes.
 
+### [2026-09-25] - Indo-Pak Jazm for App-Rendered Arabic
+* **Author:** Claude (pairing session)
+* **Scope:** Arabic rendering across both portals.
+* **Entries Updated:** `architecture/student-design-system.md` (new invariant 8).
+* **Reported By:** A student found the Namaz Arabic hard to read. Diagnosis: the app drew sukun as the Uthmani small circle (`U+0652` default glyph) while the mushaf he reads uses the Indo-Pak open hook, so he was shown a mark he had never seen.
+* **Code Change Documented:** `.font-arabic` / `.font-hadith` / `.font-amiri` now set `font-feature-settings: "cv78" 2`, and the three Scheherazade New files were replaced with subsets of SIL's own OFL release (+25 KB total), because the Google Fonts build strips character variants. Verified against the shipped `.woff2` and the shipped CSS rule.
+* **Decision Recorded:** Fixed in the font, not the data. Swapping the stored text to `U+06E1` would have produced the same glyph but left the data non-standard; the font route also covers the Hadith seed and the live-class tajweed cards, and any Arabic pasted in later, with no migration.
+

@@ -132,3 +132,10 @@ The portal has **no sidebar**. Children navigate by recognition, not by reading 
    var(--font-scheherazade), var(--font-arabic), var(--font-naskh), 'Traditional Arabic', serif
    ```
    Scheherazade New and Noto Naskh Arabic ship the **Arabic subset only** (400/600/700), so Latin characters fall through to Amiri, which carries both scripts.
+8. **The sukun must render as the Indo-Pak jazm (`cv78` = 2).** Our students read an Indo-Pak mushaf, where jazm is an open hook; the Uthmani convention every font defaults to draws a small circle. A student reported the Namaz Arabic as unreadable for exactly this reason. The `.font-arabic` / `.font-hadith` / `.font-amiri` utility therefore sets:
+   ```css
+   font-feature-settings: "cv78" 2, "calt" 1, "liga" 1;
+   ```
+   Two consequences:
+   * **Scheherazade New must be SIL's own build, not the Google Fonts build.** Google strips the character variants entirely, which is why the `"cv01", "cv02"` that sat here previously did nothing at all. The files in `src/app/fonts/` are subset from the official OFL release with `pyftsubset --layout-features="*"`; dropping that flag silently removes `cv78`. `SCHEHERAZADE-OFL.txt` ships alongside them as the licence requires.
+   * **Never "fix" this in the data.** The text stays `U+0652` everywhere (273 occurrences across the Namaz and Hadith seeds and `src/lib/tajweed/rules.ts`). `U+06E1` would render the same hook but makes the stored text non-standard and unportable. This is a presentation concern, so it belongs in the font, where one line covers every occurrence including anything a teacher pastes in later.

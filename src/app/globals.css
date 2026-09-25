@@ -6,9 +6,21 @@
   .font-hadith,
   .font-arabic,
   .font-amiri {
-    font-family: var(--font-scheherazade), var(--font-arabic), var(--font-naskh), 'Traditional Arabic', serif;
+    font-family:
+      var(--font-scheherazade), var(--font-arabic), var(--font-naskh), "Traditional Arabic", serif;
     line-height: 2.1;
-    font-feature-settings: "cv01", "cv02", "calt", "liga";
+    /*
+     * cv78=2 draws the sukun as the open-left jazm hook used in the Indo-Pak
+     * mushaf our students read, instead of the small circle of the Uthmani
+     * convention. The text itself is unchanged -- it stays U+0652 everywhere,
+     * so it copies out correctly; only the glyph differs. Requires SIL's own
+     * build of Scheherazade New: the Google Fonts build strips the character
+     * variants, which is why the previous "cv01","cv02" here did nothing.
+     */
+    font-feature-settings:
+      "cv78" 2,
+      "calt" 1,
+      "liga" 1;
   }
 }
 
