@@ -145,31 +145,28 @@ export default function MemorizationPage() {
   }, [newParts])
 
   async function loadItems() {
-    // Load from memorization_catalog
-    const { data: catalog } = await supabase
-      .from("memorization_catalog")
-      .select("*")
-      .order("category")
-      .order("title")
-
-    // Load memorization items from media_library
-    const { data: mediaItems } = await supabase
-      .from("media_library")
-      .select("*")
-      .eq("type", "memorization")
-      .order("category")
-      .order("title")
-
-    // Load assignment counts
-    const { data: counts } = await supabase.from("student_memorization").select("catalog_id")
+    // Four independent reads: run them in one round trip, not four.
+    const [{ data: catalog }, { data: mediaItems }, { data: counts }, { data: chunkRows }] =
+      await Promise.all([
+        supabase.from("memorization_catalog").select("*").order("category").order("title"),
+        // Memorization items that live in the media library
+        supabase
+          .from("media_library")
+          .select("*")
+          .eq("type", "memorization")
+          .order("category")
+          .order("title"),
+        // Assignment counts
+        supabase.from("student_memorization").select("catalog_id"),
+        // Chunk (part) counts so cards can show "N parts"
+        supabase.from("memorization_chunks").select("catalog_id"),
+      ])
 
     const countMap: Record<string, number> = {}
     ;(counts || []).forEach((c: any) => {
       countMap[c.catalog_id] = (countMap[c.catalog_id] || 0) + 1
     })
 
-    // Load chunk (part) counts so cards can show "N parts"
-    const { data: chunkRows } = await supabase.from("memorization_chunks").select("catalog_id")
     const chunkMap: Record<string, number> = {}
     ;(chunkRows || []).forEach((c: any) => {
       chunkMap[c.catalog_id] = (chunkMap[c.catalog_id] || 0) + 1
