@@ -92,3 +92,14 @@ CREATE POLICY "Student read own new_feature"
    If RLS is enabled on a table (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`) but no policies are declared, PostgreSQL defaults to rejecting all queries. This happened with `student_para_progress`, causing client reads and writes to silently 403 without informative errors.
 2. **Service-Role Boundary:**  
    The `SUPABASE_SERVICE_ROLE_KEY` bypasses all RLS checks. It must **only** be imported in server-side API routes via `src/lib/supabase-admin.ts` and must never be exposed or passed to the browser bundle.
+3. **One open policy cancels every correct one.**
+   Policies are *permissive* and OR'd. A leftover `USING (true)` next to a careful `is_teacher()` policy makes the table fully open — the careful policy never gets a say. Adding a correct policy is not enough; the open one must be **dropped**. The 2026-09-26 audit found exactly this on `class_sessions`, all four quiz tables and both storage buckets (fixed by `migration_rls_hardening.sql`).
+4. **A policy with no `TO` clause applies to `public`, which includes `anon`.**
+   The anon key ships in the browser bundle, so `public` means *anyone on the internet, logged in or not*. Every write policy must say `TO authenticated` **and** check `is_teacher()` or ownership.
+5. **Students never write quiz tables or storage.** Quiz attempts and assignments are written server-side with the service role (`src/app/api/quizzes/*`); only teacher pages upload files. So those tables need student `SELECT` only.
+6. **Audit against `pg_policies`, not the migration files.** Policies have been created and renamed in the dashboard (see [Schema Drift](../database/schema-drift-and-parity.md) #3), so the files are not the truth. Run:
+   ```sql
+   select schemaname, tablename, policyname, roles, cmd, qual, with_check
+   from pg_policies where schemaname in ('public','storage') order by 1,2,3;
+   ```
+   Any row with `roles = {public}` other than the storage "Public read …" `SELECT` policies is a hole.

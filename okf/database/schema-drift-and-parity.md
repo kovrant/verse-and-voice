@@ -53,6 +53,12 @@ tags:
     ADD COLUMN IF NOT EXISTS last_page integer;
   ```
 
+### 3. RLS Policies Created or Renamed in the Dashboard
+* **Found:** 2026-09-26, by comparing `pg_policies` with the migration files.
+* **Live but in no migration:** `"Allow upload / update / delete memorization images"` and `"Public read memorization images"` on `storage.objects`, all granted to `public` (anyone).
+* **Renamed:** the open policy on `class_sessions` is live as `"Allow all"`, whereas every migration refers to `"Allow all on class_sessions"` — so the migrations' `DROP POLICY IF EXISTS` could never have removed it.
+* **Resolution:** `migration_rls_hardening.sql` drops both sets by their live names. Lesson: write policy `DROP`s against names read from `pg_policies`.
+
 ---
 
 ## 🎯 Remediation Plan

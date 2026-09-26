@@ -51,6 +51,7 @@ Execute the SQL files strictly in this order:
 22. `migration_achievements.sql` — Achievement seed badges.
 23. `migration_achievements_module.sql` — Unified badges and certificates.
 24. `migration_memorization_revision.sql` — Revision queue and triggers.
+25. `migration_rls_hardening.sql` — Drops the open (`public`) policies on storage, quizzes and `class_sessions`; storage writes and quiz management become teacher-only. Run **after** `migration_quizzes.sql`. Idempotent.
 
 ---
 

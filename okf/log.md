@@ -59,3 +59,12 @@ tags:
 * **Code Change Documented:** `.font-arabic` / `.font-hadith` / `.font-amiri` now set `font-feature-settings: "cv78" 2`, and the three Scheherazade New files were replaced with subsets of SIL's own OFL release (+25 KB total), because the Google Fonts build strips character variants. Verified against the shipped `.woff2` and the shipped CSS rule.
 * **Decision Recorded:** Fixed in the font, not the data. Swapping the stored text to `U+06E1` would have produced the same glyph but left the data non-standard; the font route also covers the Hadith seed and the live-class tajweed cards, and any Arabic pasted in later, with no migration.
 
+### [2026-09-26] - RLS Audit and Hardening Migration
+* **Author:** Claude (pairing session), using Supabase's official `supabase` agent skill checklist.
+* **Scope:** Every policy in `supabase/*.sql`, replayed in apply order, then confirmed against live `pg_policies`.
+* **Entries Updated:** `architecture/rls-security-model.md` (gotchas 3–6), `database/schema-drift-and-parity.md` (discrepancy 3), `database/migration-pipeline.md` (step 25).
+* **Findings (live):** policies granted to `public` — i.e. anyone, unauthenticated — allowed writing/deleting both storage buckets (including all 30 Quran para PDFs), full read/write of `quizzes`, `quiz_questions`, `quiz_assignments`, `quiz_attempts` (every child's answers and scores), and full read/write of `class_sessions` including teacher notes.
+* **Sound:** no self-promotion path (`profiles` is read-own, teacher-write; `is_teacher()` reads `profiles.role`, never user metadata); students, fees, rounds, memorization, Namaz, achievements and notifications correctly scoped; RLS enabled on all 31 tables; no views; no `user_metadata`.
+* **Low / not fixed:** students can update their own progress rows (row scope correct, but RLS cannot restrict columns); `auth.role() = 'service_role'` in `migration_hadiths.sql` is deprecated and redundant; `quiz_questions` may expose correct answers before an attempt.
+* **Fix:** `migration_rls_hardening.sql` — hand-applied like the others.
+
