@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
-import { Suspense, useEffect, useRef, useState } from "react"
+import { Suspense, useCallback, useEffect, useRef, useState } from "react"
 
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import { OnlineDot } from "@/components/online-dot"
@@ -102,6 +102,44 @@ function ClassPageContent() {
     loadParas()
   }, [])
 
+  const handleSelect = useCallback(
+    async (studentId: string) => {
+      const seq = ++selectSeq.current
+      const student = students.find((s) => s.id === studentId) || null
+      setSelected(student)
+      if (student) {
+        const [memResult, roundsResult, sessionsResult] = await Promise.all([
+          supabase
+            .from("student_memorization")
+            .select(MEM_ITEM_SELECT)
+            .eq("student_id", student.id)
+            .order("created_at", { ascending: false }),
+          supabase
+            .from("quran_rounds")
+            .select("*")
+            .eq("student_id", student.id)
+            .order("round_number", { ascending: true }),
+          supabase
+            .from("class_sessions")
+            .select("*")
+            .eq("student_id", student.id)
+            .order("started_at", { ascending: false })
+            .limit(10),
+        ])
+        // A newer selection started while we were loading — discard these results.
+        if (seq !== selectSeq.current) return
+        setMemItems((memResult.data as any) || [])
+        setRounds(roundsResult.data || [])
+        setSessions(sessionsResult.data || [])
+      } else {
+        setMemItems([])
+        setRounds([])
+        setSessions([])
+      }
+    },
+    [students],
+  )
+
   useEffect(() => {
     if (preselected.current || loading) return
     const id = searchParams.get("student")
@@ -109,7 +147,7 @@ function ClassPageContent() {
       preselected.current = true
       void handleSelect(id)
     }
-  }, [searchParams, loading, students])
+  }, [searchParams, loading, students, handleSelect])
 
   async function loadStudents() {
     const { data } = await supabase
@@ -134,41 +172,6 @@ function ClassPageContent() {
       return aNum - bNum
     })
     setParas(sorted)
-  }
-
-  async function handleSelect(studentId: string) {
-    const seq = ++selectSeq.current
-    const student = students.find((s) => s.id === studentId) || null
-    setSelected(student)
-    if (student) {
-      const [memResult, roundsResult, sessionsResult] = await Promise.all([
-        supabase
-          .from("student_memorization")
-          .select(MEM_ITEM_SELECT)
-          .eq("student_id", student.id)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("quran_rounds")
-          .select("*")
-          .eq("student_id", student.id)
-          .order("round_number", { ascending: true }),
-        supabase
-          .from("class_sessions")
-          .select("*")
-          .eq("student_id", student.id)
-          .order("started_at", { ascending: false })
-          .limit(10),
-      ])
-      // A newer selection started while we were loading — discard these results.
-      if (seq !== selectSeq.current) return
-      setMemItems((memResult.data as any) || [])
-      setRounds(roundsResult.data || [])
-      setSessions(sessionsResult.data || [])
-    } else {
-      setMemItems([])
-      setRounds([])
-      setSessions([])
-    }
   }
 
   // Determine current para and page from latest session or active round

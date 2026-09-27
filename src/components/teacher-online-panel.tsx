@@ -11,7 +11,8 @@ import { useOnlineStudents } from "@/lib/use-online-students"
 
 export function TeacherOnlinePanel() {
   const onlineIds = useOnlineStudents()
-  const ids = useMemo(() => [...onlineIds], [onlineIds])
+  const idsKey = [...onlineIds].sort().join(",")
+  const ids = useMemo(() => (idsKey ? idsKey.split(",") : []), [idsKey])
   const [names, setNames] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -33,7 +34,7 @@ export function TeacherOnlinePanel() {
     return () => {
       active = false
     }
-  }, [ids.join(",")])
+  }, [ids])
 
   const sorted = ids
     .map((id) => ({ id, name: names[id] ?? "…" }))
