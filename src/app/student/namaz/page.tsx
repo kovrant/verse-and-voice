@@ -2,13 +2,12 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ArrowLeft } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
-import { KidCard, KidEmpty, KidPageHeader } from "@/components/kid-ui"
+import { KidEmpty, KidPageHeader } from "@/components/kid-ui"
 import { NamazStepCard } from "@/components/namaz-step-card"
+import { NamazStepViewer } from "@/components/namaz-step-viewer"
 import { PageLoading } from "@/components/page-loading"
-import { StudentBackdrop } from "@/components/student-backdrop"
 import {
   isStepCardClickable,
   learningProgress,
@@ -29,7 +28,6 @@ import {
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { useStudentNamazRealtime } from "@/lib/use-student-namaz-realtime"
-import { cn } from "@/lib/utils"
 
 export default function StudentNamazPage() {
   const { student, loading: studentLoading, error } = useStudent()
@@ -131,105 +129,16 @@ export default function StudentNamazPage() {
   }
 
   if (viewStep) {
-    const stepParts = partsForStep(viewStep.id, parts)
-
     return (
-      <div className="fixed inset-0 z-50 isolate flex flex-col">
-        <StudentBackdrop />
-
-        <div className="flex shrink-0 items-center gap-2 px-3 pb-2 pt-3 sm:px-4">
-          <button
-            type="button"
-            onClick={() => setViewStep(null)}
-            className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-foreground shadow-soft backdrop-blur-sm transition-transform hover:-translate-y-0.5 active:scale-[0.99]"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            All steps
-          </button>
-          <span className="inline-flex min-w-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
-            <span aria-hidden className="text-[17px] leading-none">
-              🕌
-            </span>
-            <span className="truncate font-heading text-[16px] font-bold text-primary">
-              {viewStep.title}
-            </span>
-          </span>
-        </div>
-
-        <div className="flex-1 overflow-auto px-3 pb-8 sm:px-4">
-          <div className="mx-auto w-full max-w-md space-y-4">
-            {viewStep.image_url && (
-              <KidCard color="rose" className="overflow-hidden p-0">
-                <div className="flex items-end justify-center px-3 pb-2 pt-3">
-                  <img
-                    src={viewStep.image_url}
-                    alt={viewStep.title}
-                    className="max-h-48 w-full object-contain object-bottom sm:max-h-56"
-                  />
-                </div>
-              </KidCard>
-            )}
-
-            {stepParts.length === 0 ? (
-              <KidCard className="text-center">
-                <p className="text-[15px] font-semibold text-foreground/85">
-                  🌟 Practise this step with your teacher.
-                </p>
-              </KidCard>
-            ) : (
-              stepParts.map((part) => {
-                const assigned = !!partProgress.get(part.id)?.revision_assigned_at
-                const inactive = moduleStatus === "completed" && !assigned
-                return (
-                  <KidCard
-                    key={part.id}
-                    color={assigned ? "saffron" : "rose"}
-                    className={cn("space-y-3", inactive && "opacity-60")}
-                  >
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-heading text-[19px] font-bold leading-tight text-primary">
-                        {part.title}
-                      </p>
-                      {assigned && (
-                        <span className="rounded-full bg-[hsl(var(--kid-saffron)/0.5)] px-2.5 py-1 text-[12px] font-extrabold text-foreground">
-                          🔁 Say this one again
-                        </span>
-                      )}
-                    </div>
-
-                    {/* The words the child recites. */}
-                    {part.arabic_text && (
-                      <p
-                        dir="rtl"
-                        lang="ar"
-                        className="select-text rounded-[18px] border-[1.5px] border-border bg-card p-4 text-center font-hadith text-[24px] leading-loose text-foreground sm:text-[27px]"
-                      >
-                        {part.arabic_text}
-                      </p>
-                    )}
-
-                    {part.image_url && (
-                      <div className="flex justify-center rounded-[18px] bg-card/70 p-3">
-                        <img
-                          src={part.image_url}
-                          alt={part.title}
-                          className="max-h-48 w-auto max-w-full object-contain object-center"
-                        />
-                      </div>
-                    )}
-                  </KidCard>
-                )
-              })
-            )}
-
-            {moduleStatus === "completed" && assignment.completed_at && (
-              <p className="text-center text-[13px] font-bold text-muted-foreground">
-                🏅 Namaz badge earned · {new Date(assignment.completed_at).toLocaleDateString()}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
+      <NamazStepViewer
+        key={viewStep.id}
+        step={viewStep}
+        parts={partsForStep(viewStep.id, parts)}
+        partProgress={partProgress}
+        completed={moduleStatus === "completed"}
+        completedAt={assignment.completed_at}
+        onClose={() => setViewStep(null)}
+      />
     )
   }
 

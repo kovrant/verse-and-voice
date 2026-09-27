@@ -18,6 +18,8 @@ export interface NamazStepPart {
   image_url: string | null
   /** The Arabic a child recites for this part (teacher-editable, may be empty). */
   arabic_text: string | null
+  /** Its meaning in English, shown under the Arabic (teacher-editable, may be empty). */
+  translation: string | null
 }
 
 export interface StudentNamaz {
@@ -52,7 +54,7 @@ export interface StudentNamazPart {
 }
 
 export const NAMAZ_STEP_SELECT = "id, title, order_index, image_url, card_color"
-export const NAMAZ_PART_SELECT = "id, step_id, title, order_index, image_url, arabic_text"
+export const NAMAZ_PART_SELECT = "id, step_id, title, order_index, image_url, arabic_text, translation"
 export const STUDENT_NAMAZ_SELECT =
   "id, student_id, status, assigned_at, completed_at, last_revised_at, notes"
 export const STUDENT_NAMAZ_STEP_SELECT =

@@ -68,3 +68,9 @@ tags:
 * **Low / not fixed:** students can update their own progress rows (row scope correct, but RLS cannot restrict columns); `auth.role() = 'service_role'` in `migration_hadiths.sql` is deprecated and redundant; `quiz_questions` may expose correct answers before an attempt.
 * **Fix:** `migration_rls_hardening.sql` — hand-applied like the others.
 
+### [2026-09-26] - Namaz Step Viewer Redesign and Translations
+* **Author:** Claude (pairing session)
+* **Scope:** Student Namaz step screen; `namaz_step_parts` schema.
+* **Entries Updated:** `domain/namaz-and-learning.md` (translation column, image fallback, new viewer section), `database/migration-pipeline.md` (step 26).
+* **Change:** Adds `namaz_step_parts.translation` (seeded for all 14 shipped parts, teacher-editable). Replaces the stacked card list with `NamazStepViewer`: one part per screen, large bold Arabic, English meaning underneath, posture picture beside it on desktop and above it on phones.
+

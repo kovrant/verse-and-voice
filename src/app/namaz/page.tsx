@@ -33,6 +33,7 @@ export default function NamazAdminPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [partTitle, setPartTitle] = useState("")
   const [partArabic, setPartArabic] = useState("")
+  const [partTranslation, setPartTranslation] = useState("")
   const [uploading, setUploading] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const uploadStepId = useRef<string | null>(null)
@@ -121,22 +122,28 @@ export default function NamazAdminPage() {
       step_id: stepId,
       title,
       arabic_text: partArabic.trim() || null,
+      translation: partTranslation.trim() || null,
       order_index: existing.length,
     })
     if (error) toast.error(error.message)
     else {
       setPartTitle("")
       setPartArabic("")
+      setPartTranslation("")
       toast.success("Part added")
       await load()
     }
   }
 
-  /** Arabic for a part — saved on blur, so the teacher can fix a word and click away. */
-  async function savePartArabic(partId: string, value: string) {
+  /** Arabic or translation for a part — saved on blur, so the teacher can fix a word and click away. */
+  async function savePartText(
+    partId: string,
+    field: "arabic_text" | "translation",
+    value: string,
+  ) {
     const { error } = await supabase
       .from("namaz_step_parts")
-      .update({ arabic_text: value.trim() || null })
+      .update({ [field]: value.trim() || null })
       .eq("id", partId)
     if (error) toast.error(error.message)
     else await load()
@@ -303,12 +310,23 @@ export default function NamazAdminPage() {
                         defaultValue={p.arabic_text ?? ""}
                         onBlur={(e) => {
                           if (e.target.value.trim() !== (p.arabic_text ?? "").trim()) {
-                            void savePartArabic(p.id, e.target.value)
+                            void savePartText(p.id, "arabic_text", e.target.value)
                           }
                         }}
                         placeholder="Arabic the student recites (optional)"
                         rows={2}
                         className="w-full rounded-lg border border-border bg-card px-3 py-2 font-hadith text-lg leading-loose text-foreground outline-none placeholder:font-sans placeholder:text-xs placeholder:text-muted-foreground focus-visible:border-primary"
+                      />
+                      <textarea
+                        defaultValue={p.translation ?? ""}
+                        onBlur={(e) => {
+                          if (e.target.value.trim() !== (p.translation ?? "").trim()) {
+                            void savePartText(p.id, "translation", e.target.value)
+                          }
+                        }}
+                        placeholder="English meaning (optional)"
+                        rows={2}
+                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-xs placeholder:text-muted-foreground focus-visible:border-primary"
                       />
                     </div>
                   ))}
@@ -331,6 +349,12 @@ export default function NamazAdminPage() {
                       value={partArabic}
                       onChange={(e) => setPartArabic(e.target.value)}
                       className="h-9 font-hadith text-base"
+                    />
+                    <Input
+                      placeholder="English meaning (optional)"
+                      value={partTranslation}
+                      onChange={(e) => setPartTranslation(e.target.value)}
+                      className="h-9 text-sm"
                     />
                   </div>
                 </div>

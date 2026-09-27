@@ -52,6 +52,7 @@ Execute the SQL files strictly in this order:
 23. `migration_achievements_module.sql` — Unified badges and certificates.
 24. `migration_memorization_revision.sql` — Revision queue and triggers.
 25. `migration_rls_hardening.sql` — Drops the open (`public`) policies on storage, quizzes and `class_sessions`; storage writes and quiz management become teacher-only. Run **after** `migration_quizzes.sql`. Idempotent.
+26. `migration_namaz_translation.sql` — Adds `namaz_step_parts.translation` and seeds English meanings. Run **after** `migration_namaz_arabic.sql`. Idempotent; never overwrites a teacher's edit. **Apply before deploying the code that selects the column.**
 
 ---
 

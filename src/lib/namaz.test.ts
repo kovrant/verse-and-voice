@@ -20,7 +20,7 @@ const steps: NamazStep[] = [
 ]
 
 const parts: NamazStepPart[] = [
-  { id: "p1", step_id: "s2", title: "Sana", order_index: 0, image_url: null, arabic_text: null },
+  { id: "p1", step_id: "s2", title: "Sana", order_index: 0, image_url: null, arabic_text: null, translation: null },
   {
     id: "p2",
     step_id: "s2",
@@ -28,6 +28,7 @@ const parts: NamazStepPart[] = [
     order_index: 1,
     image_url: null,
     arabic_text: null,
+    translation: null,
   },
 ]
 
