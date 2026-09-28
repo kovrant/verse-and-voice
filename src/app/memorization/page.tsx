@@ -72,25 +72,32 @@ async function uploadChunkImages(
   onEach?: (done: number, total: number) => void,
 ): Promise<number> {
   const images = files.filter((f) => f.type.startsWith("image/"))
-  const rows: { catalog_id: string; order_index: number; image_url: string }[] = []
-  let nextIndex = startIndex
-  for (let i = 0; i < images.length; i++) {
-    const file = images[i]
-    const idx = nextIndex
-    const ext = file.name.split(".").pop()
-    const path = `chunks/${catalogId}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
-    const { error: upErr } = await supabase.storage
-      .from("memorization-images")
-      .upload(path, file, { cacheControl: CACHE_FOREVER, upsert: false })
-    if (upErr) {
-      toast.error(upErr.message)
-    } else {
+  let completed = 0
+
+  const uploadResults = await Promise.all(
+    images.map(async (file, i) => {
+      const idx = startIndex + i
+      const ext = file.name.split(".").pop()
+      const path = `chunks/${catalogId}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error: upErr } = await supabase.storage
+        .from("memorization-images")
+        .upload(path, file, { cacheControl: CACHE_FOREVER, upsert: false })
+      completed++
+      onEach?.(completed, images.length)
+
+      if (upErr) {
+        toast.error(upErr.message)
+        return null
+      }
       const { data } = supabase.storage.from("memorization-images").getPublicUrl(path)
-      rows.push({ catalog_id: catalogId, order_index: idx, image_url: data.publicUrl })
-      nextIndex++
-    }
-    onEach?.(i + 1, images.length)
-  }
+      return { catalog_id: catalogId, order_index: idx, image_url: data.publicUrl }
+    }),
+  )
+
+  const rows = uploadResults.filter(
+    (r): r is { catalog_id: string; order_index: number; image_url: string } => r !== null,
+  )
+
   if (rows.length > 0) {
     const { error } = await supabase.from("memorization_chunks").insert(rows)
     if (error) {
@@ -163,12 +170,12 @@ export default function MemorizationPage() {
       ])
 
     const countMap: Record<string, number> = {}
-    ;(counts || []).forEach((c: any) => {
+    ;((counts as { catalog_id: string }[]) || []).forEach((c) => {
       countMap[c.catalog_id] = (countMap[c.catalog_id] || 0) + 1
     })
 
     const chunkMap: Record<string, number> = {}
-    ;(chunkRows || []).forEach((c: any) => {
+    ;((chunkRows as { catalog_id: string }[]) || []).forEach((c) => {
       chunkMap[c.catalog_id] = (chunkMap[c.catalog_id] || 0) + 1
     })
     setChunkCounts(chunkMap)

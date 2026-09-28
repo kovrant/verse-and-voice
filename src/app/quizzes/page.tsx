@@ -41,22 +41,28 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { AGE_GROUP_LABELS, CATEGORY_LABELS } from "@/lib/quizzes/quiz-engine"
 import type {
+  QuestionType,
   Quiz,
   QuizAgeGroup,
   QuizAssignment,
   QuizAttempt,
   QuizCategory,
   QuizOption,
+  QuizQuestion,
 } from "@/lib/quizzes/types"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import type { Student } from "@/lib/utils"
 
+type AttemptWithStudentJoin = QuizAttempt & {
+  students?: { id: string; name: string; guardian_name?: string | null } | { id: string; name: string; guardian_name?: string | null }[] | null
+}
+
 export default function TeacherQuizzesPage() {
   const [quizzes, setQuizzes] = useState<Quiz[]>([])
   const [students, setStudents] = useState<Student[]>([])
   const [assignments, setAssignments] = useState<QuizAssignment[]>([])
-  const [attempts, setAttempts] = useState<QuizAttempt[]>([])
+  const [attempts, setAttempts] = useState<AttemptWithStudentJoin[]>([])
   const [loading, setLoading] = useState(true)
 
   // Filters
@@ -86,7 +92,7 @@ export default function TeacherQuizzesPage() {
     questions: Array<{
       id?: string
       question_text: string
-      question_type: "single_choice" | "true_false"
+      question_type: QuestionType
       options: QuizOption[]
       explanation: string
     }>
@@ -129,15 +135,16 @@ export default function TeacherQuizzesPage() {
           .order("completed_at", { ascending: false }),
       ])
 
-      const mappedQuizzes = (quizzesRes.data || []).map((q: any) => ({
+      type RawQuizRow = Quiz & { quiz_questions?: QuizQuestion[] }
+      const mappedQuizzes = ((quizzesRes.data as RawQuizRow[]) || []).map((q) => ({
         ...q,
-        questions: (q.quiz_questions || []).sort((a: any, b: any) => a.order_index - b.order_index),
+        questions: [...(q.quiz_questions || [])].sort((a, b) => a.order_index - b.order_index),
       }))
 
-      setQuizzes(mappedQuizzes as Quiz[])
+      setQuizzes(mappedQuizzes)
       setStudents((studentsRes.data as Student[]) || [])
       setAssignments((assignRes.data as QuizAssignment[]) || [])
-      setAttempts((attemptsRes.data as any[]) || [])
+      setAttempts((attemptsRes.data as AttemptWithStudentJoin[]) || [])
     } catch (err) {
       console.error("Error loading quizzes data:", err)
     } finally {
@@ -242,7 +249,7 @@ export default function TeacherQuizzesPage() {
         questions: (quizToEdit.questions || []).map((q) => ({
           id: q.id,
           question_text: q.question_text,
-          question_type: q.question_type as any,
+          question_type: q.question_type,
           options: q.options,
           explanation: q.explanation || "",
         })),
@@ -277,11 +284,11 @@ export default function TeacherQuizzesPage() {
   // Save Quiz to Supabase
   const handleSaveQuiz = async () => {
     if (!builderQuiz.title.trim()) {
-      alert("Please enter a Quiz Title")
+      toast.error("Please enter a Quiz Title")
       return
     }
     if (builderQuiz.questions.length === 0) {
-      alert("Please add at least one question")
+      toast.error("Please add at least one question")
       return
     }
 
@@ -293,7 +300,7 @@ export default function TeacherQuizzesPage() {
 
       if (quizId) {
         // Update existing quiz
-        await supabase
+        const { error: updateErr } = await supabase
           .from("quizzes")
           .update({
             title: builderQuiz.title,
@@ -308,8 +315,11 @@ export default function TeacherQuizzesPage() {
           })
           .eq("id", quizId)
 
+        if (updateErr) throw updateErr
+
         // Replace questions
-        await supabase.from("quiz_questions").delete().eq("quiz_id", quizId)
+        const { error: delErr } = await supabase.from("quiz_questions").delete().eq("quiz_id", quizId)
+        if (delErr) throw delErr
       } else {
         // Insert new quiz
         const { data: created, error } = await supabase
@@ -342,13 +352,15 @@ export default function TeacherQuizzesPage() {
         order_index: idx + 1,
       }))
 
-      await supabase.from("quiz_questions").insert(questionsToInsert)
+      const { error: insErr } = await supabase.from("quiz_questions").insert(questionsToInsert)
+      if (insErr) throw insErr
 
+      toast.success(builderQuiz.id ? "Quiz updated!" : "Quiz created!")
       setBuilderOpen(false)
       await loadData()
     } catch (err) {
       console.error("Error saving quiz:", err)
-      alert("Failed to save quiz. Please check fields and try again.")
+      toast.error("Failed to save quiz. Please check fields and try again.")
     } finally {
       setSavingQuiz(false)
     }
@@ -358,10 +370,13 @@ export default function TeacherQuizzesPage() {
   const handleDeleteQuiz = async (quizId: string) => {
     if (!confirm("Are you sure you want to delete this quiz? All student attempts will be deleted.")) return
     try {
-      await supabase.from("quizzes").delete().eq("id", quizId)
+      const { error } = await supabase.from("quizzes").delete().eq("id", quizId)
+      if (error) throw error
+      toast.success("Quiz deleted")
       await loadData()
     } catch (err) {
       console.error("Failed to delete quiz:", err)
+      toast.error("Failed to delete quiz")
     }
   }
 
@@ -392,11 +407,12 @@ export default function TeacherQuizzesPage() {
 
       if (!res.ok) throw new Error("Failed to save assignments")
 
+      toast.success("Quiz assignments saved")
       setAssignModalOpen(false)
       await loadData()
     } catch (err) {
       console.error("Error saving assignments:", err)
-      alert("Failed to assign quiz.")
+      toast.error("Failed to assign quiz.")
     } finally {
       setSavingAssignments(false)
     }
@@ -718,7 +734,7 @@ export default function TeacherQuizzesPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
                 <Label>Category</Label>
-                <Select value={aiCategory} onValueChange={(v: any) => setAiCategory(v)}>
+                <Select value={aiCategory} onValueChange={(v) => setAiCategory(v as QuizCategory)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -734,7 +750,7 @@ export default function TeacherQuizzesPage() {
 
               <div className="space-y-2">
                 <Label>Target Age Level</Label>
-                <Select value={aiAgeGroup} onValueChange={(v: any) => setAiAgeGroup(v)}>
+                <Select value={aiAgeGroup} onValueChange={(v) => setAiAgeGroup(v as QuizAgeGroup)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -826,7 +842,7 @@ export default function TeacherQuizzesPage() {
                 <Label>Category</Label>
                 <Select
                   value={builderQuiz.category}
-                  onValueChange={(v: any) => setBuilderQuiz({ ...builderQuiz, category: v })}
+                  onValueChange={(v) => setBuilderQuiz({ ...builderQuiz, category: v as QuizCategory })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -845,7 +861,7 @@ export default function TeacherQuizzesPage() {
                 <Label>Age Group</Label>
                 <Select
                   value={builderQuiz.age_group}
-                  onValueChange={(v: any) => setBuilderQuiz({ ...builderQuiz, age_group: v })}
+                  onValueChange={(v) => setBuilderQuiz({ ...builderQuiz, age_group: v as QuizAgeGroup })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1216,15 +1232,14 @@ export default function TeacherQuizzesPage() {
               return (
                 <div className="space-y-2">
                   {quizAttempts.map((attempt) => {
-                    const rawAttempt = attempt as any
-                    const studentInfo =
-                      studentsMap.get(attempt.student_id) ||
-                      attempt.student ||
-                      (Array.isArray(rawAttempt.students) ? rawAttempt.students[0] : rawAttempt.students)
+                    const joinedStudent = Array.isArray(attempt.students)
+                      ? attempt.students[0]
+                      : attempt.students
+                    const studentInfo = studentsMap.get(attempt.student_id) || joinedStudent || attempt.student
                     const studentName = studentInfo?.name || "Student"
-                    const studentGuardian = studentInfo?.guardian_name
-                      ? `Parent/Guardian: ${studentInfo.guardian_name}`
-                      : ""
+                    const guardianName =
+                      studentsMap.get(attempt.student_id)?.guardian_name ?? joinedStudent?.guardian_name
+                    const studentGuardian = guardianName ? `Parent/Guardian: ${guardianName}` : ""
 
                     return (
                       <div

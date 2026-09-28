@@ -1,6 +1,11 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { type MemChunk, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
+import {
+  chunkProgress,
+  type MemChunk,
+  STUDENT_MEM_SELECT,
+  type StudentMemItem,
+} from "@/lib/memorization"
 
 import {
   ensureQuranRoundAchievements,
@@ -49,12 +54,28 @@ export async function backfillStudentAchievements(
   db: SupabaseClient,
   studentId: string,
 ): Promise<{ newlyAwarded: number }> {
-  const before = await countAchievements(db, studentId)
-
-  const { data: rounds } = await db
-    .from("quran_rounds")
-    .select("id, type, round_number, desc_completed, asc_completed, completed_at")
-    .eq("student_id", studentId)
+  const [
+    before,
+    { data: rounds },
+    { data: memItems },
+    memorizedIds,
+    { data: namaz },
+    { count: hadithMemorizedCount },
+  ] = await Promise.all([
+    countAchievements(db, studentId),
+    db
+      .from("quran_rounds")
+      .select("id, type, round_number, desc_completed, asc_completed, completed_at")
+      .eq("student_id", studentId),
+    db.from("student_memorization").select(STUDENT_MEM_SELECT).eq("student_id", studentId),
+    loadMemorizedChunkIds(db, studentId),
+    db.from("student_namaz").select("status").eq("student_id", studentId).maybeSingle(),
+    db
+      .from("student_hadith_progress")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", studentId)
+      .eq("status", "memorized"),
+  ])
 
   for (const round of rounds ?? []) {
     const ref: QuranRoundRef = {
@@ -70,15 +91,9 @@ export async function backfillStudentAchievements(
     await ensureQuranRoundAchievements(db, studentId, ref, progress)
   }
 
-  const { data: memItems } = await db
-    .from("student_memorization")
-    .select(STUDENT_MEM_SELECT)
-    .eq("student_id", studentId)
-
   const items = (memItems as StudentMemItem[]) ?? []
   const catalogIds = items.map((i) => i.catalog_id)
   const chunksByCatalog = await loadChunksByCatalog(db, catalogIds)
-  const memorizedIds = await loadMemorizedChunkIds(db, studentId)
 
   for (const item of items) {
     const chunks = chunksByCatalog[item.catalog_id] ?? []
@@ -94,25 +109,18 @@ export async function backfillStudentAchievements(
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i]
       if (!memorizedIds.has(chunk.id)) continue
-      await syncMemorizationChunk(db, studentId, chunk, i, title, chunks, memorizedIds)
+      // Pass [] for allChunks so lesson completion is checked once after the loop, not N times.
+      await syncMemorizationChunk(db, studentId, chunk, i, title, [], memorizedIds)
+    }
+
+    if (chunkProgress(chunks, memorizedIds).isMemorized) {
+      await syncMemorizationLesson(db, studentId, item.catalog_id, title)
     }
   }
-
-  const { data: namaz } = await db
-    .from("student_namaz")
-    .select("status")
-    .eq("student_id", studentId)
-    .maybeSingle()
 
   if (namaz?.status === "completed") {
     await syncNamazComplete(db, studentId)
   }
-
-  const { count: hadithMemorizedCount } = await db
-    .from("student_hadith_progress")
-    .select("id", { count: "exact", head: true })
-    .eq("student_id", studentId)
-    .eq("status", "memorized")
 
   if (hadithMemorizedCount && hadithMemorizedCount > 0) {
     await syncHadithMemorized(db, studentId, hadithMemorizedCount)
@@ -121,3 +129,4 @@ export async function backfillStudentAchievements(
   const after = await countAchievements(db, studentId)
   return { newlyAwarded: Math.max(0, after - before) }
 }
+

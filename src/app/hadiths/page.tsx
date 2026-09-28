@@ -93,7 +93,24 @@ export default function TeacherHadithsPage() {
         supabase.from("student_hadith_progress").select("*"),
       ])
 
-      const rawHadiths = (hadithsRes.data as any[]) || []
+      interface RawHadithRow {
+        id: string
+        hadith_number?: number
+        arabic_text?: string
+        english_text?: string
+        english_translation?: string
+        urdu_text?: string
+        urdu_translation?: string
+        kids_lesson?: string
+        kid_lesson?: string
+        narrator?: string
+        reference?: string
+        topic?: string
+        order_index?: number
+        is_published?: boolean
+      }
+
+      const rawHadiths = (hadithsRes.data as RawHadithRow[]) || []
       const formattedHadiths: Hadith[] = rawHadiths.map((h, index) => ({
         id: h.id,
         hadith_number: h.hadith_number || index + 1,
@@ -110,7 +127,7 @@ export default function TeacherHadithsPage() {
 
       setHadiths(formattedHadiths)
       setStudents((studentsRes.data as Student[]) || [])
-      setAssignments((assignRes.data as any[]) || [])
+      setAssignments((assignRes.data as HadithAssignment[]) || [])
       setProgressList((progRes.data as StudentHadithProgress[]) || [])
     } catch (err) {
       console.error("Error loading Hadith studio data:", err)
@@ -283,9 +300,9 @@ export default function TeacherHadithsPage() {
       )
       setAssignModalOpen(false)
       void loadData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      toast.error(err.message || "Failed to assign Hadith")
+      toast.error(err instanceof Error ? err.message : "Failed to assign Hadith")
     } finally {
       setSubmittingAssign(false)
     }
@@ -369,9 +386,9 @@ export default function TeacherHadithsPage() {
 
       setCustomModalOpen(false)
       void loadData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
-      toast.error(err.message || "Failed to save Hadith")
+      toast.error(err instanceof Error ? err.message : "Failed to save Hadith")
     } finally {
       setSavingCustom(false)
     }
@@ -385,7 +402,7 @@ export default function TeacherHadithsPage() {
       if (error) throw error
       toast.success("Hadith removed")
       void loadData()
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err)
       toast.error("Failed to delete Hadith")
     }
