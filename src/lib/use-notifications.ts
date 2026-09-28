@@ -70,7 +70,7 @@ async function countUnreadNotifications(userId: string): Promise<number> {
 type NotifSubscriber = {
   limit: number
   setItems: Dispatch<SetStateAction<NotificationRow[]>>
-  refreshUnread: () => void
+  setUnread: Dispatch<SetStateAction<number>>
 }
 
 type NotifChannelEntry = {
@@ -80,6 +80,14 @@ type NotifChannelEntry = {
 
 const notifChannels = new Map<string, NotifChannelEntry>()
 
+function refreshUnreadForUser(userId: string) {
+  void countUnreadNotifications(userId).then((n) => {
+    const entry = notifChannels.get(userId)
+    if (!entry) return
+    for (const sub of entry.subs) sub.setUnread(n)
+  })
+}
+
 function dispatchInsert(userId: string, n: NotificationRow) {
   const entry = notifChannels.get(userId)
   if (!entry) return
@@ -87,8 +95,8 @@ function dispatchInsert(userId: string, n: NotificationRow) {
     sub.setItems((prev) =>
       prev.some((p) => p.id === n.id) ? prev : [n, ...prev].slice(0, sub.limit),
     )
-    sub.refreshUnread()
   }
+  refreshUnreadForUser(userId)
   if (n.type !== "live_class") toast(n.title, { description: n.body ?? undefined })
 }
 
@@ -97,8 +105,8 @@ function dispatchUpdate(userId: string, n: NotificationRow) {
   if (!entry) return
   for (const sub of entry.subs) {
     sub.setItems((prev) => prev.map((p) => (p.id === n.id ? { ...p, ...n } : p)))
-    sub.refreshUnread()
   }
+  refreshUnreadForUser(userId)
 }
 
 function attachNotifChannel(userId: string) {
@@ -119,7 +127,11 @@ function attachNotifChannel(userId: string) {
     )
 
   notifChannels.set(userId, { channel, subs: new Set() })
-  void ensureRealtimeAuth().finally(() => channel.subscribe())
+  void ensureRealtimeAuth().finally(() => {
+    if (notifChannels.get(userId)?.channel === channel) {
+      channel.subscribe()
+    }
+  })
 }
 
 function subscribeNotif(userId: string, sub: NotifSubscriber) {
@@ -158,9 +170,6 @@ export function useNotifications(limit = FEED_LIMIT) {
     let active = true
     setLoading(true)
 
-    const refreshUnread = () =>
-      void countUnreadNotifications(userId).then((n) => active && setUnread(n))
-
     void supabase
       .from("notifications")
       .select(NOTIFICATION_COLUMNS)
@@ -173,9 +182,9 @@ export function useNotifications(limit = FEED_LIMIT) {
         setItems((data as NotificationRow[] | null) ?? [])
         setLoading(false)
       })
-    refreshUnread()
+    void countUnreadNotifications(userId).then((n) => active && setUnread(n))
 
-    const unsub = subscribeNotif(userId, { limit, setItems, refreshUnread })
+    const unsub = subscribeNotif(userId, { limit, setItems, setUnread })
 
     return () => {
       active = false

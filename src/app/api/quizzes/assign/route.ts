@@ -24,7 +24,14 @@ export async function POST(request: Request) {
 
   const quizId = body.quiz_id?.trim()
   const targetStudentIds = Array.isArray(body.student_ids) ? body.student_ids : []
-  const dueDate = body.due_date ? new Date(body.due_date).toISOString() : null
+  let dueDate: string | null = null
+  if (body.due_date) {
+    const parsed = Date.parse(body.due_date)
+    if (Number.isNaN(parsed)) {
+      return NextResponse.json({ error: "Invalid due_date" }, { status: 400 })
+    }
+    dueDate = new Date(parsed).toISOString()
+  }
   const isExplicitReassign = !!body.reassign
 
   if (!quizId) {
@@ -33,50 +40,62 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient()
 
-  // 1. Fetch quiz info
-  const { data: quiz, error: quizError } = await admin
-    .from("quizzes")
-    .select("id, title")
-    .eq("id", quizId)
-    .maybeSingle()
+  // 1. Fetch quiz info and existing assignments in parallel
+  const [{ data: quiz, error: quizError }, { data: currentAssignments }] = await Promise.all([
+    admin.from("quizzes").select("id, title").eq("id", quizId).maybeSingle(),
+    admin.from("quiz_assignments").select("id, student_id, status").eq("quiz_id", quizId),
+  ])
 
   if (quizError || !quiz) {
     return NextResponse.json({ error: "Quiz not found" }, { status: 404 })
   }
 
-  // 2. Fetch existing assignments for this quiz
-  const { data: currentAssignments } = await admin
-    .from("quiz_assignments")
-    .select("id, student_id, status")
-    .eq("quiz_id", quizId)
-
   const existingMap = new Map((currentAssignments || []).map((a) => [a.student_id, a]))
 
   if (isExplicitReassign) {
-    // Single or targeted re-assignment: reset status to pending and notify
+    // Batch re-assignment: reset existing to pending, insert missing, and notify in parallel
+    const now = new Date().toISOString()
+    const existingIdsToReset: string[] = []
+    const newRowsToInsert: Array<{
+      quiz_id: string
+      student_id: string
+      status: string
+      due_date: string | null
+      assigned_at: string
+    }> = []
+
     for (const studentId of targetStudentIds) {
       const existing = existingMap.get(studentId)
       if (existing) {
-        await admin
-          .from("quiz_assignments")
-          .update({
-            status: "pending",
-            assigned_at: new Date().toISOString(),
-            due_date: dueDate,
-          })
-          .eq("id", existing.id)
+        existingIdsToReset.push(existing.id)
       } else {
-        await admin.from("quiz_assignments").insert({
+        newRowsToInsert.push({
           quiz_id: quizId,
           student_id: studentId,
           status: "pending",
           due_date: dueDate,
-          assigned_at: new Date().toISOString(),
+          assigned_at: now,
         })
       }
-
-      await notifyStudentQuizAssigned(studentId, quiz.title, quiz.id, true)
     }
+
+    await Promise.all([
+      existingIdsToReset.length > 0
+        ? admin
+            .from("quiz_assignments")
+            .update({ status: "pending", assigned_at: now, due_date: dueDate })
+            .in("id", existingIdsToReset)
+        : Promise.resolve(),
+      newRowsToInsert.length > 0
+        ? admin.from("quiz_assignments").insert(newRowsToInsert)
+        : Promise.resolve(),
+    ])
+
+    await Promise.allSettled(
+      targetStudentIds.map((studentId) =>
+        notifyStudentQuizAssigned(studentId, quiz.title, quiz.id, true),
+      ),
+    )
 
     return NextResponse.json({ ok: true, reassigned: targetStudentIds.length })
   }

@@ -48,3 +48,39 @@ export async function requireTeacher(): Promise<
   }
   return { user }
 }
+
+/**
+ * Authenticate the caller and require that they are either a teacher or the
+ * student matching `studentId` (via `profiles.student_id`).
+ */
+export async function requireStudentOrTeacher(
+  studentId: string,
+): Promise<{ user: User; denied?: undefined } | { user?: undefined; denied: NextResponse }> {
+  const supabase = createSupabaseServerClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) return { denied: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) }
+
+  const jwtRole = (user.app_metadata as { role?: string } | null)?.role
+  if (jwtRole && isTeacherRole(jwtRole, null)) {
+    return { user }
+  }
+
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("role, student_id")
+    .eq("id", user.id)
+    .maybeSingle()
+
+  if (
+    isTeacherRole(jwtRole, profile?.role as string | undefined) ||
+    (profile?.student_id && profile.student_id === studentId)
+  ) {
+    return { user }
+  }
+
+  return { denied: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
+}

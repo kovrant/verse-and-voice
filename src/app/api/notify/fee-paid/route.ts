@@ -18,7 +18,14 @@ export async function POST(request: Request) {
   const month = typeof body.month === "number" ? body.month : parseInt(String(body.month), 10)
   const year = typeof body.year === "number" ? body.year : parseInt(String(body.year), 10)
 
-  if (!studentId || month < 1 || month > 12 || year < 2000) {
+  if (
+    !studentId ||
+    !Number.isFinite(month) ||
+    !Number.isFinite(year) ||
+    month < 1 ||
+    month > 12 ||
+    year < 2000
+  ) {
     return NextResponse.json({ error: "student_id, month, and year required" }, { status: 400 })
   }
 

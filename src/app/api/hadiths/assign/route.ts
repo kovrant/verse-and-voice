@@ -23,7 +23,14 @@ export async function POST(request: Request) {
 
   const hadithId = body.hadith_id?.trim()
   const targetStudentIds = Array.isArray(body.student_ids) ? body.student_ids : []
-  const dueDate = body.due_date ? new Date(body.due_date).toISOString() : null
+  let dueDate: string | null = null
+  if (body.due_date) {
+    const parsed = Date.parse(body.due_date)
+    if (Number.isNaN(parsed)) {
+      return NextResponse.json({ error: "Invalid due_date" }, { status: 400 })
+    }
+    dueDate = new Date(parsed).toISOString()
+  }
 
   if (!hadithId) {
     return NextResponse.json({ error: "hadith_id is required" }, { status: 400 })
@@ -31,24 +38,17 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient()
 
-  // 1. Fetch Hadith info
-  const { data: hadith, error: hadithError } = await admin
-    .from("hadiths")
-    .select("id, hadith_number, english_text")
-    .eq("id", hadithId)
-    .maybeSingle()
+  // 1. Fetch Hadith info and existing assignments in parallel
+  const [{ data: hadith, error: hadithError }, { data: currentAssignments }] = await Promise.all([
+    admin.from("hadiths").select("id, hadith_number, english_text").eq("id", hadithId).maybeSingle(),
+    admin.from("hadith_assignments").select("id, student_id").eq("hadith_id", hadithId),
+  ])
 
   if (hadithError || !hadith) {
     return NextResponse.json({ error: "Hadith not found" }, { status: 404 })
   }
 
   const hadithTitle = `Hadith #${hadith.hadith_number}: ${hadith.english_text?.slice(0, 30)}...`
-
-  // 2. Fetch existing assignments for this hadith
-  const { data: currentAssignments } = await admin
-    .from("hadith_assignments")
-    .select("id, student_id")
-    .eq("hadith_id", hadithId)
 
   const existingMap = new Map((currentAssignments || []).map((a) => [a.student_id, a]))
   const toRemove = (currentAssignments || []).filter((a) => !targetStudentIds.includes(a.student_id))

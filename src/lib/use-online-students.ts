@@ -85,7 +85,14 @@ function readPresenceIds(channel: NonNullable<typeof teacherChannel>): Set<strin
 
 function broadcastOnlineIds() {
   if (!teacherChannel) return
-  teacherOnlineIds = readPresenceIds(teacherChannel)
+  const nextIds = readPresenceIds(teacherChannel)
+  if (
+    nextIds.size === teacherOnlineIds.size &&
+    [...nextIds].every((id) => teacherOnlineIds.has(id))
+  ) {
+    return
+  }
+  teacherOnlineIds = nextIds
   for (const fn of teacherListeners) fn(teacherOnlineIds)
 }
 

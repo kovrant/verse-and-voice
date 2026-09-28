@@ -1,7 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react"
 
 import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
 import { MoonMascot } from "@/components/student-mascot"
@@ -192,26 +192,45 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     router.push("/student/classes")
   }, [join, router])
 
+  const contextValue = useMemo(
+    () => ({
+      live,
+      peerNav,
+      peerPointer,
+      studentId,
+      joined,
+      join,
+      leave,
+      sendNav,
+      sendScroll,
+      sendPointer,
+      subscribeNav,
+      subscribeScroll,
+      subscribePointer,
+      activeTajweedRule,
+      dismissTajweedRule,
+    }),
+    [
+      live,
+      peerNav,
+      peerPointer,
+      studentId,
+      joined,
+      join,
+      leave,
+      sendNav,
+      sendScroll,
+      sendPointer,
+      subscribeNav,
+      subscribeScroll,
+      subscribePointer,
+      activeTajweedRule,
+      dismissTajweedRule,
+    ],
+  )
+
   return (
-    <LiveClassContext.Provider
-      value={{
-        live,
-        peerNav,
-        peerPointer,
-        studentId,
-        joined,
-        join,
-        leave,
-        sendNav,
-        sendScroll,
-        sendPointer,
-        subscribeNav,
-        subscribeScroll,
-        subscribePointer,
-        activeTajweedRule,
-        dismissTajweedRule,
-      }}
-    >
+    <LiveClassContext.Provider value={contextValue}>
       {children}
 
       <KidModal

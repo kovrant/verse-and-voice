@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
 
 import { syncHadithMemorized } from "@/lib/achievements/sync"
+import { requireTeacher } from "@/lib/api-auth"
 import type { HadithStatus } from "@/lib/hadiths/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
 export async function POST(request: Request) {
+  const { denied } = await requireTeacher()
+  if (denied) return denied
+
   let body: {
     student_id?: string
     hadith_id?: string

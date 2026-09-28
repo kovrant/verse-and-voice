@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { awardAchievement } from "@/lib/achievements/award"
+import { requireStudentOrTeacher } from "@/lib/api-auth"
 import { gradeQuizAttempt } from "@/lib/quizzes/quiz-engine"
 import type { Quiz, QuizQuestion } from "@/lib/quizzes/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
@@ -27,6 +28,9 @@ export async function POST(request: Request) {
   if (!studentId || !quizId) {
     return NextResponse.json({ error: "student_id and quiz_id are required" }, { status: 400 })
   }
+
+  const { denied } = await requireStudentOrTeacher(studentId)
+  if (denied) return denied
 
   const admin = createSupabaseAdminClient()
 

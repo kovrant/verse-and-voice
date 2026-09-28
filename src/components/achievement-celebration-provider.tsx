@@ -6,6 +6,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -141,10 +142,13 @@ export function AchievementCelebrationProvider({ children }: { children: ReactNo
     }
   }, [studentId, loadAndCelebrate])
 
+  const contextValue = useMemo(
+    () => ({ hasUnseen, markAllSeen, refresh: loadAndCelebrate }),
+    [hasUnseen, markAllSeen, loadAndCelebrate],
+  )
+
   return (
-    <AchievementCelebrationContext.Provider
-      value={{ hasUnseen, markAllSeen, refresh: loadAndCelebrate }}
-    >
+    <AchievementCelebrationContext.Provider value={contextValue}>
       {children}
     </AchievementCelebrationContext.Provider>
   )

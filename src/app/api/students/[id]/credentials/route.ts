@@ -37,12 +37,14 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   const admin = createSupabaseAdminClient()
 
-  // 3. Confirm the student exists.
-  const { data: student, error: studentError } = await admin
-    .from("students")
-    .select("id, name")
-    .eq("id", studentId)
-    .maybeSingle()
+  // 3. Confirm the student exists, check if the username is taken by another
+  //    student, and look up any existing login in parallel.
+  const [{ data: student, error: studentError }, { data: usernameOwner }, { data: existing }] =
+    await Promise.all([
+      admin.from("students").select("id, name").eq("id", studentId).maybeSingle(),
+      admin.from("profiles").select("student_id").eq("username", username).maybeSingle(),
+      admin.from("profiles").select("id, username").eq("student_id", studentId).maybeSingle(),
+    ])
 
   if (studentError) {
     return NextResponse.json({ error: studentError.message }, { status: 500 })
@@ -52,12 +54,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 
   // 4. Reject a username already taken by a *different* student.
-  const { data: usernameOwner } = await admin
-    .from("profiles")
-    .select("student_id")
-    .eq("username", username)
-    .maybeSingle()
-
   if (usernameOwner && usernameOwner.student_id !== studentId) {
     return NextResponse.json({ error: "That username is already taken." }, { status: 409 })
   }
@@ -65,11 +61,6 @@ export async function POST(request: Request, { params }: { params: { id: string 
   const email = usernameToEmail(username)
 
   // 5. Does this student already have a login?
-  const { data: existing } = await admin
-    .from("profiles")
-    .select("id, username")
-    .eq("student_id", studentId)
-    .maybeSingle()
 
   if (existing) {
     // Reset password (and rename if the username changed).
