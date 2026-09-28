@@ -53,7 +53,24 @@ export default function StudentHadithsPage() {
           .order("assigned_at", { ascending: false }),
       ])
 
-      const rawHadiths = (hadithsRes.data as any[]) || []
+      interface RawHadithRow {
+        id: string
+        hadith_number?: number
+        arabic_text?: string
+        english_text?: string
+        english_translation?: string
+        urdu_text?: string
+        urdu_translation?: string
+        kids_lesson?: string
+        kid_lesson?: string
+        narrator?: string
+        reference?: string
+        topic?: string
+        order_index?: number
+        is_published?: boolean
+      }
+
+      const rawHadiths = (hadithsRes.data as RawHadithRow[]) || []
       const hadithList: Hadith[] = rawHadiths.map((h, index) => ({
         id: h.id,
         hadith_number: h.hadith_number || index + 1,
@@ -69,7 +86,7 @@ export default function StudentHadithsPage() {
       }))
 
       const pList = (progressRes.data as StudentHadithProgress[]) || []
-      const aList = (assignmentsRes.data as any[]) || []
+      const aList = (assignmentsRes.data as { hadith_id?: string; status?: string }[]) || []
 
       const pMap = new Map<string, StudentHadithProgress>()
       for (const p of pList) {

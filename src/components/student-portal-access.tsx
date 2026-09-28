@@ -159,8 +159,8 @@ function CredentialDialog({
       toast.success(data.created ? "Login created" : "Login updated")
       onSaved(data.username)
       onOpenChange(false)
-    } catch (e: any) {
-      toast.error(e?.message || "Network error")
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Network error")
     } finally {
       setSaving(false)
     }

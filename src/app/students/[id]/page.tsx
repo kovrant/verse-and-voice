@@ -195,34 +195,39 @@ export default function StudentDetailPage() {
   }
 
   const loadStudent = useCallback(async () => {
-    const { data } = await supabase.from("students").select("*").eq("id", params.id).single()
+    const studentAndFeesPromise = (async () => {
+      const { data } = await supabase.from("students").select("*").eq("id", params.id).single()
+      if (!data) {
+        router.push("/students")
+        return false
+      }
+      setStudent(data)
+      setEditForm({
+        fee: data.fee.toString(),
+        fee_currency: data.fee_currency,
+        class_time: data.class_time || "",
+        class_days: Array.isArray(data.class_days) ? data.class_days : [],
+        country: data.country || "",
+        status: data.status || "Reading",
+        ended_at: data.ended_at || "",
+      })
+      await ensureFeeRecords(data)
+      await loadFees()
+      return true
+    })()
 
-    if (!data) {
-      router.push("/students")
-      return
-    }
-
-    setStudent(data)
-    setEditForm({
-      fee: data.fee.toString(),
-      fee_currency: data.fee_currency,
-      class_time: data.class_time || "",
-      class_days: Array.isArray(data.class_days) ? data.class_days : [],
-      country: data.country || "",
-      status: data.status || "Reading",
-      ended_at: data.ended_at || "",
-    })
-
-    await ensureFeeRecords(data)
-    await Promise.all([
+    const [found] = await Promise.all([
+      studentAndFeesPromise,
       loadRounds(),
-      loadFees(),
       loadMemItems(),
       loadCatalog(),
       loadSessions(),
       loadAchievementCount(),
     ])
-    setLoading(false)
+
+    if (found) {
+      setLoading(false)
+    }
     // The loaders above only close over params.id (already a dep) and stable
     // state setters. Adding them to the deps would recreate loadStudent on every
     // render and re-fire the mount effect in a loop, so they're omitted on purpose.
@@ -348,7 +353,7 @@ export default function StudentDetailPage() {
       .select(STUDENT_MEM_SELECT)
       .eq("student_id", params.id)
       .order("created_at", { ascending: false })
-    const items = ((data as any) || []) as StudentMemItem[]
+    const items = (data as unknown as StudentMemItem[]) || []
     setMemItems(items)
 
     const catalogIds = items.map((m) => m.catalog_id)
@@ -671,6 +676,26 @@ export default function StudentDetailPage() {
   async function saveEditRound() {
     if (!editingRound) return
 
+    const nextStartedAt = editRoundForm.started_at || editingRound.started_at
+
+    if (!editRoundForm.is_completed) {
+      const hasOtherActive = rounds.some((r) => r.id !== editingRound.id && !r.completed_at)
+      if (hasOtherActive) {
+        toast.error("Cannot mark this round as incomplete while another round is already active.")
+        return
+      }
+      const hasSubsequentRound = rounds.some(
+        (r) =>
+          r.id !== editingRound.id &&
+          (r.started_at.localeCompare(nextStartedAt) > 0 ||
+            (r.started_at === nextStartedAt && r.round_number > editingRound.round_number)),
+      )
+      if (hasSubsequentRound) {
+        toast.error("Cannot reopen an older round when a newer round has already started.")
+        return
+      }
+    }
+
     // Completed round => desc=30, asc=0 (=> 30/30). See note in startNewRound.
     const before = roundProgress(editingRound)
     const desc = editRoundForm.is_completed ? 30 : parseInt(editRoundForm.desc_completed) || 0
@@ -682,7 +707,7 @@ export default function StudentDetailPage() {
     const { error } = await supabase
       .from("quran_rounds")
       .update({
-        started_at: editRoundForm.started_at,
+        started_at: nextStartedAt,
         completed_at: completedAt,
         desc_completed: desc,
         asc_completed: asc,

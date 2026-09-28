@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/sortable-header"
 import { classTimeToMinutes } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
-import { fetchAllRows, supabase } from "@/lib/supabase"
+import { fetchAllRows } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import { parseLocalDate, STATUS_CONFIG, type Student } from "@/lib/utils"
 
@@ -110,14 +110,16 @@ export default function StudentsPage() {
   }, [])
 
   async function loadStudents() {
-    const [studentsRes, allRounds] = await Promise.all([
-      supabase.from("students").select("*").order("created_at", { ascending: false }),
+    const [allStudents, allRounds] = await Promise.all([
+      fetchAllRows<Student>("students", (q) =>
+        q.select("*").order("created_at", { ascending: false }),
+      ),
       // Page past the 1000-row cap so progress data isn't silently dropped.
       fetchAllRows<QuranRound>("quran_rounds", (q) =>
         q.select("*").order("round_number", { ascending: true }),
       ),
     ])
-    setStudents(studentsRes.data || [])
+    setStudents(allStudents || [])
 
     // Group rounds by student_id
     const map: Record<string, QuranRound[]> = {}

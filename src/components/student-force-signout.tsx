@@ -32,8 +32,8 @@ export function StudentForceSignOut({ studentId }: { studentId: string }) {
       await forceSignOutStudent(studentId)
       toast.success("Student signed out")
       setOpen(false)
-    } catch (e: any) {
-      toast.error(e?.message || "Couldn't sign the student out")
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Couldn't sign the student out")
     } finally {
       setSigningOut(false)
     }

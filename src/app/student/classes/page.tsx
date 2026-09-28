@@ -47,8 +47,8 @@ export default function StudentClassesPage() {
       supabase.from("class_sessions").select("started_at").eq("student_id", student.id),
     ]).then(([mem, revision, sessions]) => {
       if (!active) return
-      setItems(((mem.data as any) || []) as StudentMemItem[])
-      setRevisionItems(((revision.data as any) || []) as StudentMemItem[])
+      setItems((mem.data as unknown as StudentMemItem[]) || [])
+      setRevisionItems((revision.data as unknown as StudentMemItem[]) || [])
       setSessionStarts(((sessions.data as { started_at: string }[]) || []).map((r) => r.started_at))
       setLoadingItems(false)
     })

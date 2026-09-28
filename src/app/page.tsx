@@ -44,31 +44,31 @@ export default function Dashboard() {
     const month = now.getMonth() + 1
     const year = now.getFullYear()
 
-    const { data: activeForFees } = await supabase
-      .from("students")
-      .select("id")
-      .eq("status", "Reading")
-    if (activeForFees && activeForFees.length > 0) {
+    const [{ count: total }, { data: activeForFees }] = await Promise.all([
+      supabase.from("students").select("*", { count: "exact", head: true }),
+      supabase.from("students").select("id").eq("status", "Reading"),
+    ])
+
+    const activeList = activeForFees || []
+    if (activeList.length > 0) {
       await supabase.from("fee_payments").upsert(
-        activeForFees.map((s) => ({ student_id: s.id, month, year })),
+        activeList.map((s) => ({ student_id: s.id, month, year })),
         { onConflict: "student_id,month,year", ignoreDuplicates: true },
       )
     }
 
-    const [{ count: total }, { count: active }, { data: fees }] = await Promise.all([
-      supabase.from("students").select("*", { count: "exact", head: true }),
-      supabase.from("students").select("*", { count: "exact", head: true }).eq("status", "Reading"),
-      supabase
-        .from("fee_payments")
-        .select("*, students(name, fee, fee_currency, status)")
-        .eq("month", month)
-        .eq("year", year),
-    ])
+    const { data: fees } = await supabase
+      .from("fee_payments")
+      .select("*, students(name, fee, fee_currency, status)")
+      .eq("month", month)
+      .eq("year", year)
 
     setTotalStudents(total || 0)
-    setActiveStudents(active || 0)
+    setActiveStudents(activeList.length)
 
-    const activeFees = (fees || []).filter((f: FeePaymentWithStudent) => f.students?.status === "Reading")
+    const activeFees = ((fees as FeePaymentWithStudent[]) || []).filter(
+      (f) => f.students?.status === "Reading",
+    )
     setPaidFees(activeFees.filter((f) => f.is_paid))
     setUnpaidFees(activeFees.filter((f) => !f.is_paid))
     setLoading(false)

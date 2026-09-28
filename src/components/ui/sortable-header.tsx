@@ -50,8 +50,8 @@ export function sortData<T>(data: T[], sortKey: string | null, direction: SortDi
   if (!sortKey || !direction) return data
 
   return [...data].sort((a, b) => {
-    const aVal = (a as any)[sortKey]
-    const bVal = (b as any)[sortKey]
+    const aVal = (a as Record<string, unknown>)[sortKey]
+    const bVal = (b as Record<string, unknown>)[sortKey]
 
     if (aVal == null && bVal == null) return 0
     if (aVal == null) return direction === "asc" ? -1 : 1

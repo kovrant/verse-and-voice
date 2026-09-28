@@ -135,7 +135,7 @@ export default function StudentMemorizationPage() {
       .select(STUDENT_MEM_SELECT)
       .eq("student_id", studentId)
       .order("created_at", { ascending: false })
-    const list = ((data as any) || []) as StudentMemItem[]
+    const list = (data as unknown as StudentMemItem[]) || []
     const [chunks, memorizedIds] = await Promise.all([
       loadChunksFor(list.map((m) => m.catalog_id)),
       loadMemorizedChunkIds(studentId),

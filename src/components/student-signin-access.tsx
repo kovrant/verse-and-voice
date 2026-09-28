@@ -58,9 +58,9 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
       } else {
         toast.success("Sign-in access turned on")
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       setEnabled(!next) // revert
-      toast.error(e?.message || "Couldn't update sign-in access")
+      toast.error(e instanceof Error ? e.message : "Couldn't update sign-in access")
     } finally {
       setSaving(false)
     }

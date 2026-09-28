@@ -24,12 +24,15 @@ import { toast } from "@/lib/toast"
 import { CURRENCY_SYMBOLS, type FeePaymentWithStudent } from "@/lib/utils"
 
 // Helper to get a nested sort value
-function getFeeValue(fee: FeePaymentWithStudent, key: string): any {
+function getFeeValue(
+  fee: FeePaymentWithStudent,
+  key: string,
+): string | number | boolean | null | undefined {
   if (key === "student_name") return fee.students?.name
   if (key === "fee_amount") return fee.students?.fee
   if (key === "is_paid") return fee.is_paid ? 1 : 0
   if (key === "paid_at") return fee.paid_at || ""
-  return (fee as any)[key]
+  return (fee as unknown as Record<string, string | number | boolean | null | undefined>)[key]
 }
 
 export default function FeesPage() {
@@ -68,9 +71,9 @@ export default function FeesPage() {
       .eq("year", year)
       .order("created_at")
 
-    const activeFees = (data || []).filter(
-      (f: any) => f.students?.status === "Reading",
-    ) as FeePaymentWithStudent[]
+    const activeFees = ((data as FeePaymentWithStudent[]) || []).filter(
+      (f) => f.students?.status === "Reading",
+    )
 
     setFees(activeFees)
     setLoading(false)
