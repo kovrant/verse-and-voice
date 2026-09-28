@@ -1,5 +1,3 @@
-import "./pdfjs-setup"
-
 const cache = new Map<string, Promise<ArrayBuffer>>()
 
 function startFetch(url: string): Promise<ArrayBuffer> {

@@ -515,7 +515,7 @@ export default function LiveSession({
           {/* Student name */}
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
-              {student.name.charAt(0)}
+              {(student.name || "?").charAt(0)}
             </div>
             <span className="font-semibold text-sm text-foreground">{student.name}</span>
           </div>

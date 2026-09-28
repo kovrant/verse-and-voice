@@ -30,7 +30,7 @@ export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
   const incomplete = rounds.filter((r) => !r.completed_at)
   if (incomplete.length === 0) return null
   return incomplete.reduce((latest, r) => {
-    const cmp = r.started_at.localeCompare(latest.started_at)
+    const cmp = (r.started_at || "").localeCompare(latest.started_at || "")
     if (cmp > 0) return r
     if (cmp === 0 && r.round_number > latest.round_number) return r
     return latest
@@ -43,7 +43,7 @@ export function getActiveRound(rounds: QuranRound[]): QuranRound | null {
 export function getCompletedRounds(rounds: QuranRound[]): QuranRound[] {
   return rounds
     .filter((r) => r.completed_at)
-    .sort((a, b) => a.started_at.localeCompare(b.started_at))
+    .sort((a, b) => (a.started_at || "").localeCompare(b.started_at || ""))
 }
 
 /**
@@ -80,7 +80,7 @@ export function getChronologicalRoundNumber(rounds: QuranRound[], round: QuranRo
       const aActive = !a.completed_at ? 1 : 0
       const bActive = !b.completed_at ? 1 : 0
       if (aActive !== bActive) return aActive - bActive
-      return a.started_at.localeCompare(b.started_at)
+      return (a.started_at || "").localeCompare(b.started_at || "")
     })
   const idx = quranRounds.findIndex((r) => r.id === round.id)
   return idx >= 0 ? idx + 1 : round.round_number

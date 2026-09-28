@@ -1,6 +1,5 @@
 "use client"
 
-import { format } from "date-fns"
 import { Check, ChevronDown, Lock, Moon, RotateCcw, Unlock } from "lucide-react"
 import { useCallback, useEffect, useState } from "react"
 
@@ -27,7 +26,7 @@ import {
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
-import { cn } from "@/lib/utils"
+import { cn, safeFormatDate } from "@/lib/utils"
 
 /**
  * Teacher panel: assign Namaz, unlock steps, mark complete, assign part revision,
@@ -539,7 +538,7 @@ export function StudentNamazAssign({
                               <span className="text-[11px] text-muted-foreground">
                                 {revision_count}×
                                 {last_revised_at &&
-                                  ` · ${format(new Date(last_revised_at), "MMM d")}`}
+                                  ` · ${safeFormatDate(last_revised_at, "MMM d")}`}
                               </span>
                               {revision_assigned_at ? (
                                 <Button

@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from "clsx"
+import { format, formatDistanceToNow } from "date-fns"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
@@ -16,10 +17,52 @@ export function parseLocalDate(value: string | null | undefined): Date | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
   if (match) {
     const [, y, m, d] = match
-    return new Date(Number(y), Number(m) - 1, Number(d))
+    const parsed = new Date(Number(y), Number(m) - 1, Number(d))
+    return isNaN(parsed.getTime()) ? null : parsed
   }
   const fallback = new Date(value)
   return isNaN(fallback.getTime()) ? null : fallback
+}
+
+/**
+ * Safely format a date or timestamp string without ever throwing `RangeError: Invalid time value`.
+ */
+export function safeFormatDate(
+  value: Date | string | number | null | undefined,
+  fmt: string,
+  fallback = "—",
+): string {
+  if (!value) return fallback
+  try {
+    const d =
+      value instanceof Date
+        ? value
+        : typeof value === "string"
+          ? parseLocalDate(value) ?? new Date(value)
+          : new Date(value)
+    if (isNaN(d.getTime())) return fallback
+    return format(d, fmt)
+  } catch {
+    return fallback
+  }
+}
+
+/**
+ * Safely format relative distance to now without ever throwing `RangeError: Invalid time value`.
+ */
+export function safeFormatDistanceToNow(
+  value: Date | string | number | null | undefined,
+  options?: { addSuffix?: boolean },
+  fallback = "recently",
+): string {
+  if (!value) return fallback
+  try {
+    const d = value instanceof Date ? value : new Date(value)
+    if (isNaN(d.getTime())) return fallback
+    return formatDistanceToNow(d, options)
+  } catch {
+    return fallback
+  }
 }
 
 /**

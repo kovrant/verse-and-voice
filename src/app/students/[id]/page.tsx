@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
 import * as Popover from "@radix-ui/react-popover"
-import { differenceInDays, format, formatDistanceToNow, subMonths } from "date-fns"
+import { differenceInDays, subMonths } from "date-fns"
 import {
   Activity,
   ArrowLeft,
@@ -102,6 +102,8 @@ import {
   formatLocalDate,
   formatSessionDuration,
   parseLocalDate,
+  safeFormatDate,
+  safeFormatDistanceToNow,
   STATUS_CONFIG,
   type Student,
   type StudentStatus,
@@ -202,8 +204,8 @@ export default function StudentDetailPage() {
       }
       setStudent(data)
       setEditForm({
-        fee: data.fee.toString(),
-        fee_currency: data.fee_currency,
+        fee: (data.fee ?? 0).toString(),
+        fee_currency: data.fee_currency || "GBP",
         class_time: data.class_time || "",
         class_days: Array.isArray(data.class_days) ? data.class_days : [],
         country: data.country || "",
@@ -243,11 +245,15 @@ export default function StudentDetailPage() {
   }
 
   async function loadSessions() {
-    // Page past the 1000-row cap so older sessions aren't silently dropped.
-    const data = await fetchAllRows<ClassSession>("class_sessions", (q) =>
-      q.select("*").eq("student_id", params.id).order("started_at", { ascending: false }),
-    )
-    setSessions(data)
+    try {
+      // Page past the 1000-row cap so older sessions aren't silently dropped.
+      const data = await fetchAllRows<ClassSession>("class_sessions", (q) =>
+        q.select("*").eq("student_id", params.id).order("started_at", { ascending: false }),
+      )
+      setSessions(data)
+    } catch {
+      setSessions([])
+    }
   }
 
   const loadActivity = useCallback(async () => {
@@ -706,7 +712,7 @@ export default function StudentDetailPage() {
   function openEditRound(r: QuranRound) {
     setEditingRound(r)
     setEditRoundForm({
-      started_at: r.started_at.split("T")[0],
+      started_at: (r.started_at || "").split("T")[0],
       completed_at: r.completed_at ? r.completed_at.split("T")[0] : "",
       desc_completed: (r.desc_completed || 0).toString(),
       asc_completed: (r.asc_completed || 0).toString(),
@@ -728,7 +734,7 @@ export default function StudentDetailPage() {
       const hasSubsequentRound = rounds.some(
         (r) =>
           r.id !== editingRound.id &&
-          (r.started_at.localeCompare(nextStartedAt) > 0 ||
+          ((r.started_at || "").localeCompare(nextStartedAt || "") > 0 ||
             (r.started_at === nextStartedAt && r.round_number > editingRound.round_number)),
       )
       if (hasSubsequentRound) {
@@ -841,7 +847,7 @@ export default function StudentDetailPage() {
 
   const navItems = studentNavItems({
     lastClassLabel: lastSession
-      ? formatDistanceToNow(new Date(lastSession.started_at), { addSuffix: true })
+      ? safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })
       : undefined,
     sessionCount: sessions.length,
     memInProgress: memorizingCount,
@@ -874,7 +880,7 @@ export default function StudentDetailPage() {
             </Button>
           </Link>
           <div className="flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
-            {student.name.charAt(0)}
+            {(student.name || "?").charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-2">
@@ -895,7 +901,7 @@ export default function StudentDetailPage() {
                   className="inline-flex items-center gap-1 rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
                   title={
                     student.last_device_at
-                      ? `Last active on this device: ${new Date(student.last_device_at).toLocaleString()}`
+                      ? `Last active on this device: ${safeFormatDate(student.last_device_at, "PPp")}`
                       : undefined
                   }
                 >
@@ -931,7 +937,7 @@ export default function StudentDetailPage() {
                 <>
                   <span className="text-muted-foreground/40">&middot;</span>
                   <span>
-                    Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
+                    Ended {safeFormatDate(student.ended_at, "MMM yyyy")}
                   </span>
                 </>
               )}
@@ -950,7 +956,7 @@ export default function StudentDetailPage() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
               >
                 <Check className="h-3.5 w-3.5" />
-                {format(now, "MMM")} Fee Paid
+                {safeFormatDate(now, "MMM")} Fee Paid
               </button>
             ) : (
               <button
@@ -960,7 +966,7 @@ export default function StudentDetailPage() {
                 className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
               >
                 <CreditCard className="h-3.5 w-3.5" />
-                {format(now, "MMM")} Fee Unpaid &middot; Mark Paid
+                {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
               </button>
             )
           )}
@@ -1264,7 +1270,7 @@ export default function StudentDetailPage() {
                             icon={BookOpen}
                             tint="text-amber-600 bg-amber-500/10"
                             value={
-                              lastSession ? format(new Date(lastSession.started_at), "MMM d") : "--"
+                              lastSession ? safeFormatDate(lastSession.started_at, "MMM d") : "--"
                             }
                             label="Last class"
                           />
@@ -1349,7 +1355,6 @@ export default function StudentDetailPage() {
                             {paginatedSessions.map((session, i) => {
                               const paras = paraSummary(session)
                               const revised = session.memorization_revised?.length || 0
-                              const started = new Date(session.started_at)
                               return (
                                 <div
                                   key={session.id}
@@ -1359,21 +1364,21 @@ export default function StudentDetailPage() {
                                 >
                                   <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-secondary/40">
                                     <span className="text-[10px] font-semibold uppercase leading-none text-muted-foreground">
-                                      {format(started, "MMM")}
+                                      {safeFormatDate(session.started_at, "MMM")}
                                     </span>
                                     <span className="font-heading text-lg font-bold leading-tight tabular-nums text-foreground">
-                                      {format(started, "d")}
+                                      {safeFormatDate(session.started_at, "d")}
                                     </span>
                                   </div>
 
                                   <div className="min-w-0 flex-1">
                                     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                       <p className="text-sm font-semibold text-foreground">
-                                        {format(started, "EEEE")}
+                                        {safeFormatDate(session.started_at, "EEEE")}
                                       </p>
                                       <span className="text-muted-foreground/40">&middot;</span>
                                       <span className="text-[13px] text-muted-foreground">
-                                        {format(started, "MMM d, yyyy")}
+                                        {safeFormatDate(session.started_at, "MMM d, yyyy")}
                                       </span>
                                     </div>
                                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
@@ -1407,7 +1412,9 @@ export default function StudentDetailPage() {
 
                                   <div className="flex flex-shrink-0 items-center gap-1.5">
                                     <span className="hidden text-[11px] text-muted-foreground sm:block">
-                                      {formatDistanceToNow(started, { addSuffix: true })}
+                                      {safeFormatDistanceToNow(session.started_at, {
+                                        addSuffix: true,
+                                      })}
                                     </span>
                                     <Popover.Root
                                       open={sessionToDelete?.id === session.id}

@@ -15,16 +15,30 @@ export default function Error({
   }, [error])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in-up">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-fade-in-up px-4">
       <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
         <span className="text-3xl">!</span>
       </div>
       <h1 className="text-xl font-bold mb-2">Something went wrong</h1>
-      <p className="text-muted-foreground mb-6 max-w-sm">
+      <p className="text-muted-foreground mb-4 max-w-sm">
         An unexpected error occurred. Please try again.
       </p>
+      {error?.message && (
+        <p className="mb-5 max-w-md rounded-lg border border-border bg-secondary/40 px-3 py-1.5 font-mono text-xs text-muted-foreground break-words">
+          {error.message}
+        </p>
+      )}
       <button
-        onClick={reset}
+        onClick={() => {
+          if (
+            error?.name === "ChunkLoadError" ||
+            /Loading chunk [\d]+ failed/i.test(error?.message || "")
+          ) {
+            window.location.reload()
+            return
+          }
+          reset()
+        }}
         className="inline-flex items-center justify-center rounded-xl bg-gradient-to-b from-emerald-500 to-emerald-600 text-white text-sm font-medium px-6 py-2.5 shadow-btn-primary hover:shadow-btn-primary-hover hover:from-emerald-400 hover:to-emerald-500 transition-all active:scale-[0.98]"
       >
         Try Again

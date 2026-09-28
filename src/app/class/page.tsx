@@ -1,7 +1,7 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { differenceInDays, format } from "date-fns"
+import { differenceInDays } from "date-fns"
 import {
   BookMarked,
   BookOpen,
@@ -39,7 +39,7 @@ import { saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
-import { parseLocalDate, type Student } from "@/lib/utils"
+import { parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
 
 type ClassStudent = Pick<Student, "id" | "name" | "guardian_name" | "started_at" | "class_time">
 
@@ -327,7 +327,7 @@ function ClassPageContent() {
   const sortedStudents = [...students].sort((a, b) => {
     const aMin = classTimeToMinutes(a.class_time)
     const bMin = classTimeToMinutes(b.class_time)
-    if (aMin == null && bMin == null) return a.name.localeCompare(b.name)
+    if (aMin == null && bMin == null) return (a.name || "").localeCompare(b.name || "")
     if (aMin == null) return 1
     if (bMin == null) return -1
     const aAdj = aMin < 360 ? aMin + 1440 : aMin
@@ -336,7 +336,7 @@ function ClassPageContent() {
   })
 
   const filteredStudents = sortedStudents.filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()),
+    (s.name || "").toLowerCase().includes(search.toLowerCase()),
   )
   const showQuickPick = students.length > 20
 
@@ -388,7 +388,7 @@ function ClassPageContent() {
                 {/* SECTION 1 — HEADER */}
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[28px] font-bold flex-shrink-0">
-                    {selected.name.charAt(0)}
+                    {(selected.name || "?").charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -567,8 +567,12 @@ function ClassPageContent() {
                         <div className="space-y-2">
                           {entries.map((e) => {
                             const Icon = e.type === "qaida" ? BookMarked : BookOpen
-                            const range = `${format(e.startedAt, "MMM yyyy")} → ${
-                              e.isCurrent ? "Now" : e.endedAt ? format(e.endedAt, "MMM yyyy") : "…"
+                            const range = `${safeFormatDate(e.startedAt, "MMM yyyy")} → ${
+                              e.isCurrent
+                                ? "Now"
+                                : e.endedAt
+                                  ? safeFormatDate(e.endedAt, "MMM yyyy")
+                                  : "…"
                             }`
                             const duration = fmtDuration(e.startedAt, e.endedAt ?? new Date())
                             return (
@@ -747,7 +751,7 @@ function ClassPageContent() {
                           className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-secondary/30 transition-colors group"
                         >
                           <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-secondary/50 text-primary text-sm font-bold">
-                            {s.name.charAt(0)}
+                            {(s.name || "?").charAt(0)}
                           </span>
                           <span className="flex-1 min-w-0">
                             <span className="block text-sm font-medium truncate">{s.name}</span>
@@ -794,7 +798,7 @@ function ClassPageContent() {
                   className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-5 text-center transition-all hover:-translate-y-0.5 hover:border-primary focus-visible:border-primary"
                 >
                   <span className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary/60 text-primary text-xl font-bold">
-                    {s.name.charAt(0).toUpperCase()}
+                    {(s.name || "?").charAt(0).toUpperCase()}
                   </span>
                   {onlineStudents.has(s.id) ? (
                     <OnlineDot className="absolute top-3 right-3" />

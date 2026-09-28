@@ -1,6 +1,5 @@
 "use client"
 
-import { format } from "date-fns"
 import {
   BookOpen,
   Check,
@@ -23,7 +22,7 @@ import type { Hadith, HadithAssignment, StudentHadithProgress } from "@/lib/hadi
 import type { Quiz, QuizAssignment, QuizAttempt } from "@/lib/quizzes/types"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
-import { cn } from "@/lib/utils"
+import { cn, safeFormatDate } from "@/lib/utils"
 
 interface StudentHadithQuizCardProps {
   studentId: string
@@ -566,7 +565,7 @@ export function StudentHadithQuizCard({
                       </span>
                       {progress.memorized_at && (
                         <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                          {format(new Date(progress.memorized_at), "MMM d")}
+                          {safeFormatDate(progress.memorized_at, "MMM d")}
                         </span>
                       )}
                     </div>
@@ -620,7 +619,7 @@ export function StudentHadithQuizCard({
                           </span>
                         )}
                         {latestAttempt?.completed_at && (
-                          <span>· {format(new Date(latestAttempt.completed_at), "MMM d")}</span>
+                          <span>· {safeFormatDate(latestAttempt.completed_at, "MMM d")}</span>
                         )}
                       </div>
                     </div>

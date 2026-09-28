@@ -1,6 +1,5 @@
 "use client"
 
-import { format, formatDistanceToNow } from "date-fns"
 import {
   ArrowRight,
   BookMarked,
@@ -34,7 +33,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type CatalogItem, chunkProgress, type StudentMemItem } from "@/lib/memorization"
 import type { Student } from "@/lib/utils"
-import { cn, formatSessionDuration } from "@/lib/utils"
+import {
+  cn,
+  formatSessionDuration,
+  safeFormatDate,
+  safeFormatDistanceToNow,
+} from "@/lib/utils"
 
 export type HistorySection = "all" | "sessions" | "timeline" | "trophies" | "activity"
 
@@ -276,7 +280,7 @@ export function StudentOverview({
                     <div className="min-w-0 truncate">
                       <span className="font-medium text-foreground">
                         Last class{" "}
-                        {formatDistanceToNow(new Date(lastSession.started_at), { addSuffix: true })}
+                        {safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })}
                       </span>
                       <span className="text-muted-foreground">
                         {" "}
@@ -387,7 +391,7 @@ export function StudentOverview({
                           <p className="text-[11px] text-muted-foreground">
                             {item.memorization_catalog?.category}
                             {item.last_revised_at &&
-                              ` · Last ${format(new Date(item.last_revised_at), "MMM d")}`}
+                              ` · Last ${safeFormatDate(item.last_revised_at, "MMM d")}`}
                           </p>
                         </div>
                       </div>
@@ -530,7 +534,7 @@ export function StudentOverview({
                             <p className="text-[10px] text-muted-foreground">
                               {item.memorization_catalog?.category}
                               {item.last_revised_at &&
-                                ` · Revised ${format(new Date(item.last_revised_at), "MMM d")}`}
+                                ` · Revised ${safeFormatDate(item.last_revised_at, "MMM d")}`}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
