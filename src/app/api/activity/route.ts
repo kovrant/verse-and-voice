@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 
+import { isLoginDisabled } from "@/lib/student-auth"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 
@@ -20,6 +21,7 @@ const ALLOWED_EVENT_TYPES = new Set([
 ])
 
 const MAX_EVENTS_PER_BATCH = 100
+const MAX_META_JSON_LENGTH = 2048
 
 interface IncomingEvent {
   event_type?: unknown
@@ -37,6 +39,17 @@ function str(value: unknown, max: number): string | null {
   return trimmed.slice(0, max)
 }
 
+function safeMeta(value: unknown): Record<string, unknown> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {}
+  try {
+    const serialized = JSON.stringify(value)
+    if (!serialized || serialized.length > MAX_META_JSON_LENGTH) return {}
+    return value as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
 export async function POST(request: Request) {
   // 1. Identify the caller. sendBeacon/keepalive carry the session cookie.
   const supabase = createSupabaseServerClient()
@@ -44,9 +57,9 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Silently accept-and-drop when there's no session; logging is best-effort
-  // and we don't want unload beacons throwing visible errors.
-  if (!user) {
+  // Silently accept-and-drop when there's no session or login is disabled;
+  // logging is best-effort and we don't want unload beacons throwing visible errors.
+  if (!user || isLoginDisabled(user.app_metadata as { login_disabled?: boolean })) {
     return NextResponse.json({ ok: true, inserted: 0 })
   }
 
@@ -90,10 +103,7 @@ export async function POST(request: Request) {
           ? e.occurred_at
           : new Date().toISOString()
 
-      const meta =
-        e.meta && typeof e.meta === "object" && !Array.isArray(e.meta)
-          ? (e.meta as Record<string, unknown>)
-          : {}
+      const meta = safeMeta(e.meta)
 
       return {
         student_id: studentId,
@@ -114,7 +124,7 @@ export async function POST(request: Request) {
 
   const { error } = await admin.from("activity_logs").insert(rows)
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ error: "Failed to record activity" }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true, inserted: rows.length })

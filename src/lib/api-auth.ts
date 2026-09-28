@@ -3,7 +3,7 @@ import "server-only"
 import type { User } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
-import { isTeacherRole } from "@/lib/student-auth"
+import { isLoginDisabled, isTeacherRole } from "@/lib/student-auth"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 
@@ -43,6 +43,9 @@ export async function requireTeacher(): Promise<
   } = await supabase.auth.getUser()
 
   if (!user) return { denied: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) }
+  if (isLoginDisabled(user.app_metadata as { login_disabled?: boolean })) {
+    return { denied: NextResponse.json({ error: "Account disabled" }, { status: 403 }) }
+  }
   if (!(await isTeacher(user))) {
     return { denied: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
   }
@@ -62,6 +65,9 @@ export async function requireStudentOrTeacher(
   } = await supabase.auth.getUser()
 
   if (!user) return { denied: NextResponse.json({ error: "Not authenticated" }, { status: 401 }) }
+  if (isLoginDisabled(user.app_metadata as { login_disabled?: boolean })) {
+    return { denied: NextResponse.json({ error: "Account disabled" }, { status: 403 }) }
+  }
 
   const jwtRole = (user.app_metadata as { role?: string } | null)?.role
   if (jwtRole && isTeacherRole(jwtRole, null)) {

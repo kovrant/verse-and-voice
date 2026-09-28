@@ -10,6 +10,7 @@ import { PageLoading } from "@/components/page-loading"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { safeUploadExtension } from "@/lib/media-upload"
 import {
   NAMAZ_CARD_COLORS,
   NAMAZ_PART_SELECT,
@@ -94,7 +95,7 @@ export default function NamazAdminPage() {
 
   async function uploadImage(stepId: string, file: File) {
     setUploading(stepId)
-    const ext = file.name.split(".").pop()
+    const ext = safeUploadExtension(file.name, "png")
     const path = `namaz/${stepId}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error: upErr } = await supabase.storage
       .from("memorization-images")

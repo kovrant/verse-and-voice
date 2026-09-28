@@ -45,6 +45,9 @@ export async function POST(request: Request) {
   }
 
   const quiz = quizRes.data as Quiz
+  if (quiz.is_published === false) {
+    return NextResponse.json({ error: "Quiz is not published" }, { status: 403 })
+  }
   const questions = (questionsRes.data as QuizQuestion[]) || []
 
   // 2. Grade attempt

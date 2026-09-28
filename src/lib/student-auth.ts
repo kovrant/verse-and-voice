@@ -78,3 +78,25 @@ export function studentPostLoginPath(redirectTo: string | null | undefined): str
   }
   return "/student"
 }
+
+/**
+ * After a teacher signs in at /admin, only internal teacher paths are safe.
+ * Rejects external URLs (`https://...`), protocol-relative URLs (`//evil.com`),
+ * and student/auth routes to prevent Open Redirect phishing.
+ */
+export function teacherPostLoginPath(redirectTo: string | null | undefined): string {
+  if (
+    redirectTo &&
+    redirectTo.startsWith("/") &&
+    !redirectTo.startsWith("//") &&
+    !redirectTo.includes("://") &&
+    redirectTo !== "/student" &&
+    !redirectTo.startsWith("/student/") &&
+    !redirectTo.startsWith("/login") &&
+    !redirectTo.startsWith("/admin")
+  ) {
+    return redirectTo
+  }
+  return "/"
+}
+

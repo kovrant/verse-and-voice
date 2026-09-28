@@ -94,16 +94,12 @@ export default function StudentNamazPage() {
     )
     if (!clickable) return
     setViewStep(step)
-    if (student?.id) {
-      await supabase.from("student_namaz_steps").upsert(
-        {
-          student_id: student.id,
-          step_id: step.id,
-          unlocked_at: row?.unlocked_at ?? new Date().toISOString(),
-          last_viewed_at: new Date().toISOString(),
-        },
-        { onConflict: "student_id,step_id" },
-      )
+    if (student?.id && row?.id) {
+      await supabase
+        .from("student_namaz_steps")
+        .update({ last_viewed_at: new Date().toISOString() })
+        .eq("id", row.id)
+        .eq("student_id", student.id)
     }
   }
 

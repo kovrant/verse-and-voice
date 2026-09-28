@@ -34,6 +34,17 @@ interface GeneratedQuizResponse {
   questions: GeneratedQuestion[]
 }
 
+const ALLOWED_AGE_GROUPS = new Set<QuizAgeGroup>(["5-8", "9-12", "13-16", "all"])
+const ALLOWED_CATEGORIES = new Set<QuizCategory>([
+  "general",
+  "seerah",
+  "prophets",
+  "quran",
+  "hadith",
+  "fiqh",
+  "events",
+])
+
 export async function POST(request: Request) {
   const { denied } = await requireTeacher()
   if (denied) return denied
@@ -45,10 +56,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
   }
 
-  const topic = (body.topic || "Islamic Knowledge").trim()
-  const ageGroup = body.age_group || "all"
-  const category = body.category || "general"
-  const count = Math.min(Math.max(body.count || 4, 3), 8)
+  const rawTopic = typeof body.topic === "string" ? body.topic : "Islamic Knowledge"
+  const topic =
+    rawTopic
+      .replace(/[\r\n"`\\]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 120) || "Islamic Knowledge"
+  const ageGroup: QuizAgeGroup =
+    body.age_group && ALLOWED_AGE_GROUPS.has(body.age_group) ? body.age_group : "all"
+  const category: QuizCategory =
+    body.category && ALLOWED_CATEGORIES.has(body.category) ? body.category : "general"
+  const count = Math.min(Math.max(Number(body.count) || 4, 3), 8)
 
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
 
@@ -103,10 +122,13 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
       for (const model of modelsToTry) {
         try {
           const res = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": apiKey,
+              },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {

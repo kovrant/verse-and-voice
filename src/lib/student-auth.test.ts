@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest"
 
 // student-auth.ts is pure (no browser client import), so no mock is needed.
-import { isLoginDisabled, isTeacherRole, studentPostLoginPath } from "./student-auth"
+import {
+  isLoginDisabled,
+  isTeacherRole,
+  studentPostLoginPath,
+  teacherPostLoginPath,
+} from "./student-auth"
 
 describe("isLoginDisabled", () => {
   it("is true only when the flag is explicitly true", () => {
@@ -61,3 +66,21 @@ describe("studentPostLoginPath", () => {
     expect(studentPostLoginPath("//evil.example")).toBe("/student")
   })
 })
+
+describe("teacherPostLoginPath", () => {
+  it("keeps safe internal teacher routes", () => {
+    expect(teacherPostLoginPath("/")).toBe("/")
+    expect(teacherPostLoginPath("/students")).toBe("/students")
+    expect(teacherPostLoginPath("/quizzes")).toBe("/quizzes")
+  })
+
+  it("rejects external, protocol-relative, and student/auth paths", () => {
+    expect(teacherPostLoginPath("https://evil.example/phish")).toBe("/")
+    expect(teacherPostLoginPath("//evil.example")).toBe("/")
+    expect(teacherPostLoginPath("/student")).toBe("/")
+    expect(teacherPostLoginPath("/login")).toBe("/")
+    expect(teacherPostLoginPath("/admin")).toBe("/")
+    expect(teacherPostLoginPath(null)).toBe("/")
+  })
+})
+

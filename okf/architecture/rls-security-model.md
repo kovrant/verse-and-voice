@@ -8,6 +8,7 @@ sources:
   - "supabase/schema.sql"
   - "supabase/migration_auth_rls.sql"
   - "supabase/migration_student_portal.sql"
+  - "supabase/migration_security_hardening.sql"
   - "src/lib/supabase.ts"
 tags:
   - security
@@ -27,36 +28,37 @@ In Quran Academy, almost every page is a Next.js **Client Component querying Sup
 
 ## 📐 Canonical Policy Pattern
 
-All application tables must strictly adhere to the security pattern established in `supabase/migration_student_portal.sql`:
+All application tables must strictly adhere to the security pattern established in `supabase/migration_student_portal.sql` and hardened in `supabase/migration_security_hardening.sql`:
 
 1. **Teacher Access:** Full access (SELECT, INSERT, UPDATE, DELETE) via the `is_teacher()` SQL helper function.
-2. **Student Access:** Strictly scoped to rows matching the student's own ID via the `my_student_id()` SQL helper function.
+2. **Student Access:** Strictly scoped to rows matching the student's own ID via the `my_student_id()` SQL helper function (which automatically returns `NULL` if `app_metadata.login_disabled = true`).
+3. **Column-Level Immutability on Student `UPDATE`s:** Where a student or recipient is granted `FOR UPDATE` on their own row (`student_namaz_steps` for `last_viewed_at`, `notifications` for `read_at`), a `BEFORE UPDATE` trigger locks all teacher/system columns to `OLD.*` to prevent Broken Object Property Level Authorization (BOPLA).
 
 ### SQL Helper Functions
 ```sql
--- Checks if current user is an authenticated teacher
-CREATE OR REPLACE FUNCTION is_teacher()
-RETURNS boolean AS $$
-BEGIN
-  RETURN (
-    coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'teacher'
-    OR EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.id = auth.uid() AND profiles.role = 'teacher'
-    )
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE OR REPLACE FUNCTION public.is_teacher()
+  RETURNS boolean
+  LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+    SELECT
+      COALESCE((auth.jwt() -> 'app_metadata' ->> 'login_disabled')::boolean, false) = false
+      AND (
+        COALESCE(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'teacher'
+        OR EXISTS (
+          SELECT 1 FROM public.profiles
+          WHERE id = auth.uid() AND role = 'teacher'
+        )
+      );
+$$;
 
--- Resolves the student ID linked to current auth user
-CREATE OR REPLACE FUNCTION my_student_id()
-RETURNS uuid AS $$
-BEGIN
-  RETURN (
-    SELECT id FROM students WHERE user_id = auth.uid()
-  );
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+CREATE OR REPLACE FUNCTION public.my_student_id()
+  RETURNS uuid
+  LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+    SELECT CASE
+      WHEN COALESCE((auth.jwt() -> 'app_metadata' ->> 'login_disabled')::boolean, false) = true
+        THEN NULL::uuid
+      ELSE (SELECT student_id FROM public.profiles WHERE id = auth.uid())
+    END;
+$$;
 ```
 
 ---

@@ -8,6 +8,7 @@ import { Suspense, useState } from "react"
 import { Brand } from "@/components/brand"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { isLoginDisabled, teacherPostLoginPath } from "@/lib/student-auth"
 import { supabase } from "@/lib/supabase"
 
 export default function AdminLoginPage() {
@@ -21,7 +22,7 @@ export default function AdminLoginPage() {
 function AdminLoginForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectTo = searchParams.get("redirectTo") || "/"
+  const redirectTo = teacherPostLoginPath(searchParams.get("redirectTo"))
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -38,6 +39,13 @@ function AdminLoginForm() {
 
     if (error) {
       setError(error.message)
+      setLoading(false)
+      return
+    }
+
+    if (isLoginDisabled(data.user?.app_metadata as { login_disabled?: boolean })) {
+      await supabase.auth.signOut()
+      setError("Sign-in is disabled for this account.")
       setLoading(false)
       return
     }

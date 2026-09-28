@@ -4,6 +4,7 @@ import {
   extractParaNumber,
   fileTypeOf,
   isBulkMediaFile,
+  safeUploadExtension,
   storagePathFromPublicUrl,
   titleFromFilename,
 } from "./media-upload"
@@ -41,13 +42,21 @@ describe("storagePathFromPublicUrl", () => {
   })
 })
 
-describe("fileTypeOf / isBulkMediaFile", () => {
-  it("treats images and PDFs as bulk-eligible, not other files", () => {
+describe("fileTypeOf / isBulkMediaFile / safeUploadExtension", () => {
+  it("treats raster images and PDFs as bulk-eligible, rejecting SVG and other files", () => {
     expect(fileTypeOf({ type: "image/png", name: "a.png" })).toBe("image")
     expect(fileTypeOf({ type: "", name: "a.webp" })).toBe("image")
     expect(fileTypeOf({ type: "application/pdf", name: "a.pdf" })).toBe("pdf")
     expect(isBulkMediaFile({ type: "image/jpeg", name: "kids.jpg" })).toBe(true)
     expect(isBulkMediaFile({ type: "application/pdf", name: "para.pdf" })).toBe(true)
     expect(isBulkMediaFile({ type: "text/plain", name: "notes.txt" })).toBe(false)
+    expect(isBulkMediaFile({ type: "image/svg+xml", name: "xss.svg" })).toBe(false)
+  })
+
+  it("whitelists safe storage extensions and falls back on dangerous extensions", () => {
+    expect(safeUploadExtension("page.JPG")).toBe("jpg")
+    expect(safeUploadExtension("para-1.PDF", "pdf")).toBe("pdf")
+    expect(safeUploadExtension("xss.svg", "png")).toBe("png")
+    expect(safeUploadExtension("exploit.html", "pdf")).toBe("pdf")
   })
 })

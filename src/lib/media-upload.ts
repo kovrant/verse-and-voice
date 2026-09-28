@@ -16,15 +16,60 @@ export function titleFromFilename(name: string): string {
   return base.replace(/\b[\p{L}\p{N}]/gu, (c) => c.toUpperCase())
 }
 
+const SAFE_IMAGE_MIME_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/jpg",
+  "image/gif",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/bmp",
+])
+
+const SAFE_IMAGE_EXT_PATTERN = /\.(png|jpe?g|gif|webp|heic|heif|bmp)$/i
+
+const SAFE_UPLOAD_EXTENSIONS = new Set([
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "webp",
+  "heic",
+  "heif",
+  "bmp",
+  "pdf",
+])
+
 export function fileTypeOf(file: { type: string; name: string }): "image" | "pdf" {
-  if (file.type.startsWith("image/") || /\.(png|jpe?g|gif|webp|heic|heif|bmp)$/i.test(file.name)) {
+  const mime = file.type.toLowerCase()
+  // Explicitly exclude SVG (`image/svg+xml`) since SVG documents can execute inline <script>.
+  if (
+    mime !== "image/svg+xml" &&
+    !/\.svgz?$/i.test(file.name) &&
+    (SAFE_IMAGE_MIME_TYPES.has(mime) || SAFE_IMAGE_EXT_PATTERN.test(file.name))
+  ) {
     return "image"
   }
   return "pdf"
 }
 
 export function isBulkMediaFile(file: { type: string; name: string }): boolean {
-  return fileTypeOf(file) === "image" || file.type === "application/pdf" || /\.pdf$/i.test(file.name)
+  return (
+    fileTypeOf(file) === "image" ||
+    file.type.toLowerCase() === "application/pdf" ||
+    /\.pdf$/i.test(file.name)
+  )
+}
+
+/**
+ * Returns a lowercase file extension strictly from the safe upload whitelist
+ * (`png`, `jpg`, `jpeg`, `gif`, `webp`, `heic`, `heif`, `bmp`, `pdf`), preventing
+ * executable extensions (`.svg`, `.html`, `.js`) in public storage object keys.
+ */
+export function safeUploadExtension(filename: string, fallback: "png" | "pdf" = "png"): string {
+  const raw = filename.split(".").pop()?.toLowerCase().trim() ?? ""
+  return SAFE_UPLOAD_EXTENSIONS.has(raw) ? raw : fallback
 }
 
 /** Object path inside the `media` bucket from a public storage URL. */

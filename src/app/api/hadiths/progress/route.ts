@@ -5,6 +5,8 @@ import { requireTeacher } from "@/lib/api-auth"
 import type { HadithStatus } from "@/lib/hadiths/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
+const ALLOWED_STATUSES = new Set<HadithStatus>(["reading", "memorizing", "memorized"])
+
 export async function POST(request: Request) {
   const { denied } = await requireTeacher()
   if (denied) return denied
@@ -27,6 +29,9 @@ export async function POST(request: Request) {
 
   if (!studentId || !hadithId) {
     return NextResponse.json({ error: "student_id and hadith_id are required" }, { status: 400 })
+  }
+  if (status !== undefined && !ALLOWED_STATUSES.has(status)) {
+    return NextResponse.json({ error: "Invalid hadith status" }, { status: 400 })
   }
 
   const admin = createSupabaseAdminClient()

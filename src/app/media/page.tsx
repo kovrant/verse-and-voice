@@ -42,6 +42,7 @@ import {
   extractParaNumber,
   fileTypeOf,
   isBulkMediaFile,
+  safeUploadExtension,
   storagePathFromPublicUrl,
   titleFromFilename,
 } from "@/lib/media-upload"
@@ -180,8 +181,8 @@ export default function MediaPage() {
     if (!file || !title.trim()) return
     setUploading(true)
 
-    const ext = file.name.split(".").pop()
     const fileType = fileTypeOf(file)
+    const ext = safeUploadExtension(file.name, fileType === "pdf" ? "pdf" : "png")
     const folder = type
     const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
@@ -250,7 +251,7 @@ export default function MediaPage() {
       const { file, fileType, paraNum, title } = prepared[i]
       setBulkProgress({ done: i, total: prepared.length, current: title })
 
-      const ext = file.name.split(".").pop()
+      const ext = safeUploadExtension(file.name, fileType === "pdf" ? "pdf" : "png")
       const fileName = `${bulkType}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
       const { error: uploadError } = await supabase.storage

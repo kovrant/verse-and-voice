@@ -38,6 +38,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { getHijriMonthInfo, HIJRI_MONTHS } from "@/lib/hijri"
 import { CATEGORIES, CATEGORY_ICON, type HistoryStory } from "@/lib/history"
+import { safeUploadExtension } from "@/lib/media-upload"
 import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
@@ -115,7 +116,10 @@ export default function HistoryAdminPage() {
   }
 
   async function uploadFile(file: File): Promise<string | null> {
-    const ext = file.name.split(".").pop()
+    const ext = safeUploadExtension(
+      file.name,
+      file.type === "application/pdf" ? "pdf" : "png",
+    )
     const fileName = `history/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
     const { error } = await supabase.storage
       .from("memorization-images")
@@ -129,7 +133,7 @@ export default function HistoryAdminPage() {
   }
 
   function fileTypeFor(file: File): "pdf" | "image" | "doc" {
-    if (file.type.startsWith("image/")) return "image"
+    if (file.type.startsWith("image/") && file.type !== "image/svg+xml") return "image"
     if (file.type === "application/pdf") return "pdf"
     return "doc"
   }

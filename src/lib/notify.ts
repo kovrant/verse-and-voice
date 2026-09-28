@@ -317,7 +317,7 @@ export async function notifyStudentQuizAssigned(
     ? `Your teacher re-assigned "${quizTitle}" so you can retake it and improve your score! Tap to start.`
     : `Your teacher assigned you a new Islamic Quiz Quest: "${quizTitle}". Tap to start and earn your badge!`
 
-  if (await alreadyNotified(admin, profile.id as string, "quiz_assigned", title)) return
+  if (await alreadyNotified(admin, profile.id as string, "assignment", title)) return
 
   await admin.from("notifications").insert({
     recipient_id: profile.id,
@@ -348,7 +348,7 @@ export async function notifyStudentHadithAssigned(
   const title = `Hadith Assigned: ${hadithTitle}`
   const body = `Your teacher assigned you a new Hadith to learn and memorize: "${hadithTitle}". Tap to practice!`
 
-  if (await alreadyNotified(admin, profile.id as string, "hadith_assigned", title)) return
+  if (await alreadyNotified(admin, profile.id as string, "assignment", title)) return
 
   await admin.from("notifications").insert({
     recipient_id: profile.id,

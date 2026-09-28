@@ -38,6 +38,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { safeUploadExtension } from "@/lib/media-upload"
 import { type CatalogItem } from "@/lib/memorization"
 import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
@@ -77,7 +78,7 @@ async function uploadChunkImages(
   const uploadResults = await Promise.all(
     images.map(async (file, i) => {
       const idx = startIndex + i
-      const ext = file.name.split(".").pop()
+      const ext = safeUploadExtension(file.name, "png")
       const path = `chunks/${catalogId}/${idx}-${Math.random().toString(36).slice(2)}.${ext}`
       const { error: upErr } = await supabase.storage
         .from("memorization-images")
@@ -210,7 +211,7 @@ export default function MemorizationPage() {
   }
 
   async function uploadImage(file: File): Promise<string | null> {
-    const ext = file.name.split(".").pop()
+    const ext = safeUploadExtension(file.name, "png")
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
     const { error } = await supabase.storage

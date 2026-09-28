@@ -74,3 +74,14 @@ tags:
 * **Entries Updated:** `domain/namaz-and-learning.md` (translation column, image fallback, new viewer section), `database/migration-pipeline.md` (step 26).
 * **Change:** Adds `namaz_step_parts.translation` (seeded for all 14 shipped parts, teacher-editable). Replaces the stacked card list with `NamazStepViewer`: one part per screen, large bold Arabic, English meaning underneath, posture picture beside it on desktop and above it on phones.
 
+### [2026-09-28] - 6-Vector Web Application & Supabase Security Hardening
+* **Author:** Principal AppSec Audit (Pairing Session)
+* **Scope:** Database RLS/triggers (`supabase/migration_security_hardening.sql`), API route guards (`src/lib/api-auth.ts`, `src/app/api/**`), auth redirects (`src/lib/student-auth.ts`, `src/app/admin/page.tsx`), storage uploads (`src/lib/media-upload.ts`), and HTTP security headers (`next.config.js`).
+* **Entries Updated:** `architecture/rls-security-model.md`, `database/migration-pipeline.md` (step 27), `log.md`.
+* **Vulnerabilities Remediated:**
+  * **BOPLA / Privilege Escalation:** Removed student `FOR ALL` write access on `student_hadith_progress`; added `BEFORE UPDATE` column-immutability triggers on `student_namaz_steps` (locking `unlocked_at`, `completed_at`, `revision_*`) and `notifications` (locking payload columns so only `read_at` is mutable).
+  * **Suspended Account Enforcement:** Enforced `!isLoginDisabled` inside `public.my_student_id()`, `public.is_teacher()`, `requireTeacher()`, `requireStudentOrTeacher()`, `/api/activity`, `/api/presence`, and `/admin`.
+  * **Unpublished Quiz Leak:** Restricted student `SELECT` on `quizzes` and `quiz_questions` (and `/api/quizzes/complete`) to `is_published = true`.
+  * **Open Redirect & Storage XSS:** Added `teacherPostLoginPath()` on `/admin`, blocked `.svg`/`.html` in `fileTypeOf()` / `safeUploadExtension()` and `storage.buckets.allowed_mime_types`, moved Gemini API key from URL query string to `x-goog-api-key` header, fixed notification deduplication for quiz/hadith assignments, and added `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` headers in `next.config.js`.
+
+
