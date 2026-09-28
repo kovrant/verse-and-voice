@@ -84,4 +84,11 @@ tags:
   * **Unpublished Quiz Leak:** Restricted student `SELECT` on `quizzes` and `quiz_questions` (and `/api/quizzes/complete`) to `is_published = true`.
   * **Open Redirect & Storage XSS:** Added `teacherPostLoginPath()` on `/admin`, blocked `.svg`/`.html` in `fileTypeOf()` / `safeUploadExtension()` and `storage.buckets.allowed_mime_types`, moved Gemini API key from URL query string to `x-goog-api-key` header, fixed notification deduplication for quiz/hadith assignments, and added `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, and `Permissions-Policy` headers in `next.config.js`.
 
-
+### [2026-09-28] - Teacher Student Detail Workspace ("Teaching Desk") UX Redesign
+* **Author:** UI/UX & Technical Design Pairing Session
+* **Scope:** `src/app/students/[id]/page.tsx`, `src/components/student-detail-nav.tsx`, `src/components/student-overview.tsx`, `src/components/student-namaz-assign.tsx`, `src/components/student-qaida-assign.tsx`, `src/components/student-hadith-quiz-card.tsx`, `src/app/api/hadiths/assign/route.ts`.
+* **Entries Updated:** `domain/student-management.md`, `log.md`.
+* **Changes:**
+  * Replaced the 6-tab vertical sidebar with a full-width 3-Mode Top Segmented Bar (`Teaching Desk`, `History & Trophies`, `Billing & Access`) preserving all existing theme colors and fonts.
+  * Converted `StudentOverview` into an interactive 2×2 **Teaching Desk** combining inline Quran Para `-`/`+` steppers, embedded Qaida book selector, interactive Memorization chunk checklists + collapsible Revision Bucket, Namaz step/revision controls (moved out of the `Account` tab), and a new `StudentHadithQuizCard` for inline Hadith/Quiz assignment and grading.
+  * Added live schedule, online/device badges, and a 1-click Current Month Fee toggle button directly to the student command header.

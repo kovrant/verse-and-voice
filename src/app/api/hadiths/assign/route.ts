@@ -8,6 +8,7 @@ interface AssignHadithRequestBody {
   hadith_id?: string
   student_ids?: string[]
   due_date?: string | null
+  append?: boolean
 }
 
 export async function POST(request: Request) {
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
 
   const hadithId = body.hadith_id?.trim()
   const targetStudentIds = Array.isArray(body.student_ids) ? body.student_ids : []
+  const isAppend = Boolean(body.append)
   let dueDate: string | null = null
   if (body.due_date) {
     const parsed = Date.parse(body.due_date)
@@ -51,10 +53,12 @@ export async function POST(request: Request) {
   const hadithTitle = `Hadith #${hadith.hadith_number}: ${hadith.english_text?.slice(0, 30)}...`
 
   const existingMap = new Map((currentAssignments || []).map((a) => [a.student_id, a]))
-  const toRemove = (currentAssignments || []).filter((a) => !targetStudentIds.includes(a.student_id))
+  const toRemove = isAppend
+    ? []
+    : (currentAssignments || []).filter((a) => !targetStudentIds.includes(a.student_id))
   const newlyAdded = targetStudentIds.filter((id) => !existingMap.has(id))
 
-  // 3. Remove deselected assignments
+  // 3. Remove deselected assignments (unless in append mode)
   if (toRemove.length > 0) {
     await admin
       .from("hadith_assignments")

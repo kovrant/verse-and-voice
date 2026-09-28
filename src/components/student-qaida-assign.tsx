@@ -24,9 +24,11 @@ const NONE = "__none__"
 export function StudentQaidaAssign({
   studentId,
   qaidaMediaId,
+  embedded = false,
 }: {
   studentId: string
   qaidaMediaId?: string | null
+  embedded?: boolean
 }) {
   const [items, setItems] = useState<QaidaItem[]>([])
   const [assigned, setAssigned] = useState<string | null>(qaidaMediaId ?? null)
@@ -65,6 +67,44 @@ export function StudentQaidaAssign({
       return
     }
     toast.success(next ? "Qaida assigned" : "Qaida unassigned")
+  }
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col gap-2.5 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
+            <BookMarked className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-foreground">Qaida Book</p>
+            <p className="text-[11px] text-muted-foreground truncate">
+              {loading
+                ? "Loading Qaida library…"
+                : items.length === 0
+                  ? "Upload a Qaida in Media Library first"
+                  : "Shown in student portal"}
+            </p>
+          </div>
+        </div>
+        {!loading && items.length > 0 && (
+          <Select value={assigned ?? NONE} onValueChange={assign} disabled={saving}>
+            <SelectTrigger className="h-8 w-full text-xs sm:w-48 flex-shrink-0">
+              <SelectValue placeholder="Select a Qaida" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={NONE}>None</SelectItem>
+              {items.map((item) => (
+                <SelectItem key={item.id} value={item.id}>
+                  {item.title}
+                  {item.category ? ` · ${item.category}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+    )
   }
 
   return (

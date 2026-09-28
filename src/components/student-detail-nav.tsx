@@ -1,9 +1,6 @@
 "use client"
 
 import {
-  Award,
-  BookMarked,
-  BookOpen,
   CreditCard,
   History,
   LayoutDashboard,
@@ -12,13 +9,7 @@ import {
 
 import { cn } from "@/lib/utils"
 
-export type StudentView =
-  | "overview"
-  | "progress"
-  | "classes"
-  | "memorization"
-  | "achievements"
-  | "account"
+export type StudentView = "overview" | "history" | "account"
 
 export interface StudentNavItem {
   id: StudentView
@@ -36,27 +27,13 @@ interface StudentDetailNavProps {
 
 export function StudentDetailNav({ active, onChange, items }: StudentDetailNavProps) {
   return (
-    <>
-      {/* Mobile: horizontal scroll */}
-      <div className="mb-4 overflow-x-auto pb-1 lg:hidden">
-        <div className="inline-flex min-w-full gap-1 rounded-2xl border border-border bg-secondary/60 p-1.5">
-          {items.map((item) => (
-            <NavButton key={item.id} item={item} active={active === item.id} onChange={onChange} compact />
-          ))}
-        </div>
+    <div className="mb-5 overflow-x-auto pb-1">
+      <div className="grid min-w-full grid-cols-3 gap-1.5 rounded-2xl border border-border bg-secondary/60 p-1.5">
+        {items.map((item) => (
+          <NavButton key={item.id} item={item} active={active === item.id} onChange={onChange} />
+        ))}
       </div>
-
-      {/* Desktop: vertical sidebar */}
-      <nav className="hidden lg:block w-52 flex-shrink-0">
-        <ul className="space-y-1 sticky top-4">
-          {items.map((item) => (
-            <li key={item.id}>
-              <NavButton item={item} active={active === item.id} onChange={onChange} />
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </>
+    </div>
   )
 }
 
@@ -64,12 +41,10 @@ function NavButton({
   item,
   active,
   onChange,
-  compact,
 }: {
   item: StudentNavItem
   active: boolean
   onChange: (view: StudentView) => void
-  compact?: boolean
 }) {
   const Icon = item.icon
   return (
@@ -77,8 +52,7 @@ function NavButton({
       type="button"
       onClick={() => onChange(item.id)}
       className={cn(
-        "flex w-full items-center gap-2.5 rounded-xl text-left transition-colors",
-        compact ? "whitespace-nowrap px-3 py-2 text-sm" : "px-3 py-2.5 text-sm",
+        "flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 text-left text-sm transition-colors",
         active
           ? "bg-card font-semibold text-foreground shadow-soft border border-border/60"
           : "font-medium text-muted-foreground hover:bg-secondary/80 hover:text-foreground",
@@ -87,8 +61,8 @@ function NavButton({
       <Icon className={cn("h-4 w-4 flex-shrink-0", active && "text-emerald-600")} />
       <span className="flex-1 min-w-0">
         <span className="block truncate">{item.label}</span>
-        {!compact && item.hint && (
-          <span className="block truncate text-[10px] font-normal text-muted-foreground mt-0.5">
+        {item.hint && (
+          <span className="hidden sm:block truncate text-[11px] font-normal text-muted-foreground mt-0.5">
             {item.hint}
           </span>
         )}
@@ -109,49 +83,40 @@ export function studentNavItems(signals: {
   progressHint?: string
   achievementCount?: number
 }): StudentNavItem[] {
-  const memHint =
-    signals.memInProgress > 0 && (signals.revisingCount || 0) > 0
-      ? `${signals.memInProgress} learning · ${signals.revisingCount} revising`
-      : signals.memInProgress > 0
-        ? `${signals.memInProgress} in progress`
-        : (signals.revisingCount || 0) > 0
-          ? `${signals.revisingCount} revising`
-          : "None active"
+  const activeMemTotal = signals.memInProgress + (signals.revisingCount || 0)
+  const deskHintParts: string[] = []
+  if (signals.progressHint) deskHintParts.push(signals.progressHint)
+  if (activeMemTotal > 0) {
+    deskHintParts.push(`${activeMemTotal} active lesson${activeMemTotal === 1 ? "" : "s"}`)
+  } else {
+    deskHintParts.push("All curriculum")
+  }
+
+  const historyHintParts: string[] = [`${signals.sessionCount} classes`]
+  if (signals.achievementCount && signals.achievementCount > 0) {
+    historyHintParts.push(`${signals.achievementCount} trophies`)
+  } else if (signals.lastClassLabel) {
+    historyHintParts.push(`Last ${signals.lastClassLabel}`)
+  }
 
   return [
-    { id: "overview", label: "Overview", icon: LayoutDashboard },
     {
-      id: "progress",
-      label: "Progress",
-      icon: BookOpen,
-      hint: signals.progressHint,
+      id: "overview",
+      label: "Teaching Desk",
+      icon: LayoutDashboard,
+      hint: deskHintParts.join(" · "),
     },
     {
-      id: "classes",
-      label: "Classes",
+      id: "history",
+      label: "History & Trophies",
       icon: History,
-      hint: signals.lastClassLabel ?? `${signals.sessionCount} total`,
-    },
-    {
-      id: "memorization",
-      label: "Memorization",
-      icon: BookMarked,
-      hint: memHint,
-    },
-    {
-      id: "achievements",
-      label: "Trophies",
-      icon: Award,
-      hint:
-        signals.achievementCount && signals.achievementCount > 0
-          ? `${signals.achievementCount} earned`
-          : "Badges & certificates",
+      hint: historyHintParts.join(" · "),
     },
     {
       id: "account",
-      label: "Account",
+      label: "Billing & Access",
       icon: CreditCard,
-      hint: signals.unpaidThisMonth ? "Fee due this month" : "Fees & portal",
+      hint: signals.unpaidThisMonth ? "Fee due this month" : "Fees & portal login",
       alert: signals.unpaidThisMonth,
     },
   ]

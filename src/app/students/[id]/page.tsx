@@ -5,20 +5,22 @@
 import * as Popover from "@radix-ui/react-popover"
 import { differenceInDays, format, formatDistanceToNow, subMonths } from "date-fns"
 import {
+  Activity,
   ArrowLeft,
+  Award,
   BookMarked,
   BookOpen,
   CalendarDays,
   Check,
   Clock,
+  CreditCard,
   FileText,
   History,
   MapPin,
   Pencil,
   Play,
   Plus,
-  RotateCcw,
-  Sparkles,
+  Tablet,
   Trash2,
   Trophy,
 } from "lucide-react"
@@ -32,9 +34,9 @@ import {
   loadChunksFor,
   loadMemorizedChunkIds,
   type MemChunk,
-  MemPartWorkspace,
   setChunkMemorized,
 } from "@/components/memorization-chunks"
+import { OnlineDot } from "@/components/online-dot"
 import { PageLoading } from "@/components/page-loading"
 import { QuranJourney } from "@/components/quran-journey"
 import {
@@ -43,17 +45,14 @@ import {
   type QuranRound,
 } from "@/components/quran-progress"
 import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
-import { type ActivityLog } from "@/components/student-activity-feed"
+import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
 import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
-import { StudentNamazAssign } from "@/components/student-namaz-assign"
-import { StudentOverview } from "@/components/student-overview"
+import { type HistorySection, StudentOverview } from "@/components/student-overview"
 import { StudentPortalAccess } from "@/components/student-portal-access"
-import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import {
   type ClassSession,
-  MemThumb,
   paraSummary,
   SessionStat,
 } from "@/components/student-session-bits"
@@ -90,7 +89,6 @@ import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import {
   type CatalogItem,
-  chunkProgress,
   STUDENT_MEM_SELECT,
   type StudentMemItem,
 } from "@/lib/memorization"
@@ -98,6 +96,7 @@ import { fetchAllRows, supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import {
+  cn,
   COUNTRIES,
   type FeePayment,
   formatLocalDate,
@@ -136,7 +135,6 @@ export default function StudentDetailPage() {
   const [catalog, setCatalog] = useState<CatalogItem[]>([])
   const [chunksByItem, setChunksByItem] = useState<Record<string, MemChunk[]>>({})
   const [memorizedChunkIds, setMemorizedChunkIds] = useState<Set<string>>(new Set())
-  const [assignOpen, setAssignOpen] = useState(false)
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
   const [deletingSession, setDeletingSession] = useState(false)
@@ -161,6 +159,7 @@ export default function StudentDetailPage() {
   })
 
   const [activeTab, setActiveTab] = useState<StudentView>("overview")
+  const [historySection, setHistorySection] = useState<HistorySection>("all")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -581,6 +580,47 @@ export default function StudentDetailPage() {
 
     setRoundEditOpen(false)
     await loadRounds()
+    void loadAchievementCount()
+  }
+
+  async function stepRoundProgress(deltaAsc: number, deltaDesc: number) {
+    const active = getActiveRound(rounds)
+    if (!active || active.type !== "quran") return
+
+    const before = roundProgress(active)
+    const nextAsc = Math.max(0, Math.min(30, (active.asc_completed || 0) + deltaAsc))
+    const nextDesc = Math.max(0, Math.min(30, (active.desc_completed || 0) + deltaDesc))
+    if (nextAsc === (active.asc_completed || 0) && nextDesc === (active.desc_completed || 0)) {
+      return
+    }
+
+    // Optimistic update for instant feedback
+    setRounds((prev) =>
+      prev.map((r) =>
+        r.id === active.id ? { ...r, asc_completed: nextAsc, desc_completed: nextDesc } : r,
+      ),
+    )
+
+    const { error } = await supabase
+      .from("quran_rounds")
+      .update({
+        asc_completed: nextAsc,
+        desc_completed: nextDesc,
+      })
+      .eq("id", active.id)
+
+    if (error) {
+      toast.error(error.message)
+      await loadRounds()
+      return
+    }
+
+    void syncQuranRoundAchievements(params.id as string, active, before, {
+      desc: nextDesc,
+      asc: nextAsc,
+      completed_at: before.completed_at,
+    })
+    void loadAchievementCount()
   }
 
   async function startNewRound() {
@@ -660,6 +700,7 @@ export default function StudentDetailPage() {
       is_completed: false,
     })
     await loadRounds()
+    void loadAchievementCount()
   }
 
   function openEditRound(r: QuranRound) {
@@ -727,6 +768,7 @@ export default function StudentDetailPage() {
 
     setEditingRound(null)
     await loadRounds()
+    void loadAchievementCount()
   }
 
   async function deleteRound(roundId: string) {
@@ -735,18 +777,25 @@ export default function StudentDetailPage() {
     toast.success("Round deleted")
   }
 
+  function handleNavigate(view: StudentView, section?: HistorySection) {
+    setActiveTab(view)
+    if (section) {
+      setHistorySection(section)
+    }
+  }
+
   useEffect(() => {
     loadStudent()
   }, [loadStudent])
 
-  // Reset Sessions pagination when entering the tab
+  // Reset Sessions pagination when entering the history tab
   useEffect(() => {
-    if (activeTab === "classes") setSessionPage(1)
+    if (activeTab === "history") setSessionPage(1)
   }, [activeTab])
 
-  // Lazy-load activity for the overview panel.
+  // Lazy-load activity when entering the history tab
   useEffect(() => {
-    if (activeTab === "overview" && !activityLoaded && !activityLoading) {
+    if (activeTab === "history" && !activityLoaded && !activityLoading) {
       loadActivity()
     }
   }, [activeTab, activityLoaded, activityLoading, loadActivity])
@@ -768,18 +817,27 @@ export default function StudentDetailPage() {
   const paidCount = fees.filter((f) => f.is_paid).length
   const unpaidCount = fees.filter((f) => !f.is_paid).length
   const memorizingCount = memItems.filter((m) => m.status === "memorizing").length
-  const memorizedCount = memItems.filter((m) => m.status === "memorized").length
   const revisingCount = memItems.filter((m) => m.status === "memorized" && m.revision_assigned_at).length
   const now = new Date()
-  const currentMonthUnpaid = fees.some(
-    (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear() && !f.is_paid,
+  const currentFee = fees.find(
+    (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear(),
   )
+  const currentMonthUnpaid = Boolean(currentFee && !currentFee.is_paid)
+  const isOnline = onlineIds.has(student.id)
   const lastSession = sessions[0]
   const progressHint = activeRound
     ? activeRound.type === "qaida"
       ? "Qaida"
       : `Para ${activeRound.asc_completed || 1}`
     : "No active round"
+
+  const scheduleDaysLabel = student.class_days?.length
+    ? student.class_days
+        .slice()
+        .sort((a, b) => a - b)
+        .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
+        .join(" · ")
+    : null
 
   const navItems = studentNavItems({
     lastClassLabel: lastSession
@@ -806,852 +864,765 @@ export default function StudentDetailPage() {
         <span className="text-muted-foreground/40">/</span>
         <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
       </nav>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link href="/students">
-          <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
-          {student.name.charAt(0)}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5">
-            <h1 className="font-heading text-3xl font-bold tracking-tight truncate leading-none">
-              {student.name}
-            </h1>
-            <Badge variant={statusCfg.variant} className="flex-shrink-0">
-              {statusCfg.label}
-            </Badge>
+
+      {/* Command Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <Link href="/students">
+            <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div className="flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
+            {student.name.charAt(0)}
           </div>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground mt-1.5">
-            <span>{student.guardian_name}</span>
-            {student.country && (
-              <>
-                <span className="text-muted-foreground/40">&middot;</span>
-                <span className="flex items-center gap-1">
-                  <MapPin className="h-3.5 w-3.5" />
-                  {student.country}
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight truncate leading-none">
+                {student.name}
+              </h1>
+              <Badge variant={statusCfg.variant} className="flex-shrink-0">
+                {statusCfg.label}
+              </Badge>
+              {isOnline && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
+                  <OnlineDot />
+                  Online
                 </span>
-              </>
-            )}
-            <span className="text-muted-foreground/40">&middot;</span>
-            <span>{daysSinceStart} days enrolled</span>
-            {student.ended_at && (
-              <>
-                <span className="text-muted-foreground/40">&middot;</span>
-                <span>
-                  Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
+              )}
+              {student.last_device && (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                  title={
+                    student.last_device_at
+                      ? `Last active on this device: ${new Date(student.last_device_at).toLocaleString()}`
+                      : undefined
+                  }
+                >
+                  <Tablet className="h-3 w-3 text-primary" />
+                  {student.last_device}
                 </span>
-              </>
-            )}
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm text-muted-foreground mt-1.5">
+              <span>{student.guardian_name}</span>
+              {student.country && (
+                <>
+                  <span className="text-muted-foreground/40">&middot;</span>
+                  <span className="inline-flex items-center gap-1">
+                    <MapPin className="h-3.5 w-3.5" />
+                    {student.country}
+                  </span>
+                </>
+              )}
+              {(student.class_time || scheduleDaysLabel) && (
+                <>
+                  <span className="text-muted-foreground/40">&middot;</span>
+                  <span className="inline-flex items-center gap-1 text-foreground/80 font-medium">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    {student.class_time || "No time"}
+                    {scheduleDaysLabel ? ` (${scheduleDaysLabel})` : ""}
+                  </span>
+                </>
+              )}
+              <span className="text-muted-foreground/40">&middot;</span>
+              <span>{daysSinceStart}d enrolled</span>
+              {student.ended_at && (
+                <>
+                  <span className="text-muted-foreground/40">&middot;</span>
+                  <span>
+                    Ended {format(parseLocalDate(student.ended_at) ?? new Date(), "MMM yyyy")}
+                  </span>
+                </>
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+
+        {/* Right Command Actions: Quick Fee Pill + Edit + Start Class */}
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+          {currentFee && (
+            currentFee.is_paid ? (
+              <button
+                type="button"
+                onClick={() => setActiveTab("account")}
+                title="View billing history"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
+              >
+                <Check className="h-3.5 w-3.5" />
+                {format(now, "MMM")} Fee Paid
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void toggleFee(currentFee)}
+                title="Click to mark this month's fee as paid"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
+              >
+                <CreditCard className="h-3.5 w-3.5" />
+                {format(now, "MMM")} Fee Unpaid &middot; Mark Paid
+              </button>
+            )
+          )}
+
+          <Dialog open={editOpen} onOpenChange={setEditOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                Edit
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit — {student.name}</DialogTitle>
+                <DialogDescription>
+                  Update details for {student.name} ({student.guardian_name})
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Country</Label>
+                    <Select
+                      value={editForm.country}
+                      onValueChange={(val) => setEditForm({ ...editForm, country: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {COUNTRIES.map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
+                    <Input
+                      id="edit_class_time"
+                      type="time"
+                      value={toInputTime(editForm.class_time)}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          class_time: e.target.value ? toPktClassTime(e.target.value) : "",
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Class Days</Label>
+                  <ClassDaysPicker
+                    value={editForm.class_days}
+                    onChange={(class_days) => setEditForm({ ...editForm, class_days })}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Days this student has class — drives their daily streak.
+                  </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Monthly Fee</Label>
+                    <Input
+                      type="number"
+                      value={editForm.fee}
+                      onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Currency</Label>
+                    <Select
+                      value={editForm.fee_currency}
+                      onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GBP">GBP (£)</SelectItem>
+                        <SelectItem value="USD">USD ($)</SelectItem>
+                        <SelectItem value="PKR">PKR (Rs)</SelectItem>
+                        <SelectItem value="SAR">SAR (﷼)</SelectItem>
+                        <SelectItem value="BHD">BHD (BD)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select
+                      value={editForm.status}
+                      onValueChange={(val) =>
+                        setEditForm({ ...editForm, status: val as StudentStatus })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Reading">Reading</SelectItem>
+                        <SelectItem value="Completed">Completed</SelectItem>
+                        <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {editForm.status !== "Reading" && (
+                    <div className="space-y-2">
+                      <Label>End Date</Label>
+                      <Input
+                        type="date"
+                        value={editForm.ended_at}
+                        onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
+                      />
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button onClick={saveEdit}>Save Changes</Button>
+                  <Button variant="outline" onClick={() => setEditOpen(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
           <Link href={`/class?student=${student.id}`}>
             <Button size="sm">
               <Play className="h-3.5 w-3.5 mr-1.5" />
               Start class
             </Button>
           </Link>
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm">
-              <Pencil className="h-3.5 w-3.5 mr-1.5" />
-              Edit
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit — {student.name}</DialogTitle>
-              <DialogDescription>
-                Update details for {student.name} ({student.guardian_name})
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Country</Label>
-                  <Select
-                    value={editForm.country}
-                    onValueChange={(val) => setEditForm({ ...editForm, country: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select country" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COUNTRIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
-                  <Input
-                    id="edit_class_time"
-                    type="time"
-                    value={toInputTime(editForm.class_time)}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        class_time: e.target.value ? toPktClassTime(e.target.value) : "",
-                      })
-                    }
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Class Days</Label>
-                <ClassDaysPicker
-                  value={editForm.class_days}
-                  onChange={(class_days) => setEditForm({ ...editForm, class_days })}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Days this student has class — drives their daily streak.
-                </p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Monthly Fee</Label>
-                  <Input
-                    type="number"
-                    value={editForm.fee}
-                    onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Currency</Label>
-                  <Select
-                    value={editForm.fee_currency}
-                    onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GBP">GBP (£)</SelectItem>
-                      <SelectItem value="USD">USD ($)</SelectItem>
-                      <SelectItem value="PKR">PKR (Rs)</SelectItem>
-                      <SelectItem value="SAR">SAR (﷼)</SelectItem>
-                      <SelectItem value="BHD">BHD (BD)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Status</Label>
-                  <Select
-                    value={editForm.status}
-                    onValueChange={(val) =>
-                      setEditForm({ ...editForm, status: val as StudentStatus })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Reading">Reading</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {editForm.status !== "Reading" && (
-                  <div className="space-y-2">
-                    <Label>End Date</Label>
-                    <Input
-                      type="date"
-                      value={editForm.ended_at}
-                      onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-3 pt-2">
-                <Button onClick={saveEdit}>Save Changes</Button>
-                <Button variant="outline" onClick={() => setEditOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
-        <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
+      {/* 3-Mode Top Segmented Navigation */}
+      <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
 
-        <div className="flex-1 min-w-0">
-      {activeTab === "overview" && (
-        <StudentOverview
-          student={student}
-          rounds={rounds}
-          sessions={sessions}
-          fees={fees}
-          memItems={memItems}
-          chunksByItem={chunksByItem}
-          memorizedChunkIds={memorizedChunkIds}
-          rates={rates}
-          online={onlineIds.has(student.id)}
-          activity={activity}
-          activityLoading={activityLoading}
-          onNavigate={setActiveTab}
-          onMarkFeePaid={toggleFee}
-          onUpdateProgress={() => {
-            if (!activeRound) return
-            setRoundForm({
-              desc_completed: (activeRound.desc_completed || 0).toString(),
-              asc_completed: (activeRound.asc_completed || 0).toString(),
-            })
-            setRoundEditOpen(true)
-          }}
-          onCompleteRound={() => void completeActiveRound()}
-        />
-      )}
-
-      {activeTab === "progress" && (
-        <div className="space-y-4 animate-fade-in-up">
-          {/* Action buttons */}
-          <div className="flex items-center gap-2 justify-end">
-            {activeRound && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setRoundForm({
-                      desc_completed: (activeRound.desc_completed || 0).toString(),
-                      asc_completed: (activeRound.asc_completed || 0).toString(),
-                    })
-                    setRoundEditOpen(true)
-                  }}
-                >
-                  <Pencil className="h-3.5 w-3.5 mr-1" />
-                  Update Progress
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={completeActiveRound}
-                  className="text-emerald-400 hover:text-emerald-300"
-                >
-                  <Check className="h-3.5 w-3.5 mr-1" />
-                  Complete
-                </Button>
-              </>
-            )}
-            <Button size="sm" onClick={() => setNewRoundOpen(true)}>
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              Add Round
-            </Button>
-          </div>
-
-          {/* Hero progress + journey stats + timeline */}
-          <QuranJourney rounds={rounds} onEditRound={openEditRound} onDeleteRound={deleteRound} />
-        </div>
-      )}
-
-      {activeTab === "classes" &&
-        (() => {
-          const totalSessions = sessions.length
-          const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
-          const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
-          const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
-          const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
-          const now = new Date()
-          const thisMonthCount = sessions.filter((s) => {
-            const d = new Date(s.started_at)
-            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-          }).length
-          const lastSession = sessions[0]
-          const cleanupCutoff = subMonths(now, 1)
-          const oldSessionsCount = sessions.filter(
-            (s) => new Date(s.started_at) < cleanupCutoff,
-          ).length
-          const handlePageChange = (page: number) => {
-            setSessionPage(page)
-            if (typeof window !== "undefined") {
-              requestAnimationFrame(() => {
-                document.getElementById("sessions-list-top")?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
+      {/* Full-width Workspace */}
+      <div className="min-w-0">
+        {activeTab === "overview" && (
+          <StudentOverview
+            student={student}
+            rounds={rounds}
+            sessions={sessions}
+            memItems={memItems}
+            catalog={catalog}
+            chunksByItem={chunksByItem}
+            memorizedChunkIds={memorizedChunkIds}
+            onNavigate={handleNavigate}
+            onUpdateProgress={() => {
+              if (!activeRound) return
+              setRoundForm({
+                desc_completed: (activeRound.desc_completed || 0).toString(),
+                asc_completed: (activeRound.asc_completed || 0).toString(),
               })
-            }
-          }
-          return (
-            <div className="animate-fade-in-up space-y-5">
-              {totalSessions === 0 ? (
-                <div className="py-16 text-center bg-card rounded-2xl border border-border">
-                  <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-secondary/40">
-                    <Clock className="h-6 w-6 text-primary" />
+              setRoundEditOpen(true)
+            }}
+            onStepRoundProgress={(deltaAsc, deltaDesc) => void stepRoundProgress(deltaAsc, deltaDesc)}
+            onCompleteRound={() => void completeActiveRound()}
+            onOpenNewRound={() => setNewRoundOpen(true)}
+            onLoadCatalog={() => void loadCatalog()}
+            onAssignMemItem={(catalogId) => void assignItem(catalogId)}
+            onUnassignMemItem={(id) => void unassignItem(id)}
+            onToggleMemStatus={(item) => void toggleMemStatus(item)}
+            onToggleChunk={(chunk, memorized) => void toggleChunk(chunk, memorized)}
+            onAssignMemRevision={(id) => void assignRevision(id)}
+            onMarkMemRevised={(id) => void markRevised(id)}
+            onAchievementEarned={() => void loadAchievementCount()}
+          />
+        )}
+
+        {activeTab === "history" && (
+          <div className="space-y-6 animate-fade-in-up">
+            {/* Sub-filter pill bar for History & Trophies */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              {(
+                [
+                  { id: "all", label: "All History", icon: History },
+                  {
+                    id: "sessions",
+                    label: `Class Sessions (${sessions.length})`,
+                    icon: Clock,
+                  },
+                  {
+                    id: "timeline",
+                    label: `Quran Timeline (${rounds.length})`,
+                    icon: BookOpen,
+                  },
+                  {
+                    id: "trophies",
+                    label: `Trophies (${achievementCount})`,
+                    icon: Award,
+                  },
+                  {
+                    id: "activity",
+                    label: `Portal Activity (${activity.length})`,
+                    icon: Activity,
+                  },
+                ] as const
+              ).map((pill) => {
+                const PillIcon = pill.icon
+                const isSelected = historySection === pill.id
+                return (
+                  <button
+                    key={pill.id}
+                    type="button"
+                    onClick={() => setHistorySection(pill.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors",
+                      isSelected
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 font-semibold"
+                        : "border-border bg-card text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                    )}
+                  >
+                    <PillIcon className="h-3.5 w-3.5" />
+                    {pill.label}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* 1. CLASS SESSIONS SECTION */}
+            {(historySection === "all" || historySection === "sessions") &&
+              (() => {
+                const totalSessions = sessions.length
+                const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
+                const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
+                const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
+                const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
+                const thisMonthCount = sessions.filter((s) => {
+                  const d = new Date(s.started_at)
+                  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+                }).length
+                const cleanupCutoff = subMonths(now, 1)
+                const oldSessionsCount = sessions.filter(
+                  (s) => new Date(s.started_at) < cleanupCutoff,
+                ).length
+                const handlePageChange = (page: number) => {
+                  setSessionPage(page)
+                  if (typeof window !== "undefined") {
+                    requestAnimationFrame(() => {
+                      document.getElementById("sessions-list-top")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      })
+                    })
+                  }
+                }
+                return (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-lg font-semibold">Class Sessions</h2>
+                        <p className="text-sm text-muted-foreground">
+                          Recorded lessons, duration, and teacher notes
+                        </p>
+                      </div>
+                    </div>
+
+                    {totalSessions === 0 ? (
+                      <div className="py-12 text-center bg-card rounded-2xl border border-border">
+                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary/40">
+                          <Clock className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-semibold text-foreground mb-1">
+                          No sessions yet
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Sessions will appear here after the first class
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Summary bar */}
+                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                          <SessionStat
+                            icon={History}
+                            tint="text-emerald-600 bg-emerald-500/10"
+                            value={totalSessions}
+                            label="Total sessions"
+                          />
+                          <SessionStat
+                            icon={Clock}
+                            tint="text-blue-500 bg-blue-500/10"
+                            value={formatSessionDuration(totalSeconds)}
+                            label="Time together"
+                          />
+                          <SessionStat
+                            icon={CalendarDays}
+                            tint="text-purple-500 bg-purple-500/10"
+                            value={thisMonthCount}
+                            label="This month"
+                          />
+                          <SessionStat
+                            icon={BookOpen}
+                            tint="text-amber-600 bg-amber-500/10"
+                            value={
+                              lastSession ? format(new Date(lastSession.started_at), "MMM d") : "--"
+                            }
+                            label="Last class"
+                          />
+                        </div>
+
+                        {/* Cleanup toolbar — only when there are sessions older than 1 month */}
+                        {oldSessionsCount > 0 && (
+                          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/20 px-4 py-2.5">
+                            <p className="text-xs text-muted-foreground">
+                              <span className="font-semibold text-foreground">
+                                {oldSessionsCount}
+                              </span>{" "}
+                              session{oldSessionsCount === 1 ? "" : "s"} older than 1 month
+                            </p>
+                            <Popover.Root open={cleanupOpen} onOpenChange={setCleanupOpen}>
+                              <Popover.Trigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="text-muted-foreground hover:border-destructive/40 hover:text-destructive"
+                                >
+                                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                                  Clear old sessions
+                                </Button>
+                              </Popover.Trigger>
+                              <Popover.Portal>
+                                <Popover.Content
+                                  side="bottom"
+                                  align="end"
+                                  sideOffset={8}
+                                  className="z-50 w-64 rounded-xl border border-border bg-card p-3 shadow-lg"
+                                >
+                                  <p className="mb-1 text-sm font-semibold text-foreground">
+                                    Delete {oldSessionsCount} old session
+                                    {oldSessionsCount === 1 ? "" : "s"}?
+                                  </p>
+                                  <p className="mb-3 text-xs text-muted-foreground">
+                                    This removes every session older than 1 month for {student.name}
+                                    . Only the last month is kept. This can&rsquo;t be undone.
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      className="h-7 flex-1 text-xs"
+                                      onClick={() => setCleanupOpen(false)}
+                                      disabled={cleaningOld}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <button
+                                      type="button"
+                                      className="h-7 flex-1 rounded-md text-xs font-semibold bg-destructive text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                                      onClick={deleteOldSessions}
+                                      disabled={cleaningOld}
+                                    >
+                                      {cleaningOld ? "Deleting…" : "Delete"}
+                                    </button>
+                                  </div>
+                                  <Popover.Arrow className="fill-border" />
+                                </Popover.Content>
+                              </Popover.Portal>
+                            </Popover.Root>
+                          </div>
+                        )}
+
+                        {/* Sessions table */}
+                        <div
+                          id="sessions-list-top"
+                          className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
+                        >
+                          <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-5 py-3">
+                            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              {totalSessions} {totalSessions === 1 ? "Session" : "Sessions"}
+                            </p>
+                            <span className="text-[11px] font-medium text-muted-foreground">
+                              Newest first ↓
+                            </span>
+                          </div>
+
+                          <div className="max-h-[520px] overflow-y-auto main-scroll">
+                            {paginatedSessions.map((session, i) => {
+                              const paras = paraSummary(session)
+                              const revised = session.memorization_revised?.length || 0
+                              const started = new Date(session.started_at)
+                              return (
+                                <div
+                                  key={session.id}
+                                  className={`group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/50 ${
+                                    i < paginatedSessions.length - 1 ? "border-b border-border" : ""
+                                  }`}
+                                >
+                                  <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-secondary/40">
+                                    <span className="text-[10px] font-semibold uppercase leading-none text-muted-foreground">
+                                      {format(started, "MMM")}
+                                    </span>
+                                    <span className="font-heading text-lg font-bold leading-tight tabular-nums text-foreground">
+                                      {format(started, "d")}
+                                    </span>
+                                  </div>
+
+                                  <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                      <p className="text-sm font-semibold text-foreground">
+                                        {format(started, "EEEE")}
+                                      </p>
+                                      <span className="text-muted-foreground/40">&middot;</span>
+                                      <span className="text-[13px] text-muted-foreground">
+                                        {format(started, "MMM d, yyyy")}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                      <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                                        <Clock className="h-3 w-3" />
+                                        {formatSessionDuration(session.duration_seconds)}
+                                      </span>
+                                      {paras && (
+                                        <span
+                                          title={paras.title}
+                                          className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600"
+                                        >
+                                          <BookOpen className="h-3 w-3" />
+                                          {paras.label}
+                                        </span>
+                                      )}
+                                      {revised > 0 && (
+                                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600">
+                                          <BookMarked className="h-3 w-3" />
+                                          {revised} revised
+                                        </span>
+                                      )}
+                                    </div>
+                                    {session.notes && (
+                                      <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
+                                        <FileText className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                                        <span className="truncate">{session.notes}</span>
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-shrink-0 items-center gap-1.5">
+                                    <span className="hidden text-[11px] text-muted-foreground sm:block">
+                                      {formatDistanceToNow(started, { addSuffix: true })}
+                                    </span>
+                                    <Popover.Root
+                                      open={sessionToDelete?.id === session.id}
+                                      onOpenChange={(open) =>
+                                        setSessionToDelete(open ? session : null)
+                                      }
+                                    >
+                                      <Popover.Trigger asChild>
+                                        <button
+                                          type="button"
+                                          title="Delete session"
+                                          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5" />
+                                        </button>
+                                      </Popover.Trigger>
+                                      <Popover.Portal>
+                                        <Popover.Content
+                                          side="top"
+                                          align="end"
+                                          sideOffset={8}
+                                          className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
+                                        >
+                                          <p className="text-xs font-medium mb-2.5 text-foreground">
+                                            Delete this session?
+                                          </p>
+                                          <div className="flex gap-2">
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 flex-1 text-xs"
+                                              onClick={() => setSessionToDelete(null)}
+                                              disabled={deletingSession}
+                                            >
+                                              No
+                                            </Button>
+                                            <button
+                                              type="button"
+                                              className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
+                                              onClick={deleteSession}
+                                              disabled={deletingSession}
+                                            >
+                                              {deletingSession ? "..." : "Yes"}
+                                            </button>
+                                          </div>
+                                          <Popover.Arrow className="fill-border" />
+                                        </Popover.Content>
+                                      </Popover.Portal>
+                                    </Popover.Root>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        </div>
+
+                        {totalSessions > SESSION_PAGE_SIZE && (
+                          <Pagination
+                            currentPage={sessionPage}
+                            totalPages={totalSessionPages}
+                            totalItems={totalSessions}
+                            pageSize={SESSION_PAGE_SIZE}
+                            onPageChange={handlePageChange}
+                          />
+                        )}
+                      </>
+                    )}
                   </div>
-                  <p className="text-base font-semibold text-foreground mb-1">No sessions yet</p>
-                  <p className="text-sm text-muted-foreground">
-                    Sessions will appear here after the first class
+                )
+              })()}
+
+            {/* 2. QURAN TIMELINE SECTION */}
+            {(historySection === "all" || historySection === "timeline") && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <h2 className="text-lg font-semibold">Quran & Qaida Journey</h2>
+                    <p className="text-sm text-muted-foreground">
+                      Completed rounds, active para map, and historical milestones
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {activeRound && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setRoundForm({
+                              desc_completed: (activeRound.desc_completed || 0).toString(),
+                              asc_completed: (activeRound.asc_completed || 0).toString(),
+                            })
+                            setRoundEditOpen(true)
+                          }}
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1" />
+                          Update Progress
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={completeActiveRound}
+                          className="text-emerald-600 hover:text-emerald-500"
+                        >
+                          <Check className="h-3.5 w-3.5 mr-1" />
+                          Complete
+                        </Button>
+                      </>
+                    )}
+                    <Button size="sm" onClick={() => setNewRoundOpen(true)}>
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      Add Round
+                    </Button>
+                  </div>
+                </div>
+
+                <QuranJourney
+                  rounds={rounds}
+                  onEditRound={openEditRound}
+                  onDeleteRound={deleteRound}
+                />
+              </div>
+            )}
+
+            {/* 3. TROPHIES & CERTIFICATES SECTION */}
+            {(historySection === "all" || historySection === "trophies") && (
+              <StudentAchievementsPanel
+                studentId={student.id}
+                onUpdated={() => void loadAchievementCount()}
+              />
+            )}
+
+            {/* 4. PORTAL ACTIVITY SECTION */}
+            {(historySection === "all" || historySection === "activity") && (
+              <Card>
+                <div className="px-5 py-4 border-b border-border/50">
+                  <h2 className="text-base font-semibold">Portal Activity</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {activity.length > 0
+                      ? `${activity.length} events logged from the student app`
+                      : "Clicks and page views from the student app"}
                   </p>
                 </div>
-              ) : (
-                <>
-                  {/* Summary bar */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    <SessionStat
-                      icon={History}
-                      tint="text-emerald-600 bg-emerald-500/10"
-                      value={totalSessions}
-                      label="Total sessions"
-                    />
-                    <SessionStat
-                      icon={Clock}
-                      tint="text-blue-500 bg-blue-500/10"
-                      value={formatSessionDuration(totalSeconds)}
-                      label="Time together"
-                    />
-                    <SessionStat
-                      icon={CalendarDays}
-                      tint="text-purple-500 bg-purple-500/10"
-                      value={thisMonthCount}
-                      label="This month"
-                    />
-                    <SessionStat
-                      icon={BookOpen}
-                      tint="text-amber-600 bg-amber-500/10"
-                      value={lastSession ? format(new Date(lastSession.started_at), "MMM d") : "--"}
-                      label="Last class"
-                    />
-                  </div>
-
-                  {/* Cleanup toolbar — only when there are sessions older than 1 month */}
-                  {oldSessionsCount > 0 && (
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/20 px-4 py-2.5">
-                      <p className="text-xs text-muted-foreground">
-                        <span className="font-semibold text-foreground">{oldSessionsCount}</span>{" "}
-                        session{oldSessionsCount === 1 ? "" : "s"} older than 1 month
-                      </p>
-                      <Popover.Root open={cleanupOpen} onOpenChange={setCleanupOpen}>
-                        <Popover.Trigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="text-muted-foreground hover:border-destructive/40 hover:text-destructive"
-                          >
-                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                            Clear old sessions
-                          </Button>
-                        </Popover.Trigger>
-                        <Popover.Portal>
-                          <Popover.Content
-                            side="bottom"
-                            align="end"
-                            sideOffset={8}
-                            className="z-50 w-64 rounded-xl border border-border bg-card p-3 shadow-lg"
-                          >
-                            <p className="mb-1 text-sm font-semibold text-foreground">
-                              Delete {oldSessionsCount} old session
-                              {oldSessionsCount === 1 ? "" : "s"}?
-                            </p>
-                            <p className="mb-3 text-xs text-muted-foreground">
-                              This removes every session older than 1 month for {student.name}. Only
-                              the last month is kept. This can&rsquo;t be undone.
-                            </p>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 flex-1 text-xs"
-                                onClick={() => setCleanupOpen(false)}
-                                disabled={cleaningOld}
-                              >
-                                Cancel
-                              </Button>
-                              <button
-                                type="button"
-                                className="h-7 flex-1 rounded-md text-xs font-semibold bg-destructive text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-                                onClick={deleteOldSessions}
-                                disabled={cleaningOld}
-                              >
-                                {cleaningOld ? "Deleting…" : "Delete"}
-                              </button>
-                            </div>
-                            <Popover.Arrow className="fill-border" />
-                          </Popover.Content>
-                        </Popover.Portal>
-                      </Popover.Root>
-                    </div>
-                  )}
-
-                  {/* Sessions table */}
-                  <div
-                    id="sessions-list-top"
-                    className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
-                  >
-                    {/* Header */}
-                    <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-5 py-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {totalSessions} {totalSessions === 1 ? "Session" : "Sessions"}
-                      </p>
-                      <span className="text-[11px] font-medium text-muted-foreground">
-                        Newest first ↓
-                      </span>
-                    </div>
-
-                    <div className="max-h-[620px] overflow-y-auto main-scroll">
-                      {paginatedSessions.map((session, i) => {
-                        const paras = paraSummary(session)
-                        const revised = session.memorization_revised?.length || 0
-                        const started = new Date(session.started_at)
-                        return (
-                          <div
-                            key={session.id}
-                            className={`group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/50 ${
-                              i < paginatedSessions.length - 1 ? "border-b border-border" : ""
-                            }`}
-                          >
-                            {/* Date block */}
-                            <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-secondary/40">
-                              <span className="text-[10px] font-semibold uppercase leading-none text-muted-foreground">
-                                {format(started, "MMM")}
-                              </span>
-                              <span className="font-heading text-lg font-bold leading-tight tabular-nums text-foreground">
-                                {format(started, "d")}
-                              </span>
-                            </div>
-
-                            {/* Main */}
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                <p className="text-sm font-semibold text-foreground">
-                                  {format(started, "EEEE")}
-                                </p>
-                                <span className="text-muted-foreground/40">&middot;</span>
-                                <span className="text-[13px] text-muted-foreground">
-                                  {format(started, "MMM d, yyyy")}
-                                </span>
-                              </div>
-                              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                  <Clock className="h-3 w-3" />
-                                  {formatSessionDuration(session.duration_seconds)}
-                                </span>
-                                {paras && (
-                                  <span
-                                    title={paras.title}
-                                    className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600"
-                                  >
-                                    <BookOpen className="h-3 w-3" />
-                                    {paras.label}
-                                  </span>
-                                )}
-                                {revised > 0 && (
-                                  <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600">
-                                    <BookMarked className="h-3 w-3" />
-                                    {revised} revised
-                                  </span>
-                                )}
-                              </div>
-                              {session.notes && (
-                                <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
-                                  <FileText className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                                  <span className="truncate">{session.notes}</span>
-                                </p>
-                              )}
-                            </div>
-
-                            {/* Right — relative time + delete */}
-                            <div className="flex flex-shrink-0 items-center gap-1.5">
-                              <span className="hidden text-[11px] text-muted-foreground sm:block">
-                                {formatDistanceToNow(started, { addSuffix: true })}
-                              </span>
-                              <Popover.Root
-                                open={sessionToDelete?.id === session.id}
-                                onOpenChange={(open) => setSessionToDelete(open ? session : null)}
-                              >
-                                <Popover.Trigger asChild>
-                                  <button
-                                    type="button"
-                                    title="Delete session"
-                                    className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </button>
-                                </Popover.Trigger>
-                                <Popover.Portal>
-                                  <Popover.Content
-                                    side="top"
-                                    align="end"
-                                    sideOffset={8}
-                                    className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
-                                  >
-                                    <p className="text-xs font-medium mb-2.5 text-foreground">
-                                      Delete this session?
-                                    </p>
-                                    <div className="flex gap-2">
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-7 flex-1 text-xs"
-                                        onClick={() => setSessionToDelete(null)}
-                                        disabled={deletingSession}
-                                      >
-                                        No
-                                      </Button>
-                                      <button
-                                        type="button"
-                                        className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
-                                        onClick={deleteSession}
-                                        disabled={deletingSession}
-                                      >
-                                        {deletingSession ? "..." : "Yes"}
-                                      </button>
-                                    </div>
-                                    <Popover.Arrow className="fill-border" />
-                                  </Popover.Content>
-                                </Popover.Portal>
-                              </Popover.Root>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Pagination — only when more than one page */}
-                  {totalSessions > SESSION_PAGE_SIZE && (
-                    <Pagination
-                      currentPage={sessionPage}
-                      totalPages={totalSessionPages}
-                      totalItems={totalSessions}
-                      pageSize={SESSION_PAGE_SIZE}
-                      onPageChange={handlePageChange}
-                    />
-                  )}
-                </>
-              )}
-            </div>
-          )
-        })()}
-
-      {activeTab === "memorization" && (
-        <div className="space-y-4 animate-fade-in-up">
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setAssignOpen(!assignOpen)
-                if (!assignOpen) loadCatalog()
-              }}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1" />
-              Assign
-            </Button>
+                <CardContent className="pt-4 pb-5">
+                  <ActivityFeed logs={activity.slice(0, 50)} loading={activityLoading} />
+                </CardContent>
+              </Card>
+            )}
           </div>
+        )}
 
-          {assignOpen && (
-            <div className="rounded-xl border border-border/50 bg-secondary/20 p-4 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Assign from Catalog
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {catalog
-                  .filter((c) => !memItems.some((m) => m.catalog_id === c.id))
-                  .map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => assignItem(item.id)}
-                      className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-card px-3 py-1.5 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-600 transition-all"
-                    >
-                      <Plus className="h-3 w-3" />
-                      {item.title}
-                      <span className="text-muted-foreground/40">({item.category})</span>
-                    </button>
-                  ))}
-                {catalog.filter((c) => !memItems.some((m) => m.catalog_id === c.id)).length ===
-                  0 && <p className="text-xs text-muted-foreground">All items assigned.</p>}
+        {activeTab === "account" && (
+          <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12">
+            {/* Left Column: Billing & Fee Ledger */}
+            <div className="lg:col-span-7 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">Billing & Fee Ledger</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Monthly fees and payment history
+                </p>
+                <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    <span className="text-muted-foreground">Paid</span>
+                    <span className="font-semibold">{paidCount}</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-amber-400" />
+                    <span className="text-muted-foreground">Unpaid</span>
+                    <span className="font-semibold">{unpaidCount}</span>
+                  </span>
+                  <span className="text-muted-foreground/40">|</span>
+                  <FeeDisplay
+                    amount={student.fee}
+                    currency={student.fee_currency}
+                    rates={rates}
+                    size="sm"
+                  />
+                  <span className="text-muted-foreground text-xs">/ month</span>
+                </div>
+                <FeeHistoryTable
+                  fees={fees}
+                  sortKey={feeSortKey}
+                  sortDir={feeSortDir}
+                  page={feePage}
+                  pageSize={feePageSize}
+                  onSort={(key) => {
+                    const result = toggleSort(feeSortKey, feeSortDir, key)
+                    setFeeSortKey(result.direction ? result.key : null)
+                    setFeeSortDir(result.direction)
+                    setFeePage(1)
+                  }}
+                  onPageChange={setFeePage}
+                  onToggleFee={toggleFee}
+                />
               </div>
             </div>
-          )}
 
-          {memorizingCount > 0 && (
-            <div className="space-y-2.5">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-green-600">
-                <Sparkles className="h-3.5 w-3.5" />
-                Currently Memorizing ({memorizingCount})
-              </p>
-              {memItems
-                .filter((m) => m.status === "memorizing")
-                .map((item) => {
-                  const chunks = chunksByItem[item.catalog_id] || []
-                  const hasChunks = chunks.length > 0
-                  const progress = chunkProgress(chunks, memorizedChunkIds)
-                  return (
-                    <div
-                      key={item.id}
-                      className="overflow-hidden rounded-2xl border border-green-500/25 bg-card shadow-soft"
-                    >
-                      <div className="flex items-center gap-3.5 border-b border-green-500/10 bg-gradient-to-r from-green-400/[0.10] to-transparent p-3">
-                        <MemThumb src={item.memorization_catalog?.image_url} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {item.memorization_catalog?.title}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            <span className="inline-flex items-center gap-1 rounded-full bg-green-600 px-2 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-                              <Sparkles className="h-2.5 w-2.5" />
-                              In progress
-                            </span>
-                            {hasChunks && (
-                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
-                                {progress.done}/{progress.total} parts
-                              </span>
-                            )}
-                            {item.memorization_catalog?.category && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {item.memorization_catalog.category}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-shrink-0 items-center gap-1.5">
-                          {!hasChunks && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => toggleMemStatus(item)}
-                              className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
-                            >
-                              <Check className="mr-1 h-3.5 w-3.5" />
-                              Mark done
-                            </Button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => unassignItem(item.id)}
-                            aria-label="Remove item"
-                            title="Remove item"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      {hasChunks && (
-                        <div className="p-3">
-                          <MemPartWorkspace
-                            chunks={chunks}
-                            memorizedIds={memorizedChunkIds}
-                            onToggle={toggleChunk}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-
-          {memorizedCount > 0 && (
-            <div className="space-y-2.5">
-              <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
-                <Check className="h-3.5 w-3.5" />
-                Revision bucket ({memorizedCount})
-              </p>
-              <p className="text-xs text-muted-foreground -mt-1">
-                Completed lessons land here. Assign what this student should revise.
-              </p>
-              {memItems
-                .filter((m) => m.status === "memorized")
-                .map((item) => {
-                  const chunks = chunksByItem[item.catalog_id] || []
-                  const hasChunks = chunks.length > 0
-                  const progress = chunkProgress(chunks, memorizedChunkIds)
-                  const assigned = !!item.revision_assigned_at
-                  return (
-                    <div
-                      key={item.id}
-                      className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
-                    >
-                      <div className="flex items-center gap-3.5 border-b border-border/50 p-3">
-                        <MemThumb src={item.memorization_catalog?.image_url} />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-foreground">
-                            {item.memorization_catalog?.title}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
-                            {assigned ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
-                                <RotateCcw className="h-2.5 w-2.5" />
-                                Assigned
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-600">
-                                <Check className="h-2.5 w-2.5" />
-                                In bucket
-                              </span>
-                            )}
-                            {hasChunks && (
-                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
-                                {progress.done}/{progress.total} parts
-                              </span>
-                            )}
-                            {item.memorization_catalog?.category && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {item.memorization_catalog.category}
-                              </span>
-                            )}
-                            {item.last_revised_at && (
-                              <span className="text-[11px] text-muted-foreground">
-                                &middot; Revised {format(new Date(item.last_revised_at), "MMM d")}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-shrink-0 items-center gap-1.5">
-                          {assigned ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => markRevised(item.id)}
-                              className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
-                            >
-                              <Check className="mr-1 h-3.5 w-3.5" />
-                              Mark revised
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => assignRevision(item.id)}
-                              className="h-8 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
-                            >
-                              <RotateCcw className="mr-1 h-3.5 w-3.5" />
-                              Assign revision
-                            </Button>
-                          )}
-                          {!hasChunks && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleMemStatus(item)}
-                              className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                            >
-                              Undo
-                            </Button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => unassignItem(item.id)}
-                            aria-label="Remove item"
-                            title="Remove item"
-                            className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      {hasChunks && (
-                        <div className="p-3">
-                          <MemPartWorkspace
-                            chunks={chunks}
-                            memorizedIds={memorizedChunkIds}
-                            onToggle={toggleChunk}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-            </div>
-          )}
-
-          {memItems.length === 0 && (
-            <Card>
-              <CardContent className="py-12 text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-                  <BookMarked className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="font-medium mb-1">No memorization items</p>
-                <p className="text-sm text-muted-foreground">
-                  Click &ldquo;Assign&rdquo; to add items for this student
+            {/* Right Column: Portal Access & Security */}
+            <div className="lg:col-span-5 space-y-4">
+              <div>
+                <h2 className="text-lg font-semibold mb-1">Portal Access & Security</h2>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Student login credentials, sign-in permissions, and active sessions
                 </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      )}
-
-      {activeTab === "achievements" && (
-        <StudentAchievementsPanel
-          studentId={student.id}
-          onUpdated={() => void loadAchievementCount()}
-        />
-      )}
-
-      {activeTab === "account" && (
-        <div className="animate-fade-in-up space-y-6">
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Billing</h2>
-            <p className="text-sm text-muted-foreground mb-4">Monthly fees and payment history</p>
-            <div className="flex items-center gap-4 mb-4 text-sm">
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                <span className="text-muted-foreground">Paid</span>
-                <span className="font-semibold">{paidCount}</span>
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
-                <span className="text-muted-foreground">Unpaid</span>
-                <span className="font-semibold">{unpaidCount}</span>
-              </span>
-              <span className="text-muted-foreground/40">|</span>
-              <FeeDisplay
-                amount={student.fee}
-                currency={student.fee_currency}
-                rates={rates}
-                size="sm"
-              />
-              <span className="text-muted-foreground text-xs">/ month</span>
-            </div>
-            <FeeHistoryTable
-              fees={fees}
-              sortKey={feeSortKey}
-              sortDir={feeSortDir}
-              page={feePage}
-              pageSize={feePageSize}
-              onSort={(key) => {
-                const result = toggleSort(feeSortKey, feeSortDir, key)
-                setFeeSortKey(result.direction ? result.key : null)
-                setFeeSortDir(result.direction)
-                setFeePage(1)
-              }}
-              onPageChange={setFeePage}
-              onToggleFee={toggleFee}
-            />
-          </div>
-
-          <div>
-            <h2 className="text-lg font-semibold mb-1">Portal</h2>
-            <p className="text-sm text-muted-foreground mb-4">Login, Qaida, Namaz, and access controls</p>
-            <div className="space-y-4">
-              <StudentPortalAccess studentId={student.id} />
-              <StudentSignInAccess studentId={student.id} />
-              <StudentQaidaAssign studentId={student.id} qaidaMediaId={student.qaida_media_id} />
-              <StudentNamazAssign studentId={student.id} />
-              <StudentForceSignOut studentId={student.id} />
+                <div className="space-y-4">
+                  <StudentPortalAccess studentId={student.id} />
+                  <StudentSignInAccess studentId={student.id} />
+                  <StudentForceSignOut studentId={student.id} />
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-        </div>
+        )}
       </div>
 
       {/* Update Progress Dialog */}
