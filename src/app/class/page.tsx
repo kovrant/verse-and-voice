@@ -128,7 +128,7 @@ function ClassPageContent() {
         ])
         // A newer selection started while we were loading — discard these results.
         if (seq !== selectSeq.current) return
-        setMemItems((memResult.data as any) || [])
+        setMemItems((memResult.data as unknown as MemItem[]) || [])
         setRounds(roundsResult.data || [])
         setSessions(sessionsResult.data || [])
       } else {
@@ -512,8 +512,8 @@ function ClassPageContent() {
                         ? "Qaida"
                         : `Quran R${getChronologicalRoundNumber(rounds, r)}`,
                     type: r.type,
-                    startedAt: new Date(r.started_at),
-                    endedAt: r.completed_at ? new Date(r.completed_at) : null,
+                    startedAt: parseLocalDate(r.started_at) ?? new Date(),
+                    endedAt: r.completed_at ? parseLocalDate(r.completed_at) : null,
                     isCurrent: false,
                   }))
                   if (active) {
@@ -524,7 +524,7 @@ function ClassPageContent() {
                           ? "Qaida"
                           : `Quran R${getChronologicalRoundNumber(rounds, active)}`,
                       type: active.type,
-                      startedAt: new Date(active.started_at),
+                      startedAt: parseLocalDate(active.started_at) ?? new Date(),
                       endedAt: null,
                       isCurrent: true,
                     })

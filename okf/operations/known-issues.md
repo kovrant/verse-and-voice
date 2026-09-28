@@ -35,12 +35,6 @@ This catalog serves as the canonical record of active defects and architectural 
 
 ## 🟡 Low Priority / Latent Issues
 
-### 3. Round Dates Parsed as UTC in Class Journey Timeline
-* **Location:** `src/app/class/page.tsx:422-423,434`
-* **Defect:** `new Date(r.started_at)` is called on date-only `YYYY-MM-DD` strings.
-* **Consequence:** For viewers situated west of UTC (negative UTC offsets), this parses as UTC midnight and renders as the previous calendar day.
-* **Remediation:** Replace `new Date(...)` with `parseLocalDate(...)` from `src/lib/utils.ts` (matching `src/components/quran-journey.tsx:213-214`).
-
 ### 4. Re-opening Older Quran Rounds via Edit Round
 * **Location:** `saveEditRound` in `src/app/students/[id]/page.tsx`
 * **Defect:** Clearing `completed_at` on an older round can leave two incomplete rounds open simultaneously.

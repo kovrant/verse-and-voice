@@ -54,7 +54,7 @@ interface QuranPara {
   title: string
   file_url: string
   file_type: string
-  meta: Record<string, any>
+  meta: { para_number?: number; [key: string]: unknown } | null
 }
 
 interface LiveSessionProps {
@@ -92,6 +92,26 @@ function formatTimer(seconds: number): string {
   return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`
 }
 
+function SessionTimer({ startedAt }: { startedAt: Date }) {
+  const [elapsed, setElapsed] = useState(() =>
+    Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)),
+  )
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setElapsed(Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [startedAt])
+
+  return (
+    <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
+      <Clock className="h-3.5 w-3.5 text-primary" />
+      <span className="text-sm font-bold text-foreground tabular-nums">{formatTimer(elapsed)}</span>
+    </div>
+  )
+}
+
 export default function LiveSession({
   student,
   rounds,
@@ -109,7 +129,6 @@ export default function LiveSession({
   const currentPointerRef = useRef<PointerState | null>(null)
   currentPointerRef.current = currentPointer
   const [startedAt] = useState(() => new Date())
-  const [elapsed, setElapsed] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
@@ -125,14 +144,6 @@ export default function LiveSession({
     setAppSidebarVisible(false)
     return () => setAppSidebarVisible(true)
   }, [setAppSidebarVisible])
-
-  // Timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setElapsed(Math.floor((Date.now() - startedAt.getTime()) / 1000))
-    }, 1000)
-    return () => clearInterval(interval)
-  }, [startedAt])
 
   // Beforeunload guard
   useEffect(() => {
@@ -313,6 +324,15 @@ export default function LiveSession({
     [sendPointer, student.id, currentParaNumber, pdfPage],
   )
 
+  const handlePageChange = useCallback(
+    (nextPage: number) => {
+      setPdfPage(nextPage)
+      setCurrentPointer(null)
+      sendPointer(null)
+    },
+    [sendPointer],
+  )
+
   // Debounced save of the current page for this para.
   useEffect(() => {
     const t = setTimeout(() => {
@@ -385,7 +405,7 @@ export default function LiveSession({
       .select(MEM_ITEM_SELECT)
       .eq("student_id", student.id)
       .order("created_at", { ascending: false })
-    onMemItemsChange((data as any) || [])
+    onMemItemsChange((data as unknown as MemItem[]) || [])
     setRevisionPick(null)
   }
 
@@ -609,12 +629,7 @@ export default function LiveSession({
           </Button>
 
           {/* Timer — white pill, deep ink digits */}
-          <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
-            <Clock className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-bold text-foreground tabular-nums">
-              {formatTimer(elapsed)}
-            </span>
-          </div>
+          <SessionTimer startedAt={startedAt} />
 
           {/* End Class */}
           <Button
@@ -715,12 +730,7 @@ export default function LiveSession({
               <SyncedPdfViewer
                 fileUrl={currentPara.file_url}
                 page={pdfPage}
-                onPageChange={(nextPage) => {
-                  setPdfPage(nextPage)
-                  setCurrentPointer(null)
-                  sendPointer(null)
-                  void saveBookmark(student.id, currentParaNumber, { page: nextPage })
-                }}
+                onPageChange={handlePageChange}
                 initialPointer={currentPointer}
                 onPointerChange={handlePointerChange}
                 onPointerClear={handleClearPointer}
@@ -776,7 +786,9 @@ export default function LiveSession({
                   </span>
                 </div>
                 <div className="text-2xl font-bold text-foreground tabular-nums">
-                  {formatSessionDuration(elapsed)}
+                  {formatSessionDuration(
+                    Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)),
+                  )}
                 </div>
               </div>
               <div>
