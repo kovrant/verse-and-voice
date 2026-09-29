@@ -2,16 +2,12 @@
 
 import {
   ArrowRight,
-  BookMarked,
-  BookOpen,
   Check,
   ChevronDown,
-  Clock,
   Minus,
   Pencil,
   Plus,
   RotateCcw,
-  Sparkles,
   Trash2,
 } from "lucide-react"
 import { useState } from "react"
@@ -21,7 +17,6 @@ import {
   computeProgress,
   getActiveRound,
   getChronologicalRoundNumber,
-  QuranProgress,
   type QuranRound,
 } from "@/components/quran-progress"
 import type { StudentView } from "@/components/student-detail-nav"
@@ -86,6 +81,7 @@ export function StudentOverview({
   onMarkMemRevised,
   onAchievementEarned,
 }: StudentOverviewProps) {
+  const [manageRoundOpen, setManageRoundOpen] = useState(false)
   const [assignMemOpen, setAssignMemOpen] = useState(false)
   const [bucketOpen, setBucketOpen] = useState(false)
 
@@ -105,230 +101,239 @@ export function StudentOverview({
 
   const ascVal = activeRound?.asc_completed || 0
   const descVal = activeRound?.desc_completed || 0
+  const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 1
+  const pct = paraInfo ? Math.min(100, Math.round((paraInfo.total / 30) * 100)) : 0
 
   return (
-    <div className="space-y-5 animate-fade-in-up">
-      {/* 2x2 Interactive Teaching Desk Bento Grid */}
-      <div className="grid gap-5 lg:grid-cols-2">
-        {/* 1. QURAN & QAIDA CARD */}
-        <Card className="flex flex-col">
-          <CardHeader className="pb-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                  <BookOpen className="h-4 w-4" />
-                </span>
-                <div>
-                  <span>Quran & Qaida</span>
-                  <p className="text-xs font-normal text-muted-foreground">
-                    {activeRound
-                      ? activeRound.type === "qaida"
-                        ? "Active: Norani Qaida"
-                        : `Active: Round ${getChronologicalRoundNumber(rounds, activeRound)}`
-                      : "No active reading round"}
+    <div className="grid gap-6 lg:grid-cols-2 items-start animate-fade-in-up">
+      {/* LEFT CARD: READING PROGRESS */}
+      <Card className="flex flex-col">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold text-foreground">
+            Reading Progress
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-5">
+          {activeRound ? (
+            <div className="space-y-4">
+              {/* Main Headline + Single Segmented Stepper */}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-heading text-2xl sm:text-[26px] font-bold tracking-tight text-foreground">
+                    {activeRound.type === "qaida"
+                      ? "Norani Qaida"
+                      : `Round ${roundNum} · ${ascVal > 0 ? `Para ${ascVal}` : "Started"}`}
                   </p>
                 </div>
-              </CardTitle>
-              <div className="flex items-center gap-1.5">
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onOpenNewRound}>
-                  <Plus className="h-3.5 w-3.5 mr-1" />
-                  Round
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => onNavigate("history", "timeline")}
-                >
-                  Timeline <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
 
-          <CardContent className="space-y-4 flex-1 flex flex-col justify-between">
-            {activeRound ? (
-              <div className="space-y-3.5">
-                <div>
-                  <QuranProgress rounds={rounds} variant="compact" />
-                  {paraInfo && (
-                    <div className="mt-1.5 flex items-center justify-between text-xs text-muted-foreground">
-                      <span>
-                        {paraInfo.currentPara != null
-                          ? `Currently reading Para ${paraInfo.currentPara}`
-                          : "Started round"}
-                      </span>
-                      <span className="font-semibold tabular-nums text-foreground">
-                        {paraInfo.total}/30 paras
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Inline Para Steppers for Quran Round */}
                 {activeRound.type === "quran" && (
-                  <div className="grid grid-cols-2 gap-2.5">
-                    <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-secondary/20 px-3 py-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Current Para
-                        </p>
-                        <p className="text-sm font-bold tabular-nums text-foreground">
-                          {ascVal > 0 ? `Para ${ascVal}` : "Not set"}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          disabled={ascVal <= 0}
-                          onClick={() => onStepRoundProgress(-1, 0)}
-                          title="Previous Para"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={ascVal >= 30}
-                          onClick={() => onStepRoundProgress(1, 0)}
-                          title="Next Para"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between gap-2 rounded-xl border border-border/60 bg-secondary/20 px-3 py-2">
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          End Paras (30→)
-                        </p>
-                        <p className="text-sm font-bold tabular-nums text-foreground">{descVal}</p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          disabled={descVal <= 0}
-                          onClick={() => onStepRoundProgress(0, -1)}
-                          title="Decrease End Paras"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
-                        >
-                          <Minus className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          disabled={descVal >= 30}
-                          onClick={() => onStepRoundProgress(0, 1)}
-                          title="Increase End Paras"
-                          className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors hover:bg-secondary disabled:opacity-40"
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
+                  <div className="inline-flex items-center rounded-xl border border-border bg-secondary/25 p-0.5 flex-shrink-0">
+                    <button
+                      type="button"
+                      disabled={ascVal <= 0}
+                      onClick={() => onStepRoundProgress(-1, 0)}
+                      title="Previous Para"
+                      aria-label="Previous Para"
+                      className="flex h-8 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary disabled:opacity-35"
+                    >
+                      <Minus className="h-3.5 w-3.5" />
+                    </button>
+                    <span className="h-4 w-px bg-border/80" />
+                    <button
+                      type="button"
+                      disabled={ascVal >= 30}
+                      onClick={() => onStepRoundProgress(1, 0)}
+                      title="Next Para"
+                      aria-label="Next Para"
+                      className="flex h-8 w-9 items-center justify-center rounded-lg text-foreground transition-colors hover:bg-secondary disabled:opacity-35"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                 )}
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {activeRound.type === "quran" && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 text-xs"
-                      onClick={onUpdateProgress}
-                    >
-                      <Pencil className="h-3 w-3 mr-1" />
-                      Set exact para
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
-                    onClick={onCompleteRound}
-                  >
-                    <Check className="h-3.5 w-3.5 mr-1" />
-                    Complete round
-                  </Button>
-                </div>
               </div>
-            ) : (
-              <div className="flex items-center justify-between rounded-xl border border-dashed border-border px-3.5 py-3 text-xs text-muted-foreground">
-                <span>No active Quran or Qaida round</span>
-                <Button variant="outline" size="sm" className="h-7 text-xs" onClick={onOpenNewRound}>
-                  <Plus className="h-3 w-3 mr-1" />
+
+              {/* Clean Single Progress Bar for Quran Rounds */}
+              {activeRound.type === "quran" && paraInfo && (
+                <div className="space-y-2">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                      style={{ width: `${Math.max(pct, paraInfo.total > 0 ? 4 : 0)}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="tabular-nums">
+                      {paraInfo.total} of 30 paras
+                      {descVal > 0 ? ` (${descVal} from end)` : ""}
+                    </span>
+                    {rounds.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => onNavigate("sessions", "timeline")}
+                        className="hover:text-foreground transition-colors"
+                      >
+                        {rounds.length} rounds total →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* If student is currently on Qaida, show Qaida Book selector directly */}
+              {activeRound.type === "qaida" && (
+                <StudentQaidaAssign
+                  studentId={student.id}
+                  qaidaMediaId={student.qaida_media_id}
+                  embedded
+                />
+              )}
+
+              {/* Progressive Disclosure: Manage Round & Qaida */}
+              <div className="space-y-3">
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-center h-9 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  onClick={() => setManageRoundOpen((o) => !o)}
+                >
+                  <span>Manage Round &amp; Qaida</span>
+                  <ChevronDown
+                    className={cn(
+                      "ml-1.5 h-3.5 w-3.5 transition-transform",
+                      manageRoundOpen && "rotate-180",
+                    )}
+                  />
+                </Button>
+
+                {manageRoundOpen && (
+                  <div className="space-y-3 rounded-xl border border-border/60 bg-secondary/15 p-3.5 animate-fade-in-up">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {activeRound.type === "quran" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs"
+                          onClick={onUpdateProgress}
+                        >
+                          <Pencil className="h-3 w-3 mr-1" />
+                          Set exact para / End paras
+                        </Button>
+                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                        onClick={onCompleteRound}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" />
+                        Complete round
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 text-xs"
+                        onClick={onOpenNewRound}
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        New round
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 text-xs text-muted-foreground hover:text-foreground ml-auto"
+                        onClick={() => onNavigate("sessions", "timeline")}
+                      >
+                        Round timeline <ArrowRight className="h-3 w-3 ml-1" />
+                      </Button>
+                    </div>
+
+                    {activeRound.type !== "qaida" && (
+                      <div className="pt-2 border-t border-border/50">
+                        <StudentQaidaAssign
+                          studentId={student.id}
+                          qaidaMediaId={student.qaida_media_id}
+                          embedded
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">No active Quran or Qaida round</p>
+                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onOpenNewRound}>
+                  <Plus className="h-3.5 w-3.5 mr-1" />
                   Start round
                 </Button>
               </div>
-            )}
-
-            <div className="space-y-3">
-              {/* Embedded Qaida Book Picker */}
               <StudentQaidaAssign
                 studentId={student.id}
                 qaidaMediaId={student.qaida_media_id}
                 embedded
               />
-
-              {/* Compact Last Class Context Strip */}
-              <div className="flex items-center justify-between gap-2 rounded-xl border border-border/50 bg-secondary/20 px-3 py-2 text-xs">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                  {lastSession ? (
-                    <div className="min-w-0 truncate">
-                      <span className="font-medium text-foreground">
-                        Last class{" "}
-                        {safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {" "}
-                        · {formatSessionDuration(lastSession.duration_seconds)}
-                        {lastPara ? ` · ${lastPara.label}` : ""}
-                      </span>
-                      {lastSession.notes && (
-                        <span className="text-muted-foreground italic">
-                          {" "}
-                          — &ldquo;{lastSession.notes}&rdquo;
-                        </span>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground">No classes recorded yet</span>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => onNavigate("history", "sessions")}
-                  className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 hover:underline flex-shrink-0"
-                >
-                  Sessions <ArrowRight className="h-3 w-3" />
-                </button>
-              </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
 
-        {/* 2. MEMORIZATION & REVISION CARD */}
-        <Card className="flex flex-col">
-          <CardHeader className="pb-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
-                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600">
-                  <BookMarked className="h-4 w-4" />
-                </span>
-                <div>
-                  <span>Memorization & Revision</span>
-                  <p className="text-xs font-normal text-muted-foreground">
-                    {memorizing.length} learning · {revising.length} revising · {bucketItems.length} in
-                    bucket
+          {/* Clean Bottom Divider: Last Class Summary */}
+          <div className="border-t border-border/60 pt-3.5 flex items-center justify-between gap-3 text-xs">
+            <button
+              type="button"
+              onClick={() => onNavigate("sessions", "sessions")}
+              className="min-w-0 flex-1 text-left text-muted-foreground hover:text-foreground transition-colors truncate"
+            >
+              {lastSession ? (
+                <>
+                  <span>
+                    Last class {safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })}
+                  </span>
+                  <span>
+                    {" "}
+                    ({formatSessionDuration(lastSession.duration_seconds)}
+                    {lastPara ? ` · ${lastPara.label}` : ""})
+                  </span>
+                  {lastSession.notes && (
+                    <span className="text-foreground/90"> — {lastSession.notes}</span>
+                  )}
+                </>
+              ) : (
+                <span>No classes recorded yet</span>
+              )}
+            </button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* RIGHT CARD: HOMEWORK & ASSIGNMENTS (Unified, Flat-Divided) */}
+      <Card className="flex flex-col">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold text-foreground">
+            Homework &amp; Assignments
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="divide-y divide-border/60 pt-0">
+          {/* SECTION 1: MEMORIZATION & REVISION */}
+          <div className="py-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">
+                  Memorization &amp; Revision
+                </p>
+                {(memorizing.length > 0 || revising.length > 0) && (
+                  <p className="text-xs text-muted-foreground">
+                    {memorizing.length} learning · {revising.length} revising
                   </p>
-                </div>
-              </CardTitle>
+                )}
+              </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-8 text-xs flex-shrink-0"
                 onClick={() => {
                   const next = !assignMemOpen
                   setAssignMemOpen(next)
@@ -339,12 +344,10 @@ export function StudentOverview({
                 Assign
               </Button>
             </div>
-          </CardHeader>
 
-          <CardContent className="space-y-3.5 flex-1">
             {/* Inline Catalog Picker */}
             {assignMemOpen && (
-              <div className="rounded-xl border border-border bg-secondary/20 p-3 space-y-2">
+              <div className="rounded-xl border border-border/60 bg-secondary/20 p-3 space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   Assign from Catalog
                 </p>
@@ -368,54 +371,42 @@ export function StudentOverview({
               </div>
             )}
 
-            {/* Assigned for Revision (Pinned at top for fast grading) */}
+            {/* Assigned for Revision */}
             {revising.length > 0 && (
-              <div className="space-y-2">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-600">
-                  <RotateCcw className="h-3.5 w-3.5" />
-                  Assigned for Revision ({revising.length})
-                </p>
-                <div className="space-y-2">
-                  {revising.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <MemThumb src={item.memorization_catalog?.image_url} />
-                        <div className="min-w-0">
-                          <p className="truncate text-xs font-semibold text-foreground">
-                            {item.memorization_catalog?.title}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {item.memorization_catalog?.category}
-                            {item.last_revised_at &&
-                              ` · Last ${safeFormatDate(item.last_revised_at, "MMM d")}`}
-                          </p>
-                        </div>
+              <div className="space-y-1.5">
+                {revising.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center justify-between gap-2.5 rounded-xl bg-amber-500/10 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <MemThumb src={item.memorization_catalog?.image_url} />
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-semibold text-foreground">
+                          {item.memorization_catalog?.title}
+                        </p>
+                        <p className="text-[11px] text-amber-500">
+                          Revising · {item.memorization_catalog?.category}
+                        </p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onMarkMemRevised(item.id)}
-                        className="h-7 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600 flex-shrink-0"
-                      >
-                        <Check className="mr-1 h-3.5 w-3.5" />
-                        Mark revised
-                      </Button>
                     </div>
-                  ))}
-                </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onMarkMemRevised(item.id)}
+                      className="h-7 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600 flex-shrink-0"
+                    >
+                      <Check className="mr-1 h-3.5 w-3.5" />
+                      Mark revised
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
 
-            {/* Currently Memorizing (Interactive chunk checklist inline) */}
-            {memorizing.length > 0 ? (
-              <div className="space-y-2.5 max-h-72 overflow-y-auto pr-0.5 main-scroll">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-600">
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Currently Memorizing ({memorizing.length})
-                </p>
+            {/* Currently Memorizing */}
+            {memorizing.length > 0 && (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-0.5 main-scroll">
                 {memorizing.map((item) => {
                   const chunks = chunksByItem[item.catalog_id] || []
                   const hasChunks = chunks.length > 0
@@ -423,26 +414,18 @@ export function StudentOverview({
                   return (
                     <div
                       key={item.id}
-                      className="overflow-hidden rounded-xl border border-emerald-500/25 bg-card"
+                      className="overflow-hidden rounded-xl bg-secondary/25"
                     >
-                      <div className="flex items-center gap-2.5 border-b border-emerald-500/10 bg-emerald-500/[0.06] px-3 py-2">
+                      <div className="flex items-center gap-2.5 px-3 py-2">
                         <MemThumb src={item.memorization_catalog?.image_url} />
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-xs font-semibold text-foreground">
                             {item.memorization_catalog?.title}
                           </p>
-                          <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
-                            {hasChunks && (
-                              <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold tabular-nums text-muted-foreground">
-                                {progress.done}/{progress.total} parts
-                              </span>
-                            )}
-                            {item.memorization_catalog?.category && (
-                              <span className="text-[11px] text-muted-foreground">
-                                {item.memorization_catalog.category}
-                              </span>
-                            )}
-                          </div>
+                          <p className="text-[11px] text-muted-foreground">
+                            {hasChunks ? `${progress.done}/${progress.total} parts · ` : ""}
+                            {item.memorization_catalog?.category}
+                          </p>
                         </div>
                         <div className="flex flex-shrink-0 items-center gap-1">
                           {!hasChunks && (
@@ -468,7 +451,7 @@ export function StudentOverview({
                         </div>
                       </div>
                       {hasChunks && (
-                        <div className="p-2.5">
+                        <div className="px-3 pb-2.5 pt-1 border-t border-border/40">
                           <MemPartWorkspace
                             chunks={chunks}
                             memorizedIds={memorizedChunkIds}
@@ -480,87 +463,67 @@ export function StudentOverview({
                   )
                 })}
               </div>
-            ) : (
-              revising.length === 0 && (
-                <div className="flex items-center justify-between rounded-xl border border-dashed border-border px-3.5 py-3 text-xs text-muted-foreground">
-                  <span>No active memorization or revision items</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      setAssignMemOpen(true)
-                      onLoadCatalog()
-                    }}
-                  >
-                    <Plus className="h-3 w-3 mr-1" />
-                    Assign item
-                  </Button>
-                </div>
-              )
             )}
 
-            {/* Collapsible Revision Bucket (Completed lessons ready to assign for revision) */}
+            {/* Collapsible Revision Bucket (Flat Row) */}
             {bucketItems.length > 0 && (
-              <div className="rounded-xl border border-border/60 bg-secondary/10">
+              <div>
                 <button
                   type="button"
                   onClick={() => setBucketOpen((o) => !o)}
-                  className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  className="flex w-full items-center justify-between py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  <span className="flex items-center gap-1.5">
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
-                    Revision Bucket ({bucketItems.length} completed)
+                  <span>
+                    <strong className="font-medium text-foreground">Revision Bucket</strong> (
+                    {bucketItems.length} completed)
                   </span>
                   <ChevronDown
                     className={cn("h-3.5 w-3.5 transition-transform", bucketOpen && "rotate-180")}
                   />
                 </button>
                 {bucketOpen && (
-                  <div className="border-t border-border/50 p-2.5 space-y-2 max-h-56 overflow-y-auto main-scroll">
+                  <div className="mt-1.5 space-y-1.5 border-l-2 border-border/60 pl-3 max-h-48 overflow-y-auto main-scroll">
                     {bucketItems.map((item) => {
                       const chunks = chunksByItem[item.catalog_id] || []
                       const hasChunks = chunks.length > 0
                       return (
                         <div
                           key={item.id}
-                          className="flex items-center justify-between gap-2 rounded-lg border border-border/50 bg-card px-2.5 py-1.5"
+                          className="flex items-center justify-between gap-2 py-1 text-xs"
                         >
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-semibold text-foreground">
+                          <div className="min-w-0 flex-1 truncate">
+                            <span className="font-medium text-foreground">
                               {item.memorization_catalog?.title}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">
+                            </span>
+                            <span className="ml-1.5 text-[11px] text-muted-foreground">
                               {item.memorization_catalog?.category}
                               {item.last_revised_at &&
                                 ` · Revised ${safeFormatDate(item.last_revised_at, "MMM d")}`}
-                            </p>
+                            </span>
                           </div>
                           <div className="flex items-center gap-1 flex-shrink-0">
-                            <Button
-                              variant="outline"
-                              size="sm"
+                            <button
+                              type="button"
                               onClick={() => onAssignMemRevision(item.id)}
-                              className="h-7 text-xs text-amber-600 hover:border-amber-500/40 hover:bg-amber-500/10 hover:text-amber-600"
+                              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-amber-500 hover:bg-amber-500/10 transition-colors"
                             >
-                              <RotateCcw className="mr-1 h-3 w-3" />
-                              Assign revision
-                            </Button>
+                              <RotateCcw className="h-3 w-3" />
+                              Revise
+                            </button>
                             {!hasChunks && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
+                              <button
+                                type="button"
                                 onClick={() => onToggleMemStatus(item)}
-                                className="h-7 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                                className="px-1.5 py-0.5 text-[11px] text-muted-foreground hover:text-foreground"
                               >
                                 Undo
-                              </Button>
+                              </button>
                             )}
                             <button
                               type="button"
                               onClick={() => onUnassignMemItem(item.id)}
                               title="Remove item"
-                              className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                              className="text-muted-foreground hover:text-destructive transition-colors p-1"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
@@ -572,16 +535,16 @@ export function StudentOverview({
                 )}
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* 3. HADITHS CARD & 4. QUIZZES CARD */}
-        <StudentHadithQuizCard
-          studentId={student.id}
-          studentName={student.name}
-          onAchievementEarned={onAchievementEarned}
-        />
-      </div>
+          {/* SECTION 2: HADITH & SECTION 3: QUIZZES */}
+          <StudentHadithQuizCard
+            studentId={student.id}
+            studentName={student.name}
+            onAchievementEarned={onAchievementEarned}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

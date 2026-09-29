@@ -7,7 +7,6 @@ import { differenceInDays, subMonths } from "date-fns"
 import {
   Activity,
   ArrowLeft,
-  Award,
   BookMarked,
   BookOpen,
   CalendarDays,
@@ -161,7 +160,7 @@ export default function StudentDetailPage() {
   })
 
   const [activeTab, setActiveTab] = useState<StudentView>("overview")
-  const [historySection, setHistorySection] = useState<HistorySection>("all")
+  const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
@@ -794,14 +793,14 @@ export default function StudentDetailPage() {
     loadStudent()
   }, [loadStudent])
 
-  // Reset Sessions pagination when entering the history tab
+  // Reset Sessions pagination when entering the sessions tab
   useEffect(() => {
-    if (activeTab === "history") setSessionPage(1)
+    if (activeTab === "sessions") setSessionPage(1)
   }, [activeTab])
 
-  // Lazy-load activity when entering the history tab
+  // Lazy-load activity when entering the sessions tab
   useEffect(() => {
-    if (activeTab === "history" && !activityLoaded && !activityLoading) {
+    if (activeTab === "sessions" && !activityLoaded && !activityLoading) {
       loadActivity()
     }
   }, [activeTab, activityLoaded, activityLoading, loadActivity])
@@ -822,8 +821,6 @@ export default function StudentDetailPage() {
   const activeRound = getActiveRound(rounds)
   const paidCount = fees.filter((f) => f.is_paid).length
   const unpaidCount = fees.filter((f) => !f.is_paid).length
-  const memorizingCount = memItems.filter((m) => m.status === "memorizing").length
-  const revisingCount = memItems.filter((m) => m.status === "memorized" && m.revision_assigned_at).length
   const now = new Date()
   const currentFee = fees.find(
     (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear(),
@@ -831,11 +828,6 @@ export default function StudentDetailPage() {
   const currentMonthUnpaid = Boolean(currentFee && !currentFee.is_paid)
   const isOnline = onlineIds.has(student.id)
   const lastSession = sessions[0]
-  const progressHint = activeRound
-    ? activeRound.type === "qaida"
-      ? "Qaida"
-      : `Para ${activeRound.asc_completed || 1}`
-    : "No active round"
 
   const scheduleDaysLabel = student.class_days?.length
     ? student.class_days
@@ -846,14 +838,8 @@ export default function StudentDetailPage() {
     : null
 
   const navItems = studentNavItems({
-    lastClassLabel: lastSession
-      ? safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })
-      : undefined,
     sessionCount: sessions.length,
-    memInProgress: memorizingCount,
-    revisingCount,
     unpaidThisMonth: currentMonthUnpaid,
-    progressHint,
     achievementCount,
   })
 
@@ -1144,13 +1130,12 @@ export default function StudentDetailPage() {
           />
         )}
 
-        {activeTab === "history" && (
+        {activeTab === "sessions" && (
           <div className="space-y-6 animate-fade-in-up">
-            {/* Sub-filter pill bar for History & Trophies */}
+            {/* Sub-filter pill bar for Sessions, Timeline & Portal Activity */}
             <div className="flex flex-wrap items-center gap-1.5">
               {(
                 [
-                  { id: "all", label: "All History", icon: History },
                   {
                     id: "sessions",
                     label: `Class Sessions (${sessions.length})`,
@@ -1160,11 +1145,6 @@ export default function StudentDetailPage() {
                     id: "timeline",
                     label: `Quran Timeline (${rounds.length})`,
                     icon: BookOpen,
-                  },
-                  {
-                    id: "trophies",
-                    label: `Trophies (${achievementCount})`,
-                    icon: Award,
                   },
                   {
                     id: "activity",
@@ -1540,15 +1520,7 @@ export default function StudentDetailPage() {
               </div>
             )}
 
-            {/* 3. TROPHIES & CERTIFICATES SECTION */}
-            {(historySection === "all" || historySection === "trophies") && (
-              <StudentAchievementsPanel
-                studentId={student.id}
-                onUpdated={() => void loadAchievementCount()}
-              />
-            )}
-
-            {/* 4. PORTAL ACTIVITY SECTION */}
+            {/* 3. PORTAL ACTIVITY SECTION */}
             {(historySection === "all" || historySection === "activity") && (
               <Card>
                 <div className="px-5 py-4 border-b border-border/50">
@@ -1564,6 +1536,15 @@ export default function StudentDetailPage() {
                 </CardContent>
               </Card>
             )}
+          </div>
+        )}
+
+        {activeTab === "trophies" && (
+          <div className="animate-fade-in-up">
+            <StudentAchievementsPanel
+              studentId={student.id}
+              onUpdated={() => void loadAchievementCount()}
+            />
           </div>
         )}
 
