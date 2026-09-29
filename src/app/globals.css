@@ -106,6 +106,16 @@
     --shadow-soft-md: 0 2px 6px rgba(20, 24, 33, 0.07);
     --shadow-soft-lg: 0 8px 24px rgba(20, 24, 33, 0.1);
 
+    /* Shared Tajweed / Kid color accents so teacher & student see identical cards */
+    --kid-sage: 93 21% 57%;
+    --kid-sky: 202 29% 61%;
+    --kid-lavender: 266 22% 63%;
+    --kid-caramel: 34 47% 60%;
+    --kid-coral: 16 61% 62%;
+    --kid-saffron: 40 73% 59%;
+    --kid-teal: 177 22% 54%;
+    --kid-rose: 0 37% 66%;
+
     --radius-button: 0.5rem; /* 8px — tighter, minimal */
     --radius-card: 0.75rem; /* 12px */
     --radius-input: 0.5rem; /* 8px */

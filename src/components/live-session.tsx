@@ -19,6 +19,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { InlineLoader } from "@/components/page-loading"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { StudentTajweedAlert } from "@/components/student-tajweed-alert"
 import { TeacherTajweedPanel } from "@/components/teacher-tajweed-panel"
 import { Button } from "@/components/ui/button"
 import {
@@ -133,6 +134,7 @@ export default function LiveSession({
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
   const [sessionRules, setSessionRules] = useState<string[]>([])
+  const [activeTajweedRule, setActiveTajweedRule] = useState<TajweedRule | null>(null)
   const [showEndDialog, setShowEndDialog] = useState(false)
   const [notes, setNotes] = useState("")
   const [saving, setSaving] = useState(false)
@@ -240,6 +242,7 @@ export default function LiveSession({
 
   const handleSendTajweedRule = useCallback(
     (rule: TajweedRule) => {
+      setActiveTajweedRule(rule)
       sendTajweedRule(rule)
       const label = `${rule.title} (${rule.nameUrdu})`
       setSessionRules((prev) => (prev.includes(label) ? prev : [...prev, label]))
@@ -650,7 +653,6 @@ export default function LiveSession({
         {sidebarOpen && (
           <TeacherTajweedPanel
             onSendRule={handleSendTajweedRule}
-            disabled={!studentJoined}
             sessionRulesCount={sessionRules.length}
             sessionFooter={
               <div className="space-y-2.5">
@@ -898,6 +900,12 @@ export default function LiveSession({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Tajweed Rule Card Popup — shown on the teacher's screen identically to the student's screen */}
+      <StudentTajweedAlert
+        rule={activeTajweedRule}
+        onDismiss={() => setActiveTajweedRule(null)}
+      />
     </div>
   )
 }
