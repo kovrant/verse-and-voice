@@ -32,15 +32,15 @@ export function NamazStepViewer({
   step,
   parts,
   partProgress,
-  completed,
-  completedAt,
+  completed = false,
+  completedAt = null,
   onClose,
 }: {
   step: NamazStep
   parts: NamazStepPart[]
-  partProgress: Map<string, StudentNamazPart>
-  completed: boolean
-  completedAt: string | null
+  partProgress?: Map<string, StudentNamazPart>
+  completed?: boolean
+  completedAt?: string | null
   onClose: () => void
 }) {
   const [index, setIndex] = useState(0)
@@ -63,7 +63,7 @@ export function NamazStepViewer({
   }, [next, back, onClose])
 
   const image = part?.image_url || step.image_url
-  const assigned = !!(part && partProgress.get(part.id)?.revision_assigned_at)
+  const assigned = !!(part && partProgress?.get(part.id)?.revision_assigned_at)
   const inactive = completed && !assigned
 
   return (

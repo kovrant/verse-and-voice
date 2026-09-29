@@ -92,3 +92,13 @@ tags:
   * Replaced the 6-tab vertical sidebar with a full-width 3-Mode Top Segmented Bar (`Teaching Desk`, `History & Trophies`, `Billing & Access`) preserving all existing theme colors and fonts.
   * Converted `StudentOverview` into an interactive 2×2 **Teaching Desk** combining inline Quran Para `-`/`+` steppers, embedded Qaida book selector, interactive Memorization chunk checklists + collapsible Revision Bucket, Namaz step/revision controls (moved out of the `Account` tab), and a new `StudentHadithQuizCard` for inline Hadith/Quiz assignment and grading.
   * Added live schedule, online/device badges, and a 1-click Current Month Fee toggle button directly to the student command header.
+
+### [2026-09-29] - Open Namaz Access & Teaching Desk Card Split
+* **Author:** Technical Architecture & UI/UX Pairing Session
+* **Scope:** `src/app/student/namaz/page.tsx`, `src/components/student-home-cards.tsx`, `src/components/student-nav.tsx`, `src/components/student-overview.tsx`, `src/components/student-hadith-quiz-card.tsx`, `src/lib/achievements/backfill.ts`, `supabase/migration_namaz_open_access.sql`.
+* **Entries Updated:** `domain/namaz-and-learning.md`, `log.md`.
+* **Changes:**
+  * Removed per-student Namaz assignment (`StudentNamazAssign` and `useStudentNamazRealtime`) and gave all authenticated students open access to `/student/namaz` (`namaz_steps` and `namaz_step_parts`). Memorization of Namaz parts uses the unified Memorization & Revision module (`category = 'Namaz'`).
+  * Split **Hadiths** and **Quizzes** into two dedicated sibling cards in the 2×2 Teaching Desk grid.
+  * Added `supabase/migration_namaz_open_access.sql` to open `SELECT` RLS on `namaz_steps` / `namaz_step_parts` to all authenticated users and drop the obsolete `student_namaz`, `student_namaz_steps`, and `student_namaz_parts` tables.
+

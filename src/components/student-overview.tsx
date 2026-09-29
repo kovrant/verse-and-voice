@@ -26,7 +26,6 @@ import {
 } from "@/components/quran-progress"
 import type { StudentView } from "@/components/student-detail-nav"
 import { StudentHadithQuizCard } from "@/components/student-hadith-quiz-card"
-import { StudentNamazAssign } from "@/components/student-namaz-assign"
 import { StudentQaidaAssign } from "@/components/student-qaida-assign"
 import { type ClassSession, MemThumb, paraSummary } from "@/components/student-session-bits"
 import { Button } from "@/components/ui/button"
@@ -576,13 +575,7 @@ export function StudentOverview({
           </CardContent>
         </Card>
 
-        {/* 3. NAMAZ TRACKER CARD (Moved from Account tab to Teaching Desk) */}
-        <StudentNamazAssign
-          studentId={student.id}
-          onAchievementEarned={onAchievementEarned}
-        />
-
-        {/* 4. HADITHS & QUIZZES CARD (Unified on Teaching Desk) */}
+        {/* 3. HADITHS CARD & 4. QUIZZES CARD */}
         <StudentHadithQuizCard
           studentId={student.id}
           studentName={student.name}

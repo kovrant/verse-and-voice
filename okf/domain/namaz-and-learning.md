@@ -10,6 +10,7 @@ sources:
   - "supabase/migration_namaz_steps.sql"
   - "supabase/migration_namaz_arabic.sql"
   - "supabase/migration_namaz_translation.sql"
+  - "supabase/migration_namaz_open_access.sql"
   - "src/components/namaz-step-viewer.tsx"
   - "supabase/migration_achievements_module.sql"
 tags:
@@ -32,23 +33,15 @@ The Namaz module teaches children prayer postures, steps (Takbeer, Qiyam, Ruku, 
    * Stores `arabic_text`: Teacher-editable Arabic text for the child to recite.
    * Stores `translation`: its meaning in English, shown under the Arabic. Seeded for the parts that ship with the app by `migration_namaz_translation.sql`, which only fills empty values.
    * Image: a part's own `image_url` if set, otherwise the step's.
-3. **Student Progress Records:**
-   * `student_namaz`: High-level enrollment status (`"learning"` | `"completed"`).
-   * `student_namaz_steps`: Step-level unlocking (`unlocked_at`), completion (`completed_at`), and revision queue timestamps (`revision_assigned_at`).
-   * `student_namaz_parts`: Part-level revision tracking.
+3. **Open Student Access & Memorization Integration (`migration_namaz_open_access.sql`):**
+   * Every student automatically has unlocked access to `/student/namaz` and all `namaz_steps` / `namaz_step_parts` via open authenticated `SELECT` RLS policies.
+   * Memorization and revision of individual Namaz parts is managed through the unified **Memorization & Revision** module (`memorization_catalog` with `category = 'Namaz'`), replacing the legacy `student_namaz`, `student_namaz_steps`, and `student_namaz_parts` tables.
 
 ### Student step viewer (`src/components/namaz-step-viewer.tsx`)
 * **One part per screen**, with Back / Next, "2 of 5" and arrow-key support. A child learning to recite does better with one thing in view than a scroll of every part.
 * **Desktop / tablet:** the words in a panel on the left, the posture picture full-height on the right. **Phone:** picture on top, words below.
 * **Arabic is the hero:** Scheherazade Bold, sized by text length (`arabicSize()`) so *Allahu Akbar* fills the panel while Al-Fatiha or Durood still fit without scrolling. The English translation sits under it; the part title stays as a small pronunciation hint.
 * **Images** read best as transparent PNGs, portrait ~3:4, one consistent style per posture (generated in Canva). A white or cream background shows as a bright box on the dark theme.
-
----
-
-## 🔒 Step Unlocking & Revision Lifecycle
-
-* **Learning Phase:** A step is interactive if `unlocked_at` is set. Unlocked steps stay open even after being marked complete so students can review earlier postures.
-* **Completed Module Revision Phase:** Once the module status is `"completed"`, steps lock down to focus the student solely on parts flagged for revision (`revision_assigned_at`).
 
 ---
 

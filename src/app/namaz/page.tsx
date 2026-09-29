@@ -166,7 +166,7 @@ export default function NamazAdminPage() {
           Namaz Steps
         </h1>
         <p className="text-muted-foreground mt-1">
-          Manage step cards and duas inside each step. Assign per student from their profile.
+          Manage step cards and duas inside each step. All students can view and practice these steps in their portal.
         </p>
       </div>
 

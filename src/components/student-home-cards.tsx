@@ -9,7 +9,7 @@ import { useAchievementCelebrations } from "@/components/achievement-celebration
 import { QaidaLettersIcon } from "@/components/kid-ui"
 import { useLiveClass } from "@/components/live-class-provider"
 import { MoonMascot, useMascotMood } from "@/components/student-mascot"
-import { type KidColor, readDestination, useHasNamaz } from "@/components/student-nav"
+import { type KidColor, readDestination } from "@/components/student-nav"
 import { formatClassTimeLocal } from "@/lib/class-time"
 import { getHadithNextMilestone } from "@/lib/hadiths/hadith-engine"
 import { supabase } from "@/lib/supabase"
@@ -181,7 +181,6 @@ export function StudentHomeCards({
   /** Quran progress ring (omitted for Qaida). */
   readRing?: { value: number; label: string | number }
 }) {
-  const hasNamaz = useHasNamaz(studentId, "home")
   const { live } = useLiveClass()
   const nextClass = formatClassTimeLocal(classTime, new Date(), classDays)
   const hadithCount = useHadithCount(studentId)
@@ -268,15 +267,14 @@ export function StudentHomeCards({
       art: "🏮",
       color: "teal",
     },
-  ]
-  if (hasNamaz)
-    cards.push({
+    {
       href: "/student/namaz",
       label: "Namaz",
       status: "Learn to pray",
       art: "🕌",
       color: "rose",
-    })
+    },
+  ]
 
   return (
     <div className="mb-[26px] grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">

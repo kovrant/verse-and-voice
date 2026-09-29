@@ -12,7 +12,6 @@ import {
   syncHadithMemorized,
   syncMemorizationChunk,
   syncMemorizationLesson,
-  syncNamazComplete,
 } from "./sync"
 import type { QuranRoundProgress, QuranRoundRef } from "./types"
 
@@ -59,7 +58,6 @@ export async function backfillStudentAchievements(
     { data: rounds },
     { data: memItems },
     memorizedIds,
-    { data: namaz },
     { count: hadithMemorizedCount },
   ] = await Promise.all([
     countAchievements(db, studentId),
@@ -69,7 +67,6 @@ export async function backfillStudentAchievements(
       .eq("student_id", studentId),
     db.from("student_memorization").select(STUDENT_MEM_SELECT).eq("student_id", studentId),
     loadMemorizedChunkIds(db, studentId),
-    db.from("student_namaz").select("status").eq("student_id", studentId).maybeSingle(),
     db
       .from("student_hadith_progress")
       .select("id", { count: "exact", head: true })
@@ -116,10 +113,6 @@ export async function backfillStudentAchievements(
     if (chunkProgress(chunks, memorizedIds).isMemorized) {
       await syncMemorizationLesson(db, studentId, item.catalog_id, title)
     }
-  }
-
-  if (namaz?.status === "completed") {
-    await syncNamazComplete(db, studentId)
   }
 
   if (hadithMemorizedCount && hadithMemorizedCount > 0) {
