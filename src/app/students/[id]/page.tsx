@@ -65,7 +65,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -125,7 +124,6 @@ export default function StudentDetailPage() {
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [fees, setFees] = useState<FeePayment[]>([])
   const [loading, setLoading] = useState(true)
-  const [editOpen, setEditOpen] = useState(false)
   const [feeSortKey, setFeeSortKey] = useState<string | null>(null)
   const [feeSortDir, setFeeSortDir] = useState<SortDirection>(null)
   const [feePage, setFeePage] = useState(1)
@@ -159,7 +157,7 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
-  const [activeTab, setActiveTab] = useState<StudentView>("overview")
+  const [activeTab, setActiveTab] = useState<StudentView>("profile")
   const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
   // Round editing
@@ -536,7 +534,7 @@ export default function StudentDetailPage() {
       return
     }
 
-    setEditOpen(false)
+    toast.success("Profile updated")
     loadStudent()
   }
 
@@ -857,233 +855,44 @@ export default function StudentDetailPage() {
         <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
       </nav>
 
-      {/* Command Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5">
-        <div className="flex items-center gap-3.5 min-w-0">
+      {/* Clean Command Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className="flex items-center gap-3 min-w-0">
           <Link href="/students">
             <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div className="flex h-13 w-13 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
-            {(student.name || "?").charAt(0)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight truncate leading-none">
-                {student.name}
-              </h1>
-              <Badge variant={statusCfg.variant} className="flex-shrink-0">
-                {statusCfg.label}
-              </Badge>
-              {isOnline && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
-                  <OnlineDot />
-                  Online
-                </span>
-              )}
-              {student.last_device && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
-                  title={
-                    student.last_device_at
-                      ? `Last active on this device: ${safeFormatDate(student.last_device_at, "PPp")}`
-                      : undefined
-                  }
-                >
-                  <Tablet className="h-3 w-3 text-primary" />
-                  {student.last_device}
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm text-muted-foreground mt-1.5">
-              <span>{student.guardian_name}</span>
-              {student.country && (
-                <>
-                  <span className="text-muted-foreground/40">&middot;</span>
-                  <span className="inline-flex items-center gap-1">
-                    <MapPin className="h-3.5 w-3.5" />
-                    {student.country}
-                  </span>
-                </>
-              )}
-              {(student.class_time || scheduleDaysLabel) && (
-                <>
-                  <span className="text-muted-foreground/40">&middot;</span>
-                  <span className="inline-flex items-center gap-1 text-foreground/80 font-medium">
-                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                    {student.class_time || "No time"}
-                    {scheduleDaysLabel ? ` (${scheduleDaysLabel})` : ""}
-                  </span>
-                </>
-              )}
-              <span className="text-muted-foreground/40">&middot;</span>
-              <span>{daysSinceStart}d enrolled</span>
-              {student.ended_at && (
-                <>
-                  <span className="text-muted-foreground/40">&middot;</span>
-                  <span>
-                    Ended {safeFormatDate(student.ended_at, "MMM yyyy")}
-                  </span>
-                </>
-              )}
-            </div>
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight truncate leading-none">
+              {student.name}
+            </h1>
+            <Badge variant={statusCfg.variant} className="flex-shrink-0">
+              {statusCfg.label}
+            </Badge>
+            {isOnline && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
+                <OnlineDot />
+                Online
+              </span>
+            )}
+            {student.last_device && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                title={
+                  student.last_device_at
+                    ? `Last active on this device: ${safeFormatDate(student.last_device_at, "PPp")}`
+                    : undefined
+                }
+              >
+                <Tablet className="h-3 w-3 text-primary" />
+                {student.last_device}
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Right Command Actions: Quick Fee Pill + Edit + Start Class */}
-        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-          {currentFee && (
-            currentFee.is_paid ? (
-              <button
-                type="button"
-                onClick={() => setActiveTab("account")}
-                title="View billing history"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
-              >
-                <Check className="h-3.5 w-3.5" />
-                {safeFormatDate(now, "MMM")} Fee Paid
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void toggleFee(currentFee)}
-                title="Click to mark this month's fee as paid"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
-              >
-                <CreditCard className="h-3.5 w-3.5" />
-                {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
-              </button>
-            )
-          )}
-
-          <Dialog open={editOpen} onOpenChange={setEditOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                Edit
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Edit — {student.name}</DialogTitle>
-                <DialogDescription>
-                  Update details for {student.name} ({student.guardian_name})
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Country</Label>
-                    <Select
-                      value={editForm.country}
-                      onValueChange={(val) => setEditForm({ ...editForm, country: val })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select country" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {COUNTRIES.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
-                    <Input
-                      id="edit_class_time"
-                      type="time"
-                      value={toInputTime(editForm.class_time)}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          class_time: e.target.value ? toPktClassTime(e.target.value) : "",
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Class Days</Label>
-                  <ClassDaysPicker
-                    value={editForm.class_days}
-                    onChange={(class_days) => setEditForm({ ...editForm, class_days })}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Days this student has class — drives their daily streak.
-                  </p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Monthly Fee</Label>
-                    <Input
-                      type="number"
-                      value={editForm.fee}
-                      onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Currency</Label>
-                    <Select
-                      value={editForm.fee_currency}
-                      onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="GBP">GBP (£)</SelectItem>
-                        <SelectItem value="USD">USD ($)</SelectItem>
-                        <SelectItem value="PKR">PKR (Rs)</SelectItem>
-                        <SelectItem value="SAR">SAR (﷼)</SelectItem>
-                        <SelectItem value="BHD">BHD (BD)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Status</Label>
-                    <Select
-                      value={editForm.status}
-                      onValueChange={(val) =>
-                        setEditForm({ ...editForm, status: val as StudentStatus })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Reading">Reading</SelectItem>
-                        <SelectItem value="Completed">Completed</SelectItem>
-                        <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {editForm.status !== "Reading" && (
-                    <div className="space-y-2">
-                      <Label>End Date</Label>
-                      <Input
-                        type="date"
-                        value={editForm.ended_at}
-                        onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
-                      />
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-3 pt-2">
-                  <Button onClick={saveEdit}>Save Changes</Button>
-                  <Button variant="outline" onClick={() => setEditOpen(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Link href={`/class?student=${student.id}`}>
             <Button size="sm">
               <Play className="h-3.5 w-3.5 mr-1.5" />
@@ -1093,11 +902,208 @@ export default function StudentDetailPage() {
         </div>
       </div>
 
-      {/* 3-Mode Top Segmented Navigation */}
+      {/* Top Underline Navigation */}
       <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
 
       {/* Full-width Workspace */}
       <div className="min-w-0">
+        {activeTab === "profile" && (
+          <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12 items-start">
+            {/* Left Column: Student Profile & Schedule Settings */}
+            <Card className="lg:col-span-7">
+              <CardContent className="pt-6 space-y-6">
+                {/* Profile Summary Strip (Avatar + Schedule + Current Month Fee Status) */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-border/60">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
+                      {(student.name || "?").charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-heading text-lg font-bold text-foreground truncate">
+                        {student.name}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+                        <span>Guardian: {student.guardian_name}</span>
+                        {student.country && (
+                          <>
+                            <span className="text-muted-foreground/40">&middot;</span>
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {student.country}
+                            </span>
+                          </>
+                        )}
+                        <span className="text-muted-foreground/40">&middot;</span>
+                        <span>{daysSinceStart}d enrolled</span>
+                        {student.ended_at && (
+                          <>
+                            <span className="text-muted-foreground/40">&middot;</span>
+                            <span>Ended {safeFormatDate(student.ended_at, "MMM yyyy")}</span>
+                          </>
+                        )}
+                      </div>
+                      {(student.class_time || scheduleDaysLabel) && (
+                        <div className="flex items-center gap-1.5 text-xs font-medium text-foreground/85 mt-1">
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span>
+                            {student.class_time || "No time"}
+                            {scheduleDaysLabel ? ` (${scheduleDaysLabel})` : ""}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {currentFee && (
+                    <div className="flex-shrink-0">
+                      {currentFee.is_paid ? (
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab("account")}
+                          title="View billing history"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
+                        >
+                          <Check className="h-3.5 w-3.5" />
+                          {safeFormatDate(now, "MMM")} Fee Paid
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => void toggleFee(currentFee)}
+                          title="Click to mark this month's fee as paid"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
+                        >
+                          <CreditCard className="h-3.5 w-3.5" />
+                          {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Editable Profile Options */}
+                <div className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Country</Label>
+                      <Select
+                        value={editForm.country}
+                        onValueChange={(val) => setEditForm({ ...editForm, country: val })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {COUNTRIES.map((c) => (
+                            <SelectItem key={c} value={c}>
+                              {c}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
+                      <Input
+                        id="edit_class_time"
+                        type="time"
+                        value={toInputTime(editForm.class_time)}
+                        onChange={(e) =>
+                          setEditForm({
+                            ...editForm,
+                            class_time: e.target.value ? toPktClassTime(e.target.value) : "",
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Class Days</Label>
+                    <ClassDaysPicker
+                      value={editForm.class_days}
+                      onChange={(class_days) => setEditForm({ ...editForm, class_days })}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Days this student has class — drives their daily streak.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Monthly Fee</Label>
+                      <Input
+                        type="number"
+                        value={editForm.fee}
+                        onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Currency</Label>
+                      <Select
+                        value={editForm.fee_currency}
+                        onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="GBP">GBP (£)</SelectItem>
+                          <SelectItem value="USD">USD ($)</SelectItem>
+                          <SelectItem value="PKR">PKR (Rs)</SelectItem>
+                          <SelectItem value="SAR">SAR (﷼)</SelectItem>
+                          <SelectItem value="BHD">BHD (BD)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Status</Label>
+                      <Select
+                        value={editForm.status}
+                        onValueChange={(val) =>
+                          setEditForm({ ...editForm, status: val as StudentStatus })
+                        }
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Reading">Reading</SelectItem>
+                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {editForm.status !== "Reading" && (
+                      <div className="space-y-2">
+                        <Label>End Date</Label>
+                        <Input
+                          type="date"
+                          value={editForm.ended_at}
+                          onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="pt-2">
+                    <Button onClick={saveEdit}>Save Changes</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Right Column: Portal Access & Security */}
+            <div className="lg:col-span-5 space-y-4">
+              <StudentPortalAccess studentId={student.id} />
+              <StudentSignInAccess studentId={student.id} />
+              <StudentForceSignOut studentId={student.id} />
+            </div>
+          </div>
+        )}
         {activeTab === "overview" && (
           <StudentOverview
             student={student}

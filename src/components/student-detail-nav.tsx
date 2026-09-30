@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils"
 
-export type StudentView = "overview" | "sessions" | "trophies" | "account"
+export type StudentView = "profile" | "overview" | "sessions" | "trophies" | "account"
 
 export interface StudentNavItem {
   id: StudentView
@@ -66,6 +66,10 @@ export function studentNavItems(signals: {
   achievementCount?: number
 }): StudentNavItem[] {
   return [
+    {
+      id: "profile",
+      label: "Profile",
+    },
     {
       id: "overview",
       label: "Overview",
