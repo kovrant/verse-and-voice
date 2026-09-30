@@ -157,6 +157,7 @@ export default function StudentDetailPage() {
     ended_at: "",
   })
 
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [activeTab, setActiveTab] = useState<StudentView>("profile")
   const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
@@ -534,6 +535,7 @@ export default function StudentDetailPage() {
       return
     }
 
+    setIsEditingProfile(false)
     toast.success("Profile updated")
     loadStudent()
   }
@@ -954,9 +956,9 @@ export default function StudentDetailPage() {
                     </div>
                   </div>
 
-                  {currentFee && (
-                    <div className="flex-shrink-0">
-                      {currentFee.is_paid ? (
+                  <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                    {currentFee && (
+                      currentFee.is_paid ? (
                         <button
                           type="button"
                           onClick={() => setActiveTab("account")}
@@ -976,17 +978,29 @@ export default function StudentDetailPage() {
                           <CreditCard className="h-3.5 w-3.5" />
                           {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
                         </button>
-                      )}
-                    </div>
-                  )}
+                      )
+                    )}
+
+                    {!isEditingProfile && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditingProfile(true)}
+                      >
+                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                 </div>
 
-                {/* Editable Profile Options */}
+                {/* Profile Options (Read-only by default, editable when Edit is clicked) */}
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Country</Label>
                       <Select
+                        disabled={!isEditingProfile}
                         value={editForm.country}
                         onValueChange={(val) => setEditForm({ ...editForm, country: val })}
                       >
@@ -1007,6 +1021,7 @@ export default function StudentDetailPage() {
                       <Input
                         id="edit_class_time"
                         type="time"
+                        disabled={!isEditingProfile}
                         value={toInputTime(editForm.class_time)}
                         onChange={(e) =>
                           setEditForm({
@@ -1021,6 +1036,7 @@ export default function StudentDetailPage() {
                   <div className="space-y-2">
                     <Label>Class Days</Label>
                     <ClassDaysPicker
+                      disabled={!isEditingProfile}
                       value={editForm.class_days}
                       onChange={(class_days) => setEditForm({ ...editForm, class_days })}
                     />
@@ -1034,6 +1050,7 @@ export default function StudentDetailPage() {
                       <Label>Monthly Fee</Label>
                       <Input
                         type="number"
+                        disabled={!isEditingProfile}
                         value={editForm.fee}
                         onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
                       />
@@ -1041,6 +1058,7 @@ export default function StudentDetailPage() {
                     <div className="space-y-2">
                       <Label>Currency</Label>
                       <Select
+                        disabled={!isEditingProfile}
                         value={editForm.fee_currency}
                         onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
                       >
@@ -1062,6 +1080,7 @@ export default function StudentDetailPage() {
                     <div className="space-y-2">
                       <Label>Status</Label>
                       <Select
+                        disabled={!isEditingProfile}
                         value={editForm.status}
                         onValueChange={(val) =>
                           setEditForm({ ...editForm, status: val as StudentStatus })
@@ -1082,6 +1101,7 @@ export default function StudentDetailPage() {
                         <Label>End Date</Label>
                         <Input
                           type="date"
+                          disabled={!isEditingProfile}
                           value={editForm.ended_at}
                           onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
                         />
@@ -1089,9 +1109,28 @@ export default function StudentDetailPage() {
                     )}
                   </div>
 
-                  <div className="pt-2">
-                    <Button onClick={saveEdit}>Save Changes</Button>
-                  </div>
+                  {isEditingProfile && (
+                    <div className="flex items-center gap-3 pt-2">
+                      <Button onClick={saveEdit}>Save Changes</Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          setEditForm({
+                            fee: (student.fee ?? 0).toString(),
+                            fee_currency: student.fee_currency || "GBP",
+                            class_time: student.class_time || "",
+                            class_days: Array.isArray(student.class_days) ? student.class_days : [],
+                            country: student.country || "",
+                            status: student.status || "Reading",
+                            ended_at: student.ended_at || "",
+                          })
+                          setIsEditingProfile(false)
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
