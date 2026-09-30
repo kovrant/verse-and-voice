@@ -183,18 +183,18 @@ export function TeacherTajweedPanel({
                   )}
                 </div>
 
-                {/* Card Bottom: Urdu Name + English Title + Short Cue */}
+                {/* Card Bottom: Urdu Name + English Title + Rhythm Badge */}
                 <div>
                   <div className="flex items-baseline justify-between gap-2">
                     <span className="font-arabic text-[17px] font-bold leading-tight text-foreground">
                       {rule.nameUrdu}
                     </span>
                     <span className="font-heading text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors truncate">
-                      {rule.title}
+                      {rule.shortTitle || rule.title}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] font-medium text-muted-foreground truncate">
-                    💡 {rule.shortCue}
+                  <p className="mt-1 text-[11px] font-semibold text-muted-foreground truncate">
+                    {rule.rhythmBadge || `💡 ${rule.shortCue}`}
                   </p>
                 </div>
               </button>
