@@ -30,16 +30,12 @@ export function StudentFeeReminderBanner({
   const dismissKey = `fee_dismissed_${studentId}_${currentYear}_${currentMonth}`
 
   useEffect(() => {
-    // Check if dismissed in this session
+    // Clear any stale sessionStorage key from previous sessions
     if (typeof window !== "undefined") {
       try {
-        if (sessionStorage.getItem(dismissKey) === "1") {
-          setDismissed(true)
-          setLoading(false)
-          return
-        }
+        sessionStorage.removeItem(dismissKey)
       } catch {
-        // Ignore session storage errors
+        // Ignore
       }
     }
 
@@ -63,14 +59,8 @@ export function StudentFeeReminderBanner({
   }, [studentId, currentYear, currentMonth, dismissKey])
 
   function handleDismiss() {
+    // Dismiss only for the current view. Will reappear on next redirect, visit, or login.
     setDismissed(true)
-    if (typeof window !== "undefined") {
-      try {
-        sessionStorage.setItem(dismissKey, "1")
-      } catch {
-        // Ignore
-      }
-    }
   }
 
   // Only show if fee is unpaid and not dismissed
