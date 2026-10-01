@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 
 import { PageLoading } from "@/components/page-loading"
 import { getDashboardProgress, type QuranRound } from "@/components/quran-progress"
+import { StudentFeeReminderBanner } from "@/components/student-fee-reminder-banner"
 import {
   StudentGreeting,
   StudentHomeCards,
@@ -56,6 +57,11 @@ export default function StudentDashboardPage() {
         }`}
       />
       <StudentLiveBanner />
+      <StudentFeeReminderBanner
+        studentId={student.id}
+        feeAmount={student.fee}
+        feeCurrency={student.fee_currency}
+      />
       <StudentHomeCards
         studentId={student.id}
         isQaida={isQaida}

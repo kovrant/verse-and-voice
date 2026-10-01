@@ -10,11 +10,21 @@ interface FeeDisplayProps {
   size?: "sm" | "lg"
   /** Student portal ("storybook") styling — same numbers, kid palette. */
   kid?: boolean
+  /** Whether to show secondary PKR conversion. Defaults to false if kid=true, true otherwise. */
+  showPkr?: boolean
 }
 
-export function FeeDisplay({ amount, currency, rates, size = "sm", kid = false }: FeeDisplayProps) {
+export function FeeDisplay({
+  amount,
+  currency,
+  rates,
+  size = "sm",
+  kid = false,
+  showPkr,
+}: FeeDisplayProps) {
   const symbol = CURRENCY_SYMBOLS[currency] || currency
-  const pkrAmount = convertToPKR(amount, currency, rates)
+  const shouldShowPkr = showPkr !== undefined ? showPkr : !kid
+  const pkrAmount = shouldShowPkr ? convertToPKR(amount, currency, rates) : null
 
   if (size === "lg") {
     return (
