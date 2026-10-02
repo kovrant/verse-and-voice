@@ -19,6 +19,7 @@ import { useCallback, useEffect, useState } from "react"
 
 import { Brand } from "@/components/brand"
 import { FeeDisplay } from "@/components/fee-display"
+import { GeminiQuotaCard } from "@/components/gemini-quota-card"
 import { PageLoading } from "@/components/page-loading"
 import { TeacherActivityFeed } from "@/components/teacher-activity-feed"
 import { TeacherOnlinePanel } from "@/components/teacher-online-panel"
@@ -212,6 +213,9 @@ export default function Dashboard() {
           </Card>
         ))}
       </div>
+
+      {/* Google Gemini AI Quota Widget */}
+      <GeminiQuotaCard variant="dashboard" />
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
