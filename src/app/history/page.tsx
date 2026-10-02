@@ -5,7 +5,9 @@
 import * as Popover from "@radix-ui/react-popover"
 import {
   AlertTriangle,
+  Check,
   Clock,
+  Copy,
   ExternalLink,
   FileText,
   ImagePlus,
@@ -49,6 +51,7 @@ import {
   CATEGORY_ICON,
   CURATED_ISLAMIC_TOPICS,
   type CuratedTopic,
+  getCanvaDreamLabPrompt,
   type HistoryStory,
   type LifeLesson,
   normalizeTopicSlug,
@@ -70,6 +73,7 @@ type FormState = {
   hero_virtue: string
   reading_time_mins: number
   reflection_challenge: string
+  cover_prompt: string
   hijri_month: string // "" = none, else "1".."12"
   is_published: boolean
   quran_gem: QuranGem | null
@@ -88,6 +92,7 @@ const EMPTY_FORM: FormState = {
   hero_virtue: "",
   reading_time_mins: 4,
   reflection_challenge: "",
+  cover_prompt: "",
   hijri_month: "",
   is_published: false, // Default to draft
   quran_gem: null,
@@ -132,6 +137,8 @@ export default function HistoryAdminPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [toDelete, setToDelete] = useState<HistoryStory | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [copiedPromptId, setCopiedPromptId] = useState<string | null>(null)
+  const [copiedEditorPrompt, setCopiedEditorPrompt] = useState(false)
 
   useEffect(() => {
     loadStories()
@@ -207,6 +214,7 @@ export default function HistoryAdminPage() {
       hero_virtue: story.hero_virtue ?? "",
       reading_time_mins: story.reading_time_mins ?? 4,
       reflection_challenge: story.reflection_challenge ?? "",
+      cover_prompt: story.cover_prompt || getCanvaDreamLabPrompt(story),
       hijri_month: story.hijri_month ? String(story.hijri_month) : "",
       is_published: story.is_published,
       quran_gem: story.quran_gem ?? null,
@@ -282,6 +290,7 @@ export default function HistoryAdminPage() {
       hero_virtue: form.hero_virtue.trim() || null,
       reading_time_mins: Number(form.reading_time_mins) || 4,
       reflection_challenge: form.reflection_challenge.trim() || null,
+      cover_prompt: form.cover_prompt.trim() || getCanvaDreamLabPrompt(form),
       hijri_month: form.hijri_month ? Number(form.hijri_month) : null,
       cover_image_url: coverUrl,
       file_url: attachUrl,
@@ -528,8 +537,32 @@ export default function HistoryAdminPage() {
                     />
                   </button>
                 ) : (
-                  <div className="w-full aspect-[16/9] flex items-center justify-center bg-secondary/60 text-4xl">
-                    {CATEGORY_ICON[story.category] ?? "📜"}
+                  <div className="w-full aspect-[16/9] flex flex-col items-center justify-center bg-secondary/60 gap-1.5 p-3">
+                    <span className="text-3xl">{CATEGORY_ICON[story.category] ?? "📜"}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const prompt = story.cover_prompt || getCanvaDreamLabPrompt(story)
+                        navigator.clipboard.writeText(prompt)
+                        setCopiedPromptId(story.id)
+                        toast.success("Copied Canva Dream Lab prompt! Generate in Canva & upload.")
+                        setTimeout(() => setCopiedPromptId(null), 3000)
+                      }}
+                      className="inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-card/95 px-2.5 py-1 text-[10.5px] font-bold text-purple-700 dark:text-purple-300 shadow-sm hover:bg-purple-500/15 transition-all"
+                      title="Copy AI image prompt for Canva Dream Lab"
+                    >
+                      {copiedPromptId === story.id ? (
+                        <>
+                          <Check className="h-3 w-3 text-emerald-500" />
+                          <span>Copied Prompt!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3 w-3 text-purple-500" />
+                          <span>Canva AI Prompt</span>
+                        </>
+                      )}
+                    </button>
                   </div>
                 )}
 
@@ -1089,6 +1122,58 @@ export default function HistoryAdminPage() {
                 </Link>
               </div>
             )}
+
+            {/* Canva AI / Dream Lab Cover Prompt Card */}
+            <div className="rounded-2xl border border-purple-500/35 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 p-4 space-y-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-sm text-sm">
+                    🎨
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                      Canva AI Dream Lab Cover Prompt
+                      <span className="text-[10px] font-normal text-muted-foreground">(16:9 Landscape)</span>
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    const promptToCopy = form.cover_prompt.trim() || getCanvaDreamLabPrompt(form)
+                    navigator.clipboard.writeText(promptToCopy)
+                    setCopiedEditorPrompt(true)
+                    toast.success("Copied Canva Dream Lab prompt to clipboard!")
+                    setTimeout(() => setCopiedEditorPrompt(false), 3000)
+                  }}
+                  className="h-7 text-xs gap-1.5 border-purple-500/40 bg-card hover:bg-purple-500/15"
+                >
+                  {copiedEditorPrompt ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5 text-purple-500" />
+                  )}
+                  {copiedEditorPrompt ? "Copied Prompt!" : "Copy Prompt"}
+                </Button>
+              </div>
+
+              <Textarea
+                value={form.cover_prompt || getCanvaDreamLabPrompt(form)}
+                onChange={(e) => setForm((f) => ({ ...f, cover_prompt: e.target.value }))}
+                placeholder="Canva Dream Lab image prompt..."
+                className="min-h-[75px] font-mono text-xs leading-relaxed bg-card/90 border-purple-500/25 resize-y"
+              />
+
+              <p className="text-[11px] font-medium text-muted-foreground leading-relaxed flex items-start gap-1.5">
+                <span className="text-sm leading-none">💡</span>
+                <span>
+                  <strong>Tip for Teachers:</strong> Click <strong>Copy Prompt</strong> ➜ Open <strong>Canva → Dream Lab</strong> ➜ Select <strong>16:9 landscape</strong> ➜ Generate &amp; download ➜ Upload into <strong>Add cover</strong> below!
+                </span>
+              </p>
+            </div>
 
             {/* Media Uploads */}
             <div className="grid gap-3 sm:grid-cols-2">

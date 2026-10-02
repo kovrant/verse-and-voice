@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { requireTeacher } from "@/lib/api-auth"
 import {
   CURATED_ISLAMIC_TOPICS,
+  getCanvaDreamLabPrompt,
   type LifeLesson,
   normalizeTopicSlug,
   type QuranGem,
@@ -36,6 +37,7 @@ interface GeneratedStoryResponse {
   quran_gem: QuranGem
   life_lessons: LifeLesson[]
   reflection_challenge: string
+  cover_prompt: string
   derived_quiz: {
     title: string
     description: string
@@ -169,7 +171,11 @@ Follow these structural requirements with utmost precision:
      - { "context": "In My Heart & Prayers", "emoji": "💖", "lesson": "..." }
 5. 🎯 The Explorer Challenge (reflection_challenge):
    - A 1-2 sentence reflection pledge or practical action the child can do today.
-6. 🏆 Directly Derived Mini-Quest Quiz (derived_quiz):
+6. 🎨 Canva AI / Dream Lab Cover Art Prompt (cover_prompt):
+   - A descriptive, imaginative text prompt tailored for Canva AI Dream Lab / Magic Media to generate a Pixar/DreamWorks 3D children's storybook cover illustration.
+   - STRICT ISLAMIC RULE: Never depict the face or physical form of Prophets or Angels. Use majestic symbolic nature, celestial skies, luminous lanterns, historic architectural landscapes, or radiant gardens.
+   - Specify style: "Disney Pixar 3D animated storybook concept art, warm volumetric golden lighting, rich vibrant colors, highly detailed, 16:9 cinematic aspect ratio. No human faces, scenic only."
+7. 🏆 Directly Derived Mini-Quest Quiz (derived_quiz):
    - Generate 3 to 4 multiple-choice questions directly derived from the story content.
    - title: e.g. "Quest: Prophet Adam (AS)"
    - description: e.g. "Test your explorer knowledge on the story!"
@@ -216,6 +222,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
     }
   ],
   "reflection_challenge": "The next time I make a mistake today, I will pause, say 'Astaghfirullah', and apologize sincerely!",
+  "cover_prompt": "Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children's storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.",
   "derived_quiz": {
     "title": "Story Quest Quiz",
     "description": "Short description",
@@ -381,6 +388,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
         quran_gem: generatedData.quran_gem,
         life_lessons: generatedData.life_lessons,
         reflection_challenge: generatedData.reflection_challenge,
+        cover_prompt: generatedData.cover_prompt || getCanvaDreamLabPrompt(generatedData),
         quiz_id: createdQuizId,
         hijri_month: hijriMonth,
         is_published: false, // Saved as draft for teacher review!
@@ -491,6 +499,8 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
       ],
       reflection_challenge:
         "Today, whenever I step into the car or start my homework, I will say 'Bismillahi majreeha wa mursaha' with a grateful heart!",
+      cover_prompt:
+        "A colossal, majestic handcrafted wooden ark resting on the peak of a misty mountaintop as dark storm clouds part into a glorious golden sunrise and vibrant rainbow over the calm receding blue ocean, Disney Pixar 3D storybook concept art, warm heroic atmospheric lighting, cinematic 16:9, highly detailed wood texture, uplifting and hopeful. No human faces, epic scenery only.",
       derived_quiz: {
         title: "Quest: The Giant Ark of Nuh (AS)",
         description: "Test what you learned about Prophet Nuh's incredible patience!",
@@ -584,6 +594,8 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
     ],
     reflection_challenge:
       "Today, if I make even a tiny mistake, I will immediately say 'I am sorry' and 'Astaghfirullah' with a smile!",
+    cover_prompt:
+      "Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children's storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.",
     derived_quiz: {
       title: "Quest: Prophet Adam (AS)",
       description: "Test your knowledge on the first prophet and the power of Tawbah!",

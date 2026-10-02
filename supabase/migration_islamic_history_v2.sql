@@ -12,6 +12,7 @@ ALTER TABLE islamic_history
   ADD COLUMN IF NOT EXISTS quran_gem JSONB DEFAULT '{}'::jsonb, -- { surah_number, surah_name, ayah_number, arabic, translation, child_takeaway }
   ADD COLUMN IF NOT EXISTS life_lessons JSONB DEFAULT '[]'::jsonb, -- Array of { context, emoji, lesson }
   ADD COLUMN IF NOT EXISTS reflection_challenge TEXT,
+  ADD COLUMN IF NOT EXISTS cover_prompt TEXT, -- Tailored Canva AI Dream Lab cover art prompt
   ADD COLUMN IF NOT EXISTS quiz_id UUID REFERENCES quizzes(id) ON DELETE SET NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_islamic_history_topic_slug 
