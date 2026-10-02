@@ -77,20 +77,9 @@ export function StudentFeeReminderBanner({
       aria-label="Monthly Tuition Reminder for Parents"
       className="animate-banner-glow relative mb-5 rounded-2xl border-2 border-amber-400/90 bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-orange-400/10 dark:from-amber-950/45 dark:via-amber-900/25 dark:to-orange-950/20 p-4 sm:p-4.5 shadow-md animate-fade-in"
     >
-      {/* Cross dismiss button */}
-      <button
-        type="button"
-        onClick={handleDismiss}
-        title="Dismiss note for now"
-        aria-label="Dismiss note for now"
-        className="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground transition-colors z-10"
-      >
-        <X className="h-4 w-4" />
-      </button>
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
         {/* Left side: Animated Bell Icon + Content */}
-        <div className="flex items-start sm:items-center gap-3.5 min-w-0 pr-6 sm:pr-0">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0 pr-8 sm:pr-0">
           {/* Animated Bell Squircle */}
           <div className="relative shrink-0">
             <span
@@ -131,8 +120,8 @@ export function StudentFeeReminderBanner({
           </div>
         </div>
 
-        {/* Right side: Action CTA */}
-        <div className="flex items-center self-end sm:self-center shrink-0 w-full sm:w-auto">
+        {/* Right side: Action CTA + Cross dismiss button */}
+        <div className="flex items-center gap-2 self-end sm:self-center shrink-0 w-full sm:w-auto justify-end">
           <Link
             href="/student/fees"
             className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 active:scale-95 px-4 py-2 font-heading text-xs sm:text-sm font-extrabold text-stone-950 shadow-sm hover:shadow-md transition-all"
@@ -140,6 +129,17 @@ export function StudentFeeReminderBanner({
             <span>View Fee Details</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
+
+          {/* Cross dismiss button: top-right on mobile, inline flex item on desktop */}
+          <button
+            type="button"
+            onClick={handleDismiss}
+            title="Dismiss note for now"
+            aria-label="Dismiss note for now"
+            className="absolute sm:static top-3 right-3 flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
     </div>
