@@ -249,3 +249,135 @@ export function getCanvaDreamLabPrompt(story: {
   const virtueText = story.hero_virtue ? ` reflecting the virtue of ${story.hero_virtue}` : ""
   return `Enchanting Islamic children's storybook cover illustration for "${story.title}"${virtueText}, peaceful ancient desert oasis with glowing golden lanterns, lush date palm trees, majestic mountain silhouette under a star-filled celestial twilight sky with a radiant crescent moon, Disney Pixar 3D animated style, rich volumetric lighting, vibrant heartwarming colors, 8k, 16:9 landscape aspect ratio. Scenic and atmospheric only, no human faces.`
 }
+
+export interface StoryScene {
+  id: string
+  sceneNumber: number
+  title: string
+  rawText: string
+  paragraphs: string[]
+}
+
+/**
+ * Parses markdown or plain text story content into discrete episodic scenes.
+ *
+ * Handles:
+ * 1. Markdown headers: `### Scene 1: ...` or `## Scene 1 - ...`
+ * 2. Plain text scene markers: `Scene 1: Title\n...`
+ * 3. Fallback: If no explicit scene markers are present, splits into balanced
+ *    scenes by paragraphs so any legacy story displays as an interactive card reel!
+ */
+export function parseStoryScenes(content: string | null | undefined): StoryScene[] {
+  if (!content || !content.trim()) return []
+
+  const text = content.trim()
+
+  const sceneHeaderRegex =
+    /(?:^|\n)(?:#{1,3}\s*)?(?:Scene|Part|Episode|Chapter)\s*(\d+)[:\s\-]+([^\n]+)/gi
+
+  const matches: { index: number; sceneNumber: number; title: string; matchLength: number }[] = []
+  let match: RegExpExecArray | null
+
+  while ((match = sceneHeaderRegex.exec(text)) !== null) {
+    const rawNumber = parseInt(match[1], 10)
+    const title = match[2].trim().replace(/^[:\-\s]+/, "")
+    matches.push({
+      index: match.index,
+      sceneNumber: isNaN(rawNumber) ? matches.length + 1 : rawNumber,
+      title,
+      matchLength: match[0].length,
+    })
+  }
+
+  // If at least 2 scene headers were identified, slice along those boundaries
+  if (matches.length >= 2) {
+    const scenes: StoryScene[] = []
+    for (let i = 0; i < matches.length; i++) {
+      const current = matches[i]
+      const startIndex = current.index + current.matchLength
+      const endIndex = i + 1 < matches.length ? matches[i + 1].index : text.length
+      const body = text.slice(startIndex, endIndex).trim()
+      const paragraphs = body
+        .split(/\n\s*\n/)
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0)
+
+      scenes.push({
+        id: `scene-${current.sceneNumber}`,
+        sceneNumber: current.sceneNumber,
+        title: current.title || `Scene ${current.sceneNumber}`,
+        rawText: body,
+        paragraphs,
+      })
+    }
+    return scenes
+  }
+
+  // Fallback: split long text into 2 or 3 episodic scenes by paragraphs
+  const allParagraphs = text
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+
+  if (allParagraphs.length <= 1) {
+    return [
+      {
+        id: "scene-1",
+        sceneNumber: 1,
+        title: "The Adventure",
+        rawText: text,
+        paragraphs: allParagraphs,
+      },
+    ]
+  }
+
+  if (allParagraphs.length === 2) {
+    return [
+      {
+        id: "scene-1",
+        sceneNumber: 1,
+        title: "Part 1: The Beginning",
+        rawText: allParagraphs[0],
+        paragraphs: [allParagraphs[0]],
+      },
+      {
+        id: "scene-2",
+        sceneNumber: 2,
+        title: "Part 2: The Lesson",
+        rawText: allParagraphs[1],
+        paragraphs: [allParagraphs[1]],
+      },
+    ]
+  }
+
+  // 3 or more paragraphs: distribute evenly across 3 scenes
+  const chunkSize = Math.ceil(allParagraphs.length / 3)
+  const p1 = allParagraphs.slice(0, chunkSize)
+  const p2 = allParagraphs.slice(chunkSize, chunkSize * 2)
+  const p3 = allParagraphs.slice(chunkSize * 2)
+
+  return [
+    {
+      id: "scene-1",
+      sceneNumber: 1,
+      title: "Scene 1: The Beginning",
+      rawText: p1.join("\n\n"),
+      paragraphs: p1,
+    },
+    {
+      id: "scene-2",
+      sceneNumber: 2,
+      title: "Scene 2: The Adventure",
+      rawText: p2.join("\n\n"),
+      paragraphs: p2,
+    },
+    {
+      id: "scene-3",
+      sceneNumber: 3,
+      title: "Scene 3: The Golden Wisdom",
+      rawText: p3.join("\n\n"),
+      paragraphs: p3,
+    },
+  ]
+}
+

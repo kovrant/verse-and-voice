@@ -7,12 +7,12 @@ import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 import { ArabicText } from "@/components/arabic-text"
-import { KidButton, KidCard, KidEmpty } from "@/components/kid-ui"
-import { Markdown } from "@/components/markdown"
+import { KidButton, KidEmpty } from "@/components/kid-ui"
 import { PageLoading } from "@/components/page-loading"
 import { QuranGemBox } from "@/components/quran-gem-box"
 import { StoryMoralCompass } from "@/components/story-moral-compass"
 import { StoryReflectionPledge } from "@/components/story-reflection-pledge"
+import { StorySceneReader } from "@/components/story-scene-reader"
 import { logActivity } from "@/lib/activity-log"
 import { getHijriMonthInfo } from "@/lib/hijri"
 import { CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
@@ -192,14 +192,13 @@ export default function StudentHistoryReaderPage() {
         </div>
       )}
 
-      {/* 2. 📖 The Adventure (Body Scenes) */}
+      {/* 2. 📖 The Adventure (Interactive Flip-Card Scenes) */}
       {story.content ? (
-        <KidCard className="px-5 py-5 sm:px-7 sm:py-6 shadow-soft">
-          <Markdown
-            content={story.content}
-            className="text-[17px] text-foreground/90 sm:text-[18px] [&_h3]:font-heading [&_h3]:text-[20px] [&_h3]:font-bold [&_h3]:text-primary [&_h3]:mt-6 [&_h3]:mb-3 [&_li]:leading-[1.8] [&_p]:my-4 [&_p]:leading-[1.85]"
-          />
-        </KidCard>
+        <StorySceneReader
+          content={story.content}
+          storyTitle={story.title}
+          className="mb-8"
+        />
       ) : (
         !story.file_url && (
           <KidEmpty
@@ -211,7 +210,11 @@ export default function StudentHistoryReaderPage() {
       )}
 
       {/* 3. 💎 The Quranic Gem Card */}
-      {story.quran_gem && <QuranGemBox gem={story.quran_gem} />}
+      {story.quran_gem && (
+        <div id="quran-gem-section">
+          <QuranGemBox gem={story.quran_gem} />
+        </div>
+      )}
 
       {/* 4. 🧭 The Moral Compass (3 Life Lessons) */}
       {story.life_lessons && story.life_lessons.length > 0 && (

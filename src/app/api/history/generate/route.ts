@@ -148,14 +148,27 @@ Follow these structural requirements with utmost precision:
 2. 📖 The Adventure (content):
    - Markdown format with exactly 3 episodic scenes formatted as:
      ### Scene 1: [Catchy Scene Title]
-     [Narrative text...]
+     [Beats...]
      ### Scene 2: [Catchy Scene Title]
-     [Narrative text...]
+     [Beats...]
      ### Scene 3: [Catchy Scene Title]
-     [Narrative text...]
-   - Use vivid sensory details, emotional warmth, and child-relatable dialogue.
-   - Strictly authentic narrative in line with Quran and authentic Hadith (no mythical exaggerations).
-   - Inspires deep love and respect for Allah and His righteous servants.
+     [Beats...]
+   - CRITICAL 2-SENTENCE MICRO-BEAT RULE:
+     * Never write long paragraphs! Every paragraph MUST be 1 to 2 sentences maximum.
+     * Keep the rhythm fast, punchy, and cinematic so young minds stay completely gripped.
+   - COMIC POP & SENSORY SOUND WORDS:
+     * Use bold sound words and sensory anchors at dramatic moments (e.g. **💥 ACHOO!**, **🌬️ A gentle whisper...**, **⚡ BOOM!**, **🤫 Sshhh...**).
+   - CHARACTER DIALOGUE ON ISOLATED LINES WITH EMOJIS:
+     * Put spoken dialogue on its own dedicated line preceded by a character emoji so the reading UI can style it as a graphic speech card:
+       💬 Character: "Dialogue text here..."
+       🤲 Prophet: "Supplication or prayer text here..."
+       😈 Rival/Iblis: "Arrogant whisper here..."
+   - SCENE 3 DILEMMA PAUSE:
+     * In Scene 3 (the turning point/climax), insert a 1-line thought dilemma:
+       ⚡ **PAUSE & REFLECT:** [1-sentence interactive question prompting the child to choose what they would do!]
+   - STRICT AUTHENTICITY:
+     * Strictly authentic narrative in line with Quran and authentic Sunnah.
+     * NEVER describe physical faces of Prophets or Angels; focus on divine wisdom, moral courage, and noble character.
 3. 💎 The Quranic Gem Card (quran_gem):
    - Featured authentic Ayah from the Quran directly linked to the story.
    - surah_number: integer
