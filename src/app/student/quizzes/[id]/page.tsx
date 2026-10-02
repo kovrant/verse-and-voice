@@ -21,6 +21,7 @@ export default function StudentQuizPlayerPage() {
 
   const quizId = params?.id as string
   const assignmentId = searchParams.get("assignment")
+  const [activeAssignmentId, setActiveAssignmentId] = useState<string | null>(assignmentId)
 
   const [quiz, setQuiz] = useState<Quiz | null>(null)
   const [questions, setQuestions] = useState<QuizQuestion[]>([])
@@ -59,29 +60,40 @@ export default function StudentQuizPlayerPage() {
           .maybeSingle(),
       ])
 
-      if (!assignRes.data) {
-        // If not assigned yet, but the quiz exists and is published, auto-assign it on the fly!
-        if (quizRes.data && (quizRes.data as Quiz).is_published !== false) {
-          try {
-            const autoRes = await fetch("/api/quizzes/auto-assign", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                quiz_id: quizId,
-                student_id: student.id,
-              }),
-            })
-            if (!autoRes.ok) {
-              setIsNotAssigned(true)
-              setLoading(false)
-              return
+      if (assignRes.data?.id) {
+        setActiveAssignmentId(assignRes.data.id)
+      }
+
+      // If we don't have an assignment yet, or if client RLS prevented seeing the quiz/questions
+      if (!assignRes.data || !quizRes.data || !questionsRes.data?.length) {
+        try {
+          const autoRes = await fetch("/api/quizzes/auto-assign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              quiz_id: quizId,
+              student_id: student.id,
+            }),
+          })
+          if (autoRes.ok) {
+            const autoData = await autoRes.json()
+            if (autoData.assignment_id) {
+              setActiveAssignmentId(autoData.assignment_id)
             }
-          } catch {
+            if (autoData.quiz) {
+              setQuiz(autoData.quiz as Quiz)
+            }
+            if (autoData.questions && autoData.questions.length > 0) {
+              setQuestions(autoData.questions as QuizQuestion[])
+            }
+            setLoading(false)
+            return
+          } else {
             setIsNotAssigned(true)
             setLoading(false)
             return
           }
-        } else {
+        } catch {
           setIsNotAssigned(true)
           setLoading(false)
           return
@@ -170,7 +182,7 @@ export default function StudentQuizPlayerPage() {
         body: JSON.stringify({
           student_id: student.id,
           quiz_id: quiz.id,
-          assignment_id: assignmentId || null,
+          assignment_id: activeAssignmentId || assignmentId || null,
           answers,
         }),
       })

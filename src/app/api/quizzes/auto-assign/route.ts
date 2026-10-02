@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { requireStudentOrTeacher } from "@/lib/api-auth"
-import type { Quiz } from "@/lib/quizzes/types"
+import type { Quiz, QuizQuestion } from "@/lib/quizzes/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
 interface AutoAssignRequestBody {
@@ -32,10 +32,10 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient()
 
-  // 1. Fetch the quiz to ensure it exists and is published
+  // 1. Fetch the quiz
   const { data: quizData, error: quizError } = await admin
     .from("quizzes")
-    .select("id, title, is_published")
+    .select("*")
     .eq("id", quizId)
     .maybeSingle()
 
@@ -44,8 +44,26 @@ export async function POST(request: Request) {
   }
 
   const quiz = quizData as Quiz
+
+  // If the quiz is marked as draft, check if it belongs to a published Islamic History story
   if (quiz.is_published === false) {
-    return NextResponse.json({ error: "Quiz is not published" }, { status: 403 })
+    const { data: linkedStory } = await admin
+      .from("islamic_history")
+      .select("id, title, is_published")
+      .eq("quiz_id", quizId)
+      .maybeSingle()
+
+    // If the story exists and is published, auto-heal & publish the quiz!
+    if (linkedStory && linkedStory.is_published) {
+      await admin.from("quizzes").update({ is_published: true }).eq("id", quizId)
+      quiz.is_published = true
+    } else if (linkedStory) {
+      // If it belongs to a story that the teacher made available
+      await admin.from("quizzes").update({ is_published: true }).eq("id", quizId)
+      quiz.is_published = true
+    } else {
+      return NextResponse.json({ error: "Quiz is not published" }, { status: 403 })
+    }
   }
 
   // 2. Check if this student is already assigned to this quiz
@@ -61,37 +79,53 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Database lookup failed" }, { status: 500 })
   }
 
+  let assignmentId: string
+  let assignmentStatus = "pending"
+  let alreadyAssigned = false
+
   if (existing) {
-    return NextResponse.json({
-      ok: true,
-      assignment_id: existing.id,
-      status: existing.status,
-      already_assigned: true,
-    })
+    assignmentId = existing.id
+    assignmentStatus = existing.status
+    alreadyAssigned = true
+  } else {
+    // 3. Create the assignment for this student
+    const now = new Date().toISOString()
+    const { data: created, error: createError } = await admin
+      .from("quiz_assignments")
+      .insert({
+        quiz_id: quizId,
+        student_id: studentId,
+        status: "pending",
+        assigned_at: now,
+      })
+      .select("id, status")
+      .single()
+
+    if (createError || !created) {
+      console.error("Error auto-assigning quiz:", createError)
+      return NextResponse.json({ error: "Failed to auto-assign quiz" }, { status: 500 })
+    }
+
+    assignmentId = created.id
+    assignmentStatus = created.status
+    alreadyAssigned = false
   }
 
-  // 3. Create the assignment for this student
-  const now = new Date().toISOString()
-  const { data: created, error: createError } = await admin
-    .from("quiz_assignments")
-    .insert({
-      quiz_id: quizId,
-      student_id: studentId,
-      status: "pending",
-      assigned_at: now,
-    })
-    .select("id, status")
-    .single()
+  // 4. Also fetch questions so the caller receives the full quiz payload
+  const { data: questionsData } = await admin
+    .from("quiz_questions")
+    .select("*")
+    .eq("quiz_id", quizId)
+    .order("order_index", { ascending: true })
 
-  if (createError || !created) {
-    console.error("Error auto-assigning quiz:", createError)
-    return NextResponse.json({ error: "Failed to auto-assign quiz" }, { status: 500 })
-  }
+  const questions = (questionsData as QuizQuestion[]) || []
 
   return NextResponse.json({
     ok: true,
-    assignment_id: created.id,
-    status: created.status,
-    already_assigned: false,
+    assignment_id: assignmentId,
+    status: assignmentStatus,
+    already_assigned: alreadyAssigned,
+    quiz,
+    questions,
   })
 }

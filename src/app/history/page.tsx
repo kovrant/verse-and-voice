@@ -351,6 +351,10 @@ export default function HistoryAdminPage() {
       return
     }
 
+    if (story.quiz_id) {
+      await supabase.from("quizzes").update({ is_published: newStatus }).eq("id", story.quiz_id)
+    }
+
     toast.success(newStatus ? `"${story.title}" published!` : `"${story.title}" moved to drafts.`)
     await loadStories()
   }
@@ -437,6 +441,10 @@ export default function HistoryAdminPage() {
       toast.error(error.message)
       setSaving(false)
       return
+    }
+
+    if (form.quiz_id) {
+      await supabase.from("quizzes").update({ is_published: form.is_published }).eq("id", form.quiz_id)
     }
 
     setSaving(false)

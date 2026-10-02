@@ -96,7 +96,7 @@ export default function TeacherQuizViewPage() {
             .eq("quiz_id", quizId)
             .order("order_index", { ascending: true }),
           supabase
-            .from("history_stories")
+            .from("islamic_history")
             .select("id, title, category, target_age_group, summary")
             .eq("quiz_id", quizId)
             .maybeSingle(),
