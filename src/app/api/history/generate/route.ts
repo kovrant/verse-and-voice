@@ -95,27 +95,18 @@ export async function POST(request: Request) {
   const topicSlug = normalizeTopicSlug(topic)
   const admin = createSupabaseAdminClient()
 
-  // 1. Strict Duplication Prevention
+  // 1. Duplication Prevention (safe against schema variants)
   try {
     const { data: existingStories, error: searchError } = await admin
       .from("islamic_history")
-      .select("id, title, topic_slug, is_published, category")
-      .or(`topic_slug.eq.${topicSlug},title.ilike.%${topic}%`)
+      .select("id, title, is_published, category")
+      .ilike("title", `%${topic}%`)
       .limit(1)
 
     if (!searchError && existingStories && existingStories.length > 0) {
       const match = existingStories[0]
-
-      // Fetch unwritten suggestions from curated topics list
-      const { data: allSlugs } = await admin
-        .from("islamic_history")
-        .select("topic_slug")
-
-      const writtenSlugs = new Set(
-        (allSlugs || []).map((s: { topic_slug?: string | null }) => s.topic_slug).filter(Boolean),
-      )
       const suggestions = CURATED_ISLAMIC_TOPICS.filter(
-        (c) => !writtenSlugs.has(c.topic_slug) && c.topic_slug !== topicSlug,
+        (c) => c.topic_slug !== topicSlug,
       ).slice(0, 3)
 
       return NextResponse.json(
@@ -137,7 +128,7 @@ export async function POST(request: Request) {
   // 2. AI Generation via Gemini
   const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
   let generatedData: GeneratedStoryResponse | null = null
-  let successfulModel = "gemini-2.0-flash"
+  let successfulModel = "gemini-3.5-flash"
   let tokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
 
   if (apiKey) {
@@ -246,7 +237,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
   }
 }`
 
-    const modelsToTry = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
+    const modelsToTry = ["gemini-3.5-flash", "gemini-3.8-flash"]
 
     for (const model of modelsToTry) {
       try {
@@ -397,20 +388,41 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
       .select("*")
       .single()
 
+    let storyRecord = createdStory
+    let schemaNotice: string | undefined
+
     if (storyError) {
-      throw storyError
+      console.warn("V2 story insert encountered schema mismatch, retrying with base columns:", storyError)
+      // Retry with baseline columns if migration_islamic_history_v2.sql has not been run yet
+      const { data: baseStory, error: baseError } = await admin
+        .from("islamic_history")
+        .insert({
+          title: generatedData.title,
+          arabic_title: generatedData.arabic_title || null,
+          summary: generatedData.summary,
+          content: generatedData.content,
+          category,
+          hijri_month: hijriMonth,
+          is_published: false,
+        })
+        .select("*")
+        .single()
+
+      if (baseError || !baseStory) {
+        throw baseError || storyError
+      }
+
+      storyRecord = baseStory
+      schemaNotice = "Story saved! Run migration_islamic_history_v2.sql in Supabase SQL editor to enable the Quran Gem card & derived quiz."
     }
 
     return NextResponse.json({
       success: true,
-      story: createdStory,
+      story: storyRecord,
       quiz: createdQuiz,
       source: successfulModel === "offline_template" ? "offline_template" : "gemini_ai",
       model: successfulModel,
-      notice:
-        successfulModel === "offline_template"
-          ? "Generated with authentic offline storybook engine (configure GEMINI_API_KEY for continuous generative diversity)."
-          : undefined,
+      notice: schemaNotice,
     })
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to create story"

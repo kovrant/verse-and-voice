@@ -113,13 +113,12 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
 }`
 
       const modelsToTry = [
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash",
       ]
 
       let generatedData: GeneratedQuizResponse | null = null
-      let successfulModel = "gemini-2.0-flash"
+      let successfulModel = "gemini-3.5-flash"
       let tokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
 
       for (const model of modelsToTry) {

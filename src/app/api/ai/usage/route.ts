@@ -73,7 +73,7 @@ export async function GET() {
       return NextResponse.json({
         configured: isConfigured,
         table_ready: false,
-        model: "gemini-2.0-flash",
+        model: "gemini-3.5-flash",
         tier: "Free Tier (1,500 RPD / 15 RPM)",
         daily_limit: dailyLimit,
         rpm_limit: rpmLimit,
@@ -118,7 +118,7 @@ export async function GET() {
     return NextResponse.json({
       configured: isConfigured,
       table_ready: true,
-      model: "gemini-2.0-flash",
+      model: "gemini-3.5-flash",
       tier: "Free Tier (1,500 RPD / 15 RPM)",
       daily_limit: dailyLimit,
       rpm_limit: rpmLimit,

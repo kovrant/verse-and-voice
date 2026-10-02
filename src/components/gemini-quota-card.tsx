@@ -191,7 +191,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                 </Badge>
               </div>
               <p className="text-[11px] font-medium text-muted-foreground mt-0.5">
-                Model: <span className="font-semibold text-foreground/90">{data.model || "gemini-2.0-flash"}</span> ·{" "}
+                Model: <span className="font-semibold text-foreground/90">{data.model || "gemini-3.5-flash"}</span> ·{" "}
                 {data.tier || "Free Tier (1,500 RPD)"}
               </p>
             </div>

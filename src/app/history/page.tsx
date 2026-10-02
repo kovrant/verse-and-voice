@@ -296,6 +296,25 @@ export default function HistoryAdminPage() {
       ;({ error } = await supabase.from("islamic_history").insert(payload))
     }
 
+    if (error && (error.code === "42703" || error.message?.includes("does not exist"))) {
+      // Fallback for unapplied migration: save baseline columns
+      const basePayload = {
+        title: form.title.trim(),
+        arabic_title: form.arabic_title.trim() || null,
+        summary: form.summary.trim() || null,
+        content: form.content.trim() || null,
+        category: form.category,
+        hijri_month: form.hijri_month ? Number(form.hijri_month) : null,
+        cover_image_url: coverUrl,
+        file_url: attachUrl,
+        file_type: attachUrl ? attachType : null,
+        is_published: form.is_published,
+      }
+      ;({ error } = editing
+        ? await supabase.from("islamic_history").update(basePayload).eq("id", editing.id)
+        : await supabase.from("islamic_history").insert(basePayload))
+    }
+
     if (error) {
       toast.error(error.message)
       setSaving(false)
