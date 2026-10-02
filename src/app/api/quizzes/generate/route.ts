@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { requireTeacher } from "@/lib/api-auth"
 import type { QuizAgeGroup, QuizCategory } from "@/lib/quizzes/types"
+import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
 interface GenerateRequestBody {
   topic?: string
@@ -46,7 +47,7 @@ const ALLOWED_CATEGORIES = new Set<QuizCategory>([
 ])
 
 export async function POST(request: Request) {
-  const { denied } = await requireTeacher()
+  const { user, denied } = await requireTeacher()
   if (denied) return denied
 
   let body: GenerateRequestBody = {}
@@ -118,6 +119,8 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
       ]
 
       let generatedData: GeneratedQuizResponse | null = null
+      let successfulModel = "gemini-2.0-flash"
+      let tokenUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 }
 
       for (const model of modelsToTry) {
         try {
@@ -144,6 +147,13 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
             const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
             if (rawText) {
               generatedData = JSON.parse(rawText) as GeneratedQuizResponse
+              successfulModel = model
+              const meta = data?.usageMetadata || {}
+              tokenUsage = {
+                prompt_tokens: Number(meta.promptTokenCount) || 0,
+                completion_tokens: Number(meta.candidatesTokenCount) || 0,
+                total_tokens: Number(meta.totalTokenCount) || 0,
+              }
               break
             }
           } else {
@@ -156,7 +166,29 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
       }
 
       if (generatedData) {
-        return NextResponse.json({ quiz: generatedData, source: "gemini_ai" })
+        // Log Gemini usage to database
+        try {
+          const admin = createSupabaseAdminClient()
+          await admin.from("ai_usage_logs").insert({
+            teacher_id: user?.id || null,
+            feature: "quiz_generation",
+            model: successfulModel,
+            prompt_tokens: tokenUsage.prompt_tokens,
+            completion_tokens: tokenUsage.completion_tokens,
+            total_tokens: tokenUsage.total_tokens,
+            status: "success",
+            topic,
+          })
+        } catch (logErr) {
+          console.warn("Failed to log ai_usage to database:", logErr)
+        }
+
+        return NextResponse.json({
+          quiz: generatedData,
+          source: "gemini_ai",
+          model: successfulModel,
+          usage: tokenUsage,
+        })
       }
     } catch (err) {
       console.warn("Gemini AI generation failed, falling back to smart Islamic template generator:", err)
@@ -164,6 +196,22 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
   }
 
   // Fallback intelligent template generator when API key is not configured or fails
+  try {
+    const admin = createSupabaseAdminClient()
+    await admin.from("ai_usage_logs").insert({
+      teacher_id: user?.id || null,
+      feature: "quiz_generation",
+      model: "offline_template",
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+      status: "fallback",
+      topic,
+    })
+  } catch {
+    // Ignore fallback logging error if table doesn't exist
+  }
+
   const fallback = generateFallbackQuiz(topic, category, ageGroup, count)
   return NextResponse.json({
     quiz: fallback,
