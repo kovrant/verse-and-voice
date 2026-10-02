@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs */
 
-import { Search } from "lucide-react"
+import { Check, Clock, Search, Sparkles, Trophy } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
@@ -12,16 +12,22 @@ import { PageLoading } from "@/components/page-loading"
 import { getHijriMonthInfo, getHijriToday } from "@/lib/hijri"
 import { CATEGORIES, CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
+import { useStudent } from "@/lib/use-student"
 import { cn } from "@/lib/utils"
 
-// The listing selects a subset of columns — keep the type honest about that.
+// The listing selects a subset of columns for the shelf view
 type HistoryStory = Pick<
   HistoryRow,
   | "id"
   | "title"
   | "arabic_title"
+  | "subtitle"
   | "summary"
   | "category"
+  | "target_age_group"
+  | "hero_virtue"
+  | "reading_time_mins"
+  | "quiz_id"
   | "hijri_month"
   | "cover_image_url"
   | "file_url"
@@ -29,7 +35,9 @@ type HistoryStory = Pick<
 >
 
 export default function StudentHistoryPage() {
+  const { student } = useStudent()
   const [stories, setStories] = useState<HistoryStory[]>([])
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
@@ -40,7 +48,7 @@ export default function StudentHistoryPage() {
     supabase
       .from("islamic_history")
       .select(
-        "id, title, arabic_title, summary, category, hijri_month, cover_image_url, file_url, file_type",
+        "id, title, arabic_title, subtitle, summary, category, target_age_group, hero_virtue, reading_time_mins, quiz_id, hijri_month, cover_image_url, file_url, file_type",
       )
       .eq("is_published", true)
       .order("sort_order", { ascending: true })
@@ -51,6 +59,20 @@ export default function StudentHistoryPage() {
       })
   }, [])
 
+  // Fetch student completed stories
+  useEffect(() => {
+    if (!student?.id) return
+    supabase
+      .from("student_story_progress")
+      .select("story_id")
+      .eq("student_id", student.id)
+      .then(({ data }) => {
+        if (data) {
+          setCompletedIds(new Set(data.map((r) => r.story_id)))
+        }
+      })
+  }, [student?.id])
+
   const featured = stories.filter((s) => s.hijri_month === hijri.month)
   const monthInfo = getHijriMonthInfo(hijri.month)
 
@@ -58,14 +80,15 @@ export default function StudentHistoryPage() {
     const matchesCat = filterCat === "All" || s.category === filterCat
     const matchesSearch =
       s.title.toLowerCase().includes(search.toLowerCase()) ||
-      (s.summary ?? "").toLowerCase().includes(search.toLowerCase())
+      (s.summary ?? "").toLowerCase().includes(search.toLowerCase()) ||
+      (s.hero_virtue ?? "").toLowerCase().includes(search.toLowerCase())
     return matchesCat && matchesSearch
   })
 
   if (loading) return <PageLoading variant="grid-cards" student count={6} />
 
   return (
-    <div className="mx-auto max-w-5xl animate-fade-in-up pb-6">
+    <div className="mx-auto max-w-5xl animate-fade-in-up pb-8">
       <KidPageHeader
         emoji="🏮"
         color="teal"
@@ -109,7 +132,7 @@ export default function StudentHistoryPage() {
                   {s.cover_image_url ? (
                     <img src={s.cover_image_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    (CATEGORY_ICON[s.category] ?? "📜")
+                    CATEGORY_ICON[s.category] ?? "📜"
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -134,7 +157,7 @@ export default function StudentHistoryPage() {
         <div className="relative">
           <Search className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-muted-foreground" />
           <input
-            placeholder="Look for a story…"
+            placeholder="Look for a story, virtue, or prophet…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-[50px] w-full rounded-full border-[1.5px] border-border bg-card pl-11 pr-4 text-[15px] font-semibold text-foreground shadow-soft outline-none placeholder:font-normal placeholder:text-muted-foreground/70 focus-visible:border-[hsl(var(--kid-teal))] focus-visible:ring-4 focus-visible:ring-[hsl(var(--kid-teal)/0.25)]"
@@ -156,7 +179,7 @@ export default function StudentHistoryPage() {
                     : "border-border bg-card text-muted-foreground hover:text-foreground",
                 )}
               >
-                <span aria-hidden>{c === "All" ? "📚" : (CATEGORY_ICON[c] ?? "📜")}</span>
+                <span aria-hidden>{c === "All" ? "📚" : CATEGORY_ICON[c] ?? "📜"}</span>
                 {c}
               </button>
             )
@@ -178,7 +201,7 @@ export default function StudentHistoryPage() {
       ) : (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((s) => (
-            <StoryBookCard key={s.id} story={s} />
+            <StoryBookCard key={s.id} story={s} isCompleted={completedIds.has(s.id)} />
           ))}
         </div>
       )}
@@ -188,10 +211,15 @@ export default function StudentHistoryPage() {
 
 /**
  * One story as a book on the shelf: cover on top, title + a peek of the story
- * underneath, in a teal-bordered card. A Link, so it can't be a `KidCard`
- * (that renders a div) — it copies KidCard's shape instead.
+ * underneath, in a teal-bordered card.
  */
-function StoryBookCard({ story }: { story: HistoryStory }) {
+function StoryBookCard({
+  story,
+  isCompleted = false,
+}: {
+  story: HistoryStory
+  isCompleted?: boolean
+}) {
   const monthTag = getHijriMonthInfo(story.hijri_month)
 
   return (
@@ -212,11 +240,21 @@ function StoryBookCard({ story }: { story: HistoryStory }) {
             {CATEGORY_ICON[story.category] ?? "📜"}
           </span>
         )}
-        {monthTag && (
-          <span className="absolute right-3 top-3 rounded-full bg-[hsl(var(--kid-saffron)/0.92)] px-2.5 py-1 text-[11.5px] font-extrabold text-[hsl(125_12%_16%)] shadow-soft">
-            {monthTag.name}
-          </span>
-        )}
+
+        {/* Badges on Cover */}
+        <div className="absolute right-3 top-3 flex flex-col items-end gap-1.5">
+          {monthTag && (
+            <span className="rounded-full bg-[hsl(var(--kid-saffron)/0.92)] px-2.5 py-1 text-[11px] font-extrabold text-[hsl(125_12%_16%)] shadow-soft">
+              {monthTag.name}
+            </span>
+          )}
+          {isCompleted && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/95 px-2.5 py-1 text-[11px] font-extrabold text-white shadow-soft">
+              <Check className="h-3 w-3 stroke-[3]" />
+              Read
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Spine line between cover and page */}
@@ -240,14 +278,44 @@ function StoryBookCard({ story }: { story: HistoryStory }) {
           )}
         </div>
 
+        {story.subtitle && (
+          <p className="mt-1 text-[12.5px] font-medium leading-tight text-muted-foreground line-clamp-1">
+            {story.subtitle}
+          </p>
+        )}
+
         {story.summary && (
           <p className="mt-1.5 line-clamp-2 flex-1 text-[13.5px] font-semibold leading-relaxed text-foreground/75">
             {story.summary}
           </p>
         )}
 
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-card/80 px-2.5 py-1 text-[12px] font-bold text-foreground">
+        {/* Story Features Strip */}
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {story.hero_virtue && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(var(--kid-teal)/0.2)] px-2.5 py-0.5 text-[11px] font-bold text-foreground/90">
+              <Sparkles className="h-3 w-3 text-amber-500" />
+              {story.hero_virtue}
+            </span>
+          )}
+
+          {story.reading_time_mins && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+              <Clock className="h-3 w-3" />
+              {story.reading_time_mins}m
+            </span>
+          )}
+
+          {story.quiz_id && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+              <Trophy className="h-3 w-3" />
+              Quest
+            </span>
+          )}
+        </div>
+
+        <div className="mt-3 flex items-center justify-between gap-2 border-t border-[hsl(var(--kid-teal)/0.2)] pt-2.5">
+          <span className="inline-flex items-center gap-1.5 text-[12px] font-bold text-foreground">
             <span aria-hidden>{CATEGORY_ICON[story.category] ?? "📜"}</span>
             {story.category}
           </span>

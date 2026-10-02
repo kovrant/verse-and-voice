@@ -55,6 +55,7 @@ Execute the SQL files strictly in this order:
 26. `migration_namaz_translation.sql` — Adds `namaz_step_parts.translation` and seeds English meanings. Run **after** `migration_namaz_arabic.sql`. Idempotent; never overwrites a teacher's edit. **Apply before deploying the code that selects the column.**
 27. `migration_security_hardening.sql` — 6-Vector AppSec hardening: revokes `PUBLIC`/`anon` execute on `SECURITY DEFINER` helpers, enforces `login_disabled` inside `is_teacher()` and `my_student_id()`, removes student `FOR ALL` write access on `student_hadith_progress`, adds column-immutability `BEFORE UPDATE` triggers on `student_namaz_steps` and `notifications`, restricts student `SELECT` on `quizzes` and `quiz_questions` to `is_published = true`, and enforces a raster/PDF MIME whitelist (`allowed_mime_types`) and 50 MB `file_size_limit` on storage buckets. Idempotent.
 28. `migration_ai_usage_logs.sql` — AI usage logging table (`ai_usage_logs`), token telemetry, indexes, and RLS policies for tracking Google Gemini API requests, prompt/completion tokens, and daily quota consumption. Idempotent.
+29. `migration_islamic_history_v2.sql` — Islamic History V2 schema extensions (`topic_slug`, `quran_gem`, `life_lessons`, `quiz_id`, `hero_virtue`) and `student_story_progress` reading completion ledger. Idempotent.
 
 ---
 

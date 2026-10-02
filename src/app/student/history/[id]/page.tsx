@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs */
 
-import { ArrowLeft, Download, FileText } from "lucide-react"
+import { ArrowLeft, Clock, Download, FileText, Sparkles, Target } from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -10,20 +10,31 @@ import { ArabicText } from "@/components/arabic-text"
 import { KidButton, KidCard, KidEmpty } from "@/components/kid-ui"
 import { Markdown } from "@/components/markdown"
 import { PageLoading } from "@/components/page-loading"
+import { QuranGemBox } from "@/components/quran-gem-box"
+import { StoryMoralCompass } from "@/components/story-moral-compass"
+import { StoryReflectionPledge } from "@/components/story-reflection-pledge"
 import { logActivity } from "@/lib/activity-log"
 import { getHijriMonthInfo } from "@/lib/hijri"
 import { CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
 
-// The reader selects a subset of columns — keep the type honest about that.
+// The reader selects the complete storybook record
 type HistoryStory = Pick<
   HistoryRow,
   | "id"
   | "title"
   | "arabic_title"
+  | "subtitle"
   | "summary"
   | "content"
   | "category"
+  | "target_age_group"
+  | "hero_virtue"
+  | "reading_time_mins"
+  | "quran_gem"
+  | "life_lessons"
+  | "reflection_challenge"
+  | "quiz_id"
   | "hijri_month"
   | "cover_image_url"
   | "file_url"
@@ -45,7 +56,7 @@ export default function StudentHistoryReaderPage() {
     supabase
       .from("islamic_history")
       .select(
-        "id, title, arabic_title, summary, content, category, hijri_month, cover_image_url, file_url, file_type",
+        "id, title, arabic_title, subtitle, summary, content, category, target_age_group, hero_virtue, reading_time_mins, quran_gem, life_lessons, reflection_challenge, quiz_id, hijri_month, cover_image_url, file_url, file_type",
       )
       .eq("id", id)
       .eq("is_published", true)
@@ -90,7 +101,7 @@ export default function StudentHistoryReaderPage() {
   const isPdf = story.file_type === "pdf" || story.file_url?.toLowerCase().endsWith(".pdf")
 
   return (
-    <article className="mx-auto max-w-3xl animate-fade-in-up pb-6">
+    <article className="mx-auto max-w-3xl animate-fade-in-up pb-10">
       {/* Back to the shelf */}
       <button
         type="button"
@@ -101,7 +112,7 @@ export default function StudentHistoryReaderPage() {
         All stories
       </button>
 
-      {/* Cover */}
+      {/* Cover Banner */}
       {story.cover_image_url ? (
         <div className="mb-6 aspect-[16/9] w-full overflow-hidden rounded-[26px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.25)] shadow-soft">
           <img src={story.cover_image_url} alt="" className="h-full w-full object-cover" />
@@ -112,22 +123,44 @@ export default function StudentHistoryReaderPage() {
         </div>
       )}
 
-      {/* Tags */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
+      {/* Quick metadata tags */}
+      <div className="mb-3.5 flex flex-wrap items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card px-3 py-1 text-[12.5px] font-bold text-foreground">
           <span aria-hidden>{CATEGORY_ICON[story.category] ?? "📜"}</span>
           {story.category}
         </span>
+
         {monthTag && (
           <span className="rounded-full bg-[hsl(var(--kid-saffron)/0.45)] px-3 py-1 text-[12.5px] font-extrabold text-foreground">
             🌙 {monthTag.name}
           </span>
         )}
+
+        {story.reading_time_mins && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-card/80 px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+            <Clock className="h-3.5 w-3.5" />
+            {story.reading_time_mins} min read
+          </span>
+        )}
+
+        {story.target_age_group && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-border/80 bg-card/80 px-2.5 py-1 text-[12px] font-semibold text-muted-foreground">
+            <Target className="h-3.5 w-3.5" />
+            Ages {story.target_age_group}
+          </span>
+        )}
+
+        {story.hero_virtue && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[12px] font-bold text-emerald-600 dark:text-emerald-400">
+            <Sparkles className="h-3.5 w-3.5" />
+            {story.hero_virtue}
+          </span>
+        )}
       </div>
 
-      {/* Title */}
-      <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h1 className="font-heading text-[clamp(28px,6vw,40px)] font-bold leading-tight tracking-tight text-primary">
+      {/* Title & Arabic Title */}
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <h1 className="font-heading text-[clamp(26px,5.5vw,38px)] font-bold leading-tight tracking-tight text-primary">
           {story.title}
         </h1>
         {story.arabic_title && (
@@ -135,24 +168,36 @@ export default function StudentHistoryReaderPage() {
         )}
       </div>
 
-      {/* Summary — the "once upon a time" line */}
+      {/* Subtitle */}
+      {story.subtitle && (
+        <p className="mb-5 text-[16px] sm:text-[17.5px] font-medium leading-relaxed text-muted-foreground">
+          {story.subtitle}
+        </p>
+      )}
+
+      {/* 1. 🌟 The Wonder Opening (Hook) */}
       {story.summary && (
-        <div className="mb-6 flex items-start gap-3 rounded-[20px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.18)] p-4">
-          <span aria-hidden className="text-[22px] leading-none">
-            🏮
+        <div className="mb-6 flex items-start gap-3.5 rounded-[22px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.18)] p-4 sm:p-5 shadow-soft">
+          <span aria-hidden className="text-[24px] leading-none">
+            🌟
           </span>
-          <p className="text-[16px] font-semibold leading-relaxed text-foreground/85">
-            {story.summary}
-          </p>
+          <div className="space-y-0.5">
+            <span className="block text-[12px] font-black uppercase tracking-wider text-[hsl(var(--kid-teal))]">
+              The Wonder Opening
+            </span>
+            <p className="text-[15.5px] sm:text-[16.5px] font-semibold leading-relaxed text-foreground/90">
+              {story.summary}
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Body — a page of the storybook */}
+      {/* 2. 📖 The Adventure (Body Scenes) */}
       {story.content ? (
-        <KidCard className="px-5 py-5 sm:px-7 sm:py-6">
+        <KidCard className="px-5 py-5 sm:px-7 sm:py-6 shadow-soft">
           <Markdown
             content={story.content}
-            className="text-[17px] text-foreground/90 sm:text-[18px] [&_li]:leading-[1.8] [&_p]:my-4 [&_p]:leading-[1.85]"
+            className="text-[17px] text-foreground/90 sm:text-[18px] [&_h3]:font-heading [&_h3]:text-[20px] [&_h3]:font-bold [&_h3]:text-primary [&_h3]:mt-6 [&_h3]:mb-3 [&_li]:leading-[1.8] [&_p]:my-4 [&_p]:leading-[1.85]"
           />
         </KidCard>
       ) : (
@@ -165,7 +210,23 @@ export default function StudentHistoryReaderPage() {
         )
       )}
 
-      {/* Attachment */}
+      {/* 3. 💎 The Quranic Gem Card */}
+      {story.quran_gem && <QuranGemBox gem={story.quran_gem} />}
+
+      {/* 4. 🧭 The Moral Compass (3 Life Lessons) */}
+      {story.life_lessons && story.life_lessons.length > 0 && (
+        <StoryMoralCompass lessons={story.life_lessons} virtue={story.hero_virtue} />
+      )}
+
+      {/* 5. 🎯 The Explorer Challenge & Quest */}
+      <StoryReflectionPledge
+        storyId={story.id}
+        storyTitle={story.title}
+        challenge={story.reflection_challenge}
+        quizId={story.quiz_id}
+      />
+
+      {/* Attachment / PDF if any */}
       {story.file_url && (
         <div className="mt-8">
           {isPdf ? (
