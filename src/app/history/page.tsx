@@ -695,9 +695,16 @@ export default function HistoryAdminPage() {
                     {story.is_published ? "Published" : "Draft"}
                   </Badge>
                   {story.quiz_id && (
-                    <Badge variant="outline" className="text-[10px] py-0 bg-card/90 text-amber-600">
-                      <Trophy className="h-3 w-3 mr-1" /> Quiz
-                    </Badge>
+                    <Link
+                      href={`/quizzes/${story.quiz_id}`}
+                      target="_blank"
+                      className="inline-flex items-center"
+                      title="View linked quiz"
+                    >
+                      <Badge variant="outline" className="text-[10px] py-0 bg-card/90 text-amber-600 hover:border-amber-500/60 cursor-pointer">
+                        <Trophy className="h-3 w-3 mr-1" /> Quiz
+                      </Badge>
+                    </Link>
                   )}
                 </div>
 
@@ -1301,11 +1308,11 @@ export default function HistoryAdminPage() {
                   </div>
                 </div>
                 <Link
-                  href="/quizzes"
+                  href={`/quizzes/${form.quiz_id}`}
                   target="_blank"
                   className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:underline"
                 >
-                  Open Quiz Studio <ExternalLink className="h-3 w-3" />
+                  View Linked Quiz <ExternalLink className="h-3 w-3" />
                 </Link>
               </div>
             )}

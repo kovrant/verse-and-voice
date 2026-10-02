@@ -60,9 +60,32 @@ export default function StudentQuizPlayerPage() {
       ])
 
       if (!assignRes.data) {
-        setIsNotAssigned(true)
-        setLoading(false)
-        return
+        // If not assigned yet, but the quiz exists and is published, auto-assign it on the fly!
+        if (quizRes.data && (quizRes.data as Quiz).is_published !== false) {
+          try {
+            const autoRes = await fetch("/api/quizzes/auto-assign", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                quiz_id: quizId,
+                student_id: student.id,
+              }),
+            })
+            if (!autoRes.ok) {
+              setIsNotAssigned(true)
+              setLoading(false)
+              return
+            }
+          } catch {
+            setIsNotAssigned(true)
+            setLoading(false)
+            return
+          }
+        } else {
+          setIsNotAssigned(true)
+          setLoading(false)
+          return
+        }
       }
 
       if (quizRes.data) {

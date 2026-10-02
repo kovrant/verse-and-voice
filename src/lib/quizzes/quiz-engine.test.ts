@@ -85,4 +85,15 @@ describe("gradeQuizAttempt", () => {
     expect(result.percentage).toBe(0)
     expect(result.passed).toBe(false)
   })
+
+  it("determines passing status correctly based on custom passing_score", () => {
+    const answers = {
+      q1: "o2", // correct (1/3 = 33%)
+    }
+    const resultPassingLow = gradeQuizAttempt(sampleQuestions, answers, 30)
+    expect(resultPassingLow.passed).toBe(true)
+
+    const resultPassingHigh = gradeQuizAttempt(sampleQuestions, answers, 50)
+    expect(resultPassingHigh.passed).toBe(false)
+  })
 })

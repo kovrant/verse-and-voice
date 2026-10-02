@@ -4,6 +4,7 @@ import {
   Award,
   CheckCircle2,
   ChevronRight,
+  Eye,
   GraduationCap,
   HelpCircle,
   Loader2,
@@ -15,6 +16,7 @@ import {
   Users,
   XCircle,
 } from "lucide-react"
+import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { GeminiQuotaCard } from "@/components/gemini-quota-card"
@@ -630,7 +632,14 @@ export default function TeacherQuizzesPage() {
                       {ageLabel}
                     </Badge>
                   </div>
-                  <CardTitle className="text-base font-bold line-clamp-1">{quiz.title}</CardTitle>
+                  <CardTitle className="text-base font-bold line-clamp-1">
+                    <Link
+                      href={`/quizzes/${quiz.id}`}
+                      className="hover:text-primary transition-colors hover:underline"
+                    >
+                      {quiz.title}
+                    </Link>
+                  </CardTitle>
                   <p className="text-xs text-muted-foreground line-clamp-2 min-h-[32px]">
                     {quiz.description || "No description provided."}
                   </p>
@@ -667,23 +676,35 @@ export default function TeacherQuizzesPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 pt-1">
+                  <div className="flex items-center gap-1.5 pt-1">
+                    <Button
+                      asChild
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 text-xs gap-1 h-8 font-semibold hover:border-amber-500/50 hover:bg-amber-500/10"
+                    >
+                      <Link href={`/quizzes/${quiz.id}`}>
+                        <Eye className="h-3.5 w-3.5 text-amber-600" />
+                        View
+                      </Link>
+                    </Button>
                     <Button
                       size="sm"
                       onClick={() => handleOpenAssign(quiz)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1.5 h-8"
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1 h-8"
                     >
                       <Users className="h-3.5 w-3.5" />
                       Assign
                     </Button>
                     <Button
                       size="sm"
-                      variant="outline"
+                      variant="ghost"
                       onClick={() => handleOpenResults(quiz)}
-                      className="flex-1 text-xs gap-1.5 h-8"
+                      className="h-8 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                      title={`Results (${quizAttempts.length})`}
                     >
                       <GraduationCap className="h-3.5 w-3.5" />
-                      Results ({quizAttempts.length})
+                      {quizAttempts.length}
                     </Button>
                     <Button
                       size="sm"

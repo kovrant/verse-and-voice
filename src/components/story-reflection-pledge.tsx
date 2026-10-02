@@ -1,9 +1,11 @@
 "use client"
 
-import { Check, Sparkles, Trophy } from "lucide-react"
+import { Check, Loader2, Sparkles, Trophy } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
+import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 
 interface StoryReflectionPledgeProps {
@@ -29,10 +31,15 @@ export function StoryReflectionPledge({
   quizId,
   className = "",
 }: StoryReflectionPledgeProps) {
+  const router = useRouter()
   const { student } = useStudent()
   const [completed, setCompleted] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Track if this quiz is already assigned to the student (or taken)
+  const [isQuizAssigned, setIsQuizAssigned] = useState(false)
+  const [assigningQuiz, setAssigningQuiz] = useState(false)
 
   // Check if student has already completed this story
   useEffect(() => {
@@ -42,6 +49,37 @@ export function StoryReflectionPledge({
       setCompleted(true)
     }
   }, [student?.id, storyId])
+
+  // Check if student already has this quiz assigned or completed
+  useEffect(() => {
+    const studentId = student?.id
+    if (!studentId || !quizId) return
+
+    // Quick local storage check
+    const localKey = `story_quiz_assigned_${studentId}_${quizId}`
+    if (localStorage.getItem(localKey)) {
+      setIsQuizAssigned(true)
+    }
+
+    // Database lookup
+    async function checkAssigned() {
+      try {
+        const { data } = await supabase
+          .from("quiz_assignments")
+          .select("id, status")
+          .eq("quiz_id", quizId)
+          .eq("student_id", studentId)
+          .maybeSingle()
+        if (data) {
+          setIsQuizAssigned(true)
+          localStorage.setItem(localKey, "true")
+        }
+      } catch (err) {
+        console.warn("Could not check quiz assignment status:", err)
+      }
+    }
+    void checkAssigned()
+  }, [student?.id, quizId])
 
   async function handleComplete() {
     if (completed || saving) return
@@ -70,6 +108,47 @@ export function StoryReflectionPledge({
       setShowConfetti(false)
     }, 4000)
     setSaving(false)
+  }
+
+  async function handleTakeQuest() {
+    if (!quizId || assigningQuiz) return
+
+    if (!student?.id) {
+      // Non-student (e.g. preview)
+      router.push(`/quizzes/${quizId}`)
+      return
+    }
+
+    setAssigningQuiz(true)
+    try {
+      const res = await fetch("/api/quizzes/auto-assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quiz_id: quizId,
+          student_id: student.id,
+        }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to auto-assign quiz")
+      }
+
+      // Mark assigned so the button immediately disappears for this student
+      setIsQuizAssigned(true)
+      localStorage.setItem(`story_quiz_assigned_${student.id}_${quizId}`, "true")
+
+      const assignQuery = data.assignment_id ? `?assignment=${data.assignment_id}` : ""
+      router.push(`/student/quizzes/${quizId}${assignQuery}`)
+    } catch (err) {
+      console.error("Failed to auto-assign quiz:", err)
+      // Navigate anyway as fallback
+      setIsQuizAssigned(true)
+      router.push(`/student/quizzes/${quizId}`)
+    } finally {
+      setAssigningQuiz(false)
+    }
   }
 
   return (
@@ -147,15 +226,43 @@ export function StoryReflectionPledge({
           </button>
         )}
 
-        {/* Quest Link */}
+        {/* Quest Link / Button */}
         {quizId && (
-          <Link
-            href={`/student/quizzes/${quizId}`}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-[14.5px] font-black text-white shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-hover active:scale-[0.98]"
-          >
-            <Trophy className="h-4 w-4 text-amber-100" />
-            Take Story Quest 🏆 →
-          </Link>
+          <>
+            {student?.id ? (
+              // Student View: If already assigned to this student, the button disappears!
+              !isQuizAssigned && (
+                <button
+                  type="button"
+                  onClick={handleTakeQuest}
+                  disabled={assigningQuiz}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-[14.5px] font-black text-white shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-hover active:scale-[0.98] disabled:opacity-75"
+                >
+                  {assigningQuiz ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin text-amber-100" />
+                      Starting Quest...
+                    </>
+                  ) : (
+                    <>
+                      <Trophy className="h-4 w-4 text-amber-100" />
+                      Take Story Quest 🏆 →
+                    </>
+                  )}
+                </button>
+              )
+            ) : (
+              // Teacher / Classroom View: Link to Teacher Quiz View
+              <Link
+                href={`/quizzes/${quizId}`}
+                target="_blank"
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-[14.5px] font-black text-white shadow-soft hover:brightness-105"
+              >
+                <Trophy className="h-4 w-4 text-amber-100" />
+                View Story Quest 🏆 →
+              </Link>
+            )}
+          </>
         )}
       </div>
     </div>
