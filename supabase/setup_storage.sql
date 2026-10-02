@@ -31,3 +31,31 @@ USING (bucket_id = 'media');
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('memorization-images', 'memorization-images', true)
 ON CONFLICT DO NOTHING;
+
+-- Islamic history attachments bucket (with covers/ and documents/ subfolders)
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('history-attachments', 'history-attachments', true, 20971520)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 20971520;
+
+DROP POLICY IF EXISTS "Public read history-attachments" ON storage.objects;
+CREATE POLICY "Public read history-attachments"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'history-attachments');
+
+DROP POLICY IF EXISTS "Allow upload history-attachments" ON storage.objects;
+CREATE POLICY "Allow upload history-attachments"
+ON storage.objects FOR INSERT
+WITH CHECK (bucket_id = 'history-attachments');
+
+DROP POLICY IF EXISTS "Allow update history-attachments" ON storage.objects;
+CREATE POLICY "Allow update history-attachments"
+ON storage.objects FOR UPDATE
+USING (bucket_id = 'history-attachments');
+
+DROP POLICY IF EXISTS "Allow delete history-attachments" ON storage.objects;
+CREATE POLICY "Allow delete history-attachments"
+ON storage.objects FOR DELETE
+USING (bucket_id = 'history-attachments');
+

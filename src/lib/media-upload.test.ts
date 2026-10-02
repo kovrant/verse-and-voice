@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest"
 
 import {
+  calculateFitDimensions,
+  downscaleImageFile,
   extractParaNumber,
   fileTypeOf,
+  formatFileSize,
   isBulkMediaFile,
   safeUploadExtension,
   storagePathFromPublicUrl,
@@ -60,3 +63,44 @@ describe("fileTypeOf / isBulkMediaFile / safeUploadExtension", () => {
     expect(safeUploadExtension("exploit.html", "pdf")).toBe("pdf")
   })
 })
+
+describe("formatFileSize", () => {
+  it("formats bytes, kilobytes, and megabytes cleanly", () => {
+    expect(formatFileSize(0)).toBe("0 B")
+    expect(formatFileSize(512)).toBe("512 B")
+    expect(formatFileSize(1024)).toBe("1.0 KB")
+    expect(formatFileSize(153600)).toBe("150.0 KB")
+    expect(formatFileSize(6291456)).toBe("6.0 MB")
+  })
+})
+
+describe("calculateFitDimensions", () => {
+  it("downscales 4K 16:9 images down to 1280x720 keeping aspect ratio", () => {
+    const dims = calculateFitDimensions(3840, 2160, 1280, 720)
+    expect(dims).toEqual({ width: 1280, height: 720 })
+  })
+
+  it("downscales square images to fit inside bounding box", () => {
+    const dims = calculateFitDimensions(2000, 2000, 1280, 720)
+    expect(dims).toEqual({ width: 720, height: 720 })
+  })
+
+  it("does not upscale images that are already smaller than target bounds", () => {
+    const dims = calculateFitDimensions(800, 450, 1280, 720)
+    expect(dims).toEqual({ width: 800, height: 450 })
+  })
+
+  it("handles non-positive dimensions gracefully", () => {
+    expect(calculateFitDimensions(0, 0, 1280, 720)).toEqual({ width: 1280, height: 720 })
+  })
+})
+
+describe("downscaleImageFile", () => {
+  it("returns original file safely in non-browser/SSR environments", async () => {
+    const fakeFile = new File(["dummy content"], "doc.pdf", { type: "application/pdf" })
+    const res = await downscaleImageFile(fakeFile)
+    expect(res.file).toBe(fakeFile)
+    expect(res.originalSize).toBe(fakeFile.size)
+  })
+})
+

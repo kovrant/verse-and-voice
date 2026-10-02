@@ -57,7 +57,12 @@ import {
   normalizeTopicSlug,
   type QuranGem,
 } from "@/lib/history"
-import { safeUploadExtension } from "@/lib/media-upload"
+import {
+  downscaleImageFile,
+  type DownscaleImageResult,
+  formatFileSize,
+  safeUploadExtension,
+} from "@/lib/media-upload"
 import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
@@ -129,6 +134,8 @@ export default function HistoryAdminPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
   const [existingCover, setExistingCover] = useState<string | null>(null)
+  const [coverOptimization, setCoverOptimization] = useState<DownscaleImageResult | null>(null)
+  const [optimizingImage, setOptimizingImage] = useState(false)
   const [attachFile, setAttachFile] = useState<File | null>(null)
   const [existingAttach, setExistingAttach] = useState<{ url: string; type: string } | null>(null)
   const coverInputRef = useRef<HTMLInputElement>(null)
@@ -167,21 +174,114 @@ export default function HistoryAdminPage() {
     setLoading(false)
   }
 
-  async function uploadFile(file: File): Promise<string | null> {
-    const ext = safeUploadExtension(file.name, file.type.startsWith("image/") ? "png" : "pdf")
-    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
-    const { error } = await supabase.storage.from("history-attachments").upload(path, file, {
-      cacheControl: CACHE_FOREVER,
-      upsert: false,
-    })
-    if (error) {
-      toast.error(`Upload error: ${error.message}`)
-      return null
+  async function handleCoverSelect(file: File) {
+    if (!file) return
+    setOptimizingImage(true)
+    try {
+      if (file.type.startsWith("image/")) {
+        const result = await downscaleImageFile(file, {
+          maxWidth: 1280,
+          maxHeight: 720,
+          quality: 0.82,
+          targetMimeType: "image/webp",
+        })
+        setCoverFile(result.file)
+        setCoverOptimization(result)
+        if (result.savingsPercent > 0) {
+          toast.success(
+            `Cover optimized: ${formatFileSize(result.originalSize)} ➜ ${formatFileSize(result.optimizedSize)} (${result.savingsPercent}% saved, ${result.width}×${result.height})`,
+          )
+        }
+      } else {
+        setCoverFile(file)
+        setCoverOptimization(null)
+      }
+    } catch (err) {
+      console.error("Image downscaling failed:", err)
+      setCoverFile(file)
+      setCoverOptimization(null)
+    } finally {
+      setOptimizingImage(false)
     }
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from("history-attachments").getPublicUrl(path)
-    return publicUrl
+  }
+
+  async function uploadFile(
+    file: File,
+    folder: "covers" | "documents" = "covers",
+  ): Promise<string | null> {
+    let fileToUpload = file
+    if (folder === "covers" && file.type.startsWith("image/") && !coverOptimization) {
+      try {
+        const res = await downscaleImageFile(file, {
+          maxWidth: 1280,
+          maxHeight: 720,
+          quality: 0.82,
+          targetMimeType: "image/webp",
+        })
+        fileToUpload = res.file
+      } catch {
+        // Fallback to original file
+      }
+    }
+
+    // 1. Preferred: Call dedicated server upload route (bypasses RLS, creates bucket, handles folders)
+    try {
+      const fd = new FormData()
+      fd.append("file", fileToUpload)
+      fd.append("folder", folder)
+      const res = await fetch("/api/history/upload", {
+        method: "POST",
+        body: fd,
+      })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.url) return data.url
+      } else {
+        const err = await res.json().catch(() => null)
+        console.warn("Server upload warning, attempting client fallback:", err)
+      }
+    } catch (apiErr) {
+      console.warn("Server upload route call error, falling back to direct client upload:", apiErr)
+    }
+
+    // 2. Direct client fallback with organized folder prefix
+    const fallbackExt = fileToUpload.type.startsWith("image/") ? "webp" : "pdf"
+    const ext = safeUploadExtension(fileToUpload.name, fallbackExt)
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+
+    // 2a. Try primary bucket
+    const { error: primaryErr } = await supabase.storage
+      .from("history-attachments")
+      .upload(path, fileToUpload, {
+        cacheControl: CACHE_FOREVER,
+        upsert: false,
+      })
+
+    if (!primaryErr) {
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("history-attachments").getPublicUrl(path)
+      return publicUrl
+    }
+
+    // 2b. Fallback to media bucket
+    const mediaPath = `history/${path}`
+    const { error: mediaErr } = await supabase.storage
+      .from("media")
+      .upload(mediaPath, fileToUpload, {
+        cacheControl: CACHE_FOREVER,
+        upsert: false,
+      })
+
+    if (!mediaErr) {
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("media").getPublicUrl(mediaPath)
+      return publicUrl
+    }
+
+    toast.error(`Upload error: ${primaryErr.message || mediaErr?.message}`)
+    return null
   }
 
   function fileTypeFor(file: File): string {
@@ -196,6 +296,7 @@ export default function HistoryAdminPage() {
     setForm(EMPTY_FORM)
     setCoverFile(null)
     setExistingCover(null)
+    setCoverOptimization(null)
     setAttachFile(null)
     setExistingAttach(null)
     setEditorOpen(true)
@@ -223,6 +324,7 @@ export default function HistoryAdminPage() {
     })
     setCoverFile(null)
     setExistingCover(story.cover_image_url)
+    setCoverOptimization(null)
     setAttachFile(null)
     setExistingAttach(
       story.file_url ? { url: story.file_url, type: story.file_type ?? "doc" } : null,
@@ -256,7 +358,7 @@ export default function HistoryAdminPage() {
     // Upload files if new ones were picked.
     let coverUrl = existingCover
     if (coverFile) {
-      const url = await uploadFile(coverFile)
+      const url = await uploadFile(coverFile, "covers")
       if (!url) {
         toast.error("Cover image upload failed.")
         setSaving(false)
@@ -268,7 +370,7 @@ export default function HistoryAdminPage() {
     let attachUrl = existingAttach?.url ?? null
     let attachType = existingAttach?.type ?? null
     if (attachFile) {
-      const url = await uploadFile(attachFile)
+      const url = await uploadFile(attachFile, "documents")
       if (!url) {
         toast.error("Attachment upload failed.")
         setSaving(false)
@@ -1179,53 +1281,94 @@ export default function HistoryAdminPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               {/* Cover */}
               <div className="space-y-1.5">
-                <Label>Cover Image (optional)</Label>
+                <div className="flex items-center justify-between">
+                  <Label>Cover Image (optional)</Label>
+                  <span className="text-[10px] text-muted-foreground">
+                    Auto-optimized to 16:9 WebP
+                  </span>
+                </div>
                 <input
                   ref={coverInputRef}
                   type="file"
                   accept="image/*"
                   className="hidden"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const f = e.target.files?.[0]
-                    if (f) setCoverFile(f)
+                    if (f) await handleCoverSelect(f)
+                    e.target.value = ""
                   }}
                 />
                 {coverPreview || existingCover ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-secondary/30 p-2">
-                    <img
-                      src={coverPreview ?? existingCover ?? ""}
-                      alt="Cover"
-                      className="h-12 w-16 rounded-lg object-cover"
-                    />
-                    <div className="flex-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => coverInputRef.current?.click()}
-                      className="h-7 text-xs"
-                    >
-                      Change
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7"
-                      onClick={() => {
-                        setCoverFile(null)
-                        setExistingCover(null)
-                      }}
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
+                  <div className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 space-y-2">
+                    <div className="flex items-center gap-2.5">
+                      <img
+                        src={coverPreview ?? existingCover ?? ""}
+                        alt="Cover"
+                        className="h-14 w-20 rounded-lg object-cover border border-border/50 shadow-xs shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-foreground truncate">
+                          {coverFile ? coverFile.name : "Cover Image"}
+                        </p>
+                        {optimizingImage ? (
+                          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium animate-pulse">
+                            ⚡ Downscaling resolution for web...
+                          </p>
+                        ) : coverOptimization && coverOptimization.savingsPercent > 0 ? (
+                          <div className="space-y-0.5 mt-0.5">
+                            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                              <span>⚡ {coverOptimization.width}×{coverOptimization.height} WebP</span>
+                              <span>·</span>
+                              <span>{formatFileSize(coverOptimization.optimizedSize)}</span>
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              Saved {coverOptimization.savingsPercent}% (down from {formatFileSize(coverOptimization.originalSize)})
+                            </p>
+                          </div>
+                        ) : coverFile ? (
+                          <p className="text-[11px] text-muted-foreground">
+                            {formatFileSize(coverFile.size)}
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-muted-foreground">Current cover image</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={optimizingImage}
+                          onClick={() => coverInputRef.current?.click()}
+                          className="h-7 text-xs px-2"
+                        >
+                          Change
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={optimizingImage}
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => {
+                            setCoverFile(null)
+                            setExistingCover(null)
+                            setCoverOptimization(null)
+                          }}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   <Button
                     variant="outline"
+                    type="button"
+                    disabled={optimizingImage}
                     onClick={() => coverInputRef.current?.click()}
-                    className="w-full gap-1.5"
+                    className="w-full gap-1.5 border-dashed"
                   >
                     <ImagePlus className="h-4 w-4" />
-                    Add cover
+                    {optimizingImage ? "Optimizing resolution..." : "Add cover (Canva Dream Lab 16:9)"}
                   </Button>
                 )}
               </div>

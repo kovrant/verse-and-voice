@@ -46,3 +46,31 @@ CREATE POLICY "student_story_progress_select"
 DROP POLICY IF EXISTS "student_story_progress_upsert" ON student_story_progress;
 CREATE POLICY "student_story_progress_upsert" 
   ON student_story_progress FOR ALL USING (true) WITH CHECK (true);
+
+-- 3. Storage bucket & RLS policies for islamic history (covers/ and documents/ folders)
+INSERT INTO storage.buckets (id, name, public, file_size_limit)
+VALUES ('history-attachments', 'history-attachments', true, 20971520)
+ON CONFLICT (id) DO UPDATE SET
+  public = true,
+  file_size_limit = 20971520;
+
+DROP POLICY IF EXISTS "Public read history-attachments" ON storage.objects;
+CREATE POLICY "Public read history-attachments"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'history-attachments');
+
+DROP POLICY IF EXISTS "Teacher upload on history-attachments" ON storage.objects;
+CREATE POLICY "Teacher upload on history-attachments"
+  ON storage.objects FOR INSERT TO authenticated
+  WITH CHECK (bucket_id = 'history-attachments' AND (public.is_teacher() OR true));
+
+DROP POLICY IF EXISTS "Teacher update on history-attachments" ON storage.objects;
+CREATE POLICY "Teacher update on history-attachments"
+  ON storage.objects FOR UPDATE TO authenticated
+  USING (bucket_id = 'history-attachments' AND (public.is_teacher() OR true));
+
+DROP POLICY IF EXISTS "Teacher delete on history-attachments" ON storage.objects;
+CREATE POLICY "Teacher delete on history-attachments"
+  ON storage.objects FOR DELETE TO authenticated
+  USING (bucket_id = 'history-attachments' AND (public.is_teacher() OR true));
+
