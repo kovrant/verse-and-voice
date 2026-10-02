@@ -75,7 +75,7 @@ export function StudentFeeReminderBanner({
     <div
       role="region"
       aria-label="Monthly Tuition Reminder for Parents"
-      className="animate-banner-glow relative mb-5 rounded-2xl border-2 border-amber-400/90 bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-orange-400/10 dark:from-amber-950/45 dark:via-amber-900/25 dark:to-orange-950/20 p-4 sm:p-5 shadow-lg animate-fade-in"
+      className="animate-banner-glow relative mb-5 rounded-2xl border-2 border-amber-400/90 bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-orange-400/10 dark:from-amber-950/45 dark:via-amber-900/25 dark:to-orange-950/20 p-4 sm:p-4.5 shadow-md animate-fade-in"
     >
       {/* Cross dismiss button */}
       <button
@@ -88,11 +88,11 @@ export function StudentFeeReminderBanner({
         <X className="h-4 w-4" />
       </button>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3.5">
         {/* Left side: Animated Bell Icon + Content */}
-        <div className="flex items-start gap-3.5 min-w-0 pr-6 sm:pr-0">
-          {/* Animated Bell with Alert Dot */}
-          <div className="relative shrink-0 mt-0.5">
+        <div className="flex items-start sm:items-center gap-3.5 min-w-0 pr-6 sm:pr-0">
+          {/* Animated Bell Squircle */}
+          <div className="relative shrink-0">
             <span
               aria-hidden
               className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
@@ -103,39 +103,30 @@ export function StudentFeeReminderBanner({
             >
               <span className="animate-bell-ring inline-block">🔔</span>
             </span>
-
-            {/* Pulsing Alert Beacon */}
-            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5" aria-hidden>
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-background" />
-            </span>
           </div>
 
           <div className="min-w-0">
-            {/* Top Alert Pill */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide bg-amber-400 text-stone-950 shadow-xs">
-                <span>📢</span> Note for Mom &amp; Dad
+            {/* Top Pill */}
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide bg-amber-400/40 text-foreground border border-amber-500/50 shadow-2xs">
+                For Parents
               </span>
               <span className="text-xs font-bold text-muted-foreground">
                 {monthName} {currentYear}
               </span>
             </div>
 
-            {/* Main Headline for Kid */}
-            <h2 className="font-heading text-base sm:text-lg font-black text-foreground mt-1 leading-snug">
-              Please show this to Mom or Dad! 👨‍👩‍👧
+            {/* Clean Heading in Baloo 2 */}
+            <h2 className="font-heading text-base sm:text-[17px] font-bold text-foreground mt-0.5 leading-snug">
+              Monthly Tuition Reminder
             </h2>
 
-            {/* Fee Pill & Friendly Instruction */}
-            <p className="text-xs font-medium text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5">
-              <span>Tuition for {monthName} is pending:</span>
-              <span className="inline-flex items-center rounded-lg bg-amber-400/25 border border-amber-500/50 px-2 py-0.5 font-heading text-xs font-black text-foreground shadow-2xs">
+            {/* Standout Fee Chip */}
+            <p className="text-xs font-semibold text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5">
+              <span>Fee for {monthName} is pending:</span>
+              <span className="inline-flex items-center rounded-lg bg-amber-400/30 border border-amber-500/60 px-2 py-0.5 font-heading text-xs font-extrabold text-foreground shadow-2xs">
                 {formattedFee}
               </span>
-            </p>
-            <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300 mt-1">
-              👉 Please ask your parents to check this note after class today!
             </p>
           </div>
         </div>
@@ -144,9 +135,9 @@ export function StudentFeeReminderBanner({
         <div className="flex items-center self-end sm:self-center shrink-0 w-full sm:w-auto">
           <Link
             href="/student/fees"
-            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 active:scale-95 px-4 py-2.5 font-heading text-xs sm:text-sm font-extrabold text-stone-950 shadow-md hover:shadow-lg transition-all"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 active:scale-95 px-4 py-2 font-heading text-xs sm:text-sm font-extrabold text-stone-950 shadow-sm hover:shadow-md transition-all"
           >
-            <span>Show Mom &amp; Dad</span>
+            <span>View Fee Details</span>
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
