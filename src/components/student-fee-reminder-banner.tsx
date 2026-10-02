@@ -74,69 +74,82 @@ export function StudentFeeReminderBanner({
   return (
     <div
       role="region"
-      aria-label="Monthly Fee Reminder for Parents"
-      className="relative mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 rounded-2xl border-[1.5px] border-[hsl(var(--kid-saffron)/0.55)] bg-gradient-to-r from-[hsl(var(--kid-saffron)/0.2)] via-[hsl(var(--kid-saffron)/0.12)] to-[hsl(var(--kid-saffron)/0.06)] p-4 shadow-soft animate-fade-in"
+      aria-label="Monthly Tuition Reminder for Parents"
+      className="animate-banner-glow relative mb-5 rounded-2xl border-2 border-amber-400/90 bg-gradient-to-r from-amber-400/25 via-amber-300/15 to-orange-400/10 dark:from-amber-950/45 dark:via-amber-900/25 dark:to-orange-950/20 p-4 sm:p-5 shadow-lg animate-fade-in"
     >
-      {/* Left side: Icon + Content */}
-      <div className="flex items-start sm:items-center gap-3.5 min-w-0 pr-8 sm:pr-0">
-        <span
-          aria-hidden
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-2xl shadow-xs"
-          style={{
-            background: "hsl(var(--kid-saffron) / 0.32)",
-            border: "1.5px solid hsl(var(--kid-saffron) / 0.65)",
-          }}
-        >
-          🧾
-        </span>
+      {/* Cross dismiss button */}
+      <button
+        type="button"
+        onClick={handleDismiss}
+        title="Dismiss note for now"
+        aria-label="Dismiss note for now"
+        className="absolute top-3 right-3 sm:top-3.5 sm:right-3.5 flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground transition-colors z-10"
+      >
+        <X className="h-4 w-4" />
+      </button>
 
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Left side: Animated Bell Icon + Content */}
+        <div className="flex items-start gap-3.5 min-w-0 pr-6 sm:pr-0">
+          {/* Animated Bell with Alert Dot */}
+          <div className="relative shrink-0 mt-0.5">
             <span
-              className="rounded-full px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-foreground"
-              style={{ background: "hsl(var(--kid-saffron) / 0.35)" }}
+              aria-hidden
+              className="flex h-12 w-12 items-center justify-center rounded-2xl text-2xl shadow-sm"
+              style={{
+                background: "hsl(var(--kid-saffron) / 0.35)",
+                border: "2px solid hsl(var(--kid-saffron))",
+              }}
             >
-              For Parents
+              <span className="animate-bell-ring inline-block">🔔</span>
             </span>
-            <span className="text-xs font-bold text-muted-foreground">
-              {monthName} {currentYear}
+
+            {/* Pulsing Alert Beacon */}
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5" aria-hidden>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-rose-500 border-2 border-background" />
             </span>
           </div>
 
-          <h2 className="font-heading text-[15px] font-extrabold text-foreground mt-0.5 leading-tight">
-            Monthly Tuition Reminder
-          </h2>
-          <p className="text-xs font-medium text-muted-foreground mt-0.5">
-            Fee for {monthName} is pending:{" "}
-            <strong className="font-extrabold text-foreground">{formattedFee}</strong>
-          </p>
+          <div className="min-w-0">
+            {/* Top Alert Pill */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-black uppercase tracking-wide bg-amber-400 text-stone-950 shadow-xs">
+                <span>📢</span> Note for Mom &amp; Dad
+              </span>
+              <span className="text-xs font-bold text-muted-foreground">
+                {monthName} {currentYear}
+              </span>
+            </div>
+
+            {/* Main Headline for Kid */}
+            <h2 className="font-heading text-base sm:text-lg font-black text-foreground mt-1 leading-snug">
+              Please show this to Mom or Dad! 👨‍👩‍👧
+            </h2>
+
+            {/* Fee Pill & Friendly Instruction */}
+            <p className="text-xs font-medium text-muted-foreground mt-0.5 flex flex-wrap items-center gap-1.5">
+              <span>Tuition for {monthName} is pending:</span>
+              <span className="inline-flex items-center rounded-lg bg-amber-400/25 border border-amber-500/50 px-2 py-0.5 font-heading text-xs font-black text-foreground shadow-2xs">
+                {formattedFee}
+              </span>
+            </p>
+            <p className="text-[11px] font-bold text-amber-800 dark:text-amber-300 mt-1">
+              👉 Please ask your parents to check this note after class today!
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Right side: View Details link & Dismiss (cross) button */}
-      <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
-        <Link
-          href="/student/fees"
-          className="inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-extrabold text-foreground shadow-xs transition-transform hover:-translate-y-0.5 active:scale-95"
-          style={{
-            background: "hsl(var(--kid-saffron))",
-            border: "1px solid hsl(var(--kid-saffron) / 0.8)",
-          }}
-        >
-          <span>View Fee Details</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </Link>
-
-        {/* Cross button on mobile & desktop */}
-        <button
-          type="button"
-          onClick={handleDismiss}
-          title="Dismiss reminder"
-          aria-label="Dismiss reminder"
-          className="absolute sm:relative top-3.5 right-3.5 sm:top-auto sm:right-auto flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground hover:bg-black/10 dark:hover:bg-white/10 hover:text-foreground transition-colors"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {/* Right side: Action CTA */}
+        <div className="flex items-center self-end sm:self-center shrink-0 w-full sm:w-auto">
+          <Link
+            href="/student/fees"
+            className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-amber-400 hover:bg-amber-300 dark:bg-amber-400 dark:hover:bg-amber-300 active:scale-95 px-4 py-2.5 font-heading text-xs sm:text-sm font-extrabold text-stone-950 shadow-md hover:shadow-lg transition-all"
+          >
+            <span>Show Mom &amp; Dad</span>
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </div>
   )
