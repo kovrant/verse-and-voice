@@ -81,3 +81,41 @@ export const AGE_GROUP_LABELS: Record<string, string> = {
   "13-16": "Teens (13-16 yrs)",
   all: "All Ages",
 }
+
+/**
+ * Validates whether a quiz can be deleted according to platform rules:
+ * Published quizzes CANNOT be deleted. First they have to unpublish and then delete.
+ */
+export function canDeleteQuiz(quiz: { is_published: boolean }): { allowed: boolean; reason?: string } {
+  if (quiz.is_published) {
+    return {
+      allowed: false,
+      reason: "Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.",
+    }
+  }
+  return { allowed: true }
+}
+
+/**
+ * Defensive padder ensuring all multiple choice questions have at least 4 options.
+ */
+export function ensureFourOptions(
+  options: { id: string; text: string; is_correct: boolean }[],
+): { id: string; text: string; is_correct: boolean }[] {
+  if (!Array.isArray(options)) return []
+  const opts = [...options]
+  const fallbackDistracters = [
+    "None of the above",
+    "All of the above",
+    "It is not mentioned in authentic narrations",
+    "Only under special circumstances",
+  ]
+  let idx = 0
+  while (opts.length < 4) {
+    const id = `o${opts.length + 1}`
+    const text = fallbackDistracters[idx % fallbackDistracters.length]
+    idx++
+    opts.push({ id, text, is_correct: false })
+  }
+  return opts
+}

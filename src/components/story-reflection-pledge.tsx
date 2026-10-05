@@ -14,6 +14,8 @@ interface StoryReflectionPledgeProps {
   challenge?: string | null
   quizId?: string | null
   className?: string
+  onGenerateQuiz?: () => void
+  isGeneratingQuiz?: boolean
 }
 
 /* 24 confetti pieces on fixed tracks */
@@ -30,6 +32,8 @@ export function StoryReflectionPledge({
   challenge,
   quizId,
   className = "",
+  onGenerateQuiz,
+  isGeneratingQuiz = false,
 }: StoryReflectionPledgeProps) {
   const router = useRouter()
   const { student } = useStudent()
@@ -227,7 +231,7 @@ export function StoryReflectionPledge({
         )}
 
         {/* Quest Link / Button */}
-        {quizId && (
+        {quizId ? (
           <>
             {student?.id ? (
               // Student View: If already assigned to this student, the button disappears!
@@ -263,6 +267,29 @@ export function StoryReflectionPledge({
               </Link>
             )}
           </>
+        ) : (
+          // Teacher View when quiz is missing or deleted: offer immediate generation
+          !student?.id && onGenerateQuiz && (
+            <button
+              type="button"
+              onClick={onGenerateQuiz}
+              disabled={isGeneratingQuiz}
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-[14.5px] font-black text-white shadow-soft transition-transform hover:-translate-y-0.5 hover:shadow-hover active:scale-[0.98] disabled:opacity-75"
+              title="Quiz was missed or deleted. Click to generate an interactive quiz from this story!"
+            >
+              {isGeneratingQuiz ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-amber-100" />
+                  Generating Story Quest...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 text-amber-100" />
+                  Generate Story Quest (Quiz) ✨
+                </>
+              )}
+            </button>
+          )
         )}
       </div>
     </div>

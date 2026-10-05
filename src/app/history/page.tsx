@@ -13,8 +13,10 @@ import {
   Eye,
   FileText,
   ImagePlus,
+  Loader2,
   Pencil,
   Plus,
+  RotateCcw,
   ScrollText,
   Search,
   Sparkles,
@@ -156,6 +158,12 @@ export default function HistoryAdminPage() {
   const [copiedEditorPrompt, setCopiedEditorPrompt] = useState(false)
   const [readingStory, setReadingStory] = useState<HistoryStory | null>(null)
 
+  // Track existing quizzes in quizzes table to know if a story's quiz is missing/deleted
+  const [existingQuizMap, setExistingQuizMap] = useState<
+    Map<string, { id: string; title: string; is_published: boolean }>
+  >(new Map())
+  const [regeneratingQuizStoryId, setRegeneratingQuizStoryId] = useState<string | null>(null)
+
   useEffect(() => {
     loadStories()
   }, [])
@@ -171,16 +179,81 @@ export default function HistoryAdminPage() {
   }, [coverFile])
 
   async function loadStories() {
-    const { data, error } = await supabase
-      .from("islamic_history")
-      .select("*")
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false })
-    if (error) {
-      toast.error(error.message)
+    const [{ data: storiesData, error: storiesError }, { data: quizzesData }] = await Promise.all([
+      supabase
+        .from("islamic_history")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false }),
+      supabase.from("quizzes").select("id, title, is_published"),
+    ])
+
+    if (storiesError) {
+      toast.error(storiesError.message)
     }
-    setStories((data as HistoryStory[]) || [])
+
+    const qMap = new Map<string, { id: string; title: string; is_published: boolean }>()
+    ;(quizzesData || []).forEach((q) => {
+      qMap.set(q.id, q)
+    })
+    setExistingQuizMap(qMap)
+    setStories((storiesData as HistoryStory[]) || [])
     setLoading(false)
+  }
+
+  async function handleRegenerateQuiz(story: HistoryStory) {
+    const existing = story.quiz_id ? existingQuizMap.get(story.quiz_id) : null
+
+    // Strict Rule: Published quizzes cannot be replaced or deleted without unpublishing first.
+    if (existing && existing.is_published) {
+      toast.error(
+        "The linked quiz is currently published. Published quizzes cannot be deleted or replaced. Please unpublish the quiz first before regenerating.",
+        { duration: 5000 },
+      )
+      return
+    }
+
+    if (
+      existing &&
+      !confirm(
+        `A draft quiz is already linked to "${story.title}". Do you want to replace it with a newly generated quiz?`,
+      )
+    ) {
+      return
+    }
+
+    setRegeneratingQuizStoryId(story.id)
+    try {
+      const res = await fetch("/api/history/regenerate-quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ story_id: story.id }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to generate quiz")
+      }
+
+      toast.success(data.message || "Story Quest Quiz generated successfully!")
+
+      if (editing && editing.id === story.id) {
+        setForm((f) => ({ ...f, quiz_id: data.quiz_id }))
+        setEditing((prev) => (prev ? { ...prev, quiz_id: data.quiz_id } : null))
+      }
+
+      if (readingStory && readingStory.id === story.id) {
+        setReadingStory((prev) => (prev ? { ...prev, quiz_id: data.quiz_id } : null))
+      }
+
+      await loadStories()
+    } catch (err: unknown) {
+      console.error("Failed to generate quiz:", err)
+      const errorMsg = err instanceof Error ? err.message : "Failed to generate quiz"
+      toast.error(errorMsg)
+    } finally {
+      setRegeneratingQuizStoryId(null)
+    }
   }
 
   async function handleCoverSelect(file: File) {
@@ -704,14 +777,14 @@ export default function HistoryAdminPage() {
                 )}
 
                 {/* Status Badges */}
-                <div className="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
+                <div className="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5">
                   <Badge
                     variant={story.is_published ? "default" : "warning"}
                     className="text-[10px] py-0 font-bold"
                   >
                     {story.is_published ? "Published" : "Draft"}
                   </Badge>
-                  {story.quiz_id && (
+                  {story.quiz_id && existingQuizMap.has(story.quiz_id) ? (
                     <Link
                       href={`/quizzes/${story.quiz_id}`}
                       target="_blank"
@@ -722,6 +795,27 @@ export default function HistoryAdminPage() {
                         <Trophy className="h-3 w-3 mr-1" /> Quiz
                       </Badge>
                     </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRegenerateQuiz(story)
+                      }}
+                      disabled={regeneratingQuizStoryId === story.id}
+                      className="inline-flex items-center text-[10px] py-0.5 px-2 rounded-md font-bold bg-amber-500/95 hover:bg-amber-600 text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-70"
+                      title="Quiz was missed or deleted. Click to generate a new quiz from this story!"
+                    >
+                      {regeneratingQuizStoryId === story.id ? (
+                        <>
+                          <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" /> Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-2.5 w-2.5 mr-1 text-amber-200" /> + Quiz
+                        </>
+                      )}
+                    </button>
                   )}
                 </div>
 
@@ -1315,22 +1409,81 @@ export default function HistoryAdminPage() {
             </div>
 
             {/* Linked Quiz info */}
-            {form.quiz_id && (
-              <div className="flex items-center justify-between rounded-xl border border-amber-500/30 bg-amber-500/10 p-3">
-                <div className="flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-amber-500" />
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Linked Story Quest Quiz</p>
-                    <p className="text-[11px] text-muted-foreground">ID: {form.quiz_id}</p>
+            {editing && (
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-amber-500 shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Linked Story Quest Quiz</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {form.quiz_id && existingQuizMap.has(form.quiz_id)
+                          ? `Status: ${existingQuizMap.get(form.quiz_id)?.is_published ? "Published" : "Draft"}`
+                          : "No active quiz linked (missed or deleted)"}
+                      </p>
+                    </div>
                   </div>
+
+                  {form.quiz_id && existingQuizMap.has(form.quiz_id) ? (
+                    <div className="flex items-center gap-2">
+                      <Button asChild size="sm" variant="outline" className="h-7 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300">
+                        <Link href={`/quizzes/${form.quiz_id}`} target="_blank">
+                          <span>View Quiz</span>
+                          <ExternalLink className="h-3 w-3 ml-1" />
+                        </Link>
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        disabled={regeneratingQuizStoryId === editing.id}
+                        onClick={() => {
+                          const currentStory = stories.find((s) => s.id === editing.id)
+                          if (currentStory) handleRegenerateQuiz(currentStory)
+                        }}
+                        className="h-7 text-xs gap-1 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 font-semibold"
+                        title="Regenerate questions from this story"
+                      >
+                        {regeneratingQuizStoryId === editing.id ? (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin" /> Regenerating...
+                          </>
+                        ) : (
+                          <>
+                            <RotateCcw className="h-3 w-3" /> Regenerate
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={regeneratingQuizStoryId === editing.id}
+                      onClick={() => {
+                        const currentStory = stories.find((s) => s.id === editing.id)
+                        if (currentStory) handleRegenerateQuiz(currentStory)
+                      }}
+                      className="h-7 text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm"
+                    >
+                      {regeneratingQuizStoryId === editing.id ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" /> Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3 w-3" /> Generate Quest Quiz
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
-                <Link
-                  href={`/quizzes/${form.quiz_id}`}
-                  target="_blank"
-                  className="inline-flex items-center gap-1 text-xs font-bold text-amber-600 hover:underline"
-                >
-                  View Linked Quiz <ExternalLink className="h-3 w-3" />
-                </Link>
+
+                {(!form.quiz_id || !existingQuizMap.has(form.quiz_id)) && (
+                  <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80">
+                    ⚡ No active quiz is attached to this story. Click <strong>Generate Quest Quiz</strong> to create an interactive 4-5 question quiz with 4 options each directly from this story content.
+                  </p>
+                )}
               </div>
             )}
 
@@ -1715,7 +1868,13 @@ export default function HistoryAdminPage() {
                   storyId={readingStory.id}
                   storyTitle={readingStory.title}
                   challenge={readingStory.reflection_challenge}
-                  quizId={readingStory.quiz_id}
+                  quizId={
+                    readingStory.quiz_id && existingQuizMap.has(readingStory.quiz_id)
+                      ? readingStory.quiz_id
+                      : null
+                  }
+                  onGenerateQuiz={() => handleRegenerateQuiz(readingStory)}
+                  isGeneratingQuiz={regeneratingQuizStoryId === readingStory.id}
                 />
 
                 {/* Attachment / Extra reading file if any */}

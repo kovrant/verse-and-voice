@@ -12,12 +12,13 @@ import {
   Play,
   RotateCcw,
   Search,
+  Trash2,
   UserCheck,
   Users,
   XCircle,
 } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import { PageLoading } from "@/components/page-loading"
@@ -58,6 +59,7 @@ type AttemptWithStudent = QuizAttempt & {
 }
 
 export default function TeacherQuizViewPage() {
+  const router = useRouter()
   const params = useParams()
   const quizId = params?.id as string
 
@@ -220,6 +222,41 @@ export default function TeacherQuizViewPage() {
     }
   }
 
+  // Delete quiz
+  const handleDeleteQuiz = async () => {
+    if (!quiz) return
+
+    // Strict Rule: Published quizzes cannot be deleted. First they have to unpublish and then delete.
+    if (quiz.is_published) {
+      toast.error("Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.", {
+        duration: 5000,
+      })
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`)) return
+
+    try {
+      const res = await fetch("/api/quizzes/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiz_id: quiz.id }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete quiz")
+      }
+
+      toast.success("Quiz deleted successfully")
+      router.push("/quizzes")
+    } catch (err: unknown) {
+      console.error("Failed to delete quiz:", err)
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete quiz"
+      toast.error(errorMsg)
+    }
+  }
+
   // Interactive Student Preview Helpers
   const startPreview = () => {
     setPreviewIndex(0)
@@ -312,6 +349,25 @@ export default function TeacherQuizViewPage() {
           >
             <Users className="h-3.5 w-3.5" />
             Assign to Students ({assignments.length})
+          </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleDeleteQuiz}
+            className={`gap-1.5 text-xs font-semibold ${
+              quiz.is_published
+                ? "text-muted-foreground/40 hover:bg-muted/30"
+                : "text-destructive hover:text-destructive hover:bg-destructive/10"
+            }`}
+            title={
+              quiz.is_published
+                ? "Published quizzes cannot be deleted (Unpublish first)"
+                : "Delete Quiz"
+            }
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
           </Button>
         </div>
       </div>

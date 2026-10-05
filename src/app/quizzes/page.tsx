@@ -369,16 +369,35 @@ export default function TeacherQuizzesPage() {
   }
 
   // Delete Quiz
-  const handleDeleteQuiz = async (quizId: string) => {
-    if (!confirm("Are you sure you want to delete this quiz? All student attempts will be deleted.")) return
+  const handleDeleteQuiz = async (quiz: Quiz) => {
+    // Strict Rule: Published quizzes cannot be deleted. First they have to unpublish and then delete.
+    if (quiz.is_published) {
+      toast.error("Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.", {
+        duration: 5000,
+      })
+      return
+    }
+
+    if (!confirm(`Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`)) return
+
     try {
-      const { error } = await supabase.from("quizzes").delete().eq("id", quizId)
-      if (error) throw error
-      toast.success("Quiz deleted")
+      const res = await fetch("/api/quizzes/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiz_id: quiz.id }),
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete quiz")
+      }
+
+      toast.success("Quiz deleted successfully")
       await loadData()
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("Failed to delete quiz:", err)
-      toast.error("Failed to delete quiz")
+      const errorMsg = err instanceof Error ? err.message : "Failed to delete quiz"
+      toast.error(errorMsg)
     }
   }
 
@@ -714,9 +733,17 @@ export default function TeacherQuizzesPage() {
                     <Button
                       size="sm"
                       variant="ghost"
-                      onClick={() => handleDeleteQuiz(quiz.id)}
-                      className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      title="Delete Quiz"
+                      onClick={() => handleDeleteQuiz(quiz)}
+                      className={`h-8 w-8 p-0 ${
+                        quiz.is_published
+                          ? "text-muted-foreground/40 hover:bg-muted/30"
+                          : "text-destructive hover:text-destructive hover:bg-destructive/10"
+                      }`}
+                      title={
+                        quiz.is_published
+                          ? "Published quizzes cannot be deleted (Unpublish first)"
+                          : "Delete Quiz"
+                      }
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>

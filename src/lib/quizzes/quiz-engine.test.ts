@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { gradeQuizAttempt } from "./quiz-engine"
+import { canDeleteQuiz, ensureFourOptions, gradeQuizAttempt } from "./quiz-engine"
 import type { QuizQuestion } from "./types"
 
 describe("gradeQuizAttempt", () => {
@@ -97,3 +97,53 @@ describe("gradeQuizAttempt", () => {
     expect(resultPassingHigh.passed).toBe(false)
   })
 })
+
+describe("canDeleteQuiz", () => {
+  it("strictly forbids deleting published quizzes", () => {
+    const publishedQuiz = { is_published: true }
+    const check = canDeleteQuiz(publishedQuiz)
+    expect(check.allowed).toBe(false)
+    expect(check.reason).toContain("Published quizzes cannot be deleted")
+  })
+
+  it("permits deleting unpublished (draft) quizzes", () => {
+    const draftQuiz = { is_published: false }
+    const check = canDeleteQuiz(draftQuiz)
+    expect(check.allowed).toBe(true)
+    expect(check.reason).toBeUndefined()
+  })
+})
+
+describe("ensureFourOptions", () => {
+  it("leaves options with 4 or more choices untouched", () => {
+    const fourOpts = [
+      { id: "o1", text: "A", is_correct: true },
+      { id: "o2", text: "B", is_correct: false },
+      { id: "o3", text: "C", is_correct: false },
+      { id: "o4", text: "D", is_correct: false },
+    ]
+    const res = ensureFourOptions(fourOpts)
+    expect(res).toHaveLength(4)
+    expect(res[0].text).toBe("A")
+    expect(res[3].text).toBe("D")
+  })
+
+  it("pads options with only 2 or 3 choices up to 4 choices", () => {
+    const threeOpts = [
+      { id: "o1", text: "A", is_correct: true },
+      { id: "o2", text: "B", is_correct: false },
+      { id: "o3", text: "C", is_correct: false },
+    ]
+    const res = ensureFourOptions(threeOpts)
+    expect(res).toHaveLength(4)
+    expect(res[3].id).toBe("o4")
+    expect(res[3].is_correct).toBe(false)
+    expect(res[3].text).toBeTruthy()
+  })
+
+  it("handles null or non-array gracefully", () => {
+    // @ts-expect-error testing runtime resilience
+    expect(ensureFourOptions(null)).toEqual([])
+  })
+})
+
