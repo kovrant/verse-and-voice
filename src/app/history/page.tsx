@@ -57,11 +57,13 @@ import {
   CATEGORY_ICON,
   CURATED_ISLAMIC_TOPICS,
   type CuratedTopic,
+  formatCoverPromptWithText,
   getCanvaDreamLabPrompt,
   type HistoryStory,
   type LifeLesson,
   normalizeTopicSlug,
   type QuranGem,
+  removeEmDashes,
 } from "@/lib/history"
 import {
   downscaleImageFile,
@@ -322,7 +324,9 @@ export default function HistoryAdminPage() {
       hero_virtue: story.hero_virtue ?? "",
       reading_time_mins: story.reading_time_mins ?? 4,
       reflection_challenge: story.reflection_challenge ?? "",
-      cover_prompt: story.cover_prompt || getCanvaDreamLabPrompt(story),
+      cover_prompt: story.cover_prompt
+        ? formatCoverPromptWithText(story.cover_prompt, story.title)
+        : getCanvaDreamLabPrompt(story),
       hijri_month: story.hijri_month ? String(story.hijri_month) : "",
       is_published: story.is_published,
       quran_gem: story.quran_gem ?? null,
@@ -392,18 +396,20 @@ export default function HistoryAdminPage() {
     }
 
     const payload = {
-      title: form.title.trim(),
+      title: removeEmDashes(form.title.trim()),
       arabic_title: form.arabic_title.trim() || null,
-      subtitle: form.subtitle.trim() || null,
+      subtitle: removeEmDashes(form.subtitle.trim()) || null,
       topic_slug: normalizeTopicSlug(form.title),
-      summary: form.summary.trim() || null,
-      content: form.content.trim() || null,
+      summary: removeEmDashes(form.summary.trim()) || null,
+      content: removeEmDashes(form.content.trim()) || null,
       category: form.category,
       target_age_group: form.target_age_group,
-      hero_virtue: form.hero_virtue.trim() || null,
+      hero_virtue: removeEmDashes(form.hero_virtue.trim()) || null,
       reading_time_mins: Number(form.reading_time_mins) || 4,
-      reflection_challenge: form.reflection_challenge.trim() || null,
-      cover_prompt: form.cover_prompt.trim() || getCanvaDreamLabPrompt(form),
+      reflection_challenge: removeEmDashes(form.reflection_challenge.trim()) || null,
+      cover_prompt: form.cover_prompt.trim()
+        ? formatCoverPromptWithText(form.cover_prompt.trim(), form.title)
+        : getCanvaDreamLabPrompt(form),
       hijri_month: form.hijri_month ? Number(form.hijri_month) : null,
       cover_image_url: coverUrl,
       file_url: attachUrl,
@@ -421,10 +427,10 @@ export default function HistoryAdminPage() {
     if (error && (error.code === "42703" || error.message?.includes("does not exist"))) {
       // Fallback for unapplied migration: save baseline columns
       const basePayload = {
-        title: form.title.trim(),
+        title: removeEmDashes(form.title.trim()),
         arabic_title: form.arabic_title.trim() || null,
-        summary: form.summary.trim() || null,
-        content: form.content.trim() || null,
+        summary: removeEmDashes(form.summary.trim()) || null,
+        content: removeEmDashes(form.content.trim()) || null,
         category: form.category,
         hijri_month: form.hijri_month ? Number(form.hijri_month) : null,
         cover_image_url: coverUrl,
@@ -670,7 +676,10 @@ export default function HistoryAdminPage() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        const prompt = story.cover_prompt || getCanvaDreamLabPrompt(story)
+                        const prompt = formatCoverPromptWithText(
+                          story.cover_prompt || getCanvaDreamLabPrompt(story),
+                          story.title,
+                        )
                         navigator.clipboard.writeText(prompt)
                         setCopiedPromptId(story.id)
                         toast.success("Copied Canva Dream Lab prompt! Generate in Canva & upload.")
@@ -1345,7 +1354,10 @@ export default function HistoryAdminPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    const promptToCopy = form.cover_prompt.trim() || getCanvaDreamLabPrompt(form)
+                    const promptToCopy = formatCoverPromptWithText(
+                      form.cover_prompt.trim() || getCanvaDreamLabPrompt(form),
+                      form.title,
+                    )
                     navigator.clipboard.writeText(promptToCopy)
                     setCopiedEditorPrompt(true)
                     toast.success("Copied Canva Dream Lab prompt to clipboard!")
@@ -1642,7 +1654,7 @@ export default function HistoryAdminPage() {
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
                     <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-primary">
-                      {readingStory.title}
+                      {removeEmDashes(readingStory.title)}
                     </h1>
                     {readingStory.arabic_title && (
                       <ArabicText className="text-2xl text-foreground/80">
@@ -1652,7 +1664,7 @@ export default function HistoryAdminPage() {
                   </div>
                   {readingStory.subtitle && (
                     <p className="text-base font-medium text-muted-foreground">
-                      {readingStory.subtitle}
+                      {removeEmDashes(readingStory.subtitle)}
                     </p>
                   )}
                 </div>
@@ -1668,7 +1680,7 @@ export default function HistoryAdminPage() {
                         The Wonder Opening
                       </span>
                       <p className="text-[15px] sm:text-[16px] font-semibold leading-relaxed text-foreground/90">
-                        {readingStory.summary}
+                        {removeEmDashes(readingStory.summary)}
                       </p>
                     </div>
                   </div>

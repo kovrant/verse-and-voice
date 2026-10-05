@@ -3,11 +3,126 @@ import { describe, expect, it } from "vitest"
 import {
   CATEGORIES,
   CURATED_ISLAMIC_TOPICS,
+  formatCoverPromptWithText,
+  getCanvaDreamLabPrompt,
+  getCoverTitleText,
   normalizeTopicSlug,
   parseStoryScenes,
+  removeEmDashes,
 } from "./history"
 
 describe("Islamic History Module - Helper Logic", () => {
+  describe("removeEmDashes", () => {
+    it("removes unicode em dashes and en dashes cleanly", () => {
+      expect(removeEmDashes("Earth—red, white, yellow, and black.")).toBe(
+        "Earth, red, white, yellow, and black.",
+      )
+      expect(
+        removeEmDashes(
+          "teaching him the names of everything in existence—from the majestic stars to the tiniest insects.",
+        ),
+      ).toBe(
+        "teaching him the names of everything in existence, from the majestic stars to the tiniest insects.",
+      )
+      expect(removeEmDashes("word – word")).toBe("word, word")
+      expect(removeEmDashes("word — word")).toBe("word, word")
+    })
+
+    it("handles double hyphens used as em dashes while preserving single hyphens and markdown dividers", () => {
+      expect(removeEmDashes("word -- word")).toBe("word, word")
+      expect(removeEmDashes("kid-friendly storybook")).toBe("kid-friendly storybook")
+      expect(removeEmDashes("Part 1\n---\nPart 2")).toBe("Part 1\n---\nPart 2")
+    })
+
+    it("prevents punctuation collisions when removing em dashes", () => {
+      expect(removeEmDashes("He said: — 'Welcome!'")).toBe("He said: 'Welcome!'")
+      expect(removeEmDashes("Wait, — what happened?")).toBe("Wait, what happened?")
+      expect(removeEmDashes("A great ending.—")).toBe("A great ending.")
+    })
+
+    it("handles empty or null inputs gracefully", () => {
+      expect(removeEmDashes("")).toBe("")
+      expect(removeEmDashes(null)).toBe("")
+      expect(removeEmDashes(undefined)).toBe("")
+    })
+  })
+
+  describe("getCoverTitleText", () => {
+    it("strips Islamic honorifics for clean 3D cover art typography", () => {
+      expect(getCoverTitleText("Prophet Nuh (AS)")).toBe("Prophet Nuh")
+      expect(getCoverTitleText("Hazrat Adam (A.S.)")).toBe("Hazrat Adam")
+      expect(getCoverTitleText("Prophet Muhammad ﷺ")).toBe("Prophet Muhammad")
+      expect(getCoverTitleText("Abu Bakr As-Siddiq (RA)")).toBe("Abu Bakr As-Siddiq")
+    })
+
+    it("shortens excessively long combined titles with ampersands for punchy cover text", () => {
+      expect(
+        getCoverTitleText("Prophet Nuh (AS): The Giant Ark of Hope & 950 Years of Patience"),
+      ).toBe("Prophet Nuh: The Giant Ark of Hope")
+    })
+  })
+
+  describe("formatCoverPromptWithText", () => {
+    it("embeds title text typography before style descriptors", () => {
+      const basePrompt =
+        "A colossal, majestic handcrafted wooden ark resting on the peak of a misty mountaintop as dark storm clouds part into a glorious golden sunrise and vibrant rainbow over the calm receding blue ocean, Disney Pixar 3D storybook concept art, warm heroic atmospheric lighting, cinematic 16:9, highly detailed wood texture, uplifting and hopeful. No human faces, epic scenery only."
+
+      const formatted = formatCoverPromptWithText(
+        basePrompt,
+        "Prophet Nuh (AS): The Giant Ark of Hope & 950 Years of Patience",
+      )
+
+      expect(formatted).toContain(
+        'featuring the storybook title text "Prophet Nuh: The Giant Ark of Hope" in bold glowing 3D embossed golden storybook typography at the top',
+      )
+      expect(formatted).toContain("Disney Pixar 3D storybook concept art")
+    })
+
+    it("does not duplicate title typography if already present in the prompt", () => {
+      const alreadyFormatted =
+        'A majestic ark, featuring the storybook title text "Prophet Nuh" in bold glowing 3D embossed golden storybook typography at the top, Disney Pixar style.'
+      const result = formatCoverPromptWithText(alreadyFormatted, "Prophet Nuh")
+      expect(result).toBe(alreadyFormatted)
+    })
+  })
+
+  describe("getCanvaDreamLabPrompt", () => {
+    it("generates a prompt with embedded 3D title text for Prophet Nuh", () => {
+      const prompt = getCanvaDreamLabPrompt({
+        title: "Prophet Nuh (AS): The Giant Ark of Hope & 950 Years of Patience",
+      })
+
+      expect(prompt).toContain(
+        'featuring the storybook title text "Prophet Nuh: The Giant Ark of Hope" in bold glowing 3D embossed golden storybook typography at the top',
+      )
+      expect(prompt).toContain("A colossal, majestic handcrafted wooden ark")
+      expect(prompt).toContain("Disney Pixar 3D storybook concept art")
+      expect(prompt).toContain("No human faces")
+    })
+
+    it("generates a prompt with embedded 3D title text for Prophet Adam", () => {
+      const prompt = getCanvaDreamLabPrompt({
+        title: "Prophet Adam (AS): The Beginning & The Power of Sincere Apology",
+      })
+
+      expect(prompt).toContain(
+        'featuring the storybook title text "Prophet Adam: The Beginning" in bold glowing 3D embossed golden storybook typography at the top',
+      )
+      expect(prompt).toContain("Lush, magical ancient gardens of Paradise")
+    })
+
+    it("formats custom cover_prompt to ensure it includes the title text", () => {
+      const customPrompt =
+        "A peaceful ancient oasis under glowing stars, Pixar 3D style, 16:9 aspect ratio."
+      const prompt = getCanvaDreamLabPrompt({
+        title: "The Great Journey",
+        cover_prompt: customPrompt,
+      })
+
+      expect(prompt).toContain('featuring the storybook title text "The Great Journey"')
+    })
+  })
+
   describe("normalizeTopicSlug", () => {
     it("normalizes prophet honorifics and punctuation correctly", () => {
       expect(normalizeTopicSlug("Hazrat Adam (A.S.)")).toBe("adam")
@@ -72,6 +187,26 @@ Allah called out to them with justice and mercy.`
 
       expect(scenes[2].sceneNumber).toBe(3)
       expect(scenes[2].title).toBe("The Power of 'I am Sorry'")
+    })
+
+    it("strips em dashes from scene titles and paragraph bodies automatically", () => {
+      const storyWithDashes = `### Scene 1: The Beginning—A Fresh Start
+Before time—Allah created the universe.
+
+### Scene 2: The Choice—Good or Pride
+Iblis said—I am better than him!
+
+### Scene 3: The Secret—Asking Forgiveness
+They whispered—Our Lord forgive us.`
+
+      const scenes = parseStoryScenes(storyWithDashes)
+      expect(scenes).toHaveLength(3)
+      expect(scenes[0].title).not.toContain("—")
+      expect(scenes[0].paragraphs[0]).not.toContain("—")
+      expect(scenes[0].paragraphs[0]).toBe("Before time, Allah created the universe.")
+      expect(scenes[1].title).not.toContain("—")
+      expect(scenes[1].paragraphs[0]).toBe("Iblis said, I am better than him!")
+      expect(scenes[2].paragraphs[0]).toBe("They whispered, Our Lord forgive us.")
     })
 
     it("parses markdown header formats (### Scene 1: Title)", () => {

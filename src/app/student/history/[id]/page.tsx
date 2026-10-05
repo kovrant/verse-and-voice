@@ -15,7 +15,7 @@ import { StoryReflectionPledge } from "@/components/story-reflection-pledge"
 import { StorySceneReader } from "@/components/story-scene-reader"
 import { logActivity } from "@/lib/activity-log"
 import { getHijriMonthInfo } from "@/lib/hijri"
-import { CATEGORY_ICON, type HistoryStory as HistoryRow } from "@/lib/history"
+import { CATEGORY_ICON, type HistoryStory as HistoryRow, removeEmDashes } from "@/lib/history"
 import { supabase } from "@/lib/supabase"
 
 // The reader selects the complete storybook record
@@ -161,7 +161,7 @@ export default function StudentHistoryReaderPage() {
       {/* Title & Arabic Title */}
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h1 className="font-heading text-[clamp(26px,5.5vw,38px)] font-bold leading-tight tracking-tight text-primary">
-          {story.title}
+          {removeEmDashes(story.title)}
         </h1>
         {story.arabic_title && (
           <ArabicText className="text-[26px] text-foreground/80">{story.arabic_title}</ArabicText>
@@ -171,7 +171,7 @@ export default function StudentHistoryReaderPage() {
       {/* Subtitle */}
       {story.subtitle && (
         <p className="mb-5 text-[16px] sm:text-[17.5px] font-medium leading-relaxed text-muted-foreground">
-          {story.subtitle}
+          {removeEmDashes(story.subtitle)}
         </p>
       )}
 
@@ -186,7 +186,7 @@ export default function StudentHistoryReaderPage() {
               The Wonder Opening
             </span>
             <p className="text-[15.5px] sm:text-[16.5px] font-semibold leading-relaxed text-foreground/90">
-              {story.summary}
+              {removeEmDashes(story.summary)}
             </p>
           </div>
         </div>

@@ -3,10 +3,12 @@ import { NextResponse } from "next/server"
 import { requireTeacher } from "@/lib/api-auth"
 import {
   CURATED_ISLAMIC_TOPICS,
+  formatCoverPromptWithText,
   getCanvaDreamLabPrompt,
   type LifeLesson,
   normalizeTopicSlug,
   type QuranGem,
+  removeEmDashes,
 } from "@/lib/history"
 import type { QuizAgeGroup, QuizCategory } from "@/lib/quizzes/types"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
@@ -56,6 +58,48 @@ const ALLOWED_CATEGORIES = new Set([
   "Places",
   "Other",
 ])
+
+function sanitizeStoryEmDashes(story: GeneratedStoryResponse): GeneratedStoryResponse {
+  return {
+    ...story,
+    title: removeEmDashes(story.title),
+    subtitle: removeEmDashes(story.subtitle),
+    summary: removeEmDashes(story.summary),
+    content: removeEmDashes(story.content),
+    hero_virtue: removeEmDashes(story.hero_virtue),
+    reflection_challenge: removeEmDashes(story.reflection_challenge),
+    quran_gem: story.quran_gem
+      ? {
+          ...story.quran_gem,
+          translation: removeEmDashes(story.quran_gem.translation),
+          child_takeaway: removeEmDashes(story.quran_gem.child_takeaway),
+        }
+      : story.quran_gem,
+    life_lessons: (story.life_lessons || []).map((l) => ({
+      ...l,
+      context: removeEmDashes(l.context),
+      lesson: removeEmDashes(l.lesson),
+    })),
+    derived_quiz: story.derived_quiz
+      ? {
+          ...story.derived_quiz,
+          title: removeEmDashes(story.derived_quiz.title),
+          description: removeEmDashes(story.derived_quiz.description),
+          badge_title: removeEmDashes(story.derived_quiz.badge_title),
+          badge_description: removeEmDashes(story.derived_quiz.badge_description),
+          questions: (story.derived_quiz.questions || []).map((q) => ({
+            ...q,
+            question_text: removeEmDashes(q.question_text),
+            explanation: removeEmDashes(q.explanation),
+            options: (q.options || []).map((o) => ({
+              ...o,
+              text: removeEmDashes(o.text),
+            })),
+          })),
+        }
+      : story.derived_quiz,
+  }
+}
 
 export async function POST(request: Request) {
   const { user, denied } = await requireTeacher()
@@ -137,6 +181,12 @@ export async function POST(request: Request) {
     const masterPrompt = `You are a world-class Islamic educator and children's storybook author specializing in authentic, conclude-and-reflect Islamic history for young minds.
 Your task is to craft an inspiring, kid-friendly Islamic history story based on the authentic Quran and Sunnah, adhering strictly to "The 5-Part Kid Storybook Anatomy".
 
+⛔ STRICT ZERO EM DASH (—) BAN RULE:
+- NEVER EVER use an em dash ("—", "\\u2014", or "–") anywhere in the story title, subtitle, summary, content, quran_gem, life_lessons, reflection_challenge, or quiz!
+- Do not use em dashes for pauses, parentheticals, or elaborations.
+- Always use natural kid-friendly punctuation instead: simple commas, periods, colons, or short separate sentences.
+- Any output containing an em dash violates publication guidelines and will be rejected.
+
 Topic: "${topic}"
 Target Age Group: "${ageGroup}" (Ages 5-8 = gentle, simple words; Ages 9-12 = vivid adventure and moral choices; Ages 13-16 = historical context and deep character building).
 Category: "${category}"
@@ -156,6 +206,7 @@ Follow these structural requirements with utmost precision:
    - CRITICAL 2-SENTENCE MICRO-BEAT RULE:
      * Never write long paragraphs! Every paragraph MUST be 1 to 2 sentences maximum.
      * Keep the rhythm fast, punchy, and cinematic so young minds stay completely gripped.
+     * STRICT BAN: Zero em dashes ("—")! Use commas or periods instead.
    - COMIC POP & SENSORY SOUND WORDS:
      * Use bold sound words and sensory anchors at dramatic moments (e.g. **💥 ACHOO!**, **🌬️ A gentle whisper...**, **⚡ BOOM!**, **🤫 Sshhh...**).
    - CHARACTER DIALOGUE ON ISOLATED LINES WITH EMOJIS:
@@ -186,6 +237,8 @@ Follow these structural requirements with utmost precision:
    - A 1-2 sentence reflection pledge or practical action the child can do today.
 6. 🎨 Canva AI / Dream Lab Cover Art Prompt (cover_prompt):
    - A descriptive, imaginative text prompt tailored for Canva AI Dream Lab / Magic Media to generate a Pixar/DreamWorks 3D children's storybook cover illustration.
+   - MANDATORY TEXT IN PICTURE: The prompt MUST explicitly instruct the AI image generator to render the related storybook title text in the picture!
+     Format requirement: Include 'featuring the storybook title text "[Shortened Story Title]" in bold glowing 3D embossed golden storybook typography at the top' beautifully integrated into the scene.
    - STRICT ISLAMIC RULE: Never depict the face or physical form of Prophets or Angels. Use majestic symbolic nature, celestial skies, luminous lanterns, historic architectural landscapes, or radiant gardens.
    - Specify style: "Disney Pixar 3D animated storybook concept art, warm volumetric golden lighting, rich vibrant colors, highly detailed, 16:9 cinematic aspect ratio. No human faces, scenic only."
 7. 🏆 Directly Derived Mini-Quest Quiz (derived_quiz):
@@ -235,7 +288,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
     }
   ],
   "reflection_challenge": "The next time I make a mistake today, I will pause, say 'Astaghfirullah', and apologize sincerely!",
-  "cover_prompt": "Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children's storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.",
+  "cover_prompt": "Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, featuring the storybook title text \\\"Prophet Adam: The Beginning\\\" in bold glowing 3D embossed golden storybook typography at the top, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children's storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.",
   "derived_quiz": {
     "title": "Story Quest Quiz",
     "description": "Short description",
@@ -283,7 +336,12 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
           const data = await res.json()
           const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
           if (rawText) {
-            generatedData = JSON.parse(rawText) as GeneratedStoryResponse
+            const parsed = JSON.parse(rawText) as GeneratedStoryResponse
+            generatedData = sanitizeStoryEmDashes(parsed)
+            generatedData.cover_prompt = formatCoverPromptWithText(
+              generatedData.cover_prompt,
+              generatedData.title,
+            )
             successfulModel = model
             const meta = data?.usageMetadata || {}
             tokenUsage = {
@@ -305,7 +363,12 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
 
   // Fallback to rich template if Gemini is unavailable or failed
   if (!generatedData) {
-    generatedData = getFallbackStory(topic, category, ageGroup)
+    const rawFallback = getFallbackStory(topic, category, ageGroup)
+    generatedData = sanitizeStoryEmDashes(rawFallback)
+    generatedData.cover_prompt = formatCoverPromptWithText(
+      generatedData.cover_prompt,
+      generatedData.title,
+    )
     successfulModel = "offline_template"
   }
 
@@ -513,7 +576,7 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
       reflection_challenge:
         "Today, whenever I step into the car or start my homework, I will say 'Bismillahi majreeha wa mursaha' with a grateful heart!",
       cover_prompt:
-        "A colossal, majestic handcrafted wooden ark resting on the peak of a misty mountaintop as dark storm clouds part into a glorious golden sunrise and vibrant rainbow over the calm receding blue ocean, Disney Pixar 3D storybook concept art, warm heroic atmospheric lighting, cinematic 16:9, highly detailed wood texture, uplifting and hopeful. No human faces, epic scenery only.",
+        'A colossal, majestic handcrafted wooden ark resting on the peak of a misty mountaintop as dark storm clouds part into a glorious golden sunrise and vibrant rainbow over the calm receding blue ocean, featuring the storybook title text "Prophet Nuh: The Giant Ark of Hope" in bold glowing 3D embossed golden storybook typography at the top, Disney Pixar 3D storybook concept art, warm heroic atmospheric lighting, cinematic 16:9, highly detailed wood texture, uplifting and hopeful. No human faces, epic scenery only.',
       derived_quiz: {
         title: "Quest: The Giant Ark of Nuh (AS)",
         description: "Test what you learned about Prophet Nuh's incredible patience!",
@@ -568,7 +631,7 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
     summary:
       "Ever wonder who was the first person to ever walk on earth? Discover the wonder of Prophet Adam, the special gifts Allah gave him, and the powerful secret of saying 'I am sorry'.",
     content: `### Scene 1: The First Breath and The Name of Things
-Before humans existed, Allah created Prophet Adam from the earth and blew a soul of life into him. Allah taught Adam the names and secrets of all things—from the birds soaring in the sky to the sweetest fruits in the gardens. Even the angels bowed in awe of the knowledge Allah bestowed upon him.
+Before humans existed, Allah created Prophet Adam from the earth and blew a soul of life into him. Allah taught Adam the names and secrets of all things, from the birds soaring in the sky to the sweetest fruits in the gardens. Even the angels bowed in awe of the knowledge Allah bestowed upon him.
 
 ### Scene 2: The Whispering Tree
 In the peaceful gardens of Paradise, Prophet Adam and Lady Hawwa lived in tranquility. Allah permitted them to enjoy everything, except one specific tree. But Iblis, jealous of Adam's honor, whispered sweet lies and tricked them into tasting from it. Immediately, Adam felt deep remorse and sorrow in his heart.
@@ -608,7 +671,7 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
     reflection_challenge:
       "Today, if I make even a tiny mistake, I will immediately say 'I am sorry' and 'Astaghfirullah' with a smile!",
     cover_prompt:
-      "Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children's storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.",
+      'Lush, magical ancient gardens of Paradise with radiant golden sunlight streaming through giant weeping emerald willow trees, crystal-clear flowing streams of water, vibrant exotic flowers and gentle glowing butterflies, featuring the storybook title text "Prophet Adam: The Beginning" in bold glowing 3D embossed golden storybook typography at the top, peaceful celestial atmosphere, Pixar 3D animated movie style, digital children\'s storybook illustration, rich volumetric lighting, cinematic wide landscape composition, 8k, warm and enchanting. No human faces or figures, scenic nature only.',
     derived_quiz: {
       title: "Quest: Prophet Adam (AS)",
       description: "Test your knowledge on the first prophet and the power of Tawbah!",
