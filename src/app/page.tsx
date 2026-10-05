@@ -5,6 +5,7 @@ import {
   AlertCircle,
   ArrowRight,
   BookMarked,
+  BookOpen,
   ChevronRight,
   GraduationCap,
   Sparkles,
@@ -214,8 +215,129 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Google Gemini AI Quota Widget */}
-      <GeminiQuotaCard variant="dashboard" />
+      {/* AI Quota & Elevated Action Hub */}
+      <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+        <GeminiQuotaCard variant="dashboard" className="h-full" />
+
+        <Card className="flex flex-col justify-between border border-border/80 shadow-soft">
+          <CardHeader className="pb-2.5 pt-4 px-4 sm:px-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm sm:text-base font-bold tracking-tight">
+                  Quick Actions
+                </CardTitle>
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Common classroom shortcuts &amp; academy tools
+                </p>
+              </div>
+              <Badge variant="secondary" className="text-[10px] font-semibold">
+                Shortcuts
+              </Badge>
+            </div>
+          </CardHeader>
+
+          <CardContent className="px-4 sm:px-5 pb-4 pt-1 flex-1 flex flex-col justify-between">
+            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+              <Link
+                href="/class"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:scale-105 transition-transform shrink-0">
+                  <GraduationCap className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    Start a Class
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Live 1-on-1 session</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/students/new"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
+                  <UserPlus className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    Add Student
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Register new learner</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/students"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
+                  <Users className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    All Students
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Manage {totalStudents} enrolled</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/history"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-teal-500/10 hover:border-teal-500/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-500 group-hover:scale-105 transition-transform shrink-0">
+                  <BookOpen className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-teal-500 transition-colors truncate">
+                    Story Studio
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Islamic stories &amp; AI</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/quizzes"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500 group-hover:scale-105 transition-transform shrink-0">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-amber-500 transition-colors truncate">
+                    Quiz Studio
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Review &amp; assign</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/media"
+                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
+              >
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
+                  <Upload className="h-4 w-4" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                    Media Library
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">Quran paras &amp; assets</p>
+                </div>
+              </Link>
+            </div>
+
+            <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
+              <span>Looking for AI logs and token limits?</span>
+              <Link href="/ai-usage" className="inline-flex items-center text-primary font-semibold hover:underline">
+                AI Quota Details &rarr;
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -268,32 +390,6 @@ export default function Dashboard() {
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Quick actions</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              <Link href="/class">
-                <Button variant="outline" className="w-full justify-start">
-                  <GraduationCap className="h-4 w-4 mr-2 opacity-60" />
-                  Start a class
-                </Button>
-              </Link>
-              <Link href="/students/new">
-                <Button variant="outline" className="w-full justify-start">
-                  <UserPlus className="h-4 w-4 mr-2 opacity-60" />
-                  Add student
-                </Button>
-              </Link>
-              <Link href="/students">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2 opacity-60" />
-                  All students ({totalStudents})
-                </Button>
-              </Link>
             </CardContent>
           </Card>
         </div>

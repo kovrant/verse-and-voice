@@ -99,6 +99,14 @@ tags:
 * **Entries Updated:** `domain/namaz-and-learning.md`, `log.md`.
 * **Changes:**
   * Removed per-student Namaz assignment (`StudentNamazAssign` and `useStudentNamazRealtime`) and gave all authenticated students open access to `/student/namaz` (`namaz_steps` and `namaz_step_parts`). Memorization of Namaz parts uses the unified Memorization & Revision module (`category = 'Namaz'`).
-  * Split **Hadiths** and **Quizzes** into two dedicated sibling cards in the 2×2 Teaching Desk grid.
-  * Added `supabase/migration_namaz_open_access.sql` to open `SELECT` RLS on `namaz_steps` / `namaz_step_parts` to all authenticated users and drop the obsolete `student_namaz`, `student_namaz_steps`, and `student_namaz_parts` tables.
-
+### [2026-10-05] - Gemini AI Quota Circular Dashboard Meter & Dedicated `/ai-usage` Portal
+* **Author:** Technical Architecture & UI/UX Pairing Session
+* **Scope:** `src/app/page.tsx`, `src/components/gemini-quota-card.tsx`, `src/app/ai-usage/page.tsx`, `src/components/sidebar.tsx`, `okf/domain/gemini-ai-quota-and-usage.md`.
+* **Entries Created:** `domain/gemini-ai-quota-and-usage.md`.
+* **Entries Updated:** `index.md`, `log.md`.
+* **Changes:**
+  * Replaced the wide full-width linear progress AI Quota card on the teacher dashboard with a compact half-screen card (`lg:col-span-1`) featuring a 70×70px circular SVG gauge showing remaining daily allowance.
+  * Elevated the **Quick Actions Hub** alongside the quota card in a balanced 2-column top grid, bringing classroom action buttons and the Live Activity Feed directly into the viewport without scrolling.
+  * Filtered noisy daily token metrics (`TOKENS TODAY`, `MONTH TOKENS`, `RATE LIMIT`) off the main dashboard, reserving alerts exclusively for high usage (>80%) or critical quota exhaustion (<=50 RPD remaining).
+  * Built a dedicated `/ai-usage` route providing complete token telemetry, live PT midnight reset countdown, rate limits (15 RPM), recent LLM generation logs, and direct link to Google AI Studio.
+  * Added navigation link for `AI Usage` in the main sidebar under Management.

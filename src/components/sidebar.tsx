@@ -6,6 +6,7 @@ import {
   BookMarked,
   BookOpen,
   BookOpenCheck,
+  Cpu,
   CreditCard,
   LayoutDashboard,
   Menu,
@@ -59,6 +60,7 @@ const navSections = [
     items: [
       { href: "/fees", label: "Fee Management", icon: CreditCard },
       { href: "/media", label: "Media Library", icon: Upload },
+      { href: "/ai-usage", label: "AI Usage", icon: Cpu },
     ],
   },
 ]

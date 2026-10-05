@@ -46,6 +46,7 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 * [Live Interactive Class](domain/live-class-session.md): Realtime whiteboard/mushaf pointer sync, debounced progress writes, and class session lifecycles.
 * [Namaz & Islamic Studies](domain/namaz-and-learning.md): Namaz step verification, Arabic normalization, streak calculation, and Hadith/history modules.
 * [Student Lifecycle & Accounts](domain/student-management.md): Student provisioning, fee ledger, activity beacon tracking, and notification deduplication.
+* [Gemini AI Quota & Usage](domain/gemini-ai-quota-and-usage.md): Daily quota tracking, circular dashboard meter, rate limits, and dedicated `/ai-usage` audit route.
 
 ### 3. Database & Infrastructure
 * [Database Schema & PostgREST Limits](database/schema-overview.md): Core tables, relationships, and the PostgREST 1000-row unfiltered query limit (`fetchAllRows`).

@@ -3,6 +3,8 @@
 import {
   Activity,
   AlertCircle,
+  AlertTriangle,
+  ArrowRight,
   BookOpen,
   ExternalLink,
   Flame,
@@ -169,13 +171,213 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
     )
   }
 
-  const isDashboard = variant === "dashboard"
+  // Dashboard variant: Compact half-screen card with circular gauge, no noisy token stats, and alert on high usage
+  if (variant === "dashboard") {
+    const remainingPercent = 100 - usagePercent
+    const radius = 28
+    const circumference = 2 * Math.PI * radius
+    const strokeDashoffset = circumference - (remainingPercent / 100) * circumference
+
+    return (
+      <Card
+        className={cn(
+          "border border-border/80 shadow-soft overflow-hidden transition-all bg-gradient-to-br from-amber-500/[0.04] via-card to-teal-500/[0.04] flex flex-col justify-between",
+          className,
+        )}
+      >
+        <CardHeader className="pb-2.5 pt-4 px-4 sm:px-5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 shadow-xs">
+                <Sparkles className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+                    Gemini AI Quota
+                  </CardTitle>
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "text-[9px] font-extrabold uppercase tracking-wider px-2 py-0 rounded-full border shrink-0",
+                      data.configured
+                        ? "bg-teal-500/10 text-teal-400 border-teal-500/40"
+                        : "bg-amber-500/10 text-amber-400 border-amber-500/40",
+                    )}
+                  >
+                    {data.configured && (
+                      <span className="relative flex h-1.5 w-1.5 mr-1">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-teal-500"></span>
+                      </span>
+                    )}
+                    {data.configured ? "CONNECTED" : "OFFLINE"}
+                  </Badge>
+                </div>
+                <p className="text-[11px] font-medium text-muted-foreground truncate">
+                  Model: <span className="font-semibold text-foreground/90">{data.model || "gemini-3.5-flash"}</span> · Free Tier
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => fetchUsage(true)}
+              disabled={refreshing}
+              title="Refresh Quota"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground shrink-0"
+            >
+              <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
+            </Button>
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-4 sm:px-5 pb-4 pt-1 space-y-3 flex-1 flex flex-col justify-between">
+          {/* Main Circular Gauge & Requests Info */}
+          <div className="flex items-center gap-4 rounded-2xl border border-border/70 bg-card/60 p-3 sm:p-3.5">
+            {/* Circular Progress Ring */}
+            <div className="relative flex items-center justify-center shrink-0">
+              <svg width="70" height="70" className="transform -rotate-90">
+                <circle
+                  cx="35"
+                  cy="35"
+                  r={radius}
+                  stroke="currentColor"
+                  className="text-muted/20"
+                  strokeWidth="5.5"
+                  fill="none"
+                />
+                <circle
+                  cx="35"
+                  cy="35"
+                  r={radius}
+                  stroke="currentColor"
+                  className={cn(
+                    "transition-all duration-700 ease-out",
+                    isCritical
+                      ? "text-rose-500"
+                      : isWarning
+                        ? "text-amber-500"
+                        : "text-teal-500",
+                  )}
+                  strokeWidth="5.5"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center justify-center text-center">
+                <span className="font-heading text-sm font-black text-foreground">
+                  {remainingPercent}%
+                </span>
+                <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
+                  free
+                </span>
+              </div>
+            </div>
+
+            {/* Info Block */}
+            <div className="min-w-0 flex-1 space-y-0.5">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Daily Requests
+                </span>
+                <span className="text-[10px] font-medium text-muted-foreground">
+                  Resets in <strong className="text-foreground">{formatCountdown(data.reset_in_seconds)}</strong>
+                </span>
+              </div>
+
+              <div className="flex items-baseline gap-1.5">
+                <span className="font-heading text-xl sm:text-2xl font-black text-foreground">
+                  {data.requests_remaining.toLocaleString()}
+                </span>
+                <span className="text-xs font-semibold text-muted-foreground">
+                  / {data.daily_limit.toLocaleString()} RPD
+                </span>
+              </div>
+
+              <p className="text-[11px] text-muted-foreground">
+                Used today: <strong className="text-foreground">{data.requests_today}</strong> calls ({usagePercent}% allowance)
+              </p>
+            </div>
+          </div>
+
+          {/* High Usage / Quota Running Low Alert Banner (ONLY shown when usage is high or tokens are turning off) */}
+          {(isWarning || isCritical) && (
+            <div
+              className={cn(
+                "flex items-center gap-2 rounded-xl p-2.5 text-xs font-medium border animate-fade-in-up",
+                isCritical
+                  ? "bg-rose-500/10 border-rose-500/30 text-rose-400"
+                  : "bg-amber-500/10 border-amber-500/30 text-amber-400",
+              )}
+            >
+              {isCritical ? (
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-500" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
+              )}
+              <div className="min-w-0 text-[11px] leading-tight">
+                <span className="font-bold">
+                  {isCritical ? "Daily Quota Reached: " : "High AI Usage: "}
+                </span>
+                {isCritical
+                  ? "Daily requests exhausted. Offline fallback templates are now active."
+                  : `${usagePercent}% of daily limit used (${data.requests_remaining} left). Resets at midnight PT.`}
+              </div>
+            </div>
+          )}
+
+          {/* Bottom Action Buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50">
+            <div className="flex items-center gap-1.5">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-teal-500/40 hover:bg-teal-500/10"
+              >
+                <Link href="/history">
+                  <BookOpen className="h-3 w-3 text-teal-500" />
+                  <span>Stories</span>
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-amber-500/40 hover:bg-amber-500/10"
+              >
+                <Link href="/quizzes">
+                  <Trophy className="h-3 w-3 text-amber-500" />
+                  <span>Quizzes</span>
+                </Link>
+              </Button>
+            </div>
+
+            <Button
+              asChild
+              size="sm"
+              variant="ghost"
+              className="h-7 text-xs font-bold gap-1 text-muted-foreground hover:text-foreground group px-2"
+            >
+              <Link href="/ai-usage">
+                <span>Token Details</span>
+                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card
       className={cn(
         "border border-border/80 shadow-soft overflow-hidden transition-all",
-        isDashboard && "bg-gradient-to-r from-amber-500/[0.04] via-card to-teal-500/[0.04]",
         className,
       )}
     >
@@ -216,33 +418,29 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {isDashboard && (
-              <>
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-teal-500/40 hover:bg-teal-500/10 text-foreground"
-                >
-                  <Link href="/history">
-                    <BookOpen className="h-3.5 w-3.5 text-teal-500" />
-                    <span>Story Studio</span>
-                  </Link>
-                </Button>
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-teal-500/40 hover:bg-teal-500/10 text-foreground"
+            >
+              <Link href="/history">
+                <BookOpen className="h-3.5 w-3.5 text-teal-500" />
+                <span>Story Studio</span>
+              </Link>
+            </Button>
 
-                <Button
-                  asChild
-                  size="sm"
-                  variant="outline"
-                  className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-amber-500/40 hover:bg-amber-500/10 text-foreground"
-                >
-                  <Link href="/quizzes">
-                    <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                    <span>Quiz Studio</span>
-                  </Link>
-                </Button>
-              </>
-            )}
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-amber-500/40 hover:bg-amber-500/10 text-foreground"
+            >
+              <Link href="/quizzes">
+                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                <span>Quiz Studio</span>
+              </Link>
+            </Button>
 
             <Button
               variant="ghost"
