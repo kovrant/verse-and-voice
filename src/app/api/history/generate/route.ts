@@ -59,6 +59,27 @@ const ALLOWED_CATEGORIES = new Set([
   "Other",
 ])
 
+function ensureFourOptions(
+  options: { id: string; text: string; is_correct: boolean }[],
+): { id: string; text: string; is_correct: boolean }[] {
+  if (!Array.isArray(options)) return []
+  const opts = [...options]
+  const fallbackDistracters = [
+    "None of the above",
+    "All of the above",
+    "It is not mentioned in authentic narrations",
+    "Only under special circumstances",
+  ]
+  let idx = 0
+  while (opts.length < 4) {
+    const id = `o${opts.length + 1}`
+    const text = fallbackDistracters[idx % fallbackDistracters.length]
+    idx++
+    opts.push({ id, text, is_correct: false })
+  }
+  return opts
+}
+
 function sanitizeStoryEmDashes(story: GeneratedStoryResponse): GeneratedStoryResponse {
   return {
     ...story,
@@ -91,10 +112,12 @@ function sanitizeStoryEmDashes(story: GeneratedStoryResponse): GeneratedStoryRes
             ...q,
             question_text: removeEmDashes(q.question_text),
             explanation: removeEmDashes(q.explanation),
-            options: (q.options || []).map((o) => ({
-              ...o,
-              text: removeEmDashes(o.text),
-            })),
+            options: ensureFourOptions(
+              (q.options || []).map((o) => ({
+                ...o,
+                text: removeEmDashes(o.text),
+              })),
+            ),
           })),
         }
       : story.derived_quiz,
@@ -242,15 +265,15 @@ Follow these structural requirements with utmost precision:
    - STRICT ISLAMIC RULE: Never depict the face or physical form of Prophets or Angels. Use majestic symbolic nature, celestial skies, luminous lanterns, historic architectural landscapes, or radiant gardens.
    - Specify style: "Disney Pixar 3D animated storybook concept art, warm volumetric golden lighting, rich vibrant colors, highly detailed, 16:9 cinematic aspect ratio. No human faces, scenic only."
 7. 🏆 Directly Derived Mini-Quest Quiz (derived_quiz):
-   - Generate 3 to 4 multiple-choice questions directly derived from the story content.
+   - Generate at least 4 to 5 multiple-choice questions directly derived from the story content (minimum 4 questions).
    - title: e.g. "Quest: Prophet Adam (AS)"
    - description: e.g. "Test your explorer knowledge on the story!"
    - badge_title: e.g. "Garden Explorer"
    - badge_description: e.g. "Completed the Prophet Adam Story Quest"
-   - questions: 3 to 4 items, each with:
+   - questions: array of 4 to 5 items (MUST contain at least 4 questions), each with:
      - question_text: string
      - question_type: "single_choice"
-     - options: 4 options [{ "id": "o1", "text": "...", "is_correct": true }, ...] (exactly 1 is_correct: true)
+     - options: MUST contain at least 4 distinct options [{ "id": "o1", "text": "...", "is_correct": true }, { "id": "o2", "text": "...", "is_correct": false }, { "id": "o3", "text": "...", "is_correct": false }, { "id": "o4", "text": "...", "is_correct": false }] with exactly 1 is_correct: true. STRICT RULE: Every question MUST have at least 4 options (never 2 or 3 options).
      - explanation: 1 "Did you know?" fact based on the story.
 
 Output MUST be raw valid JSON strictly matching this schema with NO markdown wrapping, codeblocks, or extra text:
@@ -296,15 +319,48 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
     "badge_description": "Earned for completing this quest",
     "questions": [
       {
-        "question_text": "...",
+        "question_text": "Question 1 text?",
         "question_type": "single_choice",
         "options": [
-          { "id": "o1", "text": "...", "is_correct": true },
-          { "id": "o2", "text": "...", "is_correct": false },
-          { "id": "o3", "text": "...", "is_correct": false },
-          { "id": "o4", "text": "...", "is_correct": false }
+          { "id": "o1", "text": "Option A (Correct)", "is_correct": true },
+          { "id": "o2", "text": "Option B", "is_correct": false },
+          { "id": "o3", "text": "Option C", "is_correct": false },
+          { "id": "o4", "text": "Option D", "is_correct": false }
         ],
-        "explanation": "..."
+        "explanation": "Did you know fact for Q1."
+      },
+      {
+        "question_text": "Question 2 text?",
+        "question_type": "single_choice",
+        "options": [
+          { "id": "o1", "text": "Option A (Correct)", "is_correct": true },
+          { "id": "o2", "text": "Option B", "is_correct": false },
+          { "id": "o3", "text": "Option C", "is_correct": false },
+          { "id": "o4", "text": "Option D", "is_correct": false }
+        ],
+        "explanation": "Did you know fact for Q2."
+      },
+      {
+        "question_text": "Question 3 text?",
+        "question_type": "single_choice",
+        "options": [
+          { "id": "o1", "text": "Option A (Correct)", "is_correct": true },
+          { "id": "o2", "text": "Option B", "is_correct": false },
+          { "id": "o3", "text": "Option C", "is_correct": false },
+          { "id": "o4", "text": "Option D", "is_correct": false }
+        ],
+        "explanation": "Did you know fact for Q3."
+      },
+      {
+        "question_text": "Question 4 text?",
+        "question_type": "single_choice",
+        "options": [
+          { "id": "o1", "text": "Option A (Correct)", "is_correct": true },
+          { "id": "o2", "text": "Option B", "is_correct": false },
+          { "id": "o3", "text": "Option C", "is_correct": false },
+          { "id": "o4", "text": "Option D", "is_correct": false }
+        ],
+        "explanation": "Did you know fact for Q4."
       }
     ]
   }
@@ -616,6 +672,28 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
             ],
             explanation: "Even when people mocked him, Prophet Nuh never lost trust in Allah's promise.",
           },
+          {
+            question_text: "Where did Prophet Nuh's Ark safely come to rest after the great waters receded?",
+            question_type: "single_choice",
+            options: [
+              { id: "o1", text: "Mount Judi", is_correct: true },
+              { id: "o2", text: "Mount Uhud", is_correct: false },
+              { id: "o3", text: "Mount Sinai", is_correct: false },
+              { id: "o4", text: "Mount Nur", is_correct: false },
+            ],
+            explanation: "As mentioned in Surah Hud, the Ark safely rested on Mount Judi by Allah's command.",
+          },
+          {
+            question_text: "What lesson of character does Prophet Nuh's story teach us most?",
+            question_type: "single_choice",
+            options: [
+              { id: "o1", text: "Patience and steadfast faith even when others mock", is_correct: true },
+              { id: "o2", text: "Giving up when tasks get difficult", is_correct: false },
+              { id: "o3", text: "Building boats as a hobby", is_correct: false },
+              { id: "o4", text: "Only helping those who are popular", is_correct: false },
+            ],
+            explanation: "Prophet Nuh exemplifies perseverance and unwavering trust in Allah despite adversity.",
+          },
         ],
       },
     }
@@ -710,6 +788,28 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
             { id: "o4", text: "A palace of silver", is_correct: false },
           ],
           explanation: "Allah taught Adam the names of all things, honoring him with knowledge and intellect.",
+        },
+        {
+          question_text: "What did Prophet Adam (AS) immediately say after Allah blew the soul into him and he sneezed?",
+          question_type: "single_choice",
+          options: [
+            { id: "o1", text: "Alhamdulillah (All praise is due to Allah)", is_correct: true },
+            { id: "o2", text: "Subhanallah", is_correct: false },
+            { id: "o3", text: "Allahu Akbar", is_correct: false },
+            { id: "o4", text: "Astaghfirullah", is_correct: false },
+          ],
+          explanation: "Prophet Adam's first words upon sneezing were Alhamdulillah, and Allah replied with mercy: Yarhamukallah.",
+        },
+        {
+          question_text: "Why did Iblis refuse to bow down to Prophet Adam when Allah commanded the angels and jinn?",
+          question_type: "single_choice",
+          options: [
+            { id: "o1", text: "Arrogance and pride because he thought fire was superior to clay", is_correct: true },
+            { id: "o2", text: "He did not hear the command", is_correct: false },
+            { id: "o3", text: "He was too busy", is_correct: false },
+            { id: "o4", text: "He forgot Allah's command", is_correct: false },
+          ],
+          explanation: "Iblis allowed pride and arrogance to blind him, refusing Allah's command out of haughtiness.",
         },
       ],
     },
