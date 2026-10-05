@@ -19,7 +19,6 @@ import {
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
-import { GeminiQuotaCard } from "@/components/gemini-quota-card"
 import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -542,9 +541,6 @@ export default function TeacherQuizzesPage() {
         </Card>
       </div>
 
-      {/* Google Gemini AI Quota & Usage Widget */}
-      <GeminiQuotaCard />
-
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
@@ -746,8 +742,6 @@ export default function TeacherQuizzesPage() {
           </DialogHeader>
 
           <div className="space-y-4 py-2">
-            <GeminiQuotaCard variant="compact" />
-
             <div className="space-y-2">
               <Label htmlFor="aiTopic">Topic / Theme</Label>
               <Input
