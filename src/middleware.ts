@@ -91,7 +91,9 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublic && !isApi) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
-    url.searchParams.set("redirectTo", pathname)
+    // Keep the query so deep links (/student/namaz?step=ruku&part=1) survive sign-in.
+    url.search = ""
+    url.searchParams.set("redirectTo", pathname + request.nextUrl.search)
     return redirectTo(url)
   }
 

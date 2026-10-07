@@ -110,3 +110,37 @@ tags:
   * Filtered noisy daily token metrics (`TOKENS TODAY`, `MONTH TOKENS`, `RATE LIMIT`) off the main dashboard, reserving alerts exclusively for high usage (>80%) or critical quota exhaustion (<=50 RPD remaining).
   * Built a dedicated `/ai-usage` route providing complete token telemetry, live PT midnight reset countdown, rate limits (15 RPM), recent LLM generation logs, and direct link to Google AI Studio.
   * Added navigation link for `AI Usage` in the main sidebar under Management.
+
+### [2026-10-07] - Namaz: No Badges, No Certificates
+* **Scope:** `src/lib/achievements/*`, `src/components/trophy-case.tsx`, `src/app/student/achievements/page.tsx`, `src/lib/namaz.ts`, `src/components/namaz-step-viewer.tsx`, `src/components/namaz-step-card.tsx`, `supabase/migration_namaz_remove_badge.sql`.
+* **Entries Updated:** `domain/namaz-and-learning.md`, `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * Removed the `namaz_complete` badge/certificate, the `namaz` trophy domain, the "Namaz badge" locked hint, and the dead per-student unlock/revision helpers and viewer props. `/student/namaz` is a plain open guide.
+
+### [2026-10-07] - Namaz Phase 1: Guidance Data Model
+* **Scope:** `src/lib/namaz.ts`, `src/lib/namaz.test.ts`, `supabase/migration_namaz_guidance.sql`.
+* **Entries Updated:** `domain/namaz-and-learning.md`, `domain/namaz-review-list.md` (new), `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * Added per-part action text, word-by-word transliteration, repeat counts, audio/timing slots and a review flag; seeded all 14 live parts (validated against the live Arabic word counts) and fixed the "Rabbiyal" spellings.
+  * Added pure journey helpers (`flattenNamaz`, `findStop`, `stepSlug`, `wordChips`, `evenWordTimings`, `activeWordIndex`) with tests.
+
+### [2026-10-07] - Namaz Phase 2: Continuous Learn Journey
+* **Scope:** `src/app/student/namaz/page.tsx`, `src/components/namaz-journey.tsx` (new), `src/components/namaz-part-panel.tsx` (new), `src/lib/namaz-progress.ts` (new), `src/lib/namaz.ts`, `src/middleware.ts`; removed `src/components/namaz-step-viewer.tsx`.
+* **Entries Updated:** `domain/namaz-and-learning.md`, `log.md`.
+* **Changes:**
+  * Next/Back cross step boundaries; URL deep links with sensible browser Back; progress bar; word chips with karaoke audio; Continue/Start and viewed ticks stored in localStorage.
+  * Middleware now keeps the query string in `redirectTo`, so a signed-out deep link survives login.
+
+### [2026-10-07] - Namaz Phase 3: Teacher Audio Tools
+* **Scope:** `src/app/namaz/audio/page.tsx` (new), `src/components/namaz-audio-row.tsx` (new), `src/app/namaz/page.tsx`, `src/lib/namaz.ts`, `src/lib/namaz.test.ts`, `supabase/migration_namaz_audio.sql` (new).
+* **Entries Updated:** `domain/namaz-and-learning.md`, `domain/namaz-review-list.md`, `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * Teacher page to record, upload, replace and delete each part's audio in the new `namaz-audio` bucket (public read, teacher-only write).
+  * Tap-to-time word timings (button or Space) with a live student-panel preview, save and reset.
+  * Needs-review filter with per-part Approve.
+
+### [2026-10-07] - Namaz: Learn Mode Only
+* **Scope:** `src/app/student/namaz/page.tsx`.
+* **Entries Updated:** `domain/namaz-and-learning.md`, `log.md`.
+* **Changes:**
+  * Dropped the planned Pray Along and Challenge modes (and the Namaz Star badge). Removed the mode row and the "coming soon" buttons; the guide is the step grid plus the Learn journey with pictures and teacher audio.

@@ -4,7 +4,6 @@ import { supabase } from "@/lib/supabase"
 import {
   syncMemorizationChunk,
   syncMemorizationLesson,
-  syncNamazComplete,
   syncQuranRound,
 } from "./sync"
 import type { QuranRoundProgress, QuranRoundRef } from "./types"
@@ -46,9 +45,4 @@ export async function awardMemLesson(
   lessonTitle: string,
 ): Promise<void> {
   return syncMemorizationLesson(supabase, studentId, catalogId, lessonTitle)
-}
-
-export async function awardNamazCompleteBadge(studentId: string): Promise<boolean> {
-  await syncNamazComplete(supabase, studentId)
-  return true
 }

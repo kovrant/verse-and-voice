@@ -126,7 +126,7 @@ function getEmptyStateMessage(category: NotificationCategory, search: string) {
     case "assignments":
       return {
         title: "All caught up on assignments",
-        description: "New Namaz steps, Qaida lessons, and homework tasks will be listed here.",
+        description: "New Qaida lessons and homework tasks will be listed here.",
       }
     case "fees":
       return {
@@ -172,7 +172,7 @@ function getKidEmptyStateMessage(category: NotificationCategory, search: string)
     case "assignments":
       return {
         title: "No tasks right now",
-        description: "New Namaz steps, Qaida lessons and homework will land here.",
+        description: "New Qaida lessons and homework will land here.",
       }
     case "fees":
       return {

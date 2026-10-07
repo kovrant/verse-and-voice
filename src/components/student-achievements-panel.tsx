@@ -165,7 +165,7 @@ export function StudentAchievementsPanel({
       {isEmpty ? (
         <Card className="border-dashed">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
-            No trophies yet. Save Quran, Qaida, memorization, or Namaz progress — or run{" "}
+            No trophies yet. Save Quran, Qaida or memorization progress — or run{" "}
             <strong className="font-medium text-foreground">Sync achievements</strong> if work was
             done before this module.
           </CardContent>

@@ -19,7 +19,6 @@ export interface GroupedTrophies {
   quranMilestones: TrophyItem[]
   quranParas: number[]
   qaida: TrophyItem[]
-  namaz: TrophyItem[]
   quizzes: TrophyItem[]
   hadiths: TrophyItem[]
   memorization: MemLessonGroup[]
@@ -37,7 +36,6 @@ export function groupTrophies(items: TrophyItem[]): GroupedTrophies {
   const quranMilestones: TrophyItem[] = []
   const quranParas = new Set<number>()
   const qaida: TrophyItem[] = []
-  const namaz: TrophyItem[] = []
   const quizzes: TrophyItem[] = []
   const hadiths: TrophyItem[] = []
   const memMap = new Map<string, MemLessonGroup>()
@@ -52,9 +50,6 @@ export function groupTrophies(items: TrophyItem[]): GroupedTrophies {
       }
       case "qaida":
         qaida.push(item)
-        break
-      case "namaz":
-        namaz.push(item)
         break
       case "quiz":
         quizzes.push(item)
@@ -94,7 +89,6 @@ export function groupTrophies(items: TrophyItem[]): GroupedTrophies {
     quranMilestones,
     quranParas: [...quranParas].sort((a, b) => a - b),
     qaida,
-    namaz,
     quizzes,
     hadiths,
     memorization,
@@ -123,8 +117,8 @@ export function trophyHeadline(grouped: GroupedTrophies, certificateCount: numbe
   if (memLessons > 0) {
     bits.push(`${memLessons} lesson${memLessons === 1 ? "" : "s"}`)
   }
-  if (grouped.qaida.length + grouped.namaz.length > 0) {
-    bits.push(`${grouped.qaida.length + grouped.namaz.length} special`)
+  if (grouped.qaida.length > 0) {
+    bits.push(`${grouped.qaida.length} special`)
   }
   return bits.length > 0 ? bits.join(" · ") : "No trophies yet"
 }

@@ -506,12 +506,6 @@ export function TrophyCase({ earned, certificates, emptyHint, kid = false }: Tro
         </DomainSection>
       ) : null}
 
-      {grouped.namaz.length > 0 ? (
-        <DomainSection label="Namaz" icon={Moon} emoji="🕌" kid={kid}>
-          {simpleBadges(grouped.namaz, Moon, "🕌", "rose")}
-        </DomainSection>
-      ) : null}
-
       {grouped.quizzes.length > 0 ? (
         <DomainSection label="Quests & Quizzes" icon={Sparkles} emoji="✨" kid={kid}>
           {kid ? (

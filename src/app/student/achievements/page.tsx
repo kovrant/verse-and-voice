@@ -74,12 +74,6 @@ const LOCKED_HINTS: {
     isLocked: (g) => g.qaida.length === 0,
   },
   {
-    emoji: "🕌",
-    title: "Namaz badge",
-    hint: "Learn your prayers, step by step.",
-    isLocked: (g) => g.namaz.length === 0,
-  },
-  {
     emoji: "📜",
     title: "First certificate",
     hint: "The biggest trophies come with a certificate!",
@@ -177,8 +171,7 @@ export default function StudentAchievementsPage() {
     grouped.memorization.length +
     grouped.quizzes.length +
     grouped.hadiths.length +
-    grouped.qaida.length +
-    grouped.namaz.length
+    grouped.qaida.length
   const locked = LOCKED_HINTS.filter((l) => l.isLocked(grouped, trophyCerts.length))
 
   if (loading || loadingData) return <PageLoading variant="student-simple" student />
@@ -226,7 +219,7 @@ export default function StudentAchievementsPage() {
         kid
         earned={trophyItems}
         certificates={trophyCerts}
-        emptyHint="Finish paras, lessons, Qaida or Namaz with your teacher — your first trophy will land right here."
+        emptyHint="Finish paras, lessons or Qaida with your teacher — your first trophy will land right here."
       />
 
       {locked.length > 0 && (

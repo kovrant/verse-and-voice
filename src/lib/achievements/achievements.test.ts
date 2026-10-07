@@ -46,7 +46,7 @@ describe("achievement slugs", () => {
     expect(slugIssuesCertificate("qaida_complete")).toBe(true)
     expect(slugIssuesCertificate("quran_khatm")).toBe(true)
     expect(slugIssuesCertificate("khatm_2")).toBe(true)
-    expect(slugIssuesCertificate("namaz_complete")).toBe(true)
+    expect(slugIssuesCertificate("namaz_complete")).toBe(false)
     expect(slugIssuesCertificate("para_05")).toBe(false)
     expect(slugIssuesCertificate("quran_half")).toBe(false)
   })

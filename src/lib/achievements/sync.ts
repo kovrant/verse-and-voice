@@ -18,7 +18,6 @@ import {
   khatmSlug,
   memLessonSlug,
   memPartSlug,
-  NAMAZ_COMPLETE_SLUG,
   paraSlug,
   QAIDA_COMPLETE_SLUG,
   QURAN_HALF_SLUG,
@@ -162,15 +161,6 @@ export async function syncMemorizationLesson(
       description: `Memorized ${lessonTitle}`,
       domain: "memorization",
     })
-  } catch {
-    // ponytail: best-effort
-  }
-}
-
-/** Namaz module fully completed. */
-export async function syncNamazComplete(db: SupabaseClient, studentId: string): Promise<void> {
-  try {
-    await awardAchievement(db, studentId, NAMAZ_COMPLETE_SLUG, "namaz_completion")
   } catch {
     // ponytail: best-effort
   }

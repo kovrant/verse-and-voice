@@ -11,7 +11,6 @@ export function NamazStepCard({
   cardColor,
   clickable,
   completed,
-  activeRevision,
   onClick,
 }: {
   title: string
@@ -21,7 +20,6 @@ export function NamazStepCard({
   cardColor: string
   clickable: boolean
   completed?: boolean
-  activeRevision?: boolean
   onClick?: () => void
 }) {
   return (
@@ -41,10 +39,6 @@ export function NamazStepCard({
           : clickable
             ? "cursor-pointer hover:-translate-y-1 hover:shadow-lg border-border/40"
             : "cursor-not-allowed opacity-45 border-border/20",
-        activeRevision &&
-          (kid
-            ? "ring-4 ring-[hsl(var(--kid-saffron)/0.45)]"
-            : "ring-2 ring-amber-400/70 ring-offset-2 ring-offset-background"),
       )}
       style={{
         background: `linear-gradient(135deg, ${cardColor}22 0%, ${cardColor}44 100%)`,
@@ -76,18 +70,6 @@ export function NamazStepCard({
           >
             <Check className={kid ? "h-3.5 w-3.5" : "h-3 w-3"} />
             Done
-          </span>
-        )}
-        {activeRevision && (
-          <span
-            className={cn(
-              "mb-2 inline-flex w-fit rounded-full",
-              kid
-                ? "bg-[hsl(var(--kid-saffron)/0.6)] px-2.5 py-1 text-[12px] font-extrabold text-foreground"
-                : "bg-amber-500/90 px-2 py-0.5 text-[10px] font-semibold text-white",
-            )}
-          >
-            {kid ? "🔁 Say again" : "Revise"}
           </span>
         )}
         <p

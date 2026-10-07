@@ -2,7 +2,6 @@ export { backfillStudentAchievements } from "./backfill"
 export { buildCertificateNumber } from "./certificates"
 export {
   awardMemLesson,
-  awardNamazCompleteBadge,
   type RoundProgress,
   type RoundRef,
   syncMemChunkAchievements,

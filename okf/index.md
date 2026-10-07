@@ -45,6 +45,7 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 * [Memorization (Hifz) & Revision](domain/memorization-and-hifz.md): Sabaq, Sabqi, Manzil lifecycle, chunk allocation, and revision scheduling triggers.
 * [Live Interactive Class](domain/live-class-session.md): Realtime whiteboard/mushaf pointer sync, debounced progress writes, and class session lifecycles.
 * [Namaz & Islamic Studies](domain/namaz-and-learning.md): Namaz step verification, Arabic normalization, streak calculation, and Hadith/history modules.
+* [Namaz Content Review List](domain/namaz-review-list.md): Generated transliterations and action texts awaiting teacher approval, plus the Takbir image follow-up.
 * [Student Lifecycle & Accounts](domain/student-management.md): Student provisioning, fee ledger, activity beacon tracking, and notification deduplication.
 * [Gemini AI Quota & Usage](domain/gemini-ai-quota-and-usage.md): Daily quota tracking, circular dashboard meter, rate limits, and dedicated `/ai-usage` audit route.
 

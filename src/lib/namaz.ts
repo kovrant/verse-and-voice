@@ -1,7 +1,5 @@
 // Pure Namaz helpers — no Supabase import so they're unit-testable.
 
-export type NamazModuleStatus = "learning" | "completed"
-
 export interface NamazStep {
   id: string
   title: string
@@ -20,49 +18,23 @@ export interface NamazStepPart {
   arabic_text: string | null
   /** Its meaning in English, shown under the Arabic (teacher-editable, may be empty). */
   translation: string | null
-}
-
-export interface StudentNamaz {
-  id: string
-  student_id: string
-  status: NamazModuleStatus
-  assigned_at: string
-  completed_at: string | null
-  last_revised_at: string | null
-  notes: string | null
-}
-
-export interface StudentNamazStep {
-  id: string
-  student_id: string
-  step_id: string
-  unlocked_at: string | null
-  last_viewed_at: string | null
-  completed_at: string | null
-  revision_assigned_at: string | null
-  last_revised_at: string | null
-  revision_count: number
-}
-
-export interface StudentNamazPart {
-  id: string
-  student_id: string
-  part_id: string
-  revision_assigned_at: string | null
-  last_revised_at: string | null
-  revision_count: number
+  /** Short kid instruction: "Bow down. Hands on knees. Back flat." */
+  action_text: string | null
+  /** Transliteration, one entry per Arabic word (see `wordChips`). */
+  word_tr: string[] | null
+  /** "Say it 3 times". */
+  repeat_count: number | null
+  audio_url: string | null
+  /** Start second of each word, same length as `word_tr`. */
+  word_timings: number[] | null
+  /** Generated content the teacher has not approved yet. */
+  needs_review: boolean
+  review_note: string | null
 }
 
 export const NAMAZ_STEP_SELECT = "id, title, order_index, image_url, card_color"
-export const NAMAZ_PART_SELECT = "id, step_id, title, order_index, image_url, arabic_text, translation"
-export const STUDENT_NAMAZ_SELECT =
-  "id, student_id, status, assigned_at, completed_at, last_revised_at, notes"
-export const STUDENT_NAMAZ_STEP_SELECT =
-  "id, student_id, step_id, unlocked_at, last_viewed_at, completed_at, revision_assigned_at, last_revised_at, revision_count"
-export const STUDENT_NAMAZ_PART_SELECT =
-  "id, student_id, part_id, revision_assigned_at, last_revised_at, revision_count"
-
-export const NAMAZ_COMPLETE_BADGE_SLUG = "namaz_complete"
+export const NAMAZ_PART_SELECT =
+  "id, step_id, title, order_index, image_url, arabic_text, translation, action_text, word_tr, repeat_count, audio_url, word_timings, needs_review, review_note"
 
 /** Preset swatches for the teacher step editor. */
 export const NAMAZ_CARD_COLORS = [
@@ -77,122 +49,137 @@ export const NAMAZ_CARD_COLORS = [
   "#16a34a",
 ] as const
 
-export function stepProgressByStepId(rows: StudentNamazStep[]): Map<string, StudentNamazStep> {
-  return new Map(rows.map((r) => [r.step_id, r]))
+export function partsForStep(stepId: string, parts: NamazStepPart[]): NamazStepPart[] {
+  return parts.filter((p) => p.step_id === stepId).sort((a, b) => a.order_index - b.order_index)
 }
 
-export function partProgressByPartId(rows: StudentNamazPart[]): Map<string, StudentNamazPart> {
-  return new Map(rows.map((r) => [r.part_id, r]))
+/** "Second Sujood" → "second-sujood", for `?step=` deep links. */
+export function stepSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
 }
 
-/** Unlocked steps stay open during learning — including after teacher marks them complete. */
-export function isStepUnlockedForLearning(
-  progress: StudentNamazStep | undefined,
-  moduleStatus: NamazModuleStatus,
-): boolean {
-  if (moduleStatus === "completed") return false
-  return !!progress?.unlocked_at
+/** One screen of the journey: a step and one of its parts (null when the step has none). */
+export interface NamazStop {
+  step: NamazStep
+  part: NamazStepPart | null
+  /** 0-based position of the step among all steps. */
+  stepIndex: number
+  /** 0-based position of the part inside its step. */
+  partIndex: number
+  partCount: number
 }
 
-function isStepUnlockedForWholeStepRevision(
-  progress: StudentNamazStep | undefined,
-  moduleStatus: NamazModuleStatus,
-  hasParts: boolean,
-): boolean {
-  if (moduleStatus !== "completed" || hasParts) return false
-  return !!progress?.completed_at && !!progress.revision_assigned_at
-}
-
-function isStepOpenForRevision(
-  progress: StudentNamazStep | undefined,
-  moduleStatus: NamazModuleStatus,
-  parts: NamazStepPart[],
-  partProgress: Map<string, StudentNamazPart>,
-): boolean {
-  if (moduleStatus !== "completed" || !progress?.completed_at) return false
-  if (parts.length === 0) return isStepUnlockedForWholeStepRevision(progress, moduleStatus, false)
-  return parts.some((p) => !!partProgress.get(p.id)?.revision_assigned_at)
-}
-
-export function isStepCardClickable(
-  step: NamazStep,
-  progress: StudentNamazStep | undefined,
-  moduleStatus: NamazModuleStatus,
-  parts: NamazStepPart[],
-  partProgress: Map<string, StudentNamazPart>,
-): boolean {
-  if (moduleStatus === "learning") return isStepUnlockedForLearning(progress, moduleStatus)
-  return isStepOpenForRevision(progress, moduleStatus, parts, partProgress)
-}
-
-export function currentLearningStep(
-  steps: NamazStep[],
-  progress: Map<string, StudentNamazStep>,
-): NamazStep | null {
-  for (const step of [...steps].sort((a, b) => a.order_index - b.order_index)) {
-    const row = progress.get(step.id)
-    if (row?.unlocked_at && !row.completed_at) return step
-  }
-  return null
-}
-
-export function activeRevisionPart(
-  parts: NamazStepPart[],
-  partProgress: Map<string, StudentNamazPart>,
-): NamazStepPart | null {
-  for (const part of [...parts].sort((a, b) => a.order_index - b.order_index)) {
-    if (partProgress.get(part.id)?.revision_assigned_at) return part
-  }
-  return null
-}
-
-export function learningProgress(
-  steps: NamazStep[],
-  progress: Map<string, StudentNamazStep>,
-): { done: number; total: number } {
-  const total = steps.length
-  const done = steps.filter((s) => !!progress.get(s.id)?.completed_at).length
-  return { done, total }
-}
-
-/** All unlocked steps completed and every catalog step has a completed row. */
-export function isModuleReadyToComplete(
-  steps: NamazStep[],
-  progress: Map<string, StudentNamazStep>,
-): boolean {
-  if (steps.length === 0) return false
-  return steps.every((step) => {
-    const row = progress.get(step.id)
-    return !!row?.unlocked_at && !!row.completed_at
+/** Every part of every step, in prayer order, so Next can cross from one step to the next. */
+export function flattenNamaz(steps: NamazStep[], parts: NamazStepPart[]): NamazStop[] {
+  const ordered = [...steps].sort((a, b) => a.order_index - b.order_index)
+  return ordered.flatMap((step, stepIndex): NamazStop[] => {
+    const own = partsForStep(step.id, parts)
+    if (own.length === 0) return [{ step, part: null, stepIndex, partIndex: 0, partCount: 1 }]
+    return own.map((part, partIndex) => ({
+      step,
+      part,
+      stepIndex,
+      partIndex,
+      partCount: own.length,
+    }))
   })
 }
 
-export interface PartRevisionStat {
-  part: NamazStepPart
-  revision_count: number
-  last_revised_at: string | null
-  revision_assigned_at: string | null
+/** Stable id of a screen: the part's id, or the step's when it has no parts. */
+export function stopKey(stop: NamazStop): string {
+  return stop.part?.id ?? stop.step.id
 }
 
-/** Teacher insight: highest revision counts first. */
-export function partRevisionStats(
-  parts: NamazStepPart[],
-  partProgress: Map<string, StudentNamazPart>,
-): PartRevisionStat[] {
-  return [...parts]
-    .sort((a, b) => a.order_index - b.order_index)
-    .map((part) => {
-      const row = partProgress.get(part.id)
-      return {
-        part,
-        revision_count: row?.revision_count ?? 0,
-        last_revised_at: row?.last_revised_at ?? null,
-        revision_assigned_at: row?.revision_assigned_at ?? null,
-      }
-    })
-    .sort((a, b) => b.revision_count - a.revision_count || a.part.order_index - b.part.order_index)
+/** Index of `?step=ruku&part=2` (part is 1-based) in the journey, or -1. */
+export function findStop(stops: NamazStop[], slug: string, part = 1): number {
+  const first = stops.findIndex((s) => stepSlug(s.step.title) === slug)
+  if (first === -1) return -1
+  const within = Math.min(Math.max(part, 1), stops[first].partCount) - 1
+  return first + within
 }
 
-export function partsForStep(stepId: string, parts: NamazStepPart[]): NamazStepPart[] {
-  return parts.filter((p) => p.step_id === stepId).sort((a, b) => a.order_index - b.order_index)
+export interface WordChip {
+  ar: string
+  tr: string
+}
+
+const AYAH_MARK = "۝"
+
+/**
+ * Pair the Arabic words with their transliteration. The Arabic is split on
+ * spaces exactly as stored; an ayah marker (۝) rides on the word before it, so
+ * joining every `ar` with a space gives back `arabic` unchanged. Returns null
+ * when the counts disagree (e.g. a teacher edited the Arabic), and the caller
+ * shows the plain Arabic instead.
+ */
+export function wordChips(arabic: string | null, tr: string[] | null): WordChip[] | null {
+  if (!arabic || !tr?.length) return null
+  const words: string[] = []
+  for (const token of arabic.split(" ")) {
+    if (token === AYAH_MARK && words.length > 0) words[words.length - 1] += ` ${token}`
+    else words.push(token)
+  }
+  if (words.length !== tr.length) return null
+  return words.map((ar, i) => ({ ar, tr: tr[i] }))
+}
+
+/** Start second of each word when the teacher hasn't timed them: spread evenly over the audio. */
+export function evenWordTimings(count: number, duration: number): number[] {
+  if (count <= 0 || !(duration > 0)) return []
+  return Array.from({ length: count }, (_, i) => (duration * i) / count)
+}
+
+/** Index of the word playing at `time`, or -1 before the first one starts. */
+export function activeWordIndex(timings: number[], time: number): number {
+  let active = -1
+  for (let i = 0; i < timings.length; i++) {
+    if (timings[i] <= time) active = i
+    else break
+  }
+  return active
+}
+
+export const NAMAZ_AUDIO_BUCKET = "namaz-audio"
+
+/** Audio types the `namaz-audio` bucket accepts (migration_namaz_audio.sql), with the file extension to save. */
+const NAMAZ_AUDIO_TYPES: Record<string, string> = {
+  "audio/webm": "webm",
+  "audio/ogg": "ogg",
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/mp4": "m4a",
+  "audio/x-m4a": "m4a",
+  "audio/m4a": "m4a",
+  "audio/aac": "aac",
+  "audio/wav": "wav",
+}
+
+/**
+ * Bucket-safe content type and extension for a recording or uploaded file, or
+ * null if the bucket would refuse it. Drops `;codecs=…` (MediaRecorder adds
+ * it) and falls back to the file extension when the browser gives no type.
+ */
+export function namazAudioType(mime: string, fileName = ""): { type: string; ext: string } | null {
+  let type = mime.split(";")[0].trim().toLowerCase()
+  if (!NAMAZ_AUDIO_TYPES[type]) {
+    const ext = fileName.split(".").pop()?.toLowerCase()
+    type = Object.keys(NAMAZ_AUDIO_TYPES).find((t) => NAMAZ_AUDIO_TYPES[t] === ext) ?? ""
+  }
+  return NAMAZ_AUDIO_TYPES[type] ? { type, ext: NAMAZ_AUDIO_TYPES[type] } : null
+}
+
+/** Object path inside the namaz-audio bucket for a stored public URL, or null for any other URL. */
+export function namazAudioPath(url: string | null): string | null {
+  const marker = `/${NAMAZ_AUDIO_BUCKET}/`
+  const i = url?.indexOf(marker) ?? -1
+  return url && i !== -1 ? decodeURIComponent(url.slice(i + marker.length).split("?")[0]) : null
+}
+
+/** Word timings a teacher tapped are usable: one per word, never going backwards. */
+export function validWordTimings(timings: number[] | null, wordCount: number): boolean {
+  if (!timings || wordCount === 0 || timings.length !== wordCount) return false
+  return timings.every((t, i) => t >= 0 && (i === 0 || t >= timings[i - 1]))
 }

@@ -2,7 +2,8 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { ChevronDown, ChevronUp, ImagePlus, Loader2, Moon, Plus, Trash2 } from "lucide-react"
+import { ChevronDown, ChevronUp, ImagePlus, Loader2, Mic, Moon, Plus, Trash2 } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
 import { NamazStepCard } from "@/components/namaz-step-card"
@@ -137,11 +138,7 @@ export default function NamazAdminPage() {
   }
 
   /** Arabic or translation for a part — saved on blur, so the teacher can fix a word and click away. */
-  async function savePartText(
-    partId: string,
-    field: "arabic_text" | "translation",
-    value: string,
-  ) {
+  async function savePartText(partId: string, field: "arabic_text" | "translation", value: string) {
     const { error } = await supabase
       .from("namaz_step_parts")
       .update({ [field]: value.trim() || null })
@@ -160,14 +157,23 @@ export default function NamazAdminPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Moon className="h-8 w-8 text-teal-600" />
-          Namaz Steps
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Manage step cards and duas inside each step. All students can view and practice these steps in their portal.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Moon className="h-8 w-8 text-teal-600" />
+            Namaz Steps
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Manage step cards and duas inside each step. All students can view and practice these
+            steps in their portal.
+          </p>
+        </div>
+        <Button asChild variant="outline">
+          <Link href="/namaz/audio">
+            <Mic className="h-4 w-4 mr-1" />
+            Audio & review
+          </Link>
+        </Button>
       </div>
 
       <Card className="border-border/50 shadow-soft">
