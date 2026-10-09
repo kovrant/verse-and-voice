@@ -166,3 +166,10 @@ tags:
   * `student_para_progress_bounds_check` required `para_number BETWEEN 1 AND 30`, so every Qaida bookmark (`para_number = 0`) failed and fell back to `localStorage`. Now `0..30`.
   * The para PDFs are a 16-line mushaf. `DEFAULT_MUSHAF_LINES` is now 16, and the `last_line` / `ending_line` checks allow `1..16`. Margin ratios unchanged (not re-measured).
   * `UNIQUE(student_id, para_number)` is now declared in committed SQL; the drift item is resolved.
+
+### [2026-10-10] - README: Point to Canonical Migration Order
+* **Scope:** `README.md` (docs only; no SQL changed).
+* **Entries Updated:** `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * Removed README's older, duplicated `supabase/*.sql` run order (it still listed the never-committed `migration_qaida_live_class.sql` and missed later files) and replaced it with a pointer to `database/migration-pipeline.md`.
+  * Kept README-only context: SQL Editor note, backfill files, teacher-promotion block, drift warning.

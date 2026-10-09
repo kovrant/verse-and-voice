@@ -76,7 +76,7 @@ Execute the SQL files strictly in this order:
 > * `migration_namaz_open_access.sql` drops the trigger `migration_security_hardening.sql` creates on `student_namaz_steps`. Run it before 34 and 34 fails on the missing table.
 > * `migration_namaz_realtime.sql` and the `student_namaz*` half of `migration_namaz_steps.sql` are superseded by step 35 but kept so later files apply cleanly.
 > * `student_para_progress` `UNIQUE(student_id, para_number)` is now declared in `schema.sql` and `migration_student_para_progress.sql` (fresh builds) and step 42 (existing DBs).
-> * `README.md` keeps its own older run order; this file wins.
+> * `README.md` links here instead of keeping its own run order; this file is the only list.
 
 ---
 

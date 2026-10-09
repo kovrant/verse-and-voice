@@ -29,45 +29,16 @@ Node 20 (see `engines` in `package.json`).
 
 ## Database
 
-Apply `supabase/*.sql` in this order (it is not derivable from the filenames):
-
-```
-schema.sql
-migration_quran_progress.sql
-migration_memorization.sql
-setup_storage.sql
-migration_media_library.sql
-migration_quran_rounds.sql
-migration_auth_rls.sql
-migration_class_sessions.sql
-migration_student_portal.sql        # must come after migration_auth_rls.sql
-migration_realtime_class_auth.sql
-migration_para_progress_rls.sql
-migration_activity_logs.sql
-migration_islamic_history.sql
-migration_notifications.sql
-migration_class_days.sql
-migration_memorization_chunks.sql
-migration_notifications_retention.sql
-migration_notifications_rls_fix.sql
-migration_qaida.sql
-migration_qaida_live_class.sql     # allows para_number = 0 (the Qaida sentinel)
-migration_namaz_steps.sql          # badges / student_badges (Namaz + achievement stubs)
-migration_achievements.sql         # seed Qaida, para, half-Quran, khatm badges
-migration_achievements_module.sql # unified achievements + certificates; drops badges tables
-migration_memorization_revision.sql # revision bucket: revision_assigned_at + trigger fix
-```
+Apply `supabase/*.sql` by hand in the Supabase SQL Editor. The order is not derivable
+from the filenames: start with `schema.sql`, then follow the numbered list in
+[`okf/database/migration-pipeline.md`](okf/database/migration-pipeline.md), the single
+source of truth for run order.
 
 `backfill_old_fees_paid.sql` and `backfill_notification_copy.sql` are one-off data
 fixes, not schema.
 
 `migration_student_portal.sql` ends with a commented-out block that promotes the
 teacher account. Run it once, with the real email substituted.
-
-> **These files do not fully reproduce the live database.** `student_para_progress`
-> has RLS policies but no `CREATE TABLE` anywhere, and `class_sessions` is missing
-> the `ending_page` / `last_page` columns the app writes. A database built from
-> these files will not run the app. See `BUGS.md`.
 
 ## Invariants
 
