@@ -144,3 +144,9 @@ tags:
 * **Entries Updated:** `domain/namaz-and-learning.md`, `log.md`.
 * **Changes:**
   * Dropped the planned Pray Along and Challenge modes (and the Namaz Star badge). Removed the mode row and the "coming soon" buttons; the guide is the step grid plus the Learn journey with pictures and teacher audio.
+
+### [2026-10-09] - AI Usage Logs RLS Fix
+* **Scope:** `supabase/migration_ai_usage_logs.sql`, `supabase/migration_ai_usage_logs_rls_fix.sql` (new).
+* **Entries Updated:** `architecture/rls-security-model.md`, `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * `ai_usage_logs` had `USING (true)` / `WITH CHECK (true)` policies with no `TO` clause, so `anon` could read every log row and insert fake rows into the quota meter. Replaced with a teacher-only `FOR ALL TO authenticated` policy; all app access already goes through the service role (`/api/ai/usage`, `/api/quizzes/generate`, `/api/history/generate`).

@@ -95,7 +95,7 @@ CREATE POLICY "Student read own new_feature"
 2. **Service-Role Boundary:**  
    The `SUPABASE_SERVICE_ROLE_KEY` bypasses all RLS checks. It must **only** be imported in server-side API routes via `src/lib/supabase-admin.ts` and must never be exposed or passed to the browser bundle.
 3. **One open policy cancels every correct one.**
-   Policies are *permissive* and OR'd. A leftover `USING (true)` next to a careful `is_teacher()` policy makes the table fully open — the careful policy never gets a say. Adding a correct policy is not enough; the open one must be **dropped**. The 2026-09-26 audit found exactly this on `class_sessions`, all four quiz tables and both storage buckets (fixed by `migration_rls_hardening.sql`).
+   Policies are *permissive* and OR'd. A leftover `USING (true)` next to a careful `is_teacher()` policy makes the table fully open — the careful policy never gets a say. Adding a correct policy is not enough; the open one must be **dropped**. The 2026-09-26 audit found exactly this on `class_sessions`, all four quiz tables and both storage buckets (fixed by `migration_rls_hardening.sql`). `ai_usage_logs` had the same hole (open `SELECT`/`INSERT` to `public`), fixed by `migration_ai_usage_logs_rls_fix.sql`.
 4. **A policy with no `TO` clause applies to `public`, which includes `anon`.**
    The anon key ships in the browser bundle, so `public` means *anyone on the internet, logged in or not*. Every write policy must say `TO authenticated` **and** check `is_teacher()` or ownership.
 5. **Students never write quiz tables or storage.** Quiz attempts and assignments are written server-side with the service role (`src/app/api/quizzes/*`); only teacher pages upload files. So those tables need student `SELECT` only.

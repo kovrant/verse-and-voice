@@ -23,8 +23,10 @@ CREATE INDEX IF NOT EXISTS idx_ai_usage_status ON ai_usage_logs(status);
 
 ALTER TABLE ai_usage_logs ENABLE ROW LEVEL SECURITY;
 
+-- All app reads/writes use the service role (bypasses RLS); never open this to public/anon.
 DROP POLICY IF EXISTS "ai_usage_logs_select" ON ai_usage_logs;
-CREATE POLICY "ai_usage_logs_select" ON ai_usage_logs FOR SELECT USING (true);
-
 DROP POLICY IF EXISTS "ai_usage_logs_insert" ON ai_usage_logs;
-CREATE POLICY "ai_usage_logs_insert" ON ai_usage_logs FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Teacher full access on ai_usage_logs" ON ai_usage_logs;
+CREATE POLICY "Teacher full access on ai_usage_logs" ON ai_usage_logs
+  FOR ALL TO authenticated USING (is_teacher()) WITH CHECK (is_teacher());

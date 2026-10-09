@@ -59,6 +59,7 @@ Execute the SQL files strictly in this order:
 30. `migration_namaz_remove_badge.sql` — Deletes the `namaz` achievement domain (`namaz_complete` definition plus any earned rows and certificates). Namaz is an open guide with no awards. Idempotent.
 31. `migration_namaz_guidance.sql` — Adds `action_text`, `word_tr`, `repeat_count`, `audio_url`, `word_timings`, `needs_review`, `review_note` to `namaz_step_parts`, seeds them and fixes the "Rabbiyal" part titles. Never touches `arabic_text` / `translation`. Idempotent. **Apply before deploying the code that selects the columns** (`NAMAZ_PART_SELECT`).
 32. `migration_namaz_audio.sql` — Creates the public `namaz-audio` storage bucket (audio MIME types, 10 MB) with teacher-only insert/update/delete. Run **after** `migration_namaz_guidance.sql`. Idempotent.
+33. `migration_ai_usage_logs_rls_fix.sql` — Drops the open (`public`) `ai_usage_logs_select` / `ai_usage_logs_insert` policies and replaces them with a teacher-only `FOR ALL TO authenticated` policy. App access is service-role only. Run **after** `migration_ai_usage_logs.sql`. Idempotent.
 
 ---
 
