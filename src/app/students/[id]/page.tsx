@@ -2,32 +2,21 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
-import * as Popover from "@radix-ui/react-popover"
-import { differenceInDays, subMonths } from "date-fns"
 import {
   Activity,
   ArrowLeft,
-  BookMarked,
   BookOpen,
-  CalendarDays,
   Check,
   Clock,
-  CreditCard,
-  FileText,
-  History,
-  MapPin,
   Pencil,
   Play,
   Plus,
   Tablet,
-  Trash2,
-  Trophy,
 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
-import { ClassDaysPicker } from "@/components/class-days-picker"
 import { FeeDisplay } from "@/components/fee-display"
 import {
   loadChunksFor,
@@ -40,7 +29,6 @@ import { PageLoading } from "@/components/page-loading"
 import { QuranJourney } from "@/components/quran-journey"
 import {
   getActiveRound,
-  getChronologicalRoundNumber,
   type QuranRound,
 } from "@/components/quran-progress"
 import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
@@ -50,32 +38,24 @@ import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { type HistorySection, StudentOverview } from "@/components/student-overview"
 import { StudentPortalAccess } from "@/components/student-portal-access"
+import { StudentProfileCard } from "@/components/student-profile-card"
+import {
+  AddRoundDialog,
+  EditRoundDialog,
+  type EditRoundForm,
+  emptyNewRoundForm,
+  type NewRoundForm,
+  type RoundProgressForm,
+  UpdateProgressDialog,
+} from "@/components/student-round-dialogs"
 import {
   type ClassSession,
-  paraSummary,
-  SessionStat,
 } from "@/components/student-session-bits"
+import { StudentSessionsList } from "@/components/student-sessions-list"
 import { StudentSignInAccess } from "@/components/student-signin-access"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Pagination } from "@/components/ui/pagination"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { type SortDirection, toggleSort } from "@/components/ui/sortable-header"
 import {
   awardMemLesson,
@@ -83,7 +63,6 @@ import {
   syncMemChunkAchievements,
   syncQuranRoundAchievements,
 } from "@/lib/achievements"
-import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import {
   type CatalogItem,
@@ -95,16 +74,12 @@ import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import {
   cn,
-  COUNTRIES,
   type FeePayment,
   formatLocalDate,
-  formatSessionDuration,
   parseLocalDate,
   safeFormatDate,
-  safeFormatDistanceToNow,
   STATUS_CONFIG,
   type Student,
-  type StudentStatus,
 } from "@/lib/utils"
 
 function roundProgress(
@@ -135,49 +110,24 @@ export default function StudentDetailPage() {
   const [chunksByItem, setChunksByItem] = useState<Record<string, MemChunk[]>>({})
   const [memorizedChunkIds, setMemorizedChunkIds] = useState<Set<string>>(new Set())
   const [sessions, setSessions] = useState<ClassSession[]>([])
-  const [sessionToDelete, setSessionToDelete] = useState<ClassSession | null>(null)
-  const [deletingSession, setDeletingSession] = useState(false)
-  const [cleanupOpen, setCleanupOpen] = useState(false)
-  const [cleaningOld, setCleaningOld] = useState(false)
-  const [sessionPage, setSessionPage] = useState(1)
-  const SESSION_PAGE_SIZE = 10
   const [activity, setActivity] = useState<ActivityLog[]>([])
   const [activityLoading, setActivityLoading] = useState(false)
   const [activityLoaded, setActivityLoaded] = useState(false)
   const [achievementCount, setAchievementCount] = useState(0)
 
-  // Edit form (non-quran fields)
-  const [editForm, setEditForm] = useState({
-    fee: "",
-    fee_currency: "GBP",
-    class_time: "",
-    class_days: [] as number[],
-    country: "",
-    status: "Reading" as StudentStatus,
-    ended_at: "",
-  })
-
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [activeTab, setActiveTab] = useState<StudentView>("profile")
   const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
   // Round editing
   const [roundEditOpen, setRoundEditOpen] = useState(false)
-  const [roundForm, setRoundForm] = useState({
+  const [roundForm, setRoundForm] = useState<RoundProgressForm>({
     desc_completed: "0",
     asc_completed: "0",
   })
   const [newRoundOpen, setNewRoundOpen] = useState(false)
-  const [newRoundForm, setNewRoundForm] = useState({
-    type: "quran" as "qaida" | "quran",
-    started_at: formatLocalDate(),
-    completed_at: "",
-    desc_completed: "0",
-    asc_completed: "0",
-    is_completed: false,
-  })
+  const [newRoundForm, setNewRoundForm] = useState<NewRoundForm>(emptyNewRoundForm)
   const [editingRound, setEditingRound] = useState<QuranRound | null>(null)
-  const [editRoundForm, setEditRoundForm] = useState({
+  const [editRoundForm, setEditRoundForm] = useState<EditRoundForm>({
     started_at: "",
     completed_at: "",
     desc_completed: "0",
@@ -201,15 +151,6 @@ export default function StudentDetailPage() {
         return false
       }
       setStudent(data)
-      setEditForm({
-        fee: (data.fee ?? 0).toString(),
-        fee_currency: data.fee_currency || "GBP",
-        class_time: data.class_time || "",
-        class_days: Array.isArray(data.class_days) ? data.class_days : [],
-        country: data.country || "",
-        status: data.status || "Reading",
-        ended_at: data.ended_at || "",
-      })
       await ensureFeeRecords(data)
       await loadFees()
       return true
@@ -268,46 +209,6 @@ export default function StudentDetailPage() {
     setActivityLoading(false)
     setActivityLoaded(true)
   }, [params.id])
-
-  async function deleteSession() {
-    if (!sessionToDelete) return
-    setDeletingSession(true)
-    const { error } = await supabase.from("class_sessions").delete().eq("id", sessionToDelete.id)
-    setDeletingSession(false)
-    if (error) {
-      toast.error(`Failed to delete session: ${error.message}`)
-      return
-    }
-    const remaining = sessions.filter((s) => s.id !== sessionToDelete.id)
-    setSessions(remaining)
-    // If the current page would be empty after this delete, jump back one page
-    const newTotalPages = Math.max(1, Math.ceil(remaining.length / SESSION_PAGE_SIZE))
-    if (sessionPage > newTotalPages) {
-      setSessionPage(newTotalPages)
-    }
-    toast.success("Session deleted")
-    setSessionToDelete(null)
-  }
-
-  // Purge sessions older than one month — keeps only the last month on record.
-  async function deleteOldSessions() {
-    setCleaningOld(true)
-    const cutoff = subMonths(new Date(), 1)
-    const { error } = await supabase
-      .from("class_sessions")
-      .delete()
-      .eq("student_id", params.id)
-      .lt("started_at", cutoff.toISOString())
-    setCleaningOld(false)
-    if (error) {
-      toast.error(`Failed to clean up sessions: ${error.message}`)
-      return
-    }
-    setCleanupOpen(false)
-    await loadSessions()
-    setSessionPage(1)
-    toast.success("Removed sessions older than 1 month")
-  }
 
   async function ensureFeeRecords(s: Student) {
     const startDate = parseLocalDate(s.started_at) ?? new Date()
@@ -509,37 +410,6 @@ export default function StudentDetailPage() {
     }
   }
 
-  async function saveEdit() {
-    // Guard against an empty fee becoming NaN (NOT NULL violation): keep the
-    // existing fee if the field was cleared/invalid.
-    const parsedFee = parseFloat(editForm.fee)
-    const fee = Number.isNaN(parsedFee) ? (student?.fee ?? 0) : parsedFee
-
-    const { error } = await supabase
-      .from("students")
-      .update({
-        fee,
-        fee_currency: editForm.fee_currency,
-        class_time: editForm.class_time || null,
-        class_days: editForm.class_days.length > 0 ? editForm.class_days : null,
-        country: editForm.country || null,
-        status: editForm.status,
-        // "Reading" students have no end date — clear any stale value left over
-        // from a previous "Completed"/"Left" status.
-        ended_at: editForm.status === "Reading" ? null : editForm.ended_at || null,
-      })
-      .eq("id", params.id)
-
-    if (error) {
-      toast.error(`Couldn't save changes: ${error.message}`)
-      return
-    }
-
-    setIsEditingProfile(false)
-    toast.success("Profile updated")
-    loadStudent()
-  }
-
   // Round management
   async function completeActiveRound() {
     const active = getActiveRound(rounds)
@@ -696,14 +566,7 @@ export default function StudentDetailPage() {
     }
 
     setNewRoundOpen(false)
-    setNewRoundForm({
-      type: "quran",
-      started_at: formatLocalDate(),
-      completed_at: "",
-      desc_completed: "0",
-      asc_completed: "0",
-      is_completed: false,
-    })
+    setNewRoundForm(emptyNewRoundForm())
     await loadRounds()
     void loadAchievementCount()
   }
@@ -793,11 +656,6 @@ export default function StudentDetailPage() {
     loadStudent()
   }, [loadStudent])
 
-  // Reset Sessions pagination when entering the sessions tab
-  useEffect(() => {
-    if (activeTab === "sessions") setSessionPage(1)
-  }, [activeTab])
-
   // Lazy-load activity when entering the sessions tab
   useEffect(() => {
     if (activeTab === "sessions" && !activityLoaded && !activityLoading) {
@@ -813,10 +671,6 @@ export default function StudentDetailPage() {
     )
   }
 
-  const daysSinceStart = differenceInDays(
-    new Date(),
-    parseLocalDate(student.started_at) ?? new Date(),
-  )
   const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
   const activeRound = getActiveRound(rounds)
   const paidCount = fees.filter((f) => f.is_paid).length
@@ -827,15 +681,6 @@ export default function StudentDetailPage() {
   )
   const currentMonthUnpaid = Boolean(currentFee && !currentFee.is_paid)
   const isOnline = onlineIds.has(student.id)
-  const lastSession = sessions[0]
-
-  const scheduleDaysLabel = student.class_days?.length
-    ? student.class_days
-        .slice()
-        .sort((a, b) => a - b)
-        .map((d) => ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d])
-        .join(" · ")
-    : null
 
   const navItems = studentNavItems({
     sessionCount: sessions.length,
@@ -912,228 +757,13 @@ export default function StudentDetailPage() {
         {activeTab === "profile" && (
           <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12 items-start">
             {/* Left Column: Student Profile & Schedule Settings */}
-            <Card className="lg:col-span-7">
-              <CardContent className="pt-6 space-y-6">
-                {/* Profile Summary Strip (Avatar + Schedule + Current Month Fee Status) */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-border/60">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
-                      {(student.name || "?").charAt(0)}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-heading text-lg font-bold text-foreground truncate">
-                        {student.name}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
-                        <span>Guardian: {student.guardian_name}</span>
-                        {student.country && (
-                          <>
-                            <span className="text-muted-foreground/40">&middot;</span>
-                            <span className="inline-flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {student.country}
-                            </span>
-                          </>
-                        )}
-                        <span className="text-muted-foreground/40">&middot;</span>
-                        <span>{daysSinceStart}d enrolled</span>
-                        {student.ended_at && (
-                          <>
-                            <span className="text-muted-foreground/40">&middot;</span>
-                            <span>Ended {safeFormatDate(student.ended_at, "MMM yyyy")}</span>
-                          </>
-                        )}
-                      </div>
-                      {(student.class_time || scheduleDaysLabel) && (
-                        <div className="flex items-center gap-1.5 text-xs font-medium text-foreground/85 mt-1">
-                          <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>
-                            {student.class_time || "No time"}
-                            {scheduleDaysLabel ? ` (${scheduleDaysLabel})` : ""}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-                    {currentFee && (
-                      currentFee.is_paid ? (
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab("account")}
-                          title="View billing history"
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          {safeFormatDate(now, "MMM")} Fee Paid
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => void toggleFee(currentFee)}
-                          title="Click to mark this month's fee as paid"
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
-                        >
-                          <CreditCard className="h-3.5 w-3.5" />
-                          {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
-                        </button>
-                      )
-                    )}
-
-                    {!isEditingProfile && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditingProfile(true)}
-                      >
-                        <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                        Edit
-                      </Button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Profile Options (Read-only by default, editable when Edit is clicked) */}
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Country</Label>
-                      <Select
-                        disabled={!isEditingProfile}
-                        value={editForm.country}
-                        onValueChange={(val) => setEditForm({ ...editForm, country: val })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select country" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {COUNTRIES.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="edit_class_time">Class Time (PKT)</Label>
-                      <Input
-                        id="edit_class_time"
-                        type="time"
-                        disabled={!isEditingProfile}
-                        value={toInputTime(editForm.class_time)}
-                        onChange={(e) =>
-                          setEditForm({
-                            ...editForm,
-                            class_time: e.target.value ? toPktClassTime(e.target.value) : "",
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Class Days</Label>
-                    <ClassDaysPicker
-                      disabled={!isEditingProfile}
-                      value={editForm.class_days}
-                      onChange={(class_days) => setEditForm({ ...editForm, class_days })}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Days this student has class — drives their daily streak.
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Monthly Fee</Label>
-                      <Input
-                        type="number"
-                        disabled={!isEditingProfile}
-                        value={editForm.fee}
-                        onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Currency</Label>
-                      <Select
-                        disabled={!isEditingProfile}
-                        value={editForm.fee_currency}
-                        onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GBP">GBP (£)</SelectItem>
-                          <SelectItem value="USD">USD ($)</SelectItem>
-                          <SelectItem value="PKR">PKR (Rs)</SelectItem>
-                          <SelectItem value="SAR">SAR (﷼)</SelectItem>
-                          <SelectItem value="BHD">BHD (BD)</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label>Status</Label>
-                      <Select
-                        disabled={!isEditingProfile}
-                        value={editForm.status}
-                        onValueChange={(val) =>
-                          setEditForm({ ...editForm, status: val as StudentStatus })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Reading">Reading</SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
-                          <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {editForm.status !== "Reading" && (
-                      <div className="space-y-2">
-                        <Label>End Date</Label>
-                        <Input
-                          type="date"
-                          disabled={!isEditingProfile}
-                          value={editForm.ended_at}
-                          onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {isEditingProfile && (
-                    <div className="flex items-center gap-3 pt-2">
-                      <Button onClick={saveEdit}>Save Changes</Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setEditForm({
-                            fee: (student.fee ?? 0).toString(),
-                            fee_currency: student.fee_currency || "GBP",
-                            class_time: student.class_time || "",
-                            class_days: Array.isArray(student.class_days) ? student.class_days : [],
-                            country: student.country || "",
-                            status: student.status || "Reading",
-                            ended_at: student.ended_at || "",
-                          })
-                          setIsEditingProfile(false)
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <StudentProfileCard
+              student={student}
+              currentFee={currentFee}
+              onToggleFee={(fee) => void toggleFee(fee)}
+              onOpenBilling={() => setActiveTab("account")}
+              onSaved={() => void loadStudent()}
+            />
 
             {/* Right Column: Portal Access & Security */}
             <div className="lg:col-span-5 space-y-4">
@@ -1220,297 +850,15 @@ export default function StudentDetailPage() {
             </div>
 
             {/* 1. CLASS SESSIONS SECTION */}
-            {(historySection === "all" || historySection === "sessions") &&
-              (() => {
-                const totalSessions = sessions.length
-                const totalSessionPages = Math.max(1, Math.ceil(totalSessions / SESSION_PAGE_SIZE))
-                const startIdx = (sessionPage - 1) * SESSION_PAGE_SIZE
-                const paginatedSessions = sessions.slice(startIdx, startIdx + SESSION_PAGE_SIZE)
-                const totalSeconds = sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0)
-                const thisMonthCount = sessions.filter((s) => {
-                  const d = new Date(s.started_at)
-                  return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
-                }).length
-                const cleanupCutoff = subMonths(now, 1)
-                const oldSessionsCount = sessions.filter(
-                  (s) => new Date(s.started_at) < cleanupCutoff,
-                ).length
-                const handlePageChange = (page: number) => {
-                  setSessionPage(page)
-                  if (typeof window !== "undefined") {
-                    requestAnimationFrame(() => {
-                      document.getElementById("sessions-list-top")?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start",
-                      })
-                    })
-                  }
-                }
-                return (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-semibold">Class Sessions</h2>
-                        <p className="text-sm text-muted-foreground">
-                          Recorded lessons, duration, and teacher notes
-                        </p>
-                      </div>
-                    </div>
-
-                    {totalSessions === 0 ? (
-                      <div className="py-12 text-center bg-card rounded-2xl border border-border">
-                        <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary/40">
-                          <Clock className="h-5 w-5 text-primary" />
-                        </div>
-                        <p className="text-sm font-semibold text-foreground mb-1">
-                          No sessions yet
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          Sessions will appear here after the first class
-                        </p>
-                      </div>
-                    ) : (
-                      <>
-                        {/* Summary bar */}
-                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                          <SessionStat
-                            icon={History}
-                            tint="text-emerald-600 bg-emerald-500/10"
-                            value={totalSessions}
-                            label="Total sessions"
-                          />
-                          <SessionStat
-                            icon={Clock}
-                            tint="text-blue-500 bg-blue-500/10"
-                            value={formatSessionDuration(totalSeconds)}
-                            label="Time together"
-                          />
-                          <SessionStat
-                            icon={CalendarDays}
-                            tint="text-purple-500 bg-purple-500/10"
-                            value={thisMonthCount}
-                            label="This month"
-                          />
-                          <SessionStat
-                            icon={BookOpen}
-                            tint="text-amber-600 bg-amber-500/10"
-                            value={
-                              lastSession ? safeFormatDate(lastSession.started_at, "MMM d") : "--"
-                            }
-                            label="Last class"
-                          />
-                        </div>
-
-                        {/* Cleanup toolbar — only when there are sessions older than 1 month */}
-                        {oldSessionsCount > 0 && (
-                          <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-secondary/20 px-4 py-2.5">
-                            <p className="text-xs text-muted-foreground">
-                              <span className="font-semibold text-foreground">
-                                {oldSessionsCount}
-                              </span>{" "}
-                              session{oldSessionsCount === 1 ? "" : "s"} older than 1 month
-                            </p>
-                            <Popover.Root open={cleanupOpen} onOpenChange={setCleanupOpen}>
-                              <Popover.Trigger asChild>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="text-muted-foreground hover:border-destructive/40 hover:text-destructive"
-                                >
-                                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                                  Clear old sessions
-                                </Button>
-                              </Popover.Trigger>
-                              <Popover.Portal>
-                                <Popover.Content
-                                  side="bottom"
-                                  align="end"
-                                  sideOffset={8}
-                                  className="z-50 w-64 rounded-xl border border-border bg-card p-3 shadow-lg"
-                                >
-                                  <p className="mb-1 text-sm font-semibold text-foreground">
-                                    Delete {oldSessionsCount} old session
-                                    {oldSessionsCount === 1 ? "" : "s"}?
-                                  </p>
-                                  <p className="mb-3 text-xs text-muted-foreground">
-                                    This removes every session older than 1 month for {student.name}
-                                    . Only the last month is kept. This can&rsquo;t be undone.
-                                  </p>
-                                  <div className="flex gap-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 flex-1 text-xs"
-                                      onClick={() => setCleanupOpen(false)}
-                                      disabled={cleaningOld}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <button
-                                      type="button"
-                                      className="h-7 flex-1 rounded-md text-xs font-semibold bg-destructive text-destructive-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-                                      onClick={deleteOldSessions}
-                                      disabled={cleaningOld}
-                                    >
-                                      {cleaningOld ? "Deleting…" : "Delete"}
-                                    </button>
-                                  </div>
-                                  <Popover.Arrow className="fill-border" />
-                                </Popover.Content>
-                              </Popover.Portal>
-                            </Popover.Root>
-                          </div>
-                        )}
-
-                        {/* Sessions table */}
-                        <div
-                          id="sessions-list-top"
-                          className="overflow-hidden rounded-2xl border border-border bg-card shadow-soft"
-                        >
-                          <div className="flex items-center justify-between gap-2 border-b border-border bg-secondary/30 px-5 py-3">
-                            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                              {totalSessions} {totalSessions === 1 ? "Session" : "Sessions"}
-                            </p>
-                            <span className="text-[11px] font-medium text-muted-foreground">
-                              Newest first ↓
-                            </span>
-                          </div>
-
-                          <div className="max-h-[520px] overflow-y-auto main-scroll">
-                            {paginatedSessions.map((session, i) => {
-                              const paras = paraSummary(session)
-                              const revised = session.memorization_revised?.length || 0
-                              return (
-                                <div
-                                  key={session.id}
-                                  className={`group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-muted/50 ${
-                                    i < paginatedSessions.length - 1 ? "border-b border-border" : ""
-                                  }`}
-                                >
-                                  <div className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-xl border border-border bg-secondary/40">
-                                    <span className="text-[10px] font-semibold uppercase leading-none text-muted-foreground">
-                                      {safeFormatDate(session.started_at, "MMM")}
-                                    </span>
-                                    <span className="font-heading text-lg font-bold leading-tight tabular-nums text-foreground">
-                                      {safeFormatDate(session.started_at, "d")}
-                                    </span>
-                                  </div>
-
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                      <p className="text-sm font-semibold text-foreground">
-                                        {safeFormatDate(session.started_at, "EEEE")}
-                                      </p>
-                                      <span className="text-muted-foreground/40">&middot;</span>
-                                      <span className="text-[13px] text-muted-foreground">
-                                        {safeFormatDate(session.started_at, "MMM d, yyyy")}
-                                      </span>
-                                    </div>
-                                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                                      <span className="inline-flex items-center gap-1 rounded-md bg-secondary px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
-                                        <Clock className="h-3 w-3" />
-                                        {formatSessionDuration(session.duration_seconds)}
-                                      </span>
-                                      {paras && (
-                                        <span
-                                          title={paras.title}
-                                          className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-600"
-                                        >
-                                          <BookOpen className="h-3 w-3" />
-                                          {paras.label}
-                                        </span>
-                                      )}
-                                      {revised > 0 && (
-                                        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-600">
-                                          <BookMarked className="h-3 w-3" />
-                                          {revised} revised
-                                        </span>
-                                      )}
-                                    </div>
-                                    {session.notes && (
-                                      <p className="mt-1.5 flex items-start gap-1.5 text-xs text-muted-foreground">
-                                        <FileText className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                                        <span className="truncate">{session.notes}</span>
-                                      </p>
-                                    )}
-                                  </div>
-
-                                  <div className="flex flex-shrink-0 items-center gap-1.5">
-                                    <span className="hidden text-[11px] text-muted-foreground sm:block">
-                                      {safeFormatDistanceToNow(session.started_at, {
-                                        addSuffix: true,
-                                      })}
-                                    </span>
-                                    <Popover.Root
-                                      open={sessionToDelete?.id === session.id}
-                                      onOpenChange={(open) =>
-                                        setSessionToDelete(open ? session : null)
-                                      }
-                                    >
-                                      <Popover.Trigger asChild>
-                                        <button
-                                          type="button"
-                                          title="Delete session"
-                                          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive focus:opacity-100 group-hover:opacity-100"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <Trash2 className="h-3.5 w-3.5" />
-                                        </button>
-                                      </Popover.Trigger>
-                                      <Popover.Portal>
-                                        <Popover.Content
-                                          side="top"
-                                          align="end"
-                                          sideOffset={8}
-                                          className="z-50 rounded-xl border border-border bg-card p-3 shadow-lg w-52"
-                                        >
-                                          <p className="text-xs font-medium mb-2.5 text-foreground">
-                                            Delete this session?
-                                          </p>
-                                          <div className="flex gap-2">
-                                            <Button
-                                              size="sm"
-                                              variant="outline"
-                                              className="h-7 flex-1 text-xs"
-                                              onClick={() => setSessionToDelete(null)}
-                                              disabled={deletingSession}
-                                            >
-                                              No
-                                            </Button>
-                                            <button
-                                              type="button"
-                                              className="h-7 flex-1 text-xs rounded-md font-semibold bg-destructive text-destructive-foreground hover:opacity-90 transition-opacity disabled:opacity-60"
-                                              onClick={deleteSession}
-                                              disabled={deletingSession}
-                                            >
-                                              {deletingSession ? "..." : "Yes"}
-                                            </button>
-                                          </div>
-                                          <Popover.Arrow className="fill-border" />
-                                        </Popover.Content>
-                                      </Popover.Portal>
-                                    </Popover.Root>
-                                  </div>
-                                </div>
-                              )
-                            })}
-                          </div>
-                        </div>
-
-                        {totalSessions > SESSION_PAGE_SIZE && (
-                          <Pagination
-                            currentPage={sessionPage}
-                            totalPages={totalSessionPages}
-                            totalItems={totalSessions}
-                            pageSize={SESSION_PAGE_SIZE}
-                            onPageChange={handlePageChange}
-                          />
-                        )}
-                      </>
-                    )}
-                  </div>
-                )
-              })()}
+            {(historySection === "all" || historySection === "sessions") && (
+              <StudentSessionsList
+                studentId={student.id}
+                studentName={student.name}
+                sessions={sessions}
+                onSessionsChange={setSessions}
+                onReload={loadSessions}
+              />
+            )}
 
             {/* 2. QURAN TIMELINE SECTION */}
             {(historySection === "all" || historySection === "timeline") && (
@@ -1658,311 +1006,30 @@ export default function StudentDetailPage() {
         )}
       </div>
 
-      {/* Update Progress Dialog */}
-      <Dialog open={roundEditOpen} onOpenChange={setRoundEditOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Update Progress</DialogTitle>
-            <DialogDescription>
-              {activeRound?.type === "qaida"
-                ? "Norani Qaida"
-                : `Quran Round ${activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 1}`}
-            </DialogDescription>
-          </DialogHeader>
-          {activeRound?.type === "quran" ? (
-            <div className="space-y-4 pt-2">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Paras from End (30→)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={roundForm.desc_completed}
-                    onChange={(e) => setRoundForm({ ...roundForm, desc_completed: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Currently on Para</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={roundForm.asc_completed}
-                    onChange={(e) => setRoundForm({ ...roundForm, asc_completed: e.target.value })}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button onClick={saveRoundProgress}>Save</Button>
-                <Button variant="outline" onClick={() => setRoundEditOpen(false)}>
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4 pt-2">
-              <p className="text-sm text-muted-foreground">
-                Qaida has no para progress. Use &ldquo;Complete&rdquo; to finish this round.
-              </p>
-              <Button variant="outline" onClick={() => setRoundEditOpen(false)}>
-                Close
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Round Dialog */}
-      <Dialog open={newRoundOpen} onOpenChange={setNewRoundOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Round</DialogTitle>
-            <DialogDescription>Add a new or past completed round</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
-              <button
-                type="button"
-                onClick={() => setNewRoundForm({ ...newRoundForm, type: "qaida" })}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "qaida" ? "bg-amber-500/15 text-amber-400" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Norani Qaida
-              </button>
-              <button
-                type="button"
-                onClick={() => setNewRoundForm({ ...newRoundForm, type: "quran" })}
-                className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${newRoundForm.type === "quran" ? "bg-emerald-500/15 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}
-              >
-                Quran Reading
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() =>
-                setNewRoundForm({ ...newRoundForm, is_completed: !newRoundForm.is_completed })
-              }
-              className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
-            >
-              <div
-                className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${newRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
-              >
-                <div
-                  className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
-                  style={{
-                    transform: newRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)",
-                    transition: "transform 0.2s",
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Already completed</p>
-                <p className="text-xs text-muted-foreground">Toggle on for a past round</p>
-              </div>
-            </button>
-
-            <div className={`grid gap-4 ${newRoundForm.is_completed ? "sm:grid-cols-2" : ""}`}>
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={newRoundForm.started_at}
-                  onChange={(e) => setNewRoundForm({ ...newRoundForm, started_at: e.target.value })}
-                />
-              </div>
-              {newRoundForm.is_completed && (
-                <div className="space-y-2">
-                  <Label>Completed Date</Label>
-                  <Input
-                    type="date"
-                    value={newRoundForm.completed_at}
-                    onChange={(e) =>
-                      setNewRoundForm({ ...newRoundForm, completed_at: e.target.value })
-                    }
-                  />
-                </div>
-              )}
-            </div>
-
-            {!newRoundForm.is_completed && newRoundForm.type === "quran" && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Paras from End (30→)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={newRoundForm.desc_completed}
-                    onChange={(e) =>
-                      setNewRoundForm({ ...newRoundForm, desc_completed: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Currently on Para</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={newRoundForm.asc_completed}
-                    onChange={(e) =>
-                      setNewRoundForm({ ...newRoundForm, asc_completed: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {newRoundForm.is_completed && (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <p className="text-xs text-emerald-400">
-                  {newRoundForm.type === "quran"
-                    ? "Saved as fully completed (30/30)."
-                    : "Saved as completed Qaida round."}
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-1">
-              <Button onClick={startNewRound}>
-                {newRoundForm.is_completed ? (
-                  <>
-                    <Trophy className="h-3.5 w-3.5 mr-1" />
-                    Add Completed Round
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-3.5 w-3.5 mr-1" />
-                    Start Round
-                  </>
-                )}
-              </Button>
-              <Button variant="outline" onClick={() => setNewRoundOpen(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Round Dialog */}
-      <Dialog
-        open={!!editingRound}
-        onOpenChange={(open) => {
-          if (!open) setEditingRound(null)
-        }}
-      >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Round</DialogTitle>
-            <DialogDescription>
-              {editingRound?.type === "qaida"
-                ? "Norani Qaida"
-                : `Quran Round ${editingRound ? getChronologicalRoundNumber(rounds, editingRound) : ""}`}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <button
-              type="button"
-              onClick={() =>
-                setEditRoundForm({ ...editRoundForm, is_completed: !editRoundForm.is_completed })
-              }
-              className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
-            >
-              <div
-                className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${editRoundForm.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
-              >
-                <div
-                  className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
-                  style={{
-                    transform: editRoundForm.is_completed ? "translateX(16px)" : "translateX(2px)",
-                    transition: "transform 0.2s",
-                  }}
-                />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Completed</p>
-                <p className="text-xs text-muted-foreground">Mark as completed round</p>
-              </div>
-            </button>
-
-            <div className={`grid gap-4 ${editRoundForm.is_completed ? "sm:grid-cols-2" : ""}`}>
-              <div className="space-y-2">
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={editRoundForm.started_at}
-                  onChange={(e) =>
-                    setEditRoundForm({ ...editRoundForm, started_at: e.target.value })
-                  }
-                />
-              </div>
-              {editRoundForm.is_completed && (
-                <div className="space-y-2">
-                  <Label>Completed Date</Label>
-                  <Input
-                    type="date"
-                    value={editRoundForm.completed_at}
-                    onChange={(e) =>
-                      setEditRoundForm({ ...editRoundForm, completed_at: e.target.value })
-                    }
-                  />
-                </div>
-              )}
-            </div>
-
-            {!editRoundForm.is_completed && editingRound?.type === "quran" && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Paras from End (30→)</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={editRoundForm.desc_completed}
-                    onChange={(e) =>
-                      setEditRoundForm({ ...editRoundForm, desc_completed: e.target.value })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Currently on Para</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="30"
-                    value={editRoundForm.asc_completed}
-                    onChange={(e) =>
-                      setEditRoundForm({ ...editRoundForm, asc_completed: e.target.value })
-                    }
-                  />
-                </div>
-              </div>
-            )}
-
-            {editRoundForm.is_completed && (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <p className="text-xs text-emerald-400">
-                  {editingRound?.type === "quran"
-                    ? "Saved as fully completed (30/30)."
-                    : "Saved as completed Qaida round."}
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3 pt-1">
-              <Button onClick={saveEditRound}>
-                <Check className="h-3.5 w-3.5 mr-1" />
-                Save Changes
-              </Button>
-              <Button variant="outline" onClick={() => setEditingRound(null)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <UpdateProgressDialog
+        open={roundEditOpen}
+        onOpenChange={setRoundEditOpen}
+        round={activeRound}
+        rounds={rounds}
+        form={roundForm}
+        onFormChange={setRoundForm}
+        onSave={() => void saveRoundProgress()}
+      />
+      <AddRoundDialog
+        open={newRoundOpen}
+        onOpenChange={setNewRoundOpen}
+        form={newRoundForm}
+        onFormChange={setNewRoundForm}
+        onSave={() => void startNewRound()}
+      />
+      <EditRoundDialog
+        round={editingRound}
+        rounds={rounds}
+        onClose={() => setEditingRound(null)}
+        form={editRoundForm}
+        onFormChange={setEditRoundForm}
+        onSave={() => void saveEditRound()}
+      />
     </div>
   )
 }
