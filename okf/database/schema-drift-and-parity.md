@@ -27,7 +27,8 @@ tags:
 
 ## 🔍 Documented Discrepancies
 
-### 1. Missing `student_para_progress` Table DDL
+### 1. ~~Missing `student_para_progress` Table DDL~~ (Resolved)
+* **Resolved:** `schema.sql` and `migration_student_para_progress.sql` now create it. Still open: the `UNIQUE(student_id, para_number)` below is in no committed file.
 * **Symptom:** `src/lib/para-progress.ts` reads and writes to `student_para_progress`, and `migration_para_progress_rls.sql` applies RLS policies to it—but no migration file creates the table.
 * **Production Schema Reality:**
   ```sql
@@ -44,7 +45,8 @@ tags:
   );
   ```
 
-### 2. Missing Columns in `class_sessions`
+### 2. ~~Missing Columns in `class_sessions`~~ (Resolved)
+* **Resolved:** `schema.sql`, `migration_class_sessions.sql` and `migration_student_para_progress.sql` now declare both.
 * **Symptom:** `src/app/class/page.tsx` inserts `ending_page` and `last_page` on every session completion, but `migration_class_sessions.sql` only declares `starting_para` and `ending_para`.
 * **Production Schema Reality:**
   ```sql

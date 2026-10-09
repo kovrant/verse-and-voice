@@ -150,3 +150,11 @@ tags:
 * **Entries Updated:** `architecture/rls-security-model.md`, `database/migration-pipeline.md`, `log.md`.
 * **Changes:**
   * `ai_usage_logs` had `USING (true)` / `WITH CHECK (true)` policies with no `TO` clause, so `anon` could read every log row and insert fake rows into the quota meter. Replaced with a teacher-only `FOR ALL TO authenticated` policy; all app access already goes through the service role (`/api/ai/usage`, `/api/quizzes/generate`, `/api/history/generate`).
+
+### [2026-10-09] - Migration Pipeline: Complete Run Order
+* **Scope:** `supabase/*.sql` (docs only; no SQL changed).
+* **Entries Updated:** `database/migration-pipeline.md`, `database/schema-drift-and-parity.md`, `operations/known-issues.md`, `log.md`.
+* **Changes:**
+  * Placed the eight unlisted files (`migration_student_para_progress`, `migration_bookmark`, `migration_student_device`, `migration_namaz_arabic`, `migration_namaz_realtime`, `migration_quizzes`, `migration_hadiths`, `migration_namaz_open_access`) by their real dependencies and renumbered to one 41-step sequence.
+  * Flagged `migration_qaida_live_class.sql` as never committed, the quizzes/hadiths achievement domain-check clash, and `migration_namaz_open_access.sql` having to follow `migration_security_hardening.sql`.
+  * Marked the `student_para_progress` DDL and `class_sessions` column drift resolved; the live `UNIQUE(student_id, para_number)` is still uncommitted.
