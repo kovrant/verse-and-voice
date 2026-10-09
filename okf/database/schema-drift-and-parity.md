@@ -28,7 +28,7 @@ tags:
 ## 🔍 Documented Discrepancies
 
 ### 1. ~~Missing `student_para_progress` Table DDL~~ (Resolved)
-* **Resolved:** `schema.sql` and `migration_student_para_progress.sql` now create it. Still open: the `UNIQUE(student_id, para_number)` below is in no committed file.
+* **Resolved:** `schema.sql` and `migration_student_para_progress.sql` now create it. The `UNIQUE(student_id, para_number)` below is now declared there too, and `migration_para_progress_fixes.sql` adds it to DBs that lack it.
 * **Symptom:** `src/lib/para-progress.ts` reads and writes to `student_para_progress`, and `migration_para_progress_rls.sql` applies RLS policies to it—but no migration file creates the table.
 * **Production Schema Reality:**
   ```sql

@@ -158,3 +158,11 @@ tags:
   * Placed the eight unlisted files (`migration_student_para_progress`, `migration_bookmark`, `migration_student_device`, `migration_namaz_arabic`, `migration_namaz_realtime`, `migration_quizzes`, `migration_hadiths`, `migration_namaz_open_access`) by their real dependencies and renumbered to one 41-step sequence.
   * Flagged `migration_qaida_live_class.sql` as never committed, the quizzes/hadiths achievement domain-check clash, and `migration_namaz_open_access.sql` having to follow `migration_security_hardening.sql`.
   * Marked the `student_para_progress` DDL and `class_sessions` column drift resolved; the live `UNIQUE(student_id, para_number)` is still uncommitted.
+
+### [2026-10-09] - Qaida Bookmarks and 16-Line Mushaf
+* **Scope:** `supabase/migration_para_progress_fixes.sql` (new), `migration_security_hardening.sql`, `migration_bookmark.sql`, `migration_student_para_progress.sql`, `schema.sql`, `src/lib/mushaf-pointer.ts`, `src/components/synced-pdf-viewer.tsx`.
+* **Entries Updated:** `domain/live-class-session.md`, `domain/qaida-curriculum.md`, `database/migration-pipeline.md`, `database/schema-drift-and-parity.md`, `operations/known-issues.md`, `log.md`.
+* **Changes:**
+  * `student_para_progress_bounds_check` required `para_number BETWEEN 1 AND 30`, so every Qaida bookmark (`para_number = 0`) failed and fell back to `localStorage`. Now `0..30`.
+  * The para PDFs are a 16-line mushaf. `DEFAULT_MUSHAF_LINES` is now 16, and the `last_line` / `ending_line` checks allow `1..16`. Margin ratios unchanged (not re-measured).
+  * `UNIQUE(student_id, para_number)` is now declared in committed SQL; the drift item is resolved.

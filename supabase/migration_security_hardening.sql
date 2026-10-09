@@ -206,7 +206,7 @@ BEGIN
     DROP CONSTRAINT IF EXISTS student_para_progress_bounds_check;
   ALTER TABLE public.student_para_progress
     ADD CONSTRAINT student_para_progress_bounds_check
-    CHECK (para_number BETWEEN 1 AND 30 AND last_page >= 1);
+    CHECK (para_number BETWEEN 0 AND 30 AND last_page >= 1); -- 0 = Qaida sentinel
 EXCEPTION
   WHEN undefined_table THEN
     NULL;

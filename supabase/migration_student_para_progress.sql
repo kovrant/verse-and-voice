@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS public.student_para_progress (
   para_number integer NOT NULL,
   last_page integer NOT NULL DEFAULT 1,
   total_pages integer,
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (student_id, para_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_student_para_progress_student_para

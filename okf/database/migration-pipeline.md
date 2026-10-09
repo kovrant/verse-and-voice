@@ -68,13 +68,14 @@ Execute the SQL files strictly in this order:
 39. `migration_namaz_guidance.sql` — Adds `action_text`, `word_tr`, `repeat_count`, `audio_url`, `word_timings`, `needs_review`, `review_note` to `namaz_step_parts`, seeds them and fixes the "Rabbiyal" part titles. Never touches `arabic_text` / `translation`. Idempotent. **Apply before deploying the code that selects the columns** (`NAMAZ_PART_SELECT`).
 40. `migration_namaz_audio.sql` — Creates the public `namaz-audio` storage bucket (audio MIME types, 10 MB) with teacher-only insert/update/delete. Run **after** `migration_namaz_guidance.sql`. Idempotent.
 41. `migration_ai_usage_logs_rls_fix.sql` — Drops the open (`public`) `ai_usage_logs_select` / `ai_usage_logs_insert` policies and replaces them with a teacher-only `FOR ALL TO authenticated` policy. App access is service-role only. Run **after** `migration_ai_usage_logs.sql`. Idempotent.
+42. `migration_para_progress_fixes.sql` — Re-adds `student_para_progress_bounds_check` as `para_number BETWEEN 0 AND 30` (Qaida sentinel), widens `student_para_progress_last_line_check` and `class_sessions_ending_line_check` to `1..16` (16-line mushaf), and adds `UNIQUE (student_id, para_number)` if missing. Run **after** `migration_security_hardening.sql` and `migration_bookmark.sql`. Idempotent.
 
 > [!NOTE]
-> * `migration_qaida_live_class.sql` is listed but has never been in git. `para_number` has no range check in any committed file, so `0` is already allowed; skip it.
+> * `migration_qaida_live_class.sql` is listed but has never been in git; skip it. `migration_security_hardening.sql` now allows `para_number` `0..30`, and step 42 fixes databases that ran the older `1..30` version.
 > * `migration_quizzes.sql` and `migration_hadiths.sql` both drop and recreate `achievement_definitions_domain_check`, and the quizzes one omits `hadith`. Hadiths must run after quizzes, and both after `migration_achievements_module.sql` (which creates the table with a narrower check).
 > * `migration_namaz_open_access.sql` drops the trigger `migration_security_hardening.sql` creates on `student_namaz_steps`. Run it before 34 and 34 fails on the missing table.
 > * `migration_namaz_realtime.sql` and the `student_namaz*` half of `migration_namaz_steps.sql` are superseded by step 35 but kept so later files apply cleanly.
-> * The live `student_para_progress` `UNIQUE(student_id, para_number)` is still in no committed file (see [Schema Drift](schema-drift-and-parity.md)).
+> * `student_para_progress` `UNIQUE(student_id, para_number)` is now declared in `schema.sql` and `migration_student_para_progress.sql` (fresh builds) and step 42 (existing DBs).
 > * `README.md` keeps its own older run order; this file wins.
 
 ---

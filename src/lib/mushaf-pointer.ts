@@ -1,9 +1,11 @@
 /**
- * 15-line Mushaf pointer & line estimation utilities.
- * Includes calibrated top and bottom margin offsets for Quran page headers & footers.
+ * 16-line Mushaf pointer & line estimation utilities (all 30 para PDFs are the same 16-line print).
+ * Includes top and bottom margin offsets for Quran page headers & footers.
+ * ponytail: margins were tuned for a 15-line print and not re-measured against the 16-line PDFs;
+ * re-measure one rendered page and update the two ratios if the highlight drifts.
  */
 
-export const DEFAULT_MUSHAF_LINES = 15
+export const DEFAULT_MUSHAF_LINES = 16
 export const DEFAULT_TOP_MARGIN_RATIO = 0.075 // ~7.5% top decorative header band
 export const DEFAULT_BOTTOM_MARGIN_RATIO = 0.055 // ~5.5% bottom footer/border margin
 

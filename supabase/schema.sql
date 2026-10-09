@@ -124,7 +124,8 @@ CREATE TABLE student_para_progress (
   last_pointer_x numeric,
   last_pointer_y numeric,
   total_pages integer,
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (student_id, para_number)
 );
 
 CREATE INDEX idx_student_para_progress_student_para

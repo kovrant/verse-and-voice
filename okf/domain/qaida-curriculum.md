@@ -37,7 +37,7 @@ To reuse the existing realtime classroom, bookmarking, and progress persistence 
 ### ⚠️ Critical Constraints Across the Stack
 1. **Realtime Broadcasts:** When teaching Qaida, the `nav` event carries `{ para: 0, page: n }`.
 2. **Bookmarking & Progress:** `student_para_progress.para_number = 0` stores the student's bookmark inside their assigned Qaida book.
-3. **Database Constraints:** Any database check or trigger on `para_number` must permit `0` (e.g., `CHECK (para_number BETWEEN 0 AND 30)`), never `CHECK (para_number BETWEEN 1 AND 30)`.
+3. **Database Constraints:** Any database check or trigger on `para_number` must permit `0` (e.g., `CHECK (para_number BETWEEN 0 AND 30)`), never `CHECK (para_number BETWEEN 1 AND 30)`. `student_para_progress_bounds_check` (`migration_security_hardening.sql`) violated this until `migration_para_progress_fixes.sql`, so Qaida bookmarks silently fell back to `localStorage`.
 4. **UI Displays:** Any component rendering `"Para N"` must check for `0` and render `"Norani Qaida"` instead.
 
 ---

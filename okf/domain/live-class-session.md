@@ -1,7 +1,7 @@
 ---
 type: domain-concept
 title: "Live Interactive Class Session"
-description: "Realtime teacher-student classroom session, 15-line Mushaf pointer estimation, and session lifecycle."
+description: "Realtime teacher-student classroom session, 16-line Mushaf pointer estimation, and session lifecycle."
 status: stable
 verified: true
 sources:
@@ -24,16 +24,18 @@ The Live Interactive Class is the core teaching module where a teacher conducts 
 
 ---
 
-## 🎯 Pointer & 15-Line Mushaf Calibration
+## 🎯 Pointer & 16-Line Mushaf Calibration
 
-Traditional South Asian Quran prints use a standardized **15-line layout**.
+All 30 para PDFs the teacher uses are the same **16-line layout** (`DEFAULT_MUSHAF_LINES = 16`). There is no per-book setting.
 
 When a teacher taps or clicks the screen:
 * The client records relative coordinates $(X, Y)$ normalized from `0.0` to `1.0`.
 * The line index is mathematically calculated using `calculateMushafLine` (`src/lib/mushaf-pointer.ts`):
   * **Top Decorative Header Band:** Compensated by `DEFAULT_TOP_MARGIN_RATIO = 0.075` (~7.5%).
   * **Bottom Footer Band:** Compensated by `DEFAULT_BOTTOM_MARGIN_RATIO = 0.055` (~5.5%).
-  * The remaining vertical space is divided into 15 equal line buckets.
+  * The remaining vertical space is divided into 16 equal line buckets.
+  * The two margin ratios were tuned for a 15-line print and have not been re-measured against the 16-line PDFs.
+  * The DB checks `student_para_progress_last_line_check` and `class_sessions_ending_line_check` allow `1..16` (`migration_para_progress_fixes.sql`).
 
 ```typescript
 // Line bounds for highlighter overlay

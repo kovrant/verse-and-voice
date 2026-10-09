@@ -36,7 +36,7 @@ interface SyncedPdfViewerProps {
   followingLabel?: string | null
   /** Initial pointer / bookmark position to restore on load. */
   initialPointer?: PointerState | null
-  /** Called with the laser pointer position (0..1 ratio of page, line 1..15). */
+  /** Called with the laser pointer position (0..1 ratio of page, line 1..16). */
   onPointerChange?: (pointer: PointerState | null) => void
   /** Called when the user explicitly clears / toggles off the active pointer or bookmark. */
   onPointerClear?: () => void
@@ -516,10 +516,10 @@ export function SyncedPdfViewer({
                     loading={null}
                   />
 
-                  {/* 15-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
+                  {/* 16-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
                   {activePointer && typeof activePointer.y === "number" && (
                     <div className="pointer-events-none absolute inset-0 z-20">
-                      {/* 15-Line Mild Green Highlight Strip */}
+                      {/* 16-Line Mild Green Highlight Strip */}
                       {lineBounds && (
                         <div
                           className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
