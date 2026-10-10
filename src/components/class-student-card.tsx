@@ -10,11 +10,12 @@ import {
   getCompletedRounds,
   type QuranRound,
 } from "@/components/quran-progress"
+import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
 import { parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
 
 export type ClassStudent = Pick<
   Student,
-  "id" | "name" | "guardian_name" | "started_at" | "class_time"
+  "id" | "name" | "guardian_name" | "started_at" | "class_time" | "qaida_media_id"
 >
 
 export interface ClassSession {
@@ -34,9 +35,22 @@ export interface ClassSession {
   notes: string | null
 }
 
-/** Where the student is now: the latest session's end, else the active round's para. */
+/**
+ * Where the student is now. A Qaida round is always para 0, at the latest Qaida
+ * session's page/line. A Quran round uses the latest session's end, else the
+ * active round's para. `sessions` must be newest first.
+ */
 export function classPosition(rounds: QuranRound[], sessions: ClassSession[]) {
   const activeRound = getActiveRound(rounds)
+  if (activeRound?.type === "qaida") {
+    const qaidaSession = sessions.find((s) => s.ending_para === QAIDA_PARA)
+    return {
+      activeRound,
+      para: QAIDA_PARA,
+      page: qaidaSession?.ending_page ?? qaidaSession?.last_page ?? null,
+      line: qaidaSession?.ending_line ?? null,
+    }
+  }
   const latestSession = sessions[0]
   const para =
     latestSession?.ending_para && latestSession.ending_para >= 1 && latestSession.ending_para <= 30
@@ -57,12 +71,15 @@ export function ClassStudentCard({
   sessions,
   starting,
   onStart,
+  qaidaMissing = false,
 }: {
   student: ClassStudent
   rounds: QuranRound[]
   sessions: ClassSession[]
   starting: boolean
   onStart: () => void
+  /** On a Qaida round with no Qaida book assigned: block Start Class. */
+  qaidaMissing?: boolean
 }) {
   const {
     activeRound,
@@ -127,7 +144,7 @@ export function ClassStudentCard({
               </p>
               <p className="text-xl font-bold text-primary mt-0.5">
                 {activeRound
-                  ? `Para ${latestPara}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
+                  ? `${paraLabel(latestPara)}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
                   : "Not started"}
               </p>
             </div>
@@ -138,6 +155,18 @@ export function ClassStudentCard({
 
         {/* SECTION 3 — PROGRESS */}
         {(() => {
+          // Qaida has no /30 maths.
+          if (latestPara === QAIDA_PARA) {
+            return (
+              <div className="flex items-center gap-2">
+                <BookMarked className="h-4 w-4 text-foreground" />
+                <span className="text-base font-semibold text-foreground">Qaida</span>
+                <span className="text-sm text-muted-foreground">
+                  Learning Norani Qaida before the Quran paras
+                </span>
+              </div>
+            )
+          }
           const desc = activeRound?.desc_completed || 0
           const asc = activeRound?.asc_completed || 0
           const total = desc + (asc > 0 ? asc - 1 : 0)
@@ -322,10 +351,14 @@ export function ClassStudentCard({
         <button
           type="button"
           onClick={onStart}
-          disabled={starting}
+          disabled={starting || qaidaMissing}
           aria-live="polite"
           className={`relative w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary text-primary-foreground text-[17px] font-bold overflow-hidden transition-all ${
-            starting ? "cursor-default" : "hover:bg-primary-hover hover:-translate-y-px"
+            starting
+              ? "cursor-default"
+              : qaidaMissing
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-primary-hover hover:-translate-y-px"
           }`}
         >
           {/* Default content — fades out when starting */}
@@ -349,6 +382,16 @@ export function ClassStudentCard({
             </span>
           )}
         </button>
+
+        {qaidaMissing && (
+          <p className="mt-3 text-center text-[13px] font-medium text-muted-foreground">
+            No Qaida book assigned.{" "}
+            <Link href={`/students/${student.id}`} className="text-primary hover:underline">
+              Assign one on the student page
+            </Link>{" "}
+            to start a Qaida class.
+          </p>
+        )}
 
         {/* View full profile link */}
         <div className="mt-4 mb-2 flex justify-center">

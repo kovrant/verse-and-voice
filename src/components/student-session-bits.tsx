@@ -4,6 +4,7 @@
 
 import { BookMarked, type LucideIcon } from "lucide-react"
 
+import { paraLabel } from "@/lib/qaida"
 import { cn } from "@/lib/utils"
 
 export interface ClassSession {
@@ -22,14 +23,14 @@ export function paraSummary(s: ClassSession): { label: string; title: string } |
   const covered = (s.paras_covered || []).filter((n) => n != null)
   if (covered.length > 0) {
     const sorted = [...covered].sort((a, b) => a - b)
-    if (sorted.length === 1) return { label: `Para ${sorted[0]}`, title: `Para ${sorted[0]}` }
-    return { label: `${sorted.length} paras`, title: `Paras ${sorted.join(", ")}` }
+    if (sorted.length === 1) return { label: paraLabel(sorted[0]), title: paraLabel(sorted[0]) }
+    return { label: `${sorted.length} paras`, title: sorted.map(paraLabel).join(", ") }
   }
   if (s.starting_para != null && s.ending_para != null) {
     const range =
       s.starting_para === s.ending_para
-        ? `Para ${s.starting_para}`
-        : `Paras ${s.starting_para}–${s.ending_para}`
+        ? paraLabel(s.starting_para)
+        : `${paraLabel(s.starting_para)}–${paraLabel(s.ending_para)}`
     return { label: range, title: range }
   }
   return null

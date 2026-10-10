@@ -20,6 +20,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
 import { saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
+import { QAIDA_PARA, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
@@ -50,6 +51,8 @@ function ClassPageContent() {
   const [rounds, setRounds] = useState<QuranRound[]>([])
   const [memItems, setMemItems] = useState<MemItem[]>([])
   const [paras, setParas] = useState<QuranPara[]>([])
+  // The selected student's assigned Qaida book (students.qaida_media_id).
+  const [qaidaBook, setQaidaBook] = useState<QuranPara | null>(null)
   const [sessions, setSessions] = useState<ClassSession[]>([])
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
@@ -70,7 +73,7 @@ function ClassPageContent() {
       const student = students.find((s) => s.id === studentId) || null
       setSelected(student)
       if (student) {
-        const [memResult, roundsResult, sessionsResult] = await Promise.all([
+        const [memResult, roundsResult, sessionsResult, qaidaResult] = await Promise.all([
           supabase
             .from("student_memorization")
             .select(MEM_ITEM_SELECT)
@@ -87,16 +90,21 @@ function ClassPageContent() {
             .eq("student_id", student.id)
             .order("started_at", { ascending: false })
             .limit(10),
+          student.qaida_media_id
+            ? supabase.from("media_library").select("*").eq("id", student.qaida_media_id)
+            : Promise.resolve({ data: [] as QuranPara[] }),
         ])
         // A newer selection started while we were loading — discard these results.
         if (seq !== selectSeq.current) return
         setMemItems((memResult.data as unknown as MemItem[]) || [])
         setRounds(roundsResult.data || [])
         setSessions(sessionsResult.data || [])
+        setQaidaBook(resolveAssignedQaida(qaidaResult.data || [], student.qaida_media_id))
       } else {
         setMemItems([])
         setRounds([])
         setSessions([])
+        setQaidaBook(null)
       }
     },
     [students],
@@ -114,7 +122,7 @@ function ClassPageContent() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, class_time")
+      .select("id, name, guardian_name, started_at, class_time, qaida_media_id")
       .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
@@ -137,6 +145,11 @@ function ClassPageContent() {
   }
 
   const { activeRound, para: currentPara } = classPosition(rounds, sessions)
+  // A Qaida round teaches the assigned Qaida PDF as the sentinel para 0.
+  const qaidaMissing = currentPara === QAIDA_PARA && !qaidaBook
+  const liveParas = qaidaBook
+    ? [{ ...qaidaBook, meta: { ...qaidaBook.meta, para_number: QAIDA_PARA } }, ...paras]
+    : paras
 
   // Start class — button morphs to Bismillah, then swaps to live screen
   function handleStartClass() {
@@ -185,7 +198,8 @@ function ClassPageContent() {
     }
 
     // Save the exact bookmark position for this para
-    if (data.endingPara && data.endingPage) {
+    // != null, not truthiness: Qaida is para 0.
+    if (data.endingPara != null && data.endingPage) {
       // With a bookmark, save it; without one, keep whatever the teacher marked
       // earlier rather than overwriting it with "no bookmark".
       const save =
@@ -262,7 +276,7 @@ function ClassPageContent() {
         student={selected}
         rounds={rounds}
         memItems={memItems}
-        paras={paras}
+        paras={liveParas}
         initialParaNumber={currentPara}
         onEnd={handleEndSession}
         onMemItemsChange={setMemItems}
@@ -322,6 +336,7 @@ function ClassPageContent() {
               sessions={sessions}
               starting={starting}
               onStart={handleStartClass}
+              qaidaMissing={qaidaMissing}
             />
           )}
         </>

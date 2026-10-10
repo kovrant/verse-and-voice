@@ -49,7 +49,7 @@ Execute the SQL files strictly in this order:
 20. `migration_notifications_retention.sql` — Cleanup jobs for old notifications.
 21. `migration_notifications_rls_fix.sql` — Corrected notification RLS checks.
 22. `migration_qaida.sql` — Qaida media assignment on students.
-23. `migration_qaida_live_class.sql` — Supports sentinel `para_number = 0`. **File not in repo; skip (see note).**
+23. `migration_qaida_live_class.sql` — **Never existed; skip (see note).** The Qaida live class was built in app code with no migration.
 24. `migration_namaz_steps.sql` — Namaz steps and posture schema.
 25. `migration_namaz_arabic.sql` — Adds `namaz_step_parts.arabic_text`, seeds the Arabic for the shipped parts and adds the Qawmah / Salam parts. Run **after** `migration_namaz_steps.sql`. Idempotent; never overwrites a teacher's edit.
 26. `migration_namaz_realtime.sql` — Adds `student_namaz`, `student_namaz_steps`, `student_namaz_parts` to the `supabase_realtime` publication. Run **after** `migration_namaz_steps.sql`. Idempotent. **Obsolete:** `migration_namaz_open_access.sql` drops these tables.
@@ -71,7 +71,7 @@ Execute the SQL files strictly in this order:
 42. `migration_para_progress_fixes.sql` — Re-adds `student_para_progress_bounds_check` as `para_number BETWEEN 0 AND 30` (Qaida sentinel), widens `student_para_progress_last_line_check` and `class_sessions_ending_line_check` to `1..16` (16-line mushaf), and adds `UNIQUE (student_id, para_number)` if missing. Run **after** `migration_security_hardening.sql` and `migration_bookmark.sql`. Idempotent.
 
 > [!NOTE]
-> * `migration_qaida_live_class.sql` is listed but has never been in git; skip it. `migration_security_hardening.sql` now allows `para_number` `0..30`, and step 42 fixes databases that ran the older `1..30` version.
+> * `migration_qaida_live_class.sql` is listed but has never been in git; skip it. The Qaida live class was built in app code with no migration (see `domain/qaida-curriculum.md`): it only needs `para_number = 0`, which `migration_security_hardening.sql` now allows (`0..30`), and step 42 fixes databases that ran the older `1..30` version.
 > * `migration_quizzes.sql` and `migration_hadiths.sql` both drop and recreate `achievement_definitions_domain_check`, and the quizzes one omits `hadith`. Hadiths must run after quizzes, and both after `migration_achievements_module.sql` (which creates the table with a narrower check).
 > * `migration_namaz_open_access.sql` drops the trigger `migration_security_hardening.sql` creates on `student_namaz_steps`. Run it before 34 and 34 fails on the missing table.
 > * `migration_namaz_realtime.sql` and the `student_namaz*` half of `migration_namaz_steps.sql` are superseded by step 35 but kept so later files apply cleanly.

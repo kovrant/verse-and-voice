@@ -11,8 +11,10 @@ import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { StudentBackdrop } from "@/components/student-backdrop"
 import { StudentTajweedAlert } from "@/components/student-tajweed-alert"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
+import { paraLabel, QAIDA_PARA, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import type { NavState, PointerState } from "@/lib/use-class-channel"
+import { useStudent } from "@/lib/use-student"
 
 const SyncedPdfViewer = dynamic(
   () => import("@/components/synced-pdf-viewer").then((m) => m.SyncedPdfViewer),
@@ -40,6 +42,8 @@ export function StudentLiveClass() {
     leave,
   } = useLiveClass()
   const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
+  const { student, loading: studentLoading } = useStudent()
+  const qaidaMediaId = student?.qaida_media_id
 
   // Hide the app sidebar and topbar for the duration of the live session; restore on unmount.
   useEffect(() => {
@@ -103,31 +107,39 @@ export function StudentLiveClass() {
     return () => clearTimeout(t)
   }, [synced, peerNav])
 
-  // Load the Quran para PDFs (para_number → file_url).
+  // Load the Quran para PDFs (para_number → file_url), plus the student's own
+  // assigned Qaida book as the sentinel para 0.
   useEffect(() => {
+    if (studentLoading) return
     let active = true
-    supabase
-      .from("media_library")
-      .select("file_url, meta")
-      .eq("type", "quran")
-      .then(({ data }) => {
-        if (!active) return
-        const m: Record<number, string> = {}
-        for (const r of (data || []) as { file_url: string; meta?: { para_number?: number } }[]) {
-          const n = Number(r.meta?.para_number)
-          if (n) m[n] = r.file_url
-        }
-        setMediaMap(m)
-        setMediaLoaded(true)
-      })
+    Promise.all([
+      supabase.from("media_library").select("file_url, meta").eq("type", "quran"),
+      qaidaMediaId
+        ? supabase.from("media_library").select("id, file_url").eq("id", qaidaMediaId)
+        : Promise.resolve({ data: [] as { id: string; file_url: string }[] }),
+    ]).then(([quran, qaida]) => {
+      if (!active) return
+      const m: Record<number, string> = {}
+      for (const r of (quran.data || []) as {
+        file_url: string
+        meta?: { para_number?: number }
+      }[]) {
+        const n = Number(r.meta?.para_number)
+        if (n) m[n] = r.file_url
+      }
+      const book = resolveAssignedQaida(qaida.data || [], qaidaMediaId)
+      if (book) m[QAIDA_PARA] = book.file_url
+      setMediaMap(m)
+      setMediaLoaded(true)
+    })
     return () => {
       active = false
     }
-  }, [])
+  }, [studentLoading, qaidaMediaId])
 
   // Warm nearby para PDFs so teacher-led para changes feel instant.
   useEffect(() => {
-    if (!mediaLoaded) return
+    if (!mediaLoaded || para === QAIDA_PARA) return
     prefetchParaUrls(mediaMap, para)
   }, [mediaLoaded, mediaMap, para])
 
@@ -160,8 +172,10 @@ export function StudentLiveClass() {
             <QuranBookIcon className="h-5 w-5" />
             {ready ? (
               <span className="font-heading text-[16px] font-bold text-primary">
-                Para {para}
-                <span className="text-[13px] font-semibold text-muted-foreground"> / 30</span>
+                {paraLabel(para)}
+                {para !== QAIDA_PARA && (
+                  <span className="text-[13px] font-semibold text-muted-foreground"> / 30</span>
+                )}
               </span>
             ) : (
               <span className="text-[14px] font-semibold text-muted-foreground">Connecting…</span>
@@ -205,10 +219,12 @@ export function StudentLiveClass() {
             <QuranBookIcon className="h-10 w-10" />
           </div>
           <p className="font-heading text-[22px] font-bold text-primary">
-            Para {para} isn&apos;t available
+            {paraLabel(para)} isn&apos;t available
           </p>
           <p className="text-sm text-muted-foreground">
-            This para&apos;s PDF hasn&apos;t been uploaded yet.
+            {para === QAIDA_PARA
+              ? "Your teacher hasn't given you a Qaida book yet."
+              : "This para's PDF hasn't been uploaded yet."}
           </p>
         </div>
       )}

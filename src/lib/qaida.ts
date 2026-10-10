@@ -16,3 +16,11 @@ export function resolveAssignedQaida<T extends { id: string }>(
   if (!qaidaMediaId) return null
   return items.find((item) => item.id === qaidaMediaId) ?? null
 }
+
+/** Qaida rides the para slot as the sentinel `para_number = 0` (see okf/domain/qaida-curriculum.md). */
+export const QAIDA_PARA = 0
+
+/** "Norani Qaida" for the Qaida sentinel 0, else "Para N". */
+export function paraLabel(n: number): string {
+  return n === QAIDA_PARA ? "Norani Qaida" : `Para ${n}`
+}

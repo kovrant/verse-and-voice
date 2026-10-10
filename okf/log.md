@@ -173,3 +173,14 @@ tags:
 * **Changes:**
   * Removed README's older, duplicated `supabase/*.sql` run order (it still listed the never-committed `migration_qaida_live_class.sql` and missed later files) and replaced it with a pointer to `database/migration-pipeline.md`.
   * Kept README-only context: SQL Editor note, backfill files, teacher-promotion block, drift warning.
+
+### [2026-10-10] - Qaida in the Live Class
+* **Scope:** `src/app/class/page.tsx`, `src/components/class-student-card.tsx` (+ new `class-student-card.test.ts`), `src/components/live-session.tsx`, `src/components/student-live-class.tsx`, `src/components/student-session-bits.tsx`, `src/lib/notify.ts`, `src/lib/qaida.ts`. No SQL changed.
+* **Entries Updated:** `domain/qaida-curriculum.md`, `domain/live-class-session.md`, `database/migration-pipeline.md`, `log.md`.
+* **Changes:**
+  * A student on an active Qaida round used to get Quran Para 1 in class. The class page now resolves the assigned Qaida book (`students.qaida_media_id`) and teaches it as the sentinel para `0`; with no book assigned, Start Class is disabled with a hint.
+  * `classPosition()` returns para 0 for a Qaida round, at the latest `ending_para = 0` session's page/line. Para prev/next and "Advance to Para" are hidden on para 0.
+  * The student live view maps its own Qaida book to para 0.
+  * Fixed falsy-0 checks: `handleEndSession` skipped the para-0 bookmark (`if (data.endingPara && …)`), and the session-ended notification body dropped para 0.
+  * New `paraLabel()` / `QAIDA_PARA` in `src/lib/qaida.ts`; session summaries and notifications show "Norani Qaida" for 0.
+  * `migration_qaida_live_class.sql` is confirmed unnecessary: the feature is app code only.

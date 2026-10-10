@@ -1,6 +1,7 @@
 import "server-only"
 
 import { dedupeCutoffIso } from "@/lib/notifications"
+import { paraLabel } from "@/lib/qaida"
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
 // Server-side notification producers. Uses the service-role key (bypasses RLS)
@@ -186,7 +187,7 @@ export async function notifyTeachersSessionEnded(
 ): Promise<void> {
   const admin = createSupabaseAdminClient()
   const name = (await studentName(admin, studentId)) || "A student"
-  const paraBit = endingPara != null ? ` · ended on Para ${endingPara}` : ""
+  const paraBit = endingPara != null ? ` · ended on ${paraLabel(endingPara)}` : ""
   const title = `Class with ${name} · ${durationMinutes} min${paraBit}`
   const link = `/students/${studentId}`
 
@@ -197,7 +198,7 @@ export async function notifyTeachersSessionEnded(
       recipient_id: recipientId,
       type: "session",
       title,
-      body: `Live class completed successfully (${durationMinutes} mins${endingPara ? `, Para ${endingPara}` : ""}).`,
+      body: `Live class completed successfully (${durationMinutes} mins${endingPara != null ? `, ${paraLabel(endingPara)}` : ""}).`,
       link,
       priority: "low",
     })
@@ -220,11 +221,11 @@ export async function notifyStudentSessionEnded(
     .maybeSingle()
   if (!profile?.id) return
 
-  const paraBit = endingPara != null ? ` · Para ${endingPara}` : ""
+  const paraBit = endingPara != null ? ` · ${paraLabel(endingPara)}` : ""
   const title = `Class completed · ${durationMinutes} min${paraBit}`
   const body =
     endingPara != null
-      ? `Masha'Allah! Today's live Quran class was completed on Para ${endingPara}.`
+      ? `Masha'Allah! Today's live Quran class was completed on ${paraLabel(endingPara)}.`
       : `Masha'Allah! Your live Quran class session (${durationMinutes} mins) is complete.`
 
   if (await alreadyNotified(admin, profile.id as string, "session", title)) return

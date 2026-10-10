@@ -35,6 +35,7 @@ import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
 import { clearBookmark, loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
+import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import type { TajweedRule } from "@/lib/tajweed/rules"
 import { toast } from "@/lib/toast"
@@ -161,9 +162,12 @@ export default function LiveSession({
   // Para switching is an explicit button in the top bar.
 
   const currentPara = paras.find((p) => p.meta?.para_number === currentParaNumber) || null
+  // Qaida (para 0) is a single book: page navigation only, no para switching.
+  const isQaida = currentParaNumber === QAIDA_PARA
 
   // Warm the PDF cache for nearby paras so para switches don't flash white.
   useEffect(() => {
+    if (currentParaNumber === QAIDA_PARA) return // no para switches to warm for
     const urlByPara: Record<number, string> = {}
     for (const p of paras) {
       const n = Number(p.meta?.para_number)
@@ -174,7 +178,7 @@ export default function LiveSession({
 
   function navigatePara(direction: "prev" | "next") {
     const next = direction === "prev" ? currentParaNumber - 1 : currentParaNumber + 1
-    if (next < 1 || next > 30) return
+    if (isQaida || next < 1 || next > 30) return
     setCurrentParaNumber(next)
     setPdfPage(1)
     setCurrentPointer(null)
@@ -460,7 +464,8 @@ export default function LiveSession({
     if (finishing) toast.success("Round complete — all 30 paras done!")
   }
 
-  const canAdvance = activeRound && currentParaNumber >= (activeRound.asc_completed || 1)
+  const canAdvance =
+    activeRound && !isQaida && currentParaNumber >= (activeRound.asc_completed || 1)
 
   const openEndDialog = () => {
     if (!notes.trim() && sessionRules.length > 0) {
@@ -526,32 +531,36 @@ export default function LiveSession({
           <div className="h-5 w-px bg-border" />
 
           {/* Para switcher — explicit buttons (the ← → arrows page the PDF). */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-foreground">
-              Para <span className="text-primary font-bold">{currentParaNumber}</span>
-              <span className="text-muted-foreground text-xs ml-1">/ 30</span>
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 px-2"
-              onClick={() => navigatePara("prev")}
-              disabled={currentParaNumber <= 1}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="ml-0.5 hidden sm:inline">Prev para</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 px-2.5"
-              onClick={() => navigatePara("next")}
-              disabled={currentParaNumber >= 30}
-            >
-              <span className="mr-0.5 hidden sm:inline">Next para</span>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
+          {isQaida ? (
+            <span className="text-sm font-bold text-primary">Norani Qaida</span>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-foreground">
+                Para <span className="text-primary font-bold">{currentParaNumber}</span>
+                <span className="text-muted-foreground text-xs ml-1">/ 30</span>
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2"
+                onClick={() => navigatePara("prev")}
+                disabled={currentParaNumber <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="ml-0.5 hidden sm:inline">Prev para</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 px-2.5"
+                onClick={() => navigatePara("next")}
+                disabled={currentParaNumber >= 30}
+              >
+                <span className="mr-0.5 hidden sm:inline">Next para</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
 
           <div className="h-5 w-px bg-border" />
 
@@ -670,7 +679,9 @@ export default function LiveSession({
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-muted-foreground">Current Round</span>
                     <span className="font-bold text-foreground">
-                      Para {activeRound.asc_completed || 1}
+                      {activeRound.type === "qaida"
+                        ? "Norani Qaida"
+                        : `Para ${activeRound.asc_completed || 1}`}
                     </span>
                   </div>
                 )}
@@ -752,7 +763,7 @@ export default function LiveSession({
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
                   <BookOpen className="h-7 w-7 text-muted-foreground" />
                 </div>
-                <p className="text-lg font-medium">Para {currentParaNumber} not uploaded</p>
+                <p className="text-lg font-medium">{paraLabel(currentParaNumber)} not uploaded</p>
                 <p className="text-sm text-muted-foreground">
                   Upload this para from the Media Library
                 </p>
@@ -806,6 +817,7 @@ export default function LiveSession({
                 <div className="text-2xl font-bold text-primary tabular-nums">
                   {Array.from(parasViewed)
                     .sort((a, b) => a - b)
+                    .map((n) => (n === QAIDA_PARA ? "Norani Qaida" : n))
                     .join(", ")}
                 </div>
               </div>

@@ -10,6 +10,8 @@ sources:
   - "src/lib/para-progress.ts"
   - "src/app/class/page.tsx"
   - "src/components/live-session.tsx"
+  - "src/components/class-student-card.tsx"
+  - "src/components/student-live-class.tsx"
 tags:
   - domain
   - live-class
@@ -23,6 +25,12 @@ tags:
 The Live Interactive Class is the core teaching module where a teacher conducts real-time 1-on-1 Quran and Qaida lessons with synchronized PDF navigation, line pointing, and session logging.
 
 ---
+
+## 📚 What the Class Teaches: Quran Para or Qaida
+
+The class page picks the starting position with `classPosition()` (`src/components/class-student-card.tsx`):
+* **Quran round:** the latest session's `ending_para` (if `1..30`), else the active round's `asc_completed || 1`. Prev/Next para buttons switch between paras `1..30`.
+* **Qaida round:** always para `0`, the student's assigned Qaida book (`students.qaida_media_id`), injected into the para list as `meta.para_number = 0`. Page/line come from the latest session with `ending_para = 0`. Para switching is hidden; only pages turn. With no book assigned, Start Class is disabled. Full details: [Qaida Curriculum](qaida-curriculum.md#-qaida-in-the-live-class).
 
 ## 🎯 Pointer & 16-Line Mushaf Calibration
 
@@ -59,5 +67,7 @@ When a teacher completes and saves a class session:
 1. **Duration:** Formatted via `formatSessionDuration(seconds)` (`src/lib/utils.ts`).
 2. **Session Row (`class_sessions`):**
    * Stores `student_id`, `started_at` (timestamptz), `ended_at`, `duration_seconds`.
-   * Records curriculum span: `starting_para`, `starting_page`, `ending_para`, `ending_page`, `last_page`.
+   * Records curriculum span: `starting_para`, `starting_page`, `ending_para`, `ending_page`, `last_page`. A Qaida class stores `0`.
    * Captures performance metrics: `status` (Present/Absent/Late), `rating` (1–5 stars), and teacher notes.
+3. **Bookmark:** the ending position is saved to `student_para_progress` for the ending para (`endingPara != null`, so Qaida's `0` is included).
+4. **Round auto-advance:** `quran_rounds.asc_completed` is raised only for an ending para in `1..30`; Qaida classes never touch it.

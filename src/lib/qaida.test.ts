@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { resolveAssignedQaida } from "./qaida"
+import { paraLabel, resolveAssignedQaida } from "./qaida"
 
 describe("resolveAssignedQaida", () => {
   const items = [
@@ -16,5 +16,12 @@ describe("resolveAssignedQaida", () => {
     expect(resolveAssignedQaida(items, null)).toBeNull()
     expect(resolveAssignedQaida(items, undefined)).toBeNull()
     expect(resolveAssignedQaida(items, "missing")).toBeNull()
+  })
+})
+
+describe("paraLabel", () => {
+  it("names the Qaida sentinel 0 and numbers the Quran paras", () => {
+    expect(paraLabel(0)).toBe("Norani Qaida")
+    expect(paraLabel(7)).toBe("Para 7")
   })
 })
