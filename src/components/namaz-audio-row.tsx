@@ -102,8 +102,15 @@ export function NamazAudioRow({
     let stream: MediaStream
     try {
       stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch {
-      toast.error("Microphone not available. Allow microphone access and try again.")
+    } catch (e) {
+      const name = e instanceof DOMException ? e.name : ""
+      toast.error(
+        name === "NotFoundError"
+          ? "No microphone found. Plug one in or check your system sound input."
+          : name === "NotAllowedError"
+            ? "Microphone blocked. Reload this page, then allow it for this site in the browser's address bar and in your system's privacy settings."
+            : "Microphone not available. Use Upload file instead.",
+      )
       return
     }
     const recorder = new MediaRecorder(stream)

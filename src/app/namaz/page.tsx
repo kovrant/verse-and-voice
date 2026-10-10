@@ -3,7 +3,6 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { ChevronDown, ChevronUp, ImagePlus, Loader2, Mic, Moon, Plus, Trash2 } from "lucide-react"
-import Link from "next/link"
 import { useEffect, useRef, useState } from "react"
 
 import { NamazStepCard } from "@/components/namaz-step-card"
@@ -169,10 +168,12 @@ export default function NamazAdminPage() {
           </p>
         </div>
         <Button asChild variant="outline">
-          <Link href="/namaz/audio">
+          {/* Plain <a>, not <Link>: Permissions-Policy is fixed per document load, so a
+              client-side navigation would keep this page's microphone=() block. */}
+          <a href="/namaz/audio">
             <Mic className="h-4 w-4 mr-1" />
             Audio & review
-          </Link>
+          </a>
         </Button>
       </div>
 
