@@ -1293,3 +1293,18 @@
     animation: none;
   }
 }
+
+/* Monthly report (and any teacher page) printed via "Save as PDF". */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

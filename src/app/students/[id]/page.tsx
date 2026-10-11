@@ -8,6 +8,7 @@ import {
   BookOpen,
   Check,
   Clock,
+  FileText,
   Pencil,
   Play,
   Plus,
@@ -740,6 +741,12 @@ export default function StudentDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
+          <Link href={`/students/${student.id}/report`}>
+            <Button size="sm" variant="outline">
+              <FileText className="h-3.5 w-3.5 mr-1.5" />
+              Monthly report
+            </Button>
+          </Link>
           <Link href={`/class?student=${student.id}`}>
             <Button size="sm">
               <Play className="h-3.5 w-3.5 mr-1.5" />

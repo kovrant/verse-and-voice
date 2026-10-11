@@ -68,6 +68,7 @@ When a teacher completes and saves a class session:
 2. **Session Row (`class_sessions`):**
    * Stores `student_id`, `started_at` (timestamptz), `ended_at`, `duration_seconds`.
    * Records curriculum span: `starting_para`, `starting_page`, `ending_para`, `ending_page`, `last_page`. A Qaida class stores `0`.
+   * `starting_page` is the page the class opened on (the resumed bookmark, else 1), added by `migration_class_session_starting_page.sql` for the [monthly report](monthly-parent-report.md). Older rows have it null.
    * Captures performance metrics: `status` (Present/Absent/Late), `rating` (1–5 stars), and teacher notes.
 3. **Bookmark:** the ending position is saved to `student_para_progress` for the ending para (`endingPara != null`, so Qaida's `0` is included).
 4. **Round auto-advance:** `quran_rounds.asc_completed` is raised only for an ending para in `1..30`; Qaida classes never touch it.

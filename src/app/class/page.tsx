@@ -171,6 +171,7 @@ function ClassPageContent() {
       ended_at: data.endedAt.toISOString(),
       duration_seconds: data.durationSeconds,
       starting_para: data.startingPara,
+      starting_page: data.startingPage,
       ending_para: data.endingPara,
       ending_page: data.endingPage,
       last_page: data.endingPage,
@@ -184,6 +185,8 @@ function ClassPageContent() {
 
     let { error } = await supabase.from("class_sessions").insert(sessionInsert)
     if (error) {
+      // Older databases may lack these columns; never lose the session over them.
+      delete sessionInsert.starting_page
       delete sessionInsert.ending_line
       delete sessionInsert.ending_pointer_x
       delete sessionInsert.ending_pointer_y

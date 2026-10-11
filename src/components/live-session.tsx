@@ -76,6 +76,8 @@ export interface SessionEndData {
   endedAt: Date
   durationSeconds: number
   startingPara: number
+  /** Page the class opened on (the resumed bookmark), for the monthly report's pages read. */
+  startingPage: number
   endingPara: number
   endingPage: number
   endingLine?: number | null
@@ -350,11 +352,13 @@ export default function LiveSession({
 
   // Resume the starting para at its last-read page & bookmark (once, on open).
   const resumedRef = useRef(false)
+  const startingPageRef = useRef(1)
   useEffect(() => {
     if (resumedRef.current) return
     resumedRef.current = true
     loadBookmark(student.id, initialParaNumber).then((bm) => {
       if (currentParaRef.current === initialParaNumber) {
+        if (bm.page > 0) startingPageRef.current = bm.page
         if (typeof bm.line === "number") {
           restoreBookmark({ x: bm.x ?? 0.5, y: bm.y ?? 0.5, line: bm.line }, bm.page)
         } else if (bm.page > 1) {
@@ -486,6 +490,7 @@ export default function LiveSession({
       endedAt,
       durationSeconds: Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000),
       startingPara: initialParaNumber,
+      startingPage: startingPageRef.current,
       endingPara: currentParaNumber,
       endingPage: pdfPage,
       endingLine: currentPointer?.line ?? null,

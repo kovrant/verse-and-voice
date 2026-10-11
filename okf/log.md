@@ -184,3 +184,12 @@ tags:
   * Fixed falsy-0 checks: `handleEndSession` skipped the para-0 bookmark (`if (data.endingPara && …)`), and the session-ended notification body dropped para 0.
   * New `paraLabel()` / `QAIDA_PARA` in `src/lib/qaida.ts`; session summaries and notifications show "Norani Qaida" for 0.
   * `migration_qaida_live_class.sql` is confirmed unnecessary: the feature is app code only.
+
+### [2026-10-11] - Monthly Parent Report
+* **Scope:** `src/lib/monthly-report.ts` (new), `src/lib/monthly-report.test.ts` (new), `src/app/students/[id]/report/page.tsx` (new), `src/app/students/[id]/page.tsx`, `src/components/app-shell.tsx`, `src/app/globals.css`, `src/components/live-session.tsx`, `src/app/class/page.tsx`, `supabase/migration_class_session_starting_page.sql` (new).
+* **Entries Updated:** `domain/monthly-parent-report.md` (new), `domain/live-class-session.md`, `database/migration-pipeline.md`, `index.md`, `log.md`.
+* **Changes:**
+  * Print-ready A4 monthly report per student with a month picker and Download PDF (browser "Save as PDF"); opened from a "Monthly report" button on the student page.
+  * Pure, tested calculations for PKT month bounds, attendance, reading position and pages, memorization and revisions.
+  * Live classes now save `starting_page` so pages read are exact going forward; the insert retries without it on older databases.
+  * Teacher shell gets print-only classes so only the page content prints, at full height.

@@ -32,17 +32,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       className={
         isStudentArea
           ? "relative isolate flex h-screen overflow-hidden"
-          : "flex h-screen overflow-hidden bg-background"
+          : "flex h-screen overflow-hidden bg-background print:block print:h-auto print:overflow-visible print:bg-white"
       }
     >
       {isStudentArea && <StudentBackdrop />}
-      {isStudentArea ? <StudentTabBar /> : <Sidebar />}
-      <main className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll">
+      {isStudentArea ? (
+        <StudentTabBar />
+      ) : (
+        <div className="contents print:hidden">
+          <Sidebar />
+        </div>
+      )}
+      <main className="flex h-screen min-w-0 flex-1 flex-col overflow-y-auto main-scroll print:block print:h-auto print:overflow-visible">
         {!isStudentArea && (
           // Admin — clean, minimal.
-          <div className="fixed inset-0 pointer-events-none -z-10 bg-background" />
+          <div className="fixed inset-0 pointer-events-none -z-10 bg-background print:hidden" />
         )}
-        {isStudentArea ? <StudentTopBar /> : !isAuthArea && <TeacherTopBar />}
+        {isStudentArea ? (
+          <StudentTopBar />
+        ) : (
+          !isAuthArea && (
+            <div className="contents print:hidden">
+              <TeacherTopBar />
+            </div>
+          )
+        )}
         {/* Grows to fill the height under the top bar so a page can `min-h-full`
             into the leftover space on tall viewports (tablets in portrait)
             instead of leaving a bottom void. Deliberately still a block, not a
@@ -53,7 +67,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           className={
             isStudentArea
               ? "relative shrink-0 grow p-4 pb-28 lg:p-8"
-              : "relative shrink-0 grow p-4 lg:p-8"
+              : "relative shrink-0 grow p-4 lg:p-8 print:p-0"
           }
         >
           {children}
