@@ -226,3 +226,11 @@ tags:
   * Class Days strip from `class_attendance` marks + sessions; "classes attended" excludes teacher-absent and holiday days.
   * 18 pages per para by default (16-line mushaf), paras completed this month and round progress `x / 30`.
   * Removed the trophies and teacher's-notes sections.
+
+### [2026-10-12] - Student "My class days" Uses Attendance Marks
+* **Scope:** `src/app/student/attendance/page.tsx`, `src/lib/attendance.ts`, `src/lib/attendance.test.ts`.
+* **Entries Updated:** `domain/class-attendance.md`, `log.md`.
+* **Changes:**
+  * The kid page reads `class_attendance` marks: teacher's days off and holidays show as such and no longer count against the child; make-up classes appear as "Extra class".
+  * Months and days are PKT instead of the device timezone, so parents abroad see classes on the right day.
+  * Removed the unused device-timezone `buildMonthAttendance` / `localDateKey`.

@@ -9,12 +9,14 @@ import { KidCard, KidEmpty, KidPageHeader } from "@/components/kid-ui"
 import { PageLoading } from "@/components/page-loading"
 import { type ClassSession, paraSummary } from "@/components/student-session-bits"
 import {
-  type AttendanceDayStatus,
-  buildMonthAttendance,
-  localDateKey,
+  type AttendanceEntry,
+  type AttendanceMark,
+  buildAttendanceDays,
   monthLabel,
+  scheduledDates,
   shiftMonth,
 } from "@/lib/attendance"
+import { attendanceTotals, monthRange, pktDateKey } from "@/lib/monthly-report"
 import { supabase } from "@/lib/supabase"
 import { useStudent } from "@/lib/use-student"
 import { cn, formatSessionDuration } from "@/lib/utils"
@@ -22,11 +24,17 @@ import { cn, formatSessionDuration } from "@/lib/utils"
 const SESSION_SELECT =
   "id, started_at, ended_at, duration_seconds, starting_para, ending_para, paras_covered, memorization_revised, notes"
 
+type DayStatus = AttendanceEntry["status"] | "upcoming"
+
 /**
- * How one scheduled day reads. "Came to class" is the only loud one — a missed
- * day stays quiet and neutral (never a scary red X) and upcoming days are calm.
+ * How one class day reads. "Came to class" is the only loud one — a missed day
+ * stays quiet and neutral (never a scary red X), and the teacher's days off or
+ * holidays are friendly and don't count against the child.
  */
-function statusMeta(status: AttendanceDayStatus): {
+function statusMeta(
+  status: DayStatus,
+  scheduled: boolean,
+): {
   label: string
   emoji: string
   /** Panel look for the whole row. */
@@ -34,35 +42,42 @@ function statusMeta(status: AttendanceDayStatus): {
   /** Pill look for the little status chip. */
   chip: string
 } {
+  const quiet = {
+    panel: "border-border bg-card shadow-soft",
+    chip: "bg-secondary/70 text-muted-foreground",
+  }
+  const calm = {
+    panel: "border-dashed border-border bg-card/60",
+    chip: "bg-secondary/70 text-muted-foreground",
+  }
   switch (status) {
-    case "attended":
+    case "present":
       return {
-        label: "Came to class",
-        emoji: "✅",
+        label: scheduled ? "Came to class" : "Extra class",
+        emoji: scheduled ? "✅" : "⭐",
         panel: "border-[hsl(var(--kid-sage)/0.45)] bg-[hsl(var(--kid-sage)/0.16)] shadow-soft",
         chip: "bg-[hsl(var(--kid-sage)/0.4)] text-foreground",
       }
-    case "missed":
+    case "student_absent":
+      return { label: "Missed this one", emoji: "🌙", ...quiet }
+    case "teacher_absent":
       return {
-        label: "No class yet",
-        emoji: "🌙",
-        panel: "border-border bg-card shadow-soft",
-        chip: "bg-secondary/70 text-muted-foreground",
+        label: "Teacher's day off",
+        emoji: "🌿",
+        panel: "border-[hsl(var(--kid-sky)/0.45)] bg-[hsl(var(--kid-sky)/0.12)] shadow-soft",
+        chip: "bg-[hsl(var(--kid-sky)/0.35)] text-foreground",
+      }
+    case "holiday":
+      return {
+        label: "Holiday",
+        emoji: "🎉",
+        panel: "border-[hsl(var(--kid-saffron)/0.45)] bg-[hsl(var(--kid-saffron)/0.12)] shadow-soft",
+        chip: "bg-[hsl(var(--kid-saffron)/0.35)] text-foreground",
       }
     case "upcoming":
-      return {
-        label: "Coming up",
-        emoji: "⏳",
-        panel: "border-dashed border-border bg-card/60",
-        chip: "bg-secondary/70 text-muted-foreground",
-      }
+      return { label: "Coming up", emoji: "⏳", ...calm }
     default:
-      return {
-        label: "Day off",
-        emoji: "💤",
-        panel: "border-dashed border-border bg-card/60",
-        chip: "bg-secondary/70 text-muted-foreground",
-      }
+      return { label: "No class yet", emoji: "🌙", ...quiet }
   }
 }
 
@@ -93,11 +108,13 @@ function MonthArrow({
 
 export default function StudentAttendancePage() {
   const { student, loading } = useStudent()
-  const [view, setView] = useState(() => {
-    const n = new Date()
-    return { year: n.getFullYear(), month: n.getMonth() }
-  })
+  // Months and days are Pakistan time (the academy's clock), not the device's,
+  // so a parent abroad sees each class on the day it was taught.
+  const todayKey = pktDateKey(new Date())
+  const [thisYear, thisMonth] = todayKey.split("-").map(Number)
+  const [view, setView] = useState({ year: thisYear, month: thisMonth - 1 })
   const [sessions, setSessions] = useState<ClassSession[]>([])
+  const [marks, setMarks] = useState<AttendanceMark[]>([])
   const [loadingData, setLoadingData] = useState(true)
 
   useEffect(() => {
@@ -105,31 +122,53 @@ export default function StudentAttendancePage() {
     let active = true
     setLoadingData(true)
 
-    const start = new Date(view.year, view.month, 1, 0, 0, 0, 0)
-    const end = new Date(view.year, view.month + 1, 0, 23, 59, 59, 999)
+    const range = monthRange({ year: view.year, month: view.month + 1 })
 
-    supabase
-      .from("class_sessions")
-      .select(SESSION_SELECT)
-      .eq("student_id", student.id)
-      .gte("started_at", start.toISOString())
-      .lte("started_at", end.toISOString())
-      .order("started_at", { ascending: false })
-      .then(({ data }) => {
-        if (!active) return
-        setSessions((data as ClassSession[]) || [])
-        setLoadingData(false)
-      })
+    void Promise.all([
+      supabase
+        .from("class_sessions")
+        .select(SESSION_SELECT)
+        .eq("student_id", student.id)
+        .gte("started_at", range.start)
+        .lt("started_at", range.end)
+        .order("started_at", { ascending: false }),
+      supabase
+        .from("class_attendance")
+        .select("class_date, status")
+        .eq("student_id", student.id)
+        .gte("class_date", range.start.slice(0, 10))
+        .lt("class_date", range.end.slice(0, 10)),
+    ]).then(([sessionsRes, marksRes]) => {
+      if (!active) return
+      setSessions((sessionsRes.data as ClassSession[]) || [])
+      setMarks((marksRes.data as AttendanceMark[]) || [])
+      setLoadingData(false)
+    })
 
     return () => {
       active = false
     }
   }, [student, view.year, view.month])
 
-  const summary = useMemo(
-    () => buildMonthAttendance(student?.class_days ?? null, sessions, view.year, view.month),
-    [student?.class_days, sessions, view.year, view.month],
-  )
+  const summary = useMemo(() => {
+    const classDays = student?.class_days ?? null
+    const month = { year: view.year, month: view.month + 1 }
+    // Whole month's schedule; days after today are "coming up".
+    const all = scheduledDates(month, classDays, student?.started_at, null, "9999-12-31")
+    const done = buildAttendanceDays({
+      scheduled: all.filter((d) => d <= todayKey),
+      sessionDates: sessions.map((s) => pktDateKey(s.started_at)),
+      marks,
+    })
+    const upcoming = all
+      .filter((d) => d > todayKey)
+      .map((date) => ({ date, scheduled: true, status: "upcoming" as const }))
+    return {
+      configured: Boolean(classDays?.length),
+      days: [...done, ...upcoming] as { date: string; scheduled: boolean; status: DayStatus }[],
+      ...attendanceTotals(done),
+    }
+  }, [student?.class_days, student?.started_at, sessions, marks, view.year, view.month, todayKey])
 
   const classDaysLabel = useMemo(() => {
     const days = student?.class_days ?? []
@@ -143,12 +182,10 @@ export default function StudentAttendancePage() {
   if (loading || !student) return <PageLoading variant="student-simple" student />
 
   const canGoForward =
-    view.year < new Date().getFullYear() ||
-    (view.year === new Date().getFullYear() && view.month < new Date().getMonth())
+    view.year < thisYear || (view.year === thisYear && view.month < thisMonth - 1)
 
-  const missed = summary.dueCount - summary.attendedCount
-  const donePct =
-    summary.dueCount > 0 ? Math.round((summary.attendedCount / summary.dueCount) * 100) : 0
+  const missed = summary.counted - summary.attended
+  const donePct = summary.counted > 0 ? Math.round((summary.attended / summary.counted) * 100) : 0
 
   return (
     <div className="mx-auto max-w-3xl animate-fade-in-up pb-6">
@@ -199,13 +236,13 @@ export default function StudentAttendancePage() {
               This month
             </p>
             <p className="mt-1 font-heading text-[32px] font-bold leading-none tabular-nums text-primary sm:text-[36px]">
-              {summary.attendedCount}
+              {summary.attended}
               <span className="text-[19px] font-bold text-muted-foreground">
                 {" "}
-                / {summary.dueCount} class days
+                / {summary.counted} class days
               </span>
             </p>
-            {summary.dueCount > 0 && (
+            {summary.counted > 0 && (
               <div className="mt-3 h-3.5 overflow-hidden rounded-full bg-[hsl(var(--kid-sky)/0.28)]">
                 <div
                   className="h-full rounded-full bg-[hsl(var(--kid-sage))] transition-all duration-500"
@@ -214,7 +251,7 @@ export default function StudentAttendancePage() {
               </div>
             )}
             <p className="mt-2.5 text-[14.5px] font-semibold text-foreground/85">
-              {summary.dueCount === 0
+              {summary.counted === 0
                 ? "No class days here yet. Your next one is on its way!"
                 : missed === 0
                   ? "You came to every class — MashaAllah! 🌟"
@@ -237,15 +274,15 @@ export default function StudentAttendancePage() {
               <SectionTitle emoji="📆" title="Day by day" />
               <div className="space-y-2.5">
                 {summary.days.map((day) => {
-                  const meta = statusMeta(day.status)
-                  const fullSession = sessions.find(
-                    (s) => localDateKey(new Date(s.started_at)) === day.dateKey,
-                  )
+                  const meta = statusMeta(day.status, day.scheduled)
+                  const fullSession = sessions.find((s) => pktDateKey(s.started_at) === day.date)
+                  const [y, m, d] = day.date.split("-").map(Number)
+                  const weekday = format(new Date(y, m - 1, d), "EEE")
                   const paras = fullSession ? paraSummary(fullSession) : null
                   const revised = fullSession?.memorization_revised?.length ?? 0
                   return (
                     <div
-                      key={day.dateKey}
+                      key={day.date}
                       className={cn(
                         "flex items-start gap-3.5 rounded-[22px] border-[1.5px] p-3 sm:items-center",
                         meta.panel,
@@ -253,10 +290,10 @@ export default function StudentAttendancePage() {
                     >
                       <span className="flex h-12 w-12 flex-shrink-0 flex-col items-center justify-center rounded-[16px] border-[1.5px] border-border bg-card/80">
                         <span className="text-[10px] font-extrabold uppercase text-muted-foreground">
-                          {day.weekday}
+                          {weekday}
                         </span>
                         <span className="font-heading text-[17px] font-bold leading-none tabular-nums text-primary">
-                          {Number(day.dateKey.split("-")[2])}
+                          {d}
                         </span>
                       </span>
 
@@ -271,10 +308,10 @@ export default function StudentAttendancePage() {
                             <span aria-hidden>{meta.emoji}</span>
                             {meta.label}
                           </span>
-                          {day.session ? (
+                          {fullSession ? (
                             <span className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-foreground/85">
                               <Clock className="h-3.5 w-3.5" />
-                              {formatSessionDuration(day.session.duration_seconds)}
+                              {formatSessionDuration(fullSession.duration_seconds)}
                             </span>
                           ) : null}
                           {paras ? (

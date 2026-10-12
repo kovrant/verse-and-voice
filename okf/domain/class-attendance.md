@@ -66,4 +66,8 @@ Standard blueprint ([RLS model](../architecture/rls-security-model.md)): teacher
 
 ## Not wired yet
 
-* The student portal's "My class days" page (`/student/attendance`, `buildMonthAttendance`) still derives attendance from `class_sessions` only, so a teacher-absent or holiday day shows there as missed. The [monthly report](monthly-parent-report.md) uses the marks.
+* The student-portal **streak** (`computeStreak` in `src/lib/streak.ts`, used by `student-streak-card.tsx` and `/student/classes`) still counts sessions only, so a teacher-absent or holiday day breaks the child's streak. It also uses the device's timezone.
+
+## Wired
+
+* The [monthly report](monthly-parent-report.md) and the student portal's **My class days** page (`/student/attendance`) both use `scheduledDates` + `buildAttendanceDays` on PKT dates. The kid page shows ✅ Came to class / ⭐ Extra class / 🌙 Missed this one / 🌙 No class yet / 🌿 Teacher's day off / 🎉 Holiday / ⏳ Coming up, and its "X / Y class days" uses `attendanceTotals` (teacher-absent and holiday days don't count). The old device-timezone `buildMonthAttendance` was removed.
