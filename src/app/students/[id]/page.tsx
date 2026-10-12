@@ -8,7 +8,6 @@ import {
   BookOpen,
   Check,
   Clock,
-  FileText,
   Pencil,
   Play,
   Plus,
@@ -25,6 +24,7 @@ import {
   type MemChunk,
   setChunkMemorized,
 } from "@/components/memorization-chunks"
+import { StudentMonthlyReport } from "@/components/monthly-report-sheet"
 import { OnlineDot } from "@/components/online-dot"
 import { PageLoading } from "@/components/page-loading"
 import { QuranJourney } from "@/components/quran-journey"
@@ -691,7 +691,7 @@ export default function StudentDetailPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3 print:hidden">
         <Link href="/" className="hover:text-foreground transition-colors">
           Dashboard
         </Link>
@@ -704,7 +704,7 @@ export default function StudentDetailPage() {
       </nav>
 
       {/* Clean Command Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 print:hidden">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/students">
             <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
@@ -741,12 +741,6 @@ export default function StudentDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link href={`/students/${student.id}/report`}>
-            <Button size="sm" variant="outline">
-              <FileText className="h-3.5 w-3.5 mr-1.5" />
-              Monthly report
-            </Button>
-          </Link>
           <Link href={`/class?student=${student.id}`}>
             <Button size="sm">
               <Play className="h-3.5 w-3.5 mr-1.5" />
@@ -757,7 +751,9 @@ export default function StudentDetailPage() {
       </div>
 
       {/* Top Underline Navigation */}
-      <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
+      <div className="print:hidden">
+        <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
+      </div>
 
       {/* Full-width Workspace */}
       <div className="min-w-0">
@@ -947,6 +943,8 @@ export default function StudentDetailPage() {
             />
           </div>
         )}
+
+        {activeTab === "report" && <StudentMonthlyReport studentId={student.id} />}
 
         {activeTab === "account" && (
           <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12">

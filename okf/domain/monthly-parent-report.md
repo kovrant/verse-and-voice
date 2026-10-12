@@ -7,8 +7,8 @@ verified: true
 sources:
   - "src/lib/monthly-report.ts"
   - "src/lib/monthly-report.test.ts"
-  - "src/app/students/[id]/report/page.tsx"
-  - "src/app/reports/page.tsx"
+  - "src/app/students/[id]/page.tsx"
+  - "src/components/student-detail-nav.tsx"
   - "src/components/monthly-report-sheet.tsx"
   - "src/components/app-shell.tsx"
   - "supabase/migration_class_session_starting_page.sql"
@@ -21,12 +21,12 @@ tags:
 
 # Monthly Parent Report
 
-At the start of each month the teacher sends every parent a report on the previous month. Route: **`/students/[id]/report?month=YYYY-MM`** (defaults to last month, PKT), opened from the **Monthly report** button on the student page.
+At the start of each month the teacher sends every parent a report on the previous month. It lives in the **Monthly Report** tab of the student page (`/students/[id]`), next to Trophies: a month picker (defaults to last month, PKT), **Download PDF**, and the report shown inline. `StudentMonthlyReport` in `src/components/monthly-report-sheet.tsx` renders it.
 
-**All students:** `/reports?month=YYYY-MM` (sidebar → Management → Monthly Reports) renders every `status = 'Reading'` student's report, one per printed page (`break-after-page`), so one "Save as PDF" gives the whole month. Both pages share `loadReport()` and `ReportSheet` from `src/components/monthly-report-sheet.tsx`; `/reports` runs one `loadReport` per student in parallel (a `ponytail:` note marks the ceiling).
+There is deliberately **no separate reports section or all-students page** — the teacher asked for it per student, inside the student page (a `/reports` page and a `/students/[id]/report` route were built and removed on 2026-10-12).
 
 ## 🖨️ How the PDF is made
-No PDF library. The route renders an A4 sheet and **Download PDF** calls `window.print()`; the teacher picks "Save as PDF".
+No PDF library. The tab renders an A4 sheet and **Download PDF** calls `window.print()`; the teacher picks "Save as PDF". The student page's breadcrumb, header, tab bar and the tab's toolbar are `print:hidden`, so only the sheet prints.
 * Arabic shaping, the self-hosted fonts and the Indo-Pak jazm render exactly as on screen — PDF libraries handle Arabic badly.
 * The sheet uses fixed paper colours (`bg-white`, `neutral-*`, `emerald-*`), not theme tokens, so it prints the same in dark mode.
 * `app-shell.tsx` carries print-only classes on the **teacher** shell: sidebar, top bar and background layer are `print:hidden`, and the `h-screen overflow-hidden` frame becomes `print:h-auto print:overflow-visible` (otherwise only the visible scroll area prints). `globals.css` sets `@page { size: A4; margin: 12mm }`. Screen rendering is unchanged.

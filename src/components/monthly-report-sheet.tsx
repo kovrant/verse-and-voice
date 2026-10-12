@@ -1,15 +1,23 @@
 "use client"
 
+import { Download } from "lucide-react"
+import { useEffect, useState } from "react"
+
+import { PageLoading } from "@/components/page-loading"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   type Attendance,
   computeAttendance,
   computeMemorization,
   computeReadingProgress,
   countRevisions,
+  defaultReportMonth,
   formatReportMonth,
   type LessonChunks,
   type MemorizationSummary,
   monthRange,
+  parseReportMonth,
   pktDateKey,
   positionLabel,
   type ReadingProgress,
@@ -20,8 +28,53 @@ import { paraLabel } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import { safeFormatDate, type Student } from "@/lib/utils"
 
-// Monthly parent report: data loading + the printable A4 sheet, shared by the
-// per-student page and the all-students page. See okf/domain/monthly-parent-report.md.
+// Monthly parent report: the "Monthly Report" tab on the student page — data
+// loading + the printable A4 sheet. See okf/domain/monthly-parent-report.md.
+
+/** Student page tab: pick a month, view the report, download it as a PDF. */
+export function StudentMonthlyReport({ studentId }: { studentId: string }) {
+  const [monthKey, setMonthKey] = useState(() => formatReportMonth(defaultReportMonth()))
+  const [data, setData] = useState<ReportData | null>(null)
+
+  useEffect(() => {
+    const month = parseReportMonth(monthKey)
+    if (!month) return
+    let active = true
+    setData(null)
+    void loadReport(studentId, month).then((d) => {
+      if (active) setData(d)
+    })
+    return () => {
+      active = false
+    }
+  }, [studentId, monthKey])
+
+  const month = parseReportMonth(monthKey)!
+  return (
+    <div className="space-y-4 animate-fade-in-up">
+      <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
+        <p className="text-sm text-muted-foreground">
+          Progress for one month. Download it and send it to the parents.
+        </p>
+        <div className="flex items-center gap-2">
+          <Input
+            type="month"
+            aria-label="Report month"
+            value={monthKey}
+            max={pktDateKey(new Date()).slice(0, 7)}
+            onChange={(e) => parseReportMonth(e.target.value) && setMonthKey(e.target.value)}
+            className="h-9 w-[150px]"
+          />
+          <Button size="sm" onClick={() => window.print()} disabled={!data}>
+            <Download className="mr-1.5 h-3.5 w-3.5" />
+            Download PDF
+          </Button>
+        </div>
+      </div>
+      {data ? <ReportSheet data={data} month={month} /> : <PageLoading variant="detail" />}
+    </div>
+  )
+}
 
 type Session = ReadingSession & {
   started_at: string
@@ -45,7 +98,10 @@ export interface ReportData {
   fee: { is_paid: boolean; paid_at: string | null } | null
 }
 
-export async function loadReport(studentId: string, month: ReportMonth): Promise<ReportData | null> {
+export async function loadReport(
+  studentId: string,
+  month: ReportMonth,
+): Promise<ReportData | null> {
   const range = monthRange(month)
   const monthKey = formatReportMonth(month)
 

@@ -200,3 +200,10 @@ tags:
 * **Changes:**
   * `/reports` prints every active student's report, one per page, for a single "Save as PDF"; linked in the sidebar under Management.
   * Report loading and the A4 sheet moved into a shared component used by both pages.
+
+### [2026-10-12] - Monthly Report Moves Into the Student Page
+* **Scope:** `src/components/monthly-report-sheet.tsx`, `src/components/student-detail-nav.tsx`, `src/app/students/[id]/page.tsx`, `src/components/sidebar.tsx`; removed `src/app/reports/page.tsx` and `src/app/students/[id]/report/page.tsx`.
+* **Entries Updated:** `domain/monthly-parent-report.md`, `index.md`, `log.md`.
+* **Changes:**
+  * The report is now a **Monthly Report** tab on the student page with a month picker and Download PDF, at the teacher's request. The separate Monthly Reports section, its sidebar link and the standalone report route are gone.
+  * Student page chrome is hidden when printing so only the report sheet goes into the PDF.
