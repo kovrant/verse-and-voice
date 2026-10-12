@@ -59,7 +59,7 @@ export function StudentMonthlyReport({ studentId }: { studentId: string }) {
 
   const month = parseReportMonth(monthKey)!
   return (
-    <div className="space-y-4 animate-fade-in-up">
+    <div className="space-y-4 animate-fade-in-up print:space-y-0">
       <div className="flex flex-wrap items-center justify-between gap-3 print:hidden">
         <p className="text-sm text-muted-foreground">
           Progress for one month. Download it and send it to the parents.
@@ -97,7 +97,6 @@ export interface ReportData {
     summary: AttendanceSummary
     attended: number
     counted: number
-    sessions: number
     totalMinutes: number
   }
   reading: ReadingProgress
@@ -264,7 +263,6 @@ export async function loadReport(
       days,
       summary: summarizeAttendance(days),
       ...attendanceTotals(days),
-      sessions: sessions.length,
       totalMinutes: Math.round(
         sessions.reduce((sum, s) => sum + (s.duration_seconds || 0), 0) / 60,
       ),
@@ -338,7 +336,7 @@ export function ReportSheet({ data, month }: { data: ReportData; month: ReportMo
 
   return (
     <article
-      className="relative mx-auto w-full max-w-[210mm] overflow-hidden rounded-[28px] border px-10 pb-10 pt-8 font-body shadow-sm print:min-h-[297mm] print:max-w-none print:rounded-none print:border-0 print:px-[14mm] print:pb-[12mm] print:pt-[10mm] print:shadow-none"
+      className="relative mx-auto w-full max-w-[210mm] overflow-hidden rounded-[28px] border px-10 pb-10 pt-8 font-body shadow-sm print:min-h-[296mm] print:max-w-none print:rounded-none print:border-0 print:px-[14mm] print:pb-[12mm] print:pt-[10mm] print:shadow-none"
       style={{ background: BRAND.cream, borderColor: BRAND.sand, color: BRAND.ink }}
     >
       <GeometricCorner className="left-0 top-0" />
@@ -382,9 +380,9 @@ export function ReportSheet({ data, month }: { data: ReportData; month: ReportMo
           value={
             attendance.counted > 0
               ? `${attendance.attended}/${attendance.counted}`
-              : String(attendance.sessions)
+              : String(attendance.summary.present)
           }
-          label={attendance.counted > 0 ? "Classes attended" : "Classes held"}
+          label={attendance.counted > 0 ? "Classes attended" : "Class days"}
         />
         <Tile
           value={isQaida ? "Qaida" : String(reading.parasCompleted.length)}
