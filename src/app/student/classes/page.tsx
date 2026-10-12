@@ -9,6 +9,7 @@ import { KidButton, KidCard, KidEmpty, KidPageHeader, QuranBookIcon } from "@/co
 import { useLiveClass } from "@/components/live-class-provider"
 import { PageLoading } from "@/components/page-loading"
 import { StudentLiveClass } from "@/components/student-live-class"
+import type { AttendanceMark } from "@/lib/attendance"
 import { formatClassTimeLocal, formatCountdown, msUntilNextClass } from "@/lib/class-time"
 import { STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { computeStreak } from "@/lib/streak"
@@ -21,6 +22,7 @@ export default function StudentClassesPage() {
   const [items, setItems] = useState<StudentMemItem[]>([])
   const [revisionItems, setRevisionItems] = useState<StudentMemItem[]>([])
   const [sessionStarts, setSessionStarts] = useState<string[]>([])
+  const [attendanceMarks, setAttendanceMarks] = useState<AttendanceMark[]>([])
   const [loadingItems, setLoadingItems] = useState(true)
   const [now, setNow] = useState(() => new Date())
 
@@ -45,11 +47,13 @@ export default function StudentClassesPage() {
         .eq("status", "memorized")
         .not("revision_assigned_at", "is", null),
       supabase.from("class_sessions").select("started_at").eq("student_id", student.id),
-    ]).then(([mem, revision, sessions]) => {
+      supabase.from("class_attendance").select("class_date, status").eq("student_id", student.id),
+    ]).then(([mem, revision, sessions, marks]) => {
       if (!active) return
       setItems((mem.data as unknown as StudentMemItem[]) || [])
       setRevisionItems((revision.data as unknown as StudentMemItem[]) || [])
       setSessionStarts(((sessions.data as { started_at: string }[]) || []).map((r) => r.started_at))
+      setAttendanceMarks((marks.data as AttendanceMark[]) || [])
       setLoadingItems(false)
     })
     return () => {
@@ -67,7 +71,7 @@ export default function StudentClassesPage() {
   const classTime = student?.class_time ?? null
   const ms = msUntilNextClass(classTime, now, classDays)
   const localTime = formatClassTimeLocal(classTime, now, classDays)
-  const streak = computeStreak(classDays, sessionStarts, now)
+  const streak = computeStreak(classDays, sessionStarts, now, attendanceMarks)
   const streakTease =
     streak.configured && streak.current > 0 && streak.todayScheduled && !streak.todayDone
 

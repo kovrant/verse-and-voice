@@ -5,12 +5,12 @@ import { computeStreak, nextMilestone, pendingMilestones } from "./streak"
 // Mon/Wed/Fri = 1, 3, 5
 const MWF = [1, 3, 5]
 
-/** Build a local Date at noon so DST edges don't bite. */
+/** Noon in Pakistan (07:00 UTC) — streak days are PKT, whatever the test machine's zone. */
 function localNoon(y: number, m0: number, d: number): Date {
-  return new Date(y, m0, d, 12, 0, 0)
+  return new Date(Date.UTC(y, m0, d, 7, 0, 0))
 }
 
-/** Session ISO that falls on a given local calendar day. */
+/** Session ISO that falls on a given PKT calendar day. */
 function sessionOn(y: number, m0: number, d: number): string {
   return localNoon(y, m0, d).toISOString()
 }
@@ -98,5 +98,47 @@ describe("milestones", () => {
     expect(pendingMilestones(7, 0)).toEqual([3, 7])
     expect(pendingMilestones(7, 3)).toEqual([7])
     expect(pendingMilestones(2, 0)).toEqual([])
+  })
+})
+
+describe("computeStreak with attendance marks", () => {
+  // Mon 20, Wed 22, Fri 24 Jul 2026; Mon 27 next week.
+  it("skips teacher-absent and holiday days instead of breaking", () => {
+    const sessions = [sessionOn(2026, 6, 20), sessionOn(2026, 6, 24), sessionOn(2026, 6, 27)]
+    const marks = [{ class_date: "2026-07-22", status: "teacher_absent" as const }]
+    const info = computeStreak(MWF, sessions, localNoon(2026, 6, 27), marks)
+    expect(info.current).toBe(3)
+    // The day off shows as "off" in the week strip, not "missed".
+    const holiday = computeStreak(MWF, sessions, localNoon(2026, 6, 24), [
+      { class_date: "2026-07-22", status: "holiday" },
+    ])
+    expect(holiday.week[3]).toBe("off")
+  })
+
+  it("still breaks on a student absence", () => {
+    const sessions = [sessionOn(2026, 6, 20), sessionOn(2026, 6, 24)]
+    const marks = [{ class_date: "2026-07-22", status: "student_absent" as const }]
+    expect(computeStreak(MWF, sessions, localNoon(2026, 6, 25), marks).current).toBe(1)
+  })
+
+  it("counts a day marked present without a session", () => {
+    const sessions = [sessionOn(2026, 6, 20), sessionOn(2026, 6, 24)]
+    const marks = [{ class_date: "2026-07-22", status: "present" as const }]
+    expect(computeStreak(MWF, sessions, localNoon(2026, 6, 25), marks).current).toBe(3)
+  })
+
+  it("doesn't expect a class today when today is the teacher's day off", () => {
+    const info = computeStreak(MWF, [sessionOn(2026, 6, 22)], localNoon(2026, 6, 24), [
+      { class_date: "2026-07-24", status: "teacher_absent" },
+    ])
+    expect(info.todayScheduled).toBe(false)
+    expect(info.current).toBe(1)
+  })
+
+  it("dates a late-evening PKT class on its Pakistan day", () => {
+    // 23:30 PKT Wed 22 = 18:30 UTC — still Wednesday in Pakistan.
+    const late = new Date(Date.UTC(2026, 6, 22, 18, 30)).toISOString()
+    const info = computeStreak(MWF, [sessionOn(2026, 6, 20), late], localNoon(2026, 6, 23))
+    expect(info.current).toBe(2)
   })
 })

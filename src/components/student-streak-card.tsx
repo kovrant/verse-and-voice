@@ -5,6 +5,7 @@ import { Check, Flame } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { DAY_LABELS } from "@/components/class-days-picker"
+import type { AttendanceMark } from "@/lib/attendance"
 import { formatClassTimeLocal } from "@/lib/class-time"
 import { kidToast } from "@/lib/kid-toast"
 import {
@@ -46,16 +47,16 @@ export function useStreak(
   useEffect(() => {
     let active = true
     setLoading(true)
-    supabase
-      .from("class_sessions")
-      .select("started_at")
-      .eq("student_id", studentId)
-      .then(({ data }) => {
-        if (!active) return
-        const starts = ((data as { started_at: string }[]) || []).map((r) => r.started_at)
-        setInfo(computeStreak(classDays, starts))
-        setLoading(false)
-      })
+    void Promise.all([
+      supabase.from("class_sessions").select("started_at").eq("student_id", studentId),
+      // Teacher days off / holidays don't break the streak.
+      supabase.from("class_attendance").select("class_date, status").eq("student_id", studentId),
+    ]).then(([sessions, marks]) => {
+      if (!active) return
+      const starts = ((sessions.data as { started_at: string }[]) || []).map((r) => r.started_at)
+      setInfo(computeStreak(classDays, starts, new Date(), (marks.data as AttendanceMark[]) || []))
+      setLoading(false)
+    })
     return () => {
       active = false
     }

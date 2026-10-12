@@ -64,10 +64,7 @@ There is no separate route or sidebar link; per-student features live in the stu
 
 Standard blueprint ([RLS model](../architecture/rls-security-model.md)): teacher `FOR ALL TO authenticated` via `is_teacher()`, student `FOR SELECT TO authenticated` on `student_id = my_student_id()`. Students never write attendance.
 
-## Not wired yet
-
-* The student-portal **streak** (`computeStreak` in `src/lib/streak.ts`, used by `student-streak-card.tsx` and `/student/classes`) still counts sessions only, so a teacher-absent or holiday day breaks the child's streak. It also uses the device's timezone.
-
 ## Wired
 
 * The [monthly report](monthly-parent-report.md) and the student portal's **My class days** page (`/student/attendance`) both use `scheduledDates` + `buildAttendanceDays` on PKT dates. The kid page shows ✅ Came to class / ⭐ Extra class / 🌙 Missed this one / 🌙 No class yet / 🌿 Teacher's day off / 🎉 Holiday / ⏳ Coming up, and its "X / Y class days" uses `attendanceTotals` (teacher-absent and holiday days don't count). The old device-timezone `buildMonthAttendance` was removed.
+* The student-portal **streak** (`computeStreak` in `src/lib/streak.ts`, used by `student-streak-card.tsx` and `/student/classes`) takes the marks: `teacher_absent` / `holiday` days are skipped like off days (never break the streak, shown as "off" in the week strip), a `present` mark counts like a session, and `student_absent` breaks it. Days are PKT.

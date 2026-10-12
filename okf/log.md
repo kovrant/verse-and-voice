@@ -234,3 +234,10 @@ tags:
   * The kid page reads `class_attendance` marks: teacher's days off and holidays show as such and no longer count against the child; make-up classes appear as "Extra class".
   * Months and days are PKT instead of the device timezone, so parents abroad see classes on the right day.
   * Removed the unused device-timezone `buildMonthAttendance` / `localDateKey`.
+
+### [2026-10-12] - Streak Ignores Teacher Days Off
+* **Scope:** `src/lib/streak.ts`, `src/lib/streak.test.ts`, `src/components/student-streak-card.tsx`, `src/app/student/classes/page.tsx`.
+* **Entries Updated:** `domain/class-attendance.md`, `log.md`.
+* **Changes:**
+  * `computeStreak` takes `class_attendance` marks: teacher-absent and holiday days no longer break a child's streak, and a day marked present counts.
+  * Streak days are PKT instead of the device timezone; tests pin dates to PKT noon and pass under US/UK test timezones.
