@@ -8,6 +8,7 @@ import {
   BookOpenCheck,
   Cpu,
   CreditCard,
+  FileText,
   LayoutDashboard,
   Menu,
   Moon,
@@ -59,6 +60,7 @@ const navSections = [
     label: "Management",
     items: [
       { href: "/fees", label: "Fee Management", icon: CreditCard },
+      { href: "/reports", label: "Monthly Reports", icon: FileText },
       { href: "/media", label: "Media Library", icon: Upload },
       { href: "/ai-usage", label: "AI Usage", icon: Cpu },
     ],

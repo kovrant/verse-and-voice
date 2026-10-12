@@ -193,3 +193,10 @@ tags:
   * Pure, tested calculations for PKT month bounds, attendance, reading position and pages, memorization and revisions.
   * Live classes now save `starting_page` so pages read are exact going forward; the insert retries without it on older databases.
   * Teacher shell gets print-only classes so only the page content prints, at full height.
+
+### [2026-10-11] - Monthly Reports: All Students
+* **Scope:** `src/app/reports/page.tsx` (new), `src/components/monthly-report-sheet.tsx` (new, moved from the per-student page), `src/app/students/[id]/report/page.tsx`, `src/components/sidebar.tsx`.
+* **Entries Updated:** `domain/monthly-parent-report.md`, `index.md`, `log.md`.
+* **Changes:**
+  * `/reports` prints every active student's report, one per page, for a single "Save as PDF"; linked in the sidebar under Management.
+  * Report loading and the A4 sheet moved into a shared component used by both pages.

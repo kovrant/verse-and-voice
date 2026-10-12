@@ -8,6 +8,8 @@ sources:
   - "src/lib/monthly-report.ts"
   - "src/lib/monthly-report.test.ts"
   - "src/app/students/[id]/report/page.tsx"
+  - "src/app/reports/page.tsx"
+  - "src/components/monthly-report-sheet.tsx"
   - "src/components/app-shell.tsx"
   - "supabase/migration_class_session_starting_page.sql"
 tags:
@@ -20,6 +22,8 @@ tags:
 # Monthly Parent Report
 
 At the start of each month the teacher sends every parent a report on the previous month. Route: **`/students/[id]/report?month=YYYY-MM`** (defaults to last month, PKT), opened from the **Monthly report** button on the student page.
+
+**All students:** `/reports?month=YYYY-MM` (sidebar → Management → Monthly Reports) renders every `status = 'Reading'` student's report, one per printed page (`break-after-page`), so one "Save as PDF" gives the whole month. Both pages share `loadReport()` and `ReportSheet` from `src/components/monthly-report-sheet.tsx`; `/reports` runs one `loadReport` per student in parallel (a `ponytail:` note marks the ceiling).
 
 ## 🖨️ How the PDF is made
 No PDF library. The route renders an A4 sheet and **Download PDF** calls `window.print()`; the teacher picks "Save as PDF".
