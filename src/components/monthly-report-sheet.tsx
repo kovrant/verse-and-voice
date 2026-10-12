@@ -483,7 +483,7 @@ export function ReportSheet({ data, month }: { data: ReportData; month: ReportMo
         ))}
         {reading.pagesApproximate && (
           <p className="mt-1.5 text-[10.5px]" style={{ color: BRAND.sage }}>
-            ≈ Some pages are estimated (classes before page tracking began).
+            ≈ Estimated: counted from the end of the first class this month.
           </p>
         )}
       </Section>

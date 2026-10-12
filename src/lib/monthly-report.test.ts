@@ -65,61 +65,70 @@ describe("computeReadingProgress", () => {
     ending_para: number,
     ending_page: number,
     starting_page: number | null = null,
-  ) => ({ starting_para, starting_page, ending_para, ending_page, paras_covered: [] })
+    paras_covered: number[] = [],
+  ) => ({ starting_para, starting_page, ending_para, ending_page, paras_covered })
 
-  it("counts exact pages when sessions save their starting page", () => {
-    const r = computeReadingProgress([s(3, 3, 9, 4), s(3, 3, 15, 9)], s(3, 3, 4))
+  it("measures net movement from the previous class's end", () => {
+    const r = computeReadingProgress([s(3, 3, 9), s(3, 3, 15)], s(3, 3, 4))
     expect(r.start).toEqual({ para: 3, page: 4 })
     expect(r.end).toEqual({ para: 3, page: 15 })
     expect(r.pages).toBe(11)
+    expect(r.parasCompleted).toEqual([])
     expect(r.pagesApproximate).toBe(false)
   })
 
-  it("falls back to the previous end and marks it approximate", () => {
-    const r = computeReadingProgress([s(3, 3, 9), s(3, 3, 15)], s(2, 3, 4))
-    expect(r.pages).toBe(11)
-    expect(r.pagesApproximate).toBe(true)
+  it("completes every para between start and end, 18 pages each by default", () => {
+    // Para 3 p.12 → Para 5 p.6: rest of 3 (7) + all of 4 (18) + 5 pages of 5.
+    const r = computeReadingProgress([s(3, 5, 6)], s(3, 3, 12))
+    expect(r.parasCompleted).toEqual([3, 4])
+    expect(r.pages).toBe(7 + 18 + 5)
   })
 
-  it("crosses a para using its recorded size, in either direction", () => {
-    const forward = computeReadingProgress([s(3, 4, 5, 18)], null, { 3: 20 })
-    expect(forward.pages).toBe(2 + 4)
-    expect(forward.parasCompleted).toEqual([3])
-    const backward = computeReadingProgress([s(30, 29, 3, 19)], null, { 30: 22 })
-    expect(backward.pages).toBe(3 + 2)
-    expect(backward.parasCompleted).toEqual([30])
+  it("uses a para's recorded size, and works in the descending direction", () => {
+    const r = computeReadingProgress([s(30, 29, 3)], s(30, 30, 20), { 30: 22 })
+    expect(r.parasCompleted).toEqual([30])
+    expect(r.pages).toBe(3 + 2)
   })
 
-  it("assumes 18 pages per para when the size is unknown", () => {
-    const r = computeReadingProgress([s(3, 4, 5, 15)], null)
-    expect(r.pages).toBe(3 + 4)
-    expect(r.pagesApproximate).toBe(false)
-  })
-
-  it("counts paras completed over the month, not Qaida", () => {
-    const r = computeReadingProgress(
-      [s(0, 1, 4, 30), s(1, 2, 3, 4), s(2, 2, 10, 3), s(2, 3, 2, 10)],
-      null,
-    )
-    expect(r.parasCompleted).toEqual([1, 2])
-  })
-
-  it("lists distinct paras, including Qaida as 0", () => {
+  it("ignores browsing between paras inside the month (Ahmed, Sep 2026)", () => {
+    // Real sessions: classes opened on Para 20 and the teacher clicked to 22;
+    // one session even ended on 20. He actually read Para 22 and moved to 23.
     const r = computeReadingProgress(
       [
-        { ...s(0, 0, 7, 3), paras_covered: [0] },
-        { ...s(5, 6, 2, 10), paras_covered: [5, 6] },
+        s(20, 22, 12, null, [19, 20, 21, 22]),
+        s(20, 22, 13, null, [20, 21, 22]),
+        s(20, 20, 2, null, [20]),
+        s(20, 22, 2, null, [20, 21, 22]),
+        s(22, 22, 15),
+        s(22, 22, 18),
+        s(22, 23, 1, null, [22, 23]),
       ],
       null,
     )
-    expect(r.paras).toEqual([0, 5, 6])
+    expect(r.start).toEqual({ para: 22, page: 12 })
+    expect(r.parasCompleted).toEqual([22])
+    expect(r.pages).toBe(18 - 12 + 1)
+    expect(r.pagesApproximate).toBe(true)
+  })
+
+  it("starts from the first class's recorded opening page when there's no earlier class", () => {
+    const r = computeReadingProgress([s(3, 3, 9, 4)], null)
+    expect(r.start).toEqual({ para: 3, page: 4 })
+    expect(r.pages).toBe(5)
+    expect(r.pagesApproximate).toBe(false)
+  })
+
+  it("never completes Qaida as a para", () => {
+    const r = computeReadingProgress([s(0, 1, 4)], s(0, 0, 30))
+    expect(r.parasCompleted).toEqual([])
+    expect(r.pages).toBe(3)
   })
 
   it("returns empty progress for a month without sessions", () => {
     const r = computeReadingProgress([], s(3, 3, 4))
     expect(r.end).toBeNull()
     expect(r.pages).toBeNull()
-    expect(r.paras).toEqual([])
+    expect(r.parasCompleted).toEqual([])
   })
 
   it("labels positions", () => {

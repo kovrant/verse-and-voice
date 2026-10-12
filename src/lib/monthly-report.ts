@@ -89,9 +89,9 @@ export interface ReadingProgress {
   paras: number[]
   /** Null when no session has enough data to count pages. */
   pages: number | null
-  /** True when some pages were estimated (sessions saved before starting_page existed). */
+  /** True when the month's starting page isn't known exactly (first tracked month, before starting_page). */
   pagesApproximate: boolean
-  /** Quran paras finished this month (moved on from), ascending. Qaida isn't counted. */
+  /** Quran paras finished this month: every para from the start position up to (not including) the end one. */
   parasCompleted: number[]
 }
 
@@ -100,23 +100,38 @@ function endOf(s: ReadingSession): Position | null {
   return { para: s.ending_para, page: s.ending_page ?? s.last_page ?? null }
 }
 
+function paraSize(para: number, totalPages: Record<number, number>): number {
+  return totalPages[para] ?? DEFAULT_PARA_PAGES
+}
+
 /**
- * Pages between two positions. Same para: the page difference. A different
- * para (either direction — rounds are read both ways): the rest of the old
- * para (its recorded size, else DEFAULT_PARA_PAGES) plus the pages into the new one.
+ * Pages read moving from position a to b ("on page N" = N not finished yet).
+ * Same para: the page difference. Different para (either direction — rounds
+ * are read both ways): the rest of a's para, every para in between, and the
+ * pages into b's para.
  */
 function pagesBetween(a: Position, b: Position, totalPages: Record<number, number>): number | null {
   if (a.page == null || b.page == null) return null
   if (a.para === b.para) return Math.max(0, b.page - a.page)
-  // Qaida (0) has no standard size; only count pages into the new book then.
-  const total = totalPages[a.para] ?? (a.para === QAIDA_PARA ? a.page : DEFAULT_PARA_PAGES)
-  return Math.max(0, total - a.page) + Math.max(0, b.page - 1)
+  if (a.para === QAIDA_PARA || b.para === QAIDA_PARA) return Math.max(0, b.page - 1)
+  const step = b.para > a.para ? 1 : -1
+  let pages = Math.max(0, paraSize(a.para, totalPages) - a.page + 1)
+  for (let p = a.para + step; p !== b.para; p += step) pages += paraSize(p, totalPages)
+  return pages + Math.max(0, b.page - 1)
 }
 
 /**
- * Where the month started and ended, which paras were read, and roughly how
- * many pages. `previous` is the last session before the month (if any): its
- * end is where this month began.
+ * The month's reading as NET movement: where the student stood at the start of
+ * the month → where they stood at the end. What happens in between is ignored
+ * on purpose — the teacher often opens a class on one para and clicks to
+ * another to find the student's place, and a session can even end on a para
+ * the teacher was only browsing. Summing every session would count all of that
+ * as reading (and "complete" paras the student never read).
+ *
+ * Start = the last class before the month. With none (the first tracked
+ * month), the first class's recorded opening page when it has one, else where
+ * the first class ended — its opening para isn't trustworthy — which makes the
+ * page count approximate.
  */
 export function computeReadingProgress(
   sessions: ReadingSession[],
@@ -126,47 +141,33 @@ export function computeReadingProgress(
   const paras = new Set<number>()
   for (const s of sessions) {
     for (const p of s.paras_covered ?? []) paras.add(p)
-    if (s.starting_para != null) paras.add(s.starting_para)
     if (s.ending_para != null) paras.add(s.ending_para)
   }
 
+  const ends = sessions.map(endOf).filter((p): p is Position => p !== null)
   const first = sessions[0]
-  const start: Position | null =
-    (previous && endOf(previous)) ??
-    (first && first.starting_para != null
-      ? { para: first.starting_para, page: first.starting_page ?? null }
-      : null)
+  const previousEnd = previous ? endOf(previous) : null
+  const openedExactly =
+    first?.starting_para != null && first.starting_page != null
+      ? { para: first.starting_para, page: first.starting_page }
+      : null
+  const start: Position | null = previousEnd ?? openedExactly ?? ends[0] ?? null
+  const end: Position | null = ends.at(-1) ?? null
 
-  let pages: number | null = null
-  let approximate = false
-  const completed = new Set<number>()
-  let cursor = start
-  for (const s of sessions) {
-    const end = endOf(s)
-    if (!end) continue
-    // Sessions saved before starting_page existed start where the last one ended.
-    const exactStart = s.starting_para != null && s.starting_page != null
-    const from: Position | null = exactStart
-      ? { para: s.starting_para!, page: s.starting_page! }
-      : cursor
-    const counted = from ? pagesBetween(from, end, totalPages) : null
-    if (counted != null) {
-      pages = (pages ?? 0) + counted
-      if (!exactStart) approximate = true
-    }
-    // Moving on from a para means it was finished.
-    if (from && from.para !== end.para && from.para !== QAIDA_PARA) completed.add(from.para)
-    cursor = end
+  const parasCompleted: number[] = []
+  if (start && end && start.para !== end.para && start.para !== QAIDA_PARA && end.para !== QAIDA_PARA) {
+    const step = end.para > start.para ? 1 : -1
+    for (let p = start.para; p !== end.para; p += step) parasCompleted.push(p)
+    parasCompleted.sort((x, y) => x - y)
   }
 
-  const last = [...sessions].reverse().map(endOf).find(Boolean) ?? null
   return {
     start,
-    end: last,
-    paras: Array.from(paras).sort((a, b) => a - b),
-    pages,
-    pagesApproximate: approximate,
-    parasCompleted: Array.from(completed).sort((a, b) => a - b),
+    end,
+    paras: Array.from(paras).sort((x, y) => x - y),
+    pages: start && end ? pagesBetween(start, end, totalPages) : null,
+    pagesApproximate: !previousEnd && !openedExactly && sessions.length > 0,
+    parasCompleted,
   }
 }
 

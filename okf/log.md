@@ -241,3 +241,10 @@ tags:
 * **Changes:**
   * `computeStreak` takes `class_attendance` marks: teacher-absent and holiday days no longer break a child's streak, and a day marked present counts.
   * Streak days are PKT instead of the device timezone; tests pin dates to PKT noon and pass under US/UK test timezones.
+
+### [2026-10-12] - Monthly Report: Reading Is Net Movement
+* **Scope:** `src/lib/monthly-report.ts`, `src/lib/monthly-report.test.ts`, `src/components/monthly-report-sheet.tsx`.
+* **Entries Updated:** `domain/monthly-parent-report.md`, `log.md`.
+* **Changes:**
+  * Paras and pages completed now come from the month's start position → end position. Summing every session counted the teacher clicking between paras as reading (Ahmed's Sep report showed "Para 20 ✓, Para 22 ✓" for a month spent finishing Para 22) and inflated pages.
+  * Fixed an off-by-one in pages when crossing a para (the start page itself counts).
