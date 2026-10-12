@@ -12,6 +12,7 @@ import {
   ClassStudentCard,
 } from "@/components/class-student-card"
 import { ClassStudentPicker } from "@/components/class-student-picker"
+import { ClassTodayAttendance } from "@/components/class-today-attendance"
 import LiveSession, { type SessionEndData } from "@/components/live-session"
 import { PageLoading } from "@/components/page-loading"
 import { type QuranRound } from "@/components/quran-progress"
@@ -19,6 +20,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
+import { pktDateKey } from "@/lib/monthly-report"
 import { saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
 import { QAIDA_PARA, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
@@ -122,7 +124,7 @@ function ClassPageContent() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, class_time, qaida_media_id")
+      .select("id, name, guardian_name, started_at, class_time, class_days, qaida_media_id")
       .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
@@ -199,6 +201,19 @@ function ClassPageContent() {
       toast.error(`Failed to save session: ${error.message}`)
       return false
     }
+
+    // Best-effort: a saved class marks the day present. Never fails the save
+    // (e.g. class_attendance not migrated yet).
+    const { error: attendanceError } = await supabase.from("class_attendance").upsert(
+      {
+        student_id: selected!.id,
+        class_date: pktDateKey(data.startedAt),
+        status: "present",
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "student_id,class_date" },
+    )
+    if (attendanceError) console.error("Failed to mark attendance:", attendanceError)
 
     // Save the exact bookmark position for this para
     // != null, not truthiness: Qaida is para 0.
@@ -344,11 +359,14 @@ function ClassPageContent() {
           )}
         </>
       ) : (
-        <ClassStudentPicker
-          students={students}
-          onlineIds={onlineStudents}
-          onSelect={(id) => void handleSelect(id)}
-        />
+        <>
+          <ClassTodayAttendance students={students} />
+          <ClassStudentPicker
+            students={students}
+            onlineIds={onlineStudents}
+            onSelect={(id) => void handleSelect(id)}
+          />
+        </>
       )}
     </div>
   )

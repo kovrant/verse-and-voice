@@ -8,7 +8,7 @@ import type { ClassStudent } from "@/components/class-student-card"
 import { OnlineDot } from "@/components/online-dot"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { classTimeToMinutes } from "@/lib/class-time"
+import { compareByClassTime } from "@/lib/class-time"
 
 /** Roster for the class page: quick-select (large rosters), search, and the card grid, ordered by class time. */
 export function ClassStudentPicker({
@@ -23,19 +23,7 @@ export function ClassStudentPicker({
   const [search, setSearch] = useState("")
   const [quickPickOpen, setQuickPickOpen] = useState(false)
 
-  // Sort by class time ascending. AM slots before 6:00 are treated as next-day
-  // (added to a 24h window) so they fall after late-evening PM slots.
-  // Students without a class_time sink to the bottom, then alphabetical.
-  const sortedStudents = [...students].sort((a, b) => {
-    const aMin = classTimeToMinutes(a.class_time)
-    const bMin = classTimeToMinutes(b.class_time)
-    if (aMin == null && bMin == null) return (a.name || "").localeCompare(b.name || "")
-    if (aMin == null) return 1
-    if (bMin == null) return -1
-    const aAdj = aMin < 360 ? aMin + 1440 : aMin
-    const bAdj = bMin < 360 ? bMin + 1440 : bMin
-    return aAdj - bAdj
-  })
+  const sortedStudents = [...students].sort(compareByClassTime)
 
   const filteredStudents = sortedStudents.filter((s) =>
     (s.name || "").toLowerCase().includes(search.toLowerCase()),

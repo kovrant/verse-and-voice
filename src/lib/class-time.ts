@@ -43,6 +43,24 @@ export function classTimeToMinutes(classTime: string | null): number | null {
   return h * 60 + min
 }
 
+/**
+ * Roster order by class time. AM slots before 6:00 count as next-day so they
+ * fall after late-evening PM slots; no class_time sinks to the bottom, then by name.
+ */
+export function compareByClassTime(
+  a: { name: string | null; class_time: string | null },
+  b: { name: string | null; class_time: string | null },
+): number {
+  const aMin = classTimeToMinutes(a.class_time)
+  const bMin = classTimeToMinutes(b.class_time)
+  if (aMin == null && bMin == null) return (a.name || "").localeCompare(b.name || "")
+  if (aMin == null) return 1
+  if (bMin == null) return -1
+  const aAdj = aMin < 360 ? aMin + 1440 : aMin
+  const bAdj = bMin < 360 ? bMin + 1440 : bMin
+  return aAdj - bAdj
+}
+
 function pktParts(now: Date): { y: number; m: number; d: number; dow: number } {
   const pkt = new Date(now.getTime() + PKT_OFFSET_MIN * 60_000)
   return {
@@ -75,9 +93,7 @@ function nextClassInstant(
 
   const { y, m, d, dow } = pktParts(now)
   const scheduled =
-    classDays && classDays.length > 0
-      ? new Set(classDays.filter((x) => x >= 0 && x <= 6))
-      : null
+    classDays && classDays.length > 0 ? new Set(classDays.filter((x) => x >= 0 && x <= 6)) : null
 
   // Look ahead up to 8 days so we always find the next matching weekday.
   for (let offset = 0; offset < 8; offset++) {
@@ -85,13 +101,7 @@ function nextClassInstant(
     const dayDow = (dow + offset) % 7
     if (scheduled && !scheduled.has(dayDow)) continue
 
-    const target = pktWallToUtcMs(
-      day.getUTCFullYear(),
-      day.getUTCMonth(),
-      day.getUTCDate(),
-      h,
-      min,
-    )
+    const target = pktWallToUtcMs(day.getUTCFullYear(), day.getUTCMonth(), day.getUTCDate(), h, min)
     if (target > now.getTime()) return new Date(target)
   }
   return null

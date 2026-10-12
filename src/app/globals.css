@@ -1297,13 +1297,14 @@
 /* Monthly report (and any teacher page) printed via "Save as PDF". */
 @page {
   size: A4;
-  margin: 12mm;
+  margin: 0;
 }
 
 @media print {
+  /* Full-bleed cream page for the monthly report (its sheet carries its own padding). */
   html,
   body {
-    background: #fff !important;
+    background: #f8f6ee !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

@@ -1,9 +1,18 @@
 // Monthly parent report: pure calculations. Month boundaries are PKT (UTC+5,
 // no DST) — see okf/architecture/timezone-and-dates.md.
 
+import type { AttendanceEntry } from "@/lib/attendance"
 import { QAIDA_PARA } from "@/lib/qaida"
 
 const PKT_OFFSET_MS = 5 * 60 * 60 * 1000
+
+/**
+ * Pages in a para of the academy's 16-line mushaf. Most paras are 18 pages; a
+ * para's own count (student_para_progress.total_pages) wins when known.
+ * ponytail: per-para exceptions (e.g. Para 30) fall back to 18 until their
+ * real count is recorded.
+ */
+export const DEFAULT_PARA_PAGES = 18
 
 export interface ReportMonth {
   year: number
@@ -44,62 +53,17 @@ export function monthRange({ year, month }: ReportMonth): { start: string; end: 
   }
 }
 
-function daysInMonth({ year, month }: ReportMonth): string[] {
-  const count = new Date(Date.UTC(year, month, 0)).getUTCDate()
-  return Array.from(
-    { length: count },
-    (_, i) => `${formatReportMonth({ year, month })}-${String(i + 1).padStart(2, "0")}`,
-  )
-}
-
 // ── Attendance ────────────────────────────────────────────────────────────────
 
-export interface AttendanceInput {
-  month: ReportMonth
-  /** 0 = Sunday … 6 = Saturday */
-  classDays: number[] | null
-  /** Date-only "YYYY-MM-DD" */
-  startedAt: string | null
-  endedAt: string | null
-  sessionStarts: string[]
-  sessionSeconds: number[]
-  /** Today's PKT date; scheduled days after it are not counted. */
-  today: string
-}
-
-export interface Attendance {
-  scheduled: number
-  /** Scheduled days that had a class. */
-  attended: number
-  missed: number
-  /** Classes on days that weren't scheduled (make-up classes). */
-  extra: number
-  sessions: number
-  totalMinutes: number
-}
-
-export function computeAttendance(input: AttendanceInput): Attendance {
-  const days = new Set(input.classDays ?? [])
-  const scheduled = daysInMonth(input.month).filter((date) => {
-    if (input.startedAt && date < input.startedAt) return false
-    if (input.endedAt && date > input.endedAt) return false
-    if (date > input.today) return false
-    const [y, m, d] = date.split("-").map(Number)
-    return days.has(new Date(Date.UTC(y, m - 1, d)).getUTCDay())
-  })
-  const classDates = new Set(input.sessionStarts.map(pktDateKey))
-  const attended = scheduled.filter((d) => classDates.has(d)).length
-  const scheduledSet = new Set(scheduled)
-  const extra = Array.from(classDates).filter((d) => !scheduledSet.has(d)).length
-  const totalSeconds = input.sessionSeconds.reduce((sum, s) => sum + (s || 0), 0)
-  return {
-    scheduled: scheduled.length,
-    attended,
-    missed: scheduled.length - attended,
-    extra,
-    sessions: input.sessionStarts.length,
-    totalMinutes: Math.round(totalSeconds / 60),
-  }
+/**
+ * Headline attendance from the month's days (see buildAttendanceDays in
+ * src/lib/attendance.ts). Teacher-absent and holiday days don't count against
+ * the student, so they leave the "counted" total too.
+ */
+export function attendanceTotals(days: AttendanceEntry[]): { attended: number; counted: number } {
+  const scheduled = days.filter((d) => d.scheduled)
+  const counted = scheduled.filter((d) => d.status !== "teacher_absent" && d.status !== "holiday")
+  return { attended: counted.filter((d) => d.status === "present").length, counted: counted.length }
 }
 
 // ── Reading progress ─────────────────────────────────────────────────────────
@@ -125,8 +89,10 @@ export interface ReadingProgress {
   paras: number[]
   /** Null when no session has enough data to count pages. */
   pages: number | null
-  /** True when some pages were estimated (no starting page saved, or para size unknown). */
+  /** True when some pages were estimated (sessions saved before starting_page existed). */
   pagesApproximate: boolean
+  /** Quran paras finished this month (moved on from), ascending. Qaida isn't counted. */
+  parasCompleted: number[]
 }
 
 function endOf(s: ReadingSession): Position | null {
@@ -137,19 +103,14 @@ function endOf(s: ReadingSession): Position | null {
 /**
  * Pages between two positions. Same para: the page difference. A different
  * para (either direction — rounds are read both ways): the rest of the old
- * para plus the pages into the new one. Without the old para's page count the
- * rest is unknown, so only the new pages are counted and it's approximate.
+ * para (its recorded size, else DEFAULT_PARA_PAGES) plus the pages into the new one.
  */
-function pagesBetween(
-  a: Position,
-  b: Position,
-  totalPages: Record<number, number>,
-): { pages: number; exact: boolean } | null {
+function pagesBetween(a: Position, b: Position, totalPages: Record<number, number>): number | null {
   if (a.page == null || b.page == null) return null
-  if (a.para === b.para) return { pages: Math.max(0, b.page - a.page), exact: true }
-  const total = totalPages[a.para]
-  const rest = total ? Math.max(0, total - a.page) : 0
-  return { pages: rest + Math.max(0, b.page - 1), exact: Boolean(total) }
+  if (a.para === b.para) return Math.max(0, b.page - a.page)
+  // Qaida (0) has no standard size; only count pages into the new book then.
+  const total = totalPages[a.para] ?? (a.para === QAIDA_PARA ? a.page : DEFAULT_PARA_PAGES)
+  return Math.max(0, total - a.page) + Math.max(0, b.page - 1)
 }
 
 /**
@@ -178,6 +139,7 @@ export function computeReadingProgress(
 
   let pages: number | null = null
   let approximate = false
+  const completed = new Set<number>()
   let cursor = start
   for (const s of sessions) {
     const end = endOf(s)
@@ -188,10 +150,12 @@ export function computeReadingProgress(
       ? { para: s.starting_para!, page: s.starting_page! }
       : cursor
     const counted = from ? pagesBetween(from, end, totalPages) : null
-    if (counted) {
-      pages = (pages ?? 0) + counted.pages
-      if (!counted.exact || !exactStart) approximate = true
+    if (counted != null) {
+      pages = (pages ?? 0) + counted
+      if (!exactStart) approximate = true
     }
+    // Moving on from a para means it was finished.
+    if (from && from.para !== end.para && from.para !== QAIDA_PARA) completed.add(from.para)
     cursor = end
   }
 
@@ -202,6 +166,7 @@ export function computeReadingProgress(
     paras: Array.from(paras).sort((a, b) => a - b),
     pages,
     pagesApproximate: approximate,
+    parasCompleted: Array.from(completed).sort((a, b) => a - b),
   }
 }
 

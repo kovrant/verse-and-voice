@@ -12,6 +12,7 @@ sources:
   - "src/components/live-session.tsx"
   - "src/components/class-student-card.tsx"
   - "src/components/student-live-class.tsx"
+  - "src/components/class-today-attendance.tsx"
 tags:
   - domain
   - live-class
@@ -72,3 +73,4 @@ When a teacher completes and saves a class session:
    * Captures performance metrics: `status` (Present/Absent/Late), `rating` (1–5 stars), and teacher notes.
 3. **Bookmark:** the ending position is saved to `student_para_progress` for the ending para (`endingPara != null`, so Qaida's `0` is included).
 4. **Round auto-advance:** `quran_rounds.asc_completed` is raised only for an ending para in `1..30`; Qaida classes never touch it.
+5. **Attendance:** upserts `class_attendance` `present` for the PKT date of `started_at`. Best-effort; a failure is logged and never blocks the save. See [Class Attendance](class-attendance.md).

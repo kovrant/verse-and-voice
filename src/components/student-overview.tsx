@@ -27,14 +27,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { type CatalogItem, chunkProgress, type StudentMemItem } from "@/lib/memorization"
 import type { Student } from "@/lib/utils"
-import {
-  cn,
-  formatSessionDuration,
-  safeFormatDate,
-  safeFormatDistanceToNow,
-} from "@/lib/utils"
+import { cn, formatSessionDuration, safeFormatDate, safeFormatDistanceToNow } from "@/lib/utils"
 
-export type HistorySection = "all" | "sessions" | "timeline" | "trophies" | "activity"
+export type HistorySection =
+  "all" | "sessions" | "attendance" | "timeline" | "trophies" | "activity"
 
 interface StudentOverviewProps {
   student: Student
@@ -266,7 +262,12 @@ export function StudentOverview({
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">No active Quran or Qaida round</p>
-                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onOpenNewRound}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs"
+                  onClick={onOpenNewRound}
+                >
                   <Plus className="h-3.5 w-3.5 mr-1" />
                   Start round
                 </Button>
@@ -289,7 +290,8 @@ export function StudentOverview({
               {lastSession ? (
                 <>
                   <span>
-                    Last class {safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })}
+                    Last class{" "}
+                    {safeFormatDistanceToNow(lastSession.started_at, { addSuffix: true })}
                   </span>
                   <span>
                     {" "}
@@ -321,9 +323,7 @@ export function StudentOverview({
           <div className="py-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-foreground">
-                  Memorization &amp; Revision
-                </p>
+                <p className="text-sm font-semibold text-foreground">Memorization &amp; Revision</p>
                 {(memorizing.length > 0 || revising.length > 0) && (
                   <p className="text-xs text-muted-foreground">
                     {memorizing.length} learning · {revising.length} revising
@@ -412,10 +412,7 @@ export function StudentOverview({
                   const hasChunks = chunks.length > 0
                   const progress = chunkProgress(chunks, memorizedChunkIds)
                   return (
-                    <div
-                      key={item.id}
-                      className="overflow-hidden rounded-xl bg-secondary/25"
-                    >
+                    <div key={item.id} className="overflow-hidden rounded-xl bg-secondary/25">
                       <div className="flex items-center gap-2.5 px-3 py-2">
                         <MemThumb src={item.memorization_catalog?.image_url} />
                         <div className="min-w-0 flex-1">

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  computeAttendance,
+  attendanceTotals,
   computeMemorization,
   computeReadingProgress,
   countRevisions,
@@ -43,48 +43,19 @@ describe("months", () => {
   })
 })
 
-describe("computeAttendance", () => {
-  // Sept 2026: 1st is a Tuesday. Mon/Wed/Fri classes → 13 scheduled days.
-  const base = {
-    month: SEPT,
-    classDays: [1, 3, 5],
-    startedAt: "2025-01-01",
-    endedAt: null,
-    today: "2026-10-11",
-  }
-
-  it("counts scheduled, attended, missed and make-up classes", () => {
-    const a = computeAttendance({
-      ...base,
-      // Wed 2nd, Fri 4th (07:00 PKT), and Sat 5th (a make-up class).
-      sessionStarts: ["2026-09-02T10:00:00Z", "2026-09-04T02:00:00Z", "2026-09-05T10:00:00Z"],
-      sessionSeconds: [1800, 2700, 900],
-    })
-    expect(a).toEqual({
-      scheduled: 13,
-      attended: 2,
-      missed: 11,
-      extra: 1,
-      sessions: 3,
-      totalMinutes: 90,
-    })
-  })
-
-  it("ignores days before enrolment and after today", () => {
-    const a = computeAttendance({
-      ...base,
-      startedAt: "2026-09-15",
-      today: "2026-09-20",
-      sessionStarts: [],
-      sessionSeconds: [],
-    })
-    // Wed 16, Fri 18 only.
-    expect(a.scheduled).toBe(2)
-  })
-
-  it("schedules nothing without class days", () => {
-    const a = computeAttendance({ ...base, classDays: null, sessionStarts: [], sessionSeconds: [] })
-    expect(a.scheduled).toBe(0)
+describe("attendanceTotals", () => {
+  it("doesn't count teacher-absent or holiday days against the student", () => {
+    expect(
+      attendanceTotals([
+        { date: "2026-09-02", scheduled: true, status: "present" },
+        { date: "2026-09-04", scheduled: true, status: "student_absent" },
+        { date: "2026-09-07", scheduled: true, status: "teacher_absent" },
+        { date: "2026-09-09", scheduled: true, status: "holiday" },
+        { date: "2026-09-11", scheduled: true, status: "unmarked" },
+        // A make-up class on an unscheduled day isn't part of the ratio.
+        { date: "2026-09-12", scheduled: false, status: "present" },
+      ]),
+    ).toEqual({ attended: 1, counted: 3 })
   })
 })
 
@@ -110,18 +81,27 @@ describe("computeReadingProgress", () => {
     expect(r.pagesApproximate).toBe(true)
   })
 
-  it("crosses a para using its page count, in either direction", () => {
+  it("crosses a para using its recorded size, in either direction", () => {
     const forward = computeReadingProgress([s(3, 4, 5, 18)], null, { 3: 20 })
     expect(forward.pages).toBe(2 + 4)
-    expect(forward.pagesApproximate).toBe(false)
+    expect(forward.parasCompleted).toEqual([3])
     const backward = computeReadingProgress([s(30, 29, 3, 19)], null, { 30: 22 })
     expect(backward.pages).toBe(3 + 2)
+    expect(backward.parasCompleted).toEqual([30])
   })
 
-  it("is approximate when the old para's size is unknown", () => {
-    const r = computeReadingProgress([s(3, 4, 5, 18)], null)
-    expect(r.pages).toBe(4)
-    expect(r.pagesApproximate).toBe(true)
+  it("assumes 18 pages per para when the size is unknown", () => {
+    const r = computeReadingProgress([s(3, 4, 5, 15)], null)
+    expect(r.pages).toBe(3 + 4)
+    expect(r.pagesApproximate).toBe(false)
+  })
+
+  it("counts paras completed over the month, not Qaida", () => {
+    const r = computeReadingProgress(
+      [s(0, 1, 4, 30), s(1, 2, 3, 4), s(2, 2, 10, 3), s(2, 3, 2, 10)],
+      null,
+    )
+    expect(r.parasCompleted).toEqual([1, 2])
   })
 
   it("lists distinct paras, including Qaida as 0", () => {

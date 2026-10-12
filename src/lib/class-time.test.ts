@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import {
   classTimeToMinutes,
+  compareByClassTime,
   formatClassTimeLocal,
   formatCountdown,
   msUntilNextClass,
@@ -91,5 +92,22 @@ describe("formatCountdown", () => {
     expect(formatCountdown(2 * 60 * 60 * 1000 + 15 * 60 * 1000)).toBe("2h 15m")
     expect(formatCountdown(45 * 60 * 1000)).toBe("45m")
     expect(formatCountdown(30 * 1000)).toBe("now")
+  })
+})
+
+describe("compareByClassTime", () => {
+  it("sorts AM slots before 6:00 after late PM slots, untimed last", () => {
+    const list = [
+      { name: "None", class_time: null },
+      { name: "Late", class_time: "1:00 AM PKT" },
+      { name: "Eve", class_time: "10:00 PM PKT" },
+      { name: "Morning", class_time: "8:00 AM PKT" },
+    ]
+    expect([...list].sort(compareByClassTime).map((s) => s.name)).toEqual([
+      "Morning",
+      "Eve",
+      "Late",
+      "None",
+    ])
   })
 })

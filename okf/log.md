@@ -207,3 +207,22 @@ tags:
 * **Changes:**
   * The report is now a **Monthly Report** tab on the student page with a month picker and Download PDF, at the teacher's request. The separate Monthly Reports section, its sidebar link and the standalone report route are gone.
   * Student page chrome is hidden when printing so only the report sheet goes into the PDF.
+
+### [2026-10-12] - Class Attendance
+* **Scope:** `supabase/migration_class_attendance.sql` (new), `src/lib/attendance.ts`, `src/lib/attendance.test.ts`, `src/lib/class-time.ts`, `src/lib/class-time.test.ts`, `src/app/class/page.tsx`, `src/components/class-today-attendance.tsx` (new), `src/components/class-student-picker.tsx`, `src/components/class-student-card.tsx`, `src/components/student-attendance-calendar.tsx` (new), `src/components/student-overview.tsx`, `src/app/students/[id]/page.tsx`.
+* **Entries Updated:** `domain/class-attendance.md` (new), `domain/live-class-session.md`, `domain/student-management.md`, `database/migration-pipeline.md` (step 44), `index.md`, `log.md`.
+* **Changes:**
+  * New `class_attendance` table (one status per student per PKT date: present, student absent, teacher absent, holiday) with teacher-all / student-read RLS.
+  * Saving a class marks that day present (best-effort, never blocks the save).
+  * "Today's attendance" card on the `/class` landing with per-student statuses plus "I'm absent today", "Holiday today" and "Clear day off".
+  * Attendance month calendar in the student page's Sessions tab for marking past days.
+  * Pure, tested helpers: `isScheduledDay`, `scheduledDates`, `buildAttendanceDays` (mark > session > unmarked), `summarizeAttendance`. Picker sort extracted to `compareByClassTime`.
+
+### [2026-10-12] - Monthly Report: Brand Design, Class Days, Paras & Pages
+* **Scope:** `src/components/monthly-report-sheet.tsx`, `src/lib/monthly-report.ts`, `src/lib/monthly-report.test.ts`, `src/app/globals.css`.
+* **Entries Updated:** `domain/monthly-parent-report.md`, `domain/class-attendance.md`, `log.md`.
+* **Changes:**
+  * Report restyled in the Verse & Voice brand (cream, forest, peach, sage, gold; crescent, leaves, geometric corners) with a full-bleed cream printed page.
+  * Class Days strip from `class_attendance` marks + sessions; "classes attended" excludes teacher-absent and holiday days.
+  * 18 pages per para by default (16-line mushaf), paras completed this month and round progress `x / 30`.
+  * Removed the trophies and teacher's-notes sections.

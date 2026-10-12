@@ -6,6 +6,7 @@ import {
   Activity,
   ArrowLeft,
   BookOpen,
+  CalendarCheck,
   Check,
   Clock,
   Pencil,
@@ -28,13 +29,15 @@ import { StudentMonthlyReport } from "@/components/monthly-report-sheet"
 import { OnlineDot } from "@/components/online-dot"
 import { PageLoading } from "@/components/page-loading"
 import { QuranJourney } from "@/components/quran-journey"
-import {
-  getActiveRound,
-  type QuranRound,
-} from "@/components/quran-progress"
+import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
 import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
-import { StudentDetailNav, studentNavItems, type StudentView } from "@/components/student-detail-nav"
+import { StudentAttendanceCalendar } from "@/components/student-attendance-calendar"
+import {
+  StudentDetailNav,
+  studentNavItems,
+  type StudentView,
+} from "@/components/student-detail-nav"
 import { FeeHistoryTable } from "@/components/student-fee-history"
 import { StudentForceSignOut } from "@/components/student-force-signout"
 import { type HistorySection, StudentOverview } from "@/components/student-overview"
@@ -49,9 +52,7 @@ import {
   type RoundProgressForm,
   UpdateProgressDialog,
 } from "@/components/student-round-dialogs"
-import {
-  type ClassSession,
-} from "@/components/student-session-bits"
+import { type ClassSession } from "@/components/student-session-bits"
 import { StudentSessionsList } from "@/components/student-sessions-list"
 import { StudentSignInAccess } from "@/components/student-signin-access"
 import { Badge } from "@/components/ui/badge"
@@ -65,11 +66,7 @@ import {
   syncQuranRoundAchievements,
 } from "@/lib/achievements"
 import { useExchangeRates } from "@/lib/exchange-rates"
-import {
-  type CatalogItem,
-  STUDENT_MEM_SELECT,
-  type StudentMemItem,
-} from "@/lib/memorization"
+import { type CatalogItem, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
@@ -291,14 +288,7 @@ export default function StudentDetailPage() {
     } else if (memorized && chunkIndex >= 0) {
       const nextIds = new Set(memorizedChunkIds)
       nextIds.add(chunk.id)
-      void syncMemChunkAchievements(
-        studentId,
-        chunk,
-        chunkIndex,
-        lessonTitle,
-        chunks,
-        nextIds,
-      )
+      void syncMemChunkAchievements(studentId, chunk, chunkIndex, lessonTitle, chunks, nextIds)
     }
     // Reload so the DB-derived item status (memorizing ↔ memorized) is reflected.
     await loadMemItems()
@@ -341,11 +331,7 @@ export default function StudentDetailPage() {
       })
       .eq("id", item.id)
     if (newStatus === "memorized") {
-      void awardMemLesson(
-        params.id as string,
-        item.catalog_id,
-        item.memorization_catalog.title,
-      )
+      void awardMemLesson(params.id as string, item.catalog_id, item.memorization_catalog.title)
     }
     await loadMemItems()
   }
@@ -794,7 +780,9 @@ export default function StudentDetailPage() {
               })
               setRoundEditOpen(true)
             }}
-            onStepRoundProgress={(deltaAsc, deltaDesc) => void stepRoundProgress(deltaAsc, deltaDesc)}
+            onStepRoundProgress={(deltaAsc, deltaDesc) =>
+              void stepRoundProgress(deltaAsc, deltaDesc)
+            }
             onCompleteRound={() => void completeActiveRound()}
             onOpenNewRound={() => setNewRoundOpen(true)}
             onLoadCatalog={() => void loadCatalog()}
@@ -818,6 +806,11 @@ export default function StudentDetailPage() {
                     id: "sessions",
                     label: `Class Sessions (${sessions.length})`,
                     icon: Clock,
+                  },
+                  {
+                    id: "attendance",
+                    label: "Attendance",
+                    icon: CalendarCheck,
                   },
                   {
                     id: "timeline",
@@ -860,6 +853,13 @@ export default function StudentDetailPage() {
                 sessions={sessions}
                 onSessionsChange={setSessions}
                 onReload={loadSessions}
+              />
+            )}
+
+            {(historySection === "all" || historySection === "attendance") && (
+              <StudentAttendanceCalendar
+                student={student}
+                sessionStarts={sessions.map((s) => s.started_at)}
               />
             )}
 

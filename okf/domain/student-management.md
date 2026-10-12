@@ -71,6 +71,6 @@ The teacher-facing student profile (`src/app/students/[id]/page.tsx`) uses a **3
    * **Memorization & Revision Card:** Inline catalog assignment, pinned active revisions with 1-click `Mark revised`, interactive `MemPartWorkspace` chunk checklists, and a collapsible Revision Bucket.
    * **Namaz Card (`StudentNamazAssign`):** Active-step focus for unlocking/completing steps and managing part revisions directly from the desk.
    * **Hadiths & Quizzes Card (`StudentHadithQuizCard`):** Single-student Hadith & Quiz assignment (`append: true` / `reassign: true`) and 1-click Hadith memorization grading.
-2. **History & Trophies (`history`):** Unified historical view with sub-filter pills (`All History`, `Class Sessions`, `Quran Timeline`, `Trophies`, `Portal Activity`).
+2. **History & Trophies (`history`):** Unified historical view with sub-filter pills (`All History`, `Class Sessions`, `Attendance`, `Quran Timeline`, `Trophies`, `Portal Activity`). `Attendance` is a month calendar for marking past days (see [Class Attendance](class-attendance.md)).
 3. **Billing & Access (`account`):** Dedicated 2-column administrative view for `FeeHistoryTable`, `StudentPortalAccess`, `StudentSignInAccess`, and `StudentForceSignOut` (plus a 1-click current-month fee status button in the top command header).
 

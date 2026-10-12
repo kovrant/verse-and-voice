@@ -28,7 +28,7 @@ There is deliberately **no separate reports section or all-students page** — t
 ## 🖨️ How the PDF is made
 No PDF library. The tab renders an A4 sheet and **Download PDF** calls `window.print()`; the teacher picks "Save as PDF". The student page's breadcrumb, header, tab bar and the tab's toolbar are `print:hidden`, so only the sheet prints.
 * Arabic shaping, the self-hosted fonts and the Indo-Pak jazm render exactly as on screen — PDF libraries handle Arabic badly.
-* The sheet uses fixed paper colours (`bg-white`, `neutral-*`, `emerald-*`), not theme tokens, so it prints the same in dark mode.
+* **Brand look** (matches the Verse & Voice Canva/Instagram posts and the student portal): cream paper `#F8F6EE`, forest-green Baloo 2 headings, peach pills, sage leaf sprigs, gold crescent-and-stars and geometric corners, all inline SVG. Fixed hex colours (`BRAND` in the sheet), not theme tokens, so it prints the same in dark mode. `globals.css` sets `@page { margin: 0 }` and a cream print background so the page is full-bleed; the sheet carries its own print padding.
 * `app-shell.tsx` carries print-only classes on the **teacher** shell: sidebar, top bar and background layer are `print:hidden`, and the `h-screen overflow-hidden` frame becomes `print:h-auto print:overflow-visible` (otherwise only the visible scroll area prints). `globals.css` sets `@page { size: A4; margin: 12mm }`. Screen rendering is unchanged.
 * The teacher sends the file themselves; nothing is emailed. No parent contact details are stored.
 
@@ -37,15 +37,17 @@ All calculations live in `src/lib/monthly-report.ts` (pure, tested). Month bound
 
 | Section | Source |
 |---|---|
-| Attendance | `class_sessions` vs `students.class_days`. Scheduled days are counted from enrolment to today; a "missed" day is a scheduled day with no session (absences aren't recorded). Classes on unscheduled days are "extra". |
+| Class days | `buildAttendanceDays` from [Class Attendance](class-attendance.md): scheduled days (enrolment → today) plus any day with a session or mark, each Read / Absent / Teacher away / Holiday / Not marked, shown as a strip of day chips (dashed = extra class). "Classes attended" = present ÷ scheduled days that weren't teacher-absent or holiday (`attendanceTotals`). |
 | Quran / Qaida reading | Start = end of the last session **before** the month; end = last session in the month. Paras = `paras_covered` + start/end paras. Completed rounds from `quran_rounds.completed_at`. |
-| Pages read | Per session from `starting_page` → `ending_page`. Sessions saved before `starting_page` existed start where the previous one ended and are marked approximate (`≈`). Crossing a para (either direction — rounds are read both ways) adds the rest of the old para using `student_para_progress.total_pages`; unknown → approximate. |
+| Pages completed | Per session from `starting_page` → `ending_page`. Sessions saved before `starting_page` existed start where the previous one ended and are marked approximate (`≈`). Crossing a para (either direction — rounds are read both ways) adds the rest of the old para: `student_para_progress.total_pages`, else `DEFAULT_PARA_PAGES = 18` (the academy's 16-line mushaf). |
+| Paras completed | A para the student moved on from during the month (`parasCompleted`, Qaida excluded), plus overall round progress `x / 30` from the active round (`computeProgress`). |
 | Memorization | `student_memorization_chunks.memorized_at` (parts this month); a lesson is "completed" when all its chunks are memorized and the last one falls in the month. |
 | Revision | Titles in `class_sessions.memorization_revised`. |
-| Hadith, quizzes, stories, trophies | `student_hadith_progress.memorized_at`, `quiz_attempts.completed_at`, `student_story_progress.completed_at`, `student_achievements.earned_at`. Empty sections are hidden. |
-| Teacher's notes | `class_sessions.notes`. |
+| Hadith, quizzes, stories | `student_hadith_progress.memorized_at`, `quiz_attempts.completed_at`, `student_story_progress.completed_at`. Empty sections are hidden. |
 | Fee | `fee_payments` row for that month/year: Paid / Unpaid. |
 
 ## 🚫 Not in the report
+* **Trophies and badges** — left out until the teacher decides how to present them (2026-10-12).
+* **Teacher's class notes** — removed at the teacher's request (2026-10-12).
 * **Namaz** — progress is `localStorage` only (see [Namaz](namaz-and-learning.md)).
 * **Teacher comment** — deliberately left out (decision 2026-10-11).
