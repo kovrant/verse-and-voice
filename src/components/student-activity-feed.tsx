@@ -8,11 +8,12 @@ import {
   FileText,
   type LucideIcon,
   MousePointerClick,
+  WifiOff,
 } from "lucide-react"
 
 export interface ActivityLog {
   id: string
-  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page"
+  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page" | "live_class"
   path: string | null
   label: string | null
   href: string | null
@@ -25,6 +26,7 @@ const EVENT_STYLES: Record<ActivityLog["event_type"], { icon: LucideIcon; tint: 
     page_view: { icon: FileText, tint: "text-blue-400 bg-blue-500/10", verb: "Viewed page" },
     para_open: { icon: BookOpen, tint: "text-emerald-400 bg-emerald-500/10", verb: "Opened" },
     pdf_page: { icon: FileText, tint: "text-amber-400 bg-amber-500/10", verb: "Turned to" },
+    live_class: { icon: WifiOff, tint: "text-rose-400 bg-rose-500/10", verb: "Live class" },
     link_click: {
       icon: ExternalLink,
       tint: "text-purple-400 bg-purple-500/10",

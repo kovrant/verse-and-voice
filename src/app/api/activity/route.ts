@@ -18,6 +18,7 @@ const ALLOWED_EVENT_TYPES = new Set([
   "click",
   "para_open",
   "pdf_page",
+  "live_class",
 ])
 
 const MAX_EVENTS_PER_BATCH = 100

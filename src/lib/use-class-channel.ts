@@ -53,6 +53,8 @@ interface UseClassChannelOptions {
   /** Fired when the other role newly joins (presence join) — e.g. so the
    * teacher can push its authoritative position to a fresh joiner. */
   onPeerJoin?: () => void
+  /** Connection problems and recoveries (for logging): a failed status, or "RECOVERED". */
+  onConnectionIssue?: (status: string, attempt: number) => void
 }
 
 interface ClassChannel {
@@ -72,6 +74,8 @@ interface ClassChannel {
   sendTajweedRule: (rule: TajweedRule) => void
   /** Broadcast an explicit "class ended" signal and leave presence immediately. */
   endClass: () => Promise<void>
+  /** Tear down and re-subscribe now (e.g. a "reconnect" button). */
+  reconnect: () => void
 }
 
 function genId() {
@@ -105,6 +109,7 @@ export function useClassChannel({
   onEnd,
   onTajweedRule,
   onPeerJoin,
+  onConnectionIssue,
 }: UseClassChannelOptions): ClassChannel {
   const [clientId] = useState(genId)
   const [live, setLive] = useState(false)
@@ -119,6 +124,13 @@ export function useClassChannel({
   const onEndRef = useRef(onEnd)
   const onTajweedRuleRef = useRef(onTajweedRule)
   const onPeerJoinRef = useRef(onPeerJoin)
+  const onConnectionIssueRef = useRef(onConnectionIssue)
+  // Bumped to rebuild the channel: after a failed subscribe (with backoff),
+  // when the tab wakes up / the network returns while not subscribed, or on
+  // an explicit reconnect(). A failed subscribe used to be ignored, leaving a
+  // student "not live" until a full reload (Zoyal, 13 Oct 2026).
+  const [attempt, setAttempt] = useState(0)
+  const failuresRef = useRef(0)
   // After an explicit end, ignore stale teacher presence until they join again.
   const classEndedRef = useRef(false)
 
@@ -129,7 +141,8 @@ export function useClassChannel({
     onEndRef.current = onEnd
     onTajweedRuleRef.current = onTajweedRule
     onPeerJoinRef.current = onPeerJoin
-  }, [onNav, onScroll, onPointer, onEnd, onTajweedRule, onPeerJoin])
+    onConnectionIssueRef.current = onConnectionIssue
+  }, [onNav, onScroll, onPointer, onEnd, onTajweedRule, onPeerJoin, onConnectionIssue])
 
   // Channel lifecycle — deliberately does NOT depend on `present` so joining
   // (track) doesn't tear down and rebuild the channel.
@@ -145,7 +158,13 @@ export function useClassChannel({
     const computePresence = () => {
       const state = channel.presenceState() as Record<
         string,
-        Array<{ role?: ClassRole; paraNumber?: number; page?: number; device?: string; deviceType?: PeerDevice["type"] }>
+        Array<{
+          role?: ClassRole
+          paraNumber?: number
+          page?: number
+          device?: string
+          deviceType?: PeerDevice["type"]
+        }>
       >
       let otherPresent = false
       let nav: NavState | null = null
@@ -200,11 +219,21 @@ export function useClassChannel({
       })
       .on("broadcast", { event: "pointer" }, ({ payload }) => {
         if (!payload || (payload as { by?: string }).by === clientId) return
-        const data = payload as { pointer?: PointerState | null; by?: string; x?: number; y?: number; line?: number }
+        const data = payload as {
+          pointer?: PointerState | null
+          by?: string
+          x?: number
+          y?: number
+          line?: number
+        }
         // Support { pointer: null | PointerState } wrapper and direct payload
         if (data.pointer === null) {
           onPointerRef.current?.(null)
-        } else if (data.pointer && typeof data.pointer.x === "number" && typeof data.pointer.y === "number") {
+        } else if (
+          data.pointer &&
+          typeof data.pointer.x === "number" &&
+          typeof data.pointer.y === "number"
+        ) {
           onPointerRef.current?.({
             x: data.pointer.x,
             y: data.pointer.y,
@@ -236,10 +265,26 @@ export function useClassChannel({
     // runs cleanup before the async setAuth resolves, and we'd subscribe a
     // channel that was already removed (a zombie that flickers presence).
     let cancelled = false
+    let retryTimer: ReturnType<typeof setTimeout> | undefined
     const doSubscribe = () => {
       if (cancelled) return
       channel.subscribe((status) => {
+        if (cancelled) return // our own removeChannel reports CLOSED
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
+          subscribedRef.current = false
+          failuresRef.current += 1
+          onConnectionIssueRef.current?.(status, failuresRef.current)
+          // Back off 1s, 2s, 4s … capped at 15s; each retry re-attaches a fresh JWT.
+          const delay = Math.min(15_000, 1000 * 2 ** (failuresRef.current - 1))
+          clearTimeout(retryTimer)
+          retryTimer = setTimeout(() => setAttempt((a) => a + 1), delay)
+          return
+        }
         if (status === "SUBSCRIBED") {
+          if (failuresRef.current > 0) {
+            onConnectionIssueRef.current?.("RECOVERED", failuresRef.current)
+            failuresRef.current = 0
+          }
           subscribedRef.current = true
           if (presentRef.current) {
             channel.track({
@@ -263,12 +308,31 @@ export function useClassChannel({
 
     return () => {
       cancelled = true
+      clearTimeout(retryTimer)
       subscribedRef.current = false
       channel.untrack().catch(() => {})
       supabase.removeChannel(channel)
       channelRef.current = null
     }
-  }, [studentId, role, enabled, clientId, deviceInfo])
+  }, [studentId, role, enabled, clientId, deviceInfo, attempt])
+
+  // Laptop woke up / Wi-Fi came back: rebuild if we're not subscribed.
+  useEffect(() => {
+    if (!enabled || !studentId) return
+    const kick = () => {
+      if (document.visibilityState === "visible" && !subscribedRef.current) {
+        setAttempt((a) => a + 1)
+      }
+    }
+    window.addEventListener("online", kick)
+    document.addEventListener("visibilitychange", kick)
+    return () => {
+      window.removeEventListener("online", kick)
+      document.removeEventListener("visibilitychange", kick)
+    }
+  }, [enabled, studentId])
+
+  const reconnect = useCallback(() => setAttempt((a) => a + 1), [])
 
   // Present toggle — track/untrack on the existing channel.
   useEffect(() => {
@@ -365,5 +429,15 @@ export function useClassChannel({
     await new Promise((resolve) => setTimeout(resolve, 250))
   }, [clientId])
 
-  return { live, peerNav, peerDevice, sendNav, sendScroll, sendPointer, sendTajweedRule, endClass }
+  return {
+    live,
+    peerNav,
+    peerDevice,
+    sendNav,
+    sendScroll,
+    sendPointer,
+    sendTajweedRule,
+    endClass,
+    reconnect,
+  }
 }

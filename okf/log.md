@@ -248,3 +248,11 @@ tags:
 * **Changes:**
   * Paras and pages completed now come from the month's start position → end position. Summing every session counted the teacher clicking between paras as reading (Ahmed's Sep report showed "Para 20 ✓, Para 22 ✓" for a month spent finishing Para 22) and inflated pages.
   * Fixed an off-by-one in pages when crossing a para (the start page itself counts).
+
+### [2026-10-13] - Live Class Connection Self-Heals
+* **Scope:** `src/lib/use-class-channel.ts`, `src/components/live-class-provider.tsx`, `src/app/student/classes/page.tsx`, `src/lib/activity-log.ts`, `src/app/api/activity/route.ts`, `src/components/student-activity-feed.tsx`.
+* **Entries Updated:** `architecture/realtime-protocol.md`, `log.md`.
+* **Changes:**
+  * Zoyal couldn't join a live class: her portal never detected the teacher and the "Tap to join" notification only opened the Classes page. A failed realtime subscribe was silently ignored.
+  * The class channel now retries failed subscribes with backoff, rebuilds on tab wake / network return, and exposes `reconnect()`; the student Classes page offers "Teacher already started? Tap here".
+  * New `live_class` activity event records connection failures and recoveries for the teacher to see.

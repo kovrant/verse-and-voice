@@ -16,7 +16,7 @@ import { usePathname } from "next/navigation"
 import { useEffect } from "react"
 
 export interface ActivityEvent {
-  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page"
+  event_type: "page_view" | "link_click" | "click" | "para_open" | "pdf_page" | "live_class"
   path?: string | null
   label?: string | null
   href?: string | null

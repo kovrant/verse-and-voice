@@ -11,6 +11,7 @@ import { PageLoading } from "@/components/page-loading"
 import { StudentLiveClass } from "@/components/student-live-class"
 import type { AttendanceMark } from "@/lib/attendance"
 import { formatClassTimeLocal, formatCountdown, msUntilNextClass } from "@/lib/class-time"
+import { kidToast } from "@/lib/kid-toast"
 import { STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { computeStreak } from "@/lib/streak"
 import { supabase } from "@/lib/supabase"
@@ -18,7 +19,7 @@ import { useStudent } from "@/lib/use-student"
 
 export default function StudentClassesPage() {
   const { student, loading } = useStudent()
-  const { live, joined, join } = useLiveClass()
+  const { live, joined, join, reconnect } = useLiveClass()
   const [items, setItems] = useState<StudentMemItem[]>([])
   const [revisionItems, setRevisionItems] = useState<StudentMemItem[]>([])
   const [sessionStarts, setSessionStarts] = useState<string[]>([])
@@ -129,6 +130,22 @@ export default function StudentClassesPage() {
               </p>
             </>
           )}
+          {/* If the teacher has started but this card still says "next class",
+              the live connection is stuck — let the child kick it. */}
+          <button
+            type="button"
+            onClick={() => {
+              reconnect()
+              kidToast("Looking for your class…", {
+                emoji: "📡",
+                color: "sky",
+                description: "If your teacher has started, the Join button will appear.",
+              })
+            }}
+            className="mt-3 block text-[13.5px] font-bold text-[hsl(var(--kid-sky))] underline-offset-2 hover:underline"
+          >
+            Teacher already started? Tap here 📡
+          </button>
           {streakTease && (
             <p className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[13px] font-extrabold text-accent-foreground shadow-soft">
               🔥 Keep your {streak.current}-day streak — join today&apos;s class

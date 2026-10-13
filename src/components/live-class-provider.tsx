@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 
 import { KidButton, KidModal, QuranBookIcon } from "@/components/kid-ui"
 import { MoonMascot } from "@/components/student-mascot"
+import { logActivity } from "@/lib/activity-log"
 import { detectDevice } from "@/lib/device-detection"
 import { kidToast } from "@/lib/kid-toast"
 import type { TajweedRule } from "@/lib/tajweed/rules"
@@ -28,6 +29,8 @@ interface LiveClassContextValue {
   joined: boolean
   join: () => void
   leave: () => void
+  /** Rebuild the live-class connection now (a stuck connection never shows the class). */
+  reconnect: () => void
   /** Broadcast the student's position (only meaningful once joined). */
   sendNav: (nav: NavState) => void
   /** Broadcast the student's in-page scroll ratio (0..1). */
@@ -54,6 +57,7 @@ const LiveClassContext = createContext<LiveClassContextValue>({
   joined: false,
   join: () => {},
   leave: () => {},
+  reconnect: () => {},
   sendNav: () => {},
   sendScroll: () => {},
   sendPointer: () => {},
@@ -103,7 +107,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     setActiveTajweedRule(null)
   }, [])
 
-  const { live, peerNav, sendNav, sendScroll, sendPointer } = useClassChannel({
+  const { live, peerNav, sendNav, sendScroll, sendPointer, reconnect } = useClassChannel({
     studentId,
     role: "student",
     deviceInfo,
@@ -119,6 +123,16 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       setActiveTajweedRule(rule)
     },
     onEnd: endNow, // explicit "class ended" from the teacher → close immediately
+    // Shows up in the teacher's Portal Activity for this student.
+    onConnectionIssue: (status, attempt) =>
+      logActivity({
+        event_type: "live_class",
+        label:
+          status === "RECOVERED"
+            ? "Live class connection recovered"
+            : "Live class connection failed",
+        meta: { status, attempt },
+      }),
   })
 
   const subscribeNav = useCallback((fn: NavListener) => {
@@ -201,6 +215,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       joined,
       join,
       leave,
+      reconnect,
       sendNav,
       sendScroll,
       sendPointer,
@@ -218,6 +233,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       joined,
       join,
       leave,
+      reconnect,
       sendNav,
       sendScroll,
       sendPointer,

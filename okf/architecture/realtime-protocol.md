@@ -56,6 +56,9 @@ There are two primary channel categories:
 
 ---
 
+4. **A failed subscribe must be retried, never ignored.**
+   `useClassChannel` rebuilds the channel (fresh `setAuth()` first) after `CHANNEL_ERROR` / `TIMED_OUT` / `CLOSED`, backing off 1 s → 2 s → 4 s … 15 s; when the tab becomes visible or the browser comes back `online` while not subscribed; and on `reconnect()`. Before this, one failed subscribe left a student "not live" until a full reload — Zoyal (13 Oct 2026) tapped the "class is live" notification ~20 times while her portal never saw the teacher. Failures and recoveries are logged as `live_class` activity events (teacher: student page → Sessions → Portal Activity). The student Classes page has a "Teacher already started? Tap here" link that calls `reconnect()`.
+
 ## 📜 Scroll Synchronization: Ratio vs Pixels
 
 Students and teachers have different display viewports, resolutions, and zoom settings.
