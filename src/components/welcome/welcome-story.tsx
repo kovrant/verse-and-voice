@@ -82,6 +82,9 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz{background:#FFFFFF;color:#2E3A2F;transition:background .4s,color .4s,transform .4s cubic-bezier(.34,1.56,.64,1),border-color .4s}
 .vvw .juz.lit{background:#8FA97A;border-color:#8FA97A;color:#F8F6EE;transform:scale(1.04)}.vvw .juz.lit .n{color:rgba(248,246,238,.75)}
 .vvw .juz.milestone.lit{background:#E3B04B;border-color:#E3B04B;color:#2E3A2F}.vvw .juz.milestone.lit .n{color:rgba(46,58,47,.65)}
+.vvw .ring .disc{transition:fill .5s}.vvw .ring.done .disc{fill:#F6E3B4}
+.vvw .ring .face-count{transition:opacity .3s,transform .3s}.vvw .ring.done .face-count{opacity:0;transform:scale(.7)}
+.vvw .ring .face-done{opacity:0;transform:scale(.5) rotate(-20deg);transition:opacity .35s .2s,transform .6s cubic-bezier(.34,1.56,.64,1) .2s}.vvw .ring.done .face-done{opacity:1;transform:scale(1) rotate(0)}
 .vvw .juz .star{opacity:0;transform:scale(0);transition:opacity .4s .3s,transform .5s cubic-bezier(.34,1.56,.64,1) .3s}.vvw .juz.lit .star{opacity:1;transform:scale(1)}
 @keyframes vvFlame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 @keyframes vvBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -850,12 +853,8 @@ export function WelcomeStory({
       const ring = el.querySelector<SVGCircleElement>("[data-ring]")
       if (ring) ring.style.strokeDashoffset = String(351.9 * (1 - n / 30))
       const num = el.querySelector<HTMLElement>("[data-ring-num]")
-      const lab = el.querySelector<HTMLElement>("[data-ring-label]")
-      if (num) {
-        num.textContent = n >= 30 ? "Khatm!" : String(n)
-        num.style.fontSize = n >= 30 ? "30px" : "40px"
-      }
-      if (lab) lab.style.opacity = n >= 30 ? "0" : "1"
+      if (num) num.textContent = String(Math.min(n, 30))
+      el.querySelector("[data-burst]")?.classList.toggle("done", n >= 30)
       if (n >= 30 && !r.burstDone) {
         r.burstDone = true
         spray(el.querySelector("[data-burst]"), 22, true)
@@ -1968,6 +1967,7 @@ export function WelcomeStory({
             </div>
             <div
               data-burst=""
+              className="ring"
               role="img"
               aria-label="Progress ring counting paras from 1 to 30"
               style={{ position: "relative", width: 150, height: 150, flexShrink: 0 }}
@@ -1979,7 +1979,15 @@ export function WelcomeStory({
                 aria-hidden="true"
                 style={{ transform: "rotate(-90deg)" }}
               >
-                <circle cx="70" cy="70" r="56" fill="#FFFFFF" stroke="#D9C9B2" strokeWidth="12" />
+                <circle
+                  className="disc"
+                  cx="70"
+                  cy="70"
+                  r="56"
+                  fill="#FFFFFF"
+                  stroke="#D9C9B2"
+                  strokeWidth="12"
+                />
                 <circle
                   data-ring=""
                   cx="70"
@@ -1994,7 +2002,9 @@ export function WelcomeStory({
                   style={{ transition: "stroke-dashoffset .3s" }}
                 />
               </svg>
+              {/* counting face */}
               <div
+                className="face-count"
                 style={{
                   position: "absolute",
                   inset: 0,
@@ -2005,7 +2015,6 @@ export function WelcomeStory({
                 }}
               >
                 <span
-                  data-ring-label=""
                   style={{
                     ...f(700, "13px", "1", BODY),
                     color: "#4F6343",
@@ -2020,6 +2029,32 @@ export function WelcomeStory({
                   style={{ ...f(700, "40px", "1.05", HEAD), color: "#2E3A2F" }}
                 >
                   0
+                </span>
+              </div>
+              {/* khatm face: the ayah star, then the word */}
+              <div
+                className="face-done"
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 2,
+                }}
+              >
+                <Star size={34} />
+                <span style={{ ...f(700, "22px", "1", HEAD), color: "#2E3A2F" }}>Khatm</span>
+                <span
+                  style={{
+                    ...f(700, "11px", "1", BODY),
+                    color: "#7A5A12",
+                    letterSpacing: ".08em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  30 paras
                 </span>
               </div>
             </div>
