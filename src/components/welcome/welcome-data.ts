@@ -5,14 +5,15 @@
  */
 
 /**
- * Where "Your story begins tonight" sends parents. Fill these in before launch;
- * an empty one hides its card.
+ * Where "Your story begins tonight" sends parents.
  */
 // ponytail: hard-coded contact links; upgrade path is a settings row the teacher edits.
 export const CONTACT = {
-  whatsapp: "", // e.g. "https://wa.me/923001234567"
-  instagram: "", // e.g. "https://instagram.com/verseandvoice"
-  facebook: "", // e.g. "https://facebook.com/verseandvoice"
+  // wa.me opens a chat with the greeting already typed; parents just press send.
+  whatsapp:
+    "https://wa.me/923310438768?text=Assalamu%20Alaikum%21%20I%27d%20like%20to%20book%20a%20free%20trial%20Quran%20class%20with%20Verse%20%26%20Voice%20for%20my%20child.",
+  instagram: "https://www.instagram.com/verseandvoicequran/",
+  facebook: "https://www.facebook.com/verseandvoicequran",
 }
 
 export type AgeBand = "little" | "young" | "teens"
