@@ -37,7 +37,7 @@ import {
   SKY,
   STARS,
 } from "@/components/welcome/welcome-data"
-import { PraySteps } from "@/components/welcome/welcome-pray"
+import { PrayerDay } from "@/components/welcome/welcome-pray"
 import {
   ar,
   BODY,
@@ -49,7 +49,6 @@ import {
   para,
   SHADOW,
 } from "@/components/welcome/welcome-styles"
-import type { NamazSlide } from "@/lib/welcome-namaz"
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
@@ -761,13 +760,7 @@ function ContactCards() {
 
 /* ── The page ─────────────────────────────────────────────────────── */
 
-export function WelcomeStory({
-  defaultAge = "little",
-  namaz = [],
-}: {
-  defaultAge?: AgeBand
-  namaz?: NamazSlide[]
-}) {
+export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }) {
   const root = useRef<HTMLDivElement>(null)
   const [age, setAge] = useState<AgeBand | null>(null)
   const [chapter, setChapter] = useState(0)
@@ -2428,12 +2421,13 @@ export function WelcomeStory({
               Pray with me
             </h2>
             <p style={para()}>
-              Nine steps, always in order. Each one comes with a picture, the words your teacher
-              checked, and the teacher&apos;s own voice to repeat after in class.
+              Five prayers shape a Muslim&apos;s day. Your child learns each one step by step, with
+              a picture, the words your teacher checked, and the teacher&apos;s own voice to repeat
+              after in class.
             </p>
           </div>
           <div data-reveal="" data-delay="150">
-            <PraySteps slides={namaz} />
+            <PrayerDay />
           </div>
         </section>
 
