@@ -2031,8 +2031,10 @@ export function WelcomeStory({
               listStyle: "none",
               margin: 0,
               padding: 0,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,88px),1fr))",
+              // A wrapping row, not a grid: each tile is as wide as its name, so a
+              // name is never broken across lines.
+              display: "flex",
+              flexWrap: "wrap",
               gap: 8,
             }}
           >
@@ -2046,8 +2048,11 @@ export function WelcomeStory({
                   className={milestone ? "juz milestone" : "juz"}
                   style={{
                     position: "relative",
-                    minHeight: 66,
-                    padding: "8px 8px 6px",
+                    flex: "1 0 auto",
+                    minWidth: 88,
+                    maxWidth: 200, // a lone tile on the last row shouldn't span the whole width
+                    minHeight: 64,
+                    padding: "10px 16px 8px",
                     borderRadius: 16,
                     border: `1.5px solid ${mix("#8FA97A", 60)}`,
                     display: "flex",
@@ -2073,11 +2078,7 @@ export function WelcomeStory({
                   <span
                     lang="ar"
                     dir="rtl"
-                    style={{
-                      ...ar(600, "17px", "1.45"),
-                      textAlign: "center",
-                      overflowWrap: "anywhere",
-                    }}
+                    style={{ ...ar(600, "18px", "1.45"), whiteSpace: "nowrap" }}
                   >
                     {name}
                   </span>
