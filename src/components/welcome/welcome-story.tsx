@@ -86,7 +86,8 @@ body{background:transparent!important;color:#2E3A2F}
 @keyframes vvBar{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
 @keyframes vvTwinkle{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
 @keyframes vvShine{0%{transform:translateX(-160%) skewX(-20deg)}55%,100%{transform:translateX(380%) skewX(-20deg)}}
-@keyframes vvDraw{from{stroke-dashoffset:240}to{stroke-dashoffset:0}}
+@keyframes vvWrite{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+.vvw .alif-write{animation:vvWrite 1.6s cubic-bezier(.6,.1,.3,1) .4s both}
 @keyframes vvFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes vvPop{0%{transform:scale(0) rotate(-30deg);opacity:0}70%{transform:scale(1.12) rotate(4deg);opacity:1}100%{transform:scale(1) rotate(0)}}
 @keyframes vvLineOut{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-10px)}}
@@ -1705,32 +1706,42 @@ export function WelcomeStory({
                   animation: "vvFloat 4.5s ease-in-out infinite",
                 }}
               />
-              <svg
-                viewBox="0 0 120 220"
-                width="40%"
+              {/* The real letter, in the mushaf face the children read. It "writes"
+                  itself top to bottom over a faint tracing guide. */}
+              <div
                 role="img"
-                aria-label="The Arabic letter Alif drawing itself"
-                style={{ position: "relative" }}
+                aria-label="The Arabic letter Alif writing itself"
+                lang="ar"
+                style={{
+                  position: "relative",
+                  display: "grid",
+                  placeItems: "center",
+                  width: "40%",
+                  aspectRatio: "1/1.6",
+                }}
               >
-                <path
-                  d="M74 26 C 70 74, 66 132, 52 196"
-                  fill="none"
-                  stroke="#D9C9B2"
-                  strokeWidth="22"
-                  strokeLinecap="round"
-                  transform="translate(4 5)"
-                />
-                <path
-                  d="M74 26 C 70 74, 66 132, 52 196"
-                  fill="none"
-                  stroke="#2E3A2F"
-                  strokeWidth="22"
-                  strokeLinecap="round"
-                  strokeDasharray="240"
-                  strokeDashoffset="0"
-                  style={{ animation: "vvDraw 1.8s cubic-bezier(.6,.1,.3,1) .4s both" }}
-                />
-              </svg>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    gridArea: "1 / 1",
+                    ...ar(700, "clamp(170px,25vw,290px)", "1"),
+                    color: "#D9C9B2",
+                    transform: "translate(3px,4px)",
+                  }}
+                >
+                  ا
+                </span>
+                <span
+                  className="alif-write"
+                  style={{
+                    gridArea: "1 / 1",
+                    ...ar(700, "clamp(170px,25vw,290px)", "1"),
+                    color: "#2E3A2F",
+                  }}
+                >
+                  ا
+                </span>
+              </div>
               <div
                 style={{
                   position: "absolute",
