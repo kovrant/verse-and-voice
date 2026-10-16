@@ -26,7 +26,9 @@ export interface GroupedTrophies {
 
 const PARA_SLUG = /^para_(\d+)$/
 
-export function parseMemPartTitle(title: string): { partLabel: string; lessonTitle: string } | null {
+export function parseMemPartTitle(
+  title: string,
+): { partLabel: string; lessonTitle: string } | null {
   const sep = title.indexOf(" · ")
   if (sep === -1) return null
   return { partLabel: title.slice(0, sep), lessonTitle: title.slice(sep + 3) }
@@ -105,7 +107,9 @@ export function trophyHeadline(grouped: GroupedTrophies, certificateCount: numbe
     bits.push(`${grouped.quranParas.length}/30 paras`)
   }
   if (grouped.quranMilestones.length > 0) {
-    bits.push(`${grouped.quranMilestones.length} milestone${grouped.quranMilestones.length === 1 ? "" : "s"}`)
+    bits.push(
+      `${grouped.quranMilestones.length} milestone${grouped.quranMilestones.length === 1 ? "" : "s"}`,
+    )
   }
   if (grouped.quizzes.length > 0) {
     bits.push(`${grouped.quizzes.length} quiz badge${grouped.quizzes.length === 1 ? "" : "s"}`)

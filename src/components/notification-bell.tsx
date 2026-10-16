@@ -2,16 +2,7 @@
 
 import * as Popover from "@radix-ui/react-popover"
 import { formatDistanceToNow } from "date-fns"
-import {
-  Bell,
-  CheckCheck,
-  CheckSquare,
-  Info,
-  Receipt,
-  Sparkles,
-  Trophy,
-  Video,
-} from "lucide-react"
+import { Bell, CheckCheck, CheckSquare, Info, Receipt, Sparkles, Trophy, Video } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 
@@ -52,7 +43,9 @@ function CategoryIcon({
 export function NotificationBell({ kid = false }: { kid?: boolean }) {
   const router = useRouter()
   const pathname = usePathname()
-  const allHref = pathname.startsWith("/student") ? "/student/notifications" : "/notifications"
+  const allHref = pathname.startsWith("/student")
+    ? "/student/notifications"
+    : "/teacher/notifications"
   const { items, unread, loading, markRead, markAllRead } = useNotifications()
 
   function open(n: NotificationRow) {

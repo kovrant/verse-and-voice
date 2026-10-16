@@ -64,7 +64,7 @@ function StudentLoginForm() {
     seedAuthUser(user ?? null)
     // Hard navigation so the next request carries the session cookies.
     // router.replace + refresh races middleware and bounces back to /login.
-    window.location.assign(role === "student" ? studentPostLoginPath(redirectTo) : "/")
+    window.location.assign(role === "student" ? studentPostLoginPath(redirectTo) : "/teacher")
   }
 
   async function handleSubmit(e: React.FormEvent) {

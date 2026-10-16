@@ -112,10 +112,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
   ]
 }`
 
-      const modelsToTry = [
-        "gemini-3.5-flash",
-        "gemini-3.8-flash",
-      ]
+      const modelsToTry = ["gemini-3.5-flash", "gemini-3.8-flash"]
 
       let generatedData: GeneratedQuizResponse | null = null
       let successfulModel = "gemini-3.5-flash"
@@ -190,7 +187,10 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
         })
       }
     } catch (err) {
-      console.warn("Gemini AI generation failed, falling back to smart Islamic template generator:", err)
+      console.warn(
+        "Gemini AI generation failed, falling back to smart Islamic template generator:",
+        err,
+      )
     }
   }
 
@@ -215,7 +215,9 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
   return NextResponse.json({
     quiz: fallback,
     source: "offline_template",
-    notice: !apiKey ? "GEMINI_API_KEY is not configured in .env.local; generated using offline Islamic knowledge base." : undefined
+    notice: !apiKey
+      ? "GEMINI_API_KEY is not configured in .env.local; generated using offline Islamic knowledge base."
+      : undefined,
   })
 }
 
@@ -250,7 +252,8 @@ function generateFallbackQuiz(
           { id: "o3", text: "Smokeless Fire", is_correct: false },
           { id: "o4", text: "Water only", is_correct: false },
         ],
-        explanation: "Allah created angels from light, jinn from smokeless fire, and Adam (AS) from clay.",
+        explanation:
+          "Allah created angels from light, jinn from smokeless fire, and Adam (AS) from clay.",
       },
       {
         question_text: "Who was the wife of Prophet Adam (AS)?",
@@ -272,7 +275,8 @@ function generateFallbackQuiz(
           { id: "o3", text: "Angel Mikael", is_correct: false },
           { id: "o4", text: "Angel Israfil", is_correct: false },
         ],
-        explanation: "All the angels obeyed Allah and prostrated, but Iblis refused due to arrogance.",
+        explanation:
+          "All the angels obeyed Allah and prostrated, but Iblis refused due to arrogance.",
       },
       {
         question_text: "Allah taught Prophet Adam (AS) the names of all things. True or False?",
@@ -281,7 +285,8 @@ function generateFallbackQuiz(
           { id: "t", text: "True", is_correct: true },
           { id: "f", text: "False", is_correct: false },
         ],
-        explanation: "Allah honored Adam (AS) with special divine knowledge and taught him the names of all things.",
+        explanation:
+          "Allah honored Adam (AS) with special divine knowledge and taught him the names of all things.",
       },
     ]
 
@@ -309,7 +314,8 @@ function generateFallbackQuiz(
           { id: "o3", text: "Roohullah", is_correct: false },
           { id: "o4", text: "Habibullah", is_correct: false },
         ],
-        explanation: "Prophet Ibrahim (AS) had immense devotion and was titled Khalilullah (Friend of Allah).",
+        explanation:
+          "Prophet Ibrahim (AS) had immense devotion and was titled Khalilullah (Friend of Allah).",
       },
       {
         question_text: "Who helped Prophet Ibrahim (AS) rebuild the Kaaba in Makkah?",
@@ -320,10 +326,12 @@ function generateFallbackQuiz(
           { id: "o3", text: "Prophet Lut (AS)", is_correct: false },
           { id: "o4", text: "Prophet Musa (AS)", is_correct: false },
         ],
-        explanation: "Ibrahim (AS) and Ismail (AS) raised the foundations of the holy Kaaba together.",
+        explanation:
+          "Ibrahim (AS) and Ismail (AS) raised the foundations of the holy Kaaba together.",
       },
       {
-        question_text: "What happened to the raging fire when King Nimrod threw Prophet Ibrahim (AS) into it?",
+        question_text:
+          "What happened to the raging fire when King Nimrod threw Prophet Ibrahim (AS) into it?",
         question_type: "single_choice",
         options: [
           { id: "o1", text: "Allah commanded it to be cool and peaceful", is_correct: true },
@@ -334,7 +342,8 @@ function generateFallbackQuiz(
         explanation: "Allah said: 'O fire, be cool and peaceful for Ibrahim!' (Quran 21:69).",
       },
       {
-        question_text: "Prophet Ibrahim (AS) always stood firm against idol worship and preached pure Monotheism (Tawhid). True or False?",
+        question_text:
+          "Prophet Ibrahim (AS) always stood firm against idol worship and preached pure Monotheism (Tawhid). True or False?",
         question_type: "true_false",
         options: [
           { id: "t", text: "True", is_correct: true },
@@ -357,7 +366,11 @@ function generateFallbackQuiz(
   }
 
   // 3. Prophet Muhammad (PBUH) & Seerah
-  if (cleanTopic.includes("muhammad") || cleanTopic.includes("seerah") || cleanTopic.includes("prophet")) {
+  if (
+    cleanTopic.includes("muhammad") ||
+    cleanTopic.includes("seerah") ||
+    cleanTopic.includes("prophet")
+  ) {
     const questions: GeneratedQuestion[] = [
       {
         question_text: "In which blessed city was Prophet Muhammad (PBUH) born?",
@@ -371,7 +384,8 @@ function generateFallbackQuiz(
         explanation: "The Prophet (PBUH) was born in Makkah in the Year of the Elephant (570 CE).",
       },
       {
-        question_text: "What title did the people of Makkah give the Prophet (PBUH) even before prophethood due to his honesty?",
+        question_text:
+          "What title did the people of Makkah give the Prophet (PBUH) even before prophethood due to his honesty?",
         question_type: "single_choice",
         options: [
           { id: "o1", text: "Al-Sadiq & Al-Amin (The Truthful & Trustworthy)", is_correct: true },
@@ -382,7 +396,8 @@ function generateFallbackQuiz(
         explanation: "He was widely beloved and respected for his spotless honesty and integrity.",
       },
       {
-        question_text: "In which cave did Prophet Muhammad (PBUH) receive the very first revelation of the Quran?",
+        question_text:
+          "In which cave did Prophet Muhammad (PBUH) receive the very first revelation of the Quran?",
         question_type: "single_choice",
         options: [
           { id: "o1", text: "Cave Hira", is_correct: true },
@@ -390,22 +405,26 @@ function generateFallbackQuiz(
           { id: "o3", text: "Cave of Kahf", is_correct: false },
           { id: "o4", text: "Mount Uhud", is_correct: false },
         ],
-        explanation: "Angel Jibreel brought the first verses ('Iqra!') in Cave Hira on Jabal al-Noor.",
+        explanation:
+          "Angel Jibreel brought the first verses ('Iqra!') in Cave Hira on Jabal al-Noor.",
       },
       {
-        question_text: "Prophet Muhammad (PBUH) was sent as a mercy to all of creation. True or False?",
+        question_text:
+          "Prophet Muhammad (PBUH) was sent as a mercy to all of creation. True or False?",
         question_type: "true_false",
         options: [
           { id: "t", text: "True", is_correct: true },
           { id: "f", text: "False", is_correct: false },
         ],
-        explanation: "Allah says in the Quran: 'And We have not sent you except as a mercy to the worlds.'",
+        explanation:
+          "Allah says in the Quran: 'And We have not sent you except as a mercy to the worlds.'",
       },
     ]
 
     return {
       title: `Seerah: Life of Prophet Muhammad (PBUH)`,
-      description: "Discover the beautiful life, noble character, and message of the final Messenger (PBUH).",
+      description:
+        "Discover the beautiful life, noble character, and message of the final Messenger (PBUH).",
       category: "seerah",
       age_group: ageGroup,
       passing_score: 80,
@@ -416,7 +435,11 @@ function generateFallbackQuiz(
   }
 
   // 4. Prayer / Salah
-  if (cleanTopic.includes("prayer") || cleanTopic.includes("salah") || cleanTopic.includes("namaz")) {
+  if (
+    cleanTopic.includes("prayer") ||
+    cleanTopic.includes("salah") ||
+    cleanTopic.includes("namaz")
+  ) {
     const questions: GeneratedQuestion[] = [
       {
         question_text: "What is the very first prayer of the day before sunrise?",
@@ -452,7 +475,8 @@ function generateFallbackQuiz(
         explanation: "The Qiblah unites all Muslims around the world facing the sacred Kaaba.",
       },
       {
-        question_text: "In Salah, bowing down with hands on your knees is called Ruku. True or False?",
+        question_text:
+          "In Salah, bowing down with hands on your knees is called Ruku. True or False?",
         question_type: "true_false",
         options: [
           { id: "t", text: "True", is_correct: true },
@@ -514,7 +538,8 @@ function generateFallbackQuiz(
 
     return {
       title: `Prophet Musa (AS) Adventure`,
-      description: "Learn about the brave story of Prophet Musa (AS), the Red Sea, and Mount Sinai.",
+      description:
+        "Learn about the brave story of Prophet Musa (AS), the Red Sea, and Mount Sinai.",
       category: "prophets",
       age_group: ageGroup,
       passing_score: 80,
@@ -547,10 +572,12 @@ function generateFallbackQuiz(
           { id: "o3", text: "Surah Al-Ikhlas", is_correct: false },
           { id: "o4", text: "Surah Ya-Sin", is_correct: false },
         ],
-        explanation: "Surah Al-Fatihah ('The Opening') is recited in every unit (rak'ah) of prayer.",
+        explanation:
+          "Surah Al-Fatihah ('The Opening') is recited in every unit (rak'ah) of prayer.",
       },
       {
-        question_text: "Which angel was responsible for bringing the Quran to Prophet Muhammad (PBUH)?",
+        question_text:
+          "Which angel was responsible for bringing the Quran to Prophet Muhammad (PBUH)?",
         question_type: "single_choice",
         options: [
           { id: "o1", text: "Angel Jibreel (Gabriel)", is_correct: true },
@@ -561,13 +588,15 @@ function generateFallbackQuiz(
         explanation: "Angel Jibreel brought Allah's revelations over a period of 23 years.",
       },
       {
-        question_text: "The Quran is the protected word of Allah and has remained unchanged. True or False?",
+        question_text:
+          "The Quran is the protected word of Allah and has remained unchanged. True or False?",
         question_type: "true_false",
         options: [
           { id: "t", text: "True", is_correct: true },
           { id: "f", text: "False", is_correct: false },
         ],
-        explanation: "Allah promised in the Quran: 'Indeed, it is We who sent down the Quran and indeed, We will be its guardian.'",
+        explanation:
+          "Allah promised in the Quran: 'Indeed, it is We who sent down the Quran and indeed, We will be its guardian.'",
       },
     ]
 
@@ -584,7 +613,12 @@ function generateFallbackQuiz(
   }
 
   // 7. Ramadan & Fasting (Sawm)
-  if (cleanTopic.includes("ramadan") || cleanTopic.includes("fasting") || cleanTopic.includes("roza") || cleanTopic.includes("sawm")) {
+  if (
+    cleanTopic.includes("ramadan") ||
+    cleanTopic.includes("fasting") ||
+    cleanTopic.includes("roza") ||
+    cleanTopic.includes("sawm")
+  ) {
     const questions: GeneratedQuestion[] = [
       {
         question_text: "What is the pre-dawn meal called before starting the fast?",
@@ -620,7 +654,8 @@ function generateFallbackQuiz(
         explanation: "Ramadan is known as the Month of the Quran (Surah Al-Baqarah 2:185).",
       },
       {
-        question_text: "Laylatul Qadr (The Night of Decree) is better than a thousand months. True or False?",
+        question_text:
+          "Laylatul Qadr (The Night of Decree) is better than a thousand months. True or False?",
         question_type: "true_false",
         options: [
           { id: "t", text: "True", is_correct: true },
@@ -653,7 +688,8 @@ function generateFallbackQuiz(
         { id: "o3", text: "Zakat (Charity)", is_correct: false },
         { id: "o4", text: "Hajj (Pilgrimage)", is_correct: false },
       ],
-      explanation: "The Shahada is the declaration of faith that there is no god but Allah, and Muhammad is His messenger.",
+      explanation:
+        "The Shahada is the declaration of faith that there is no god but Allah, and Muhammad is His messenger.",
     },
     {
       question_text: `Saying 'Bismillah' before eating brings Allah's blessing into our food. True or False?`,
@@ -673,7 +709,8 @@ function generateFallbackQuiz(
         { id: "o3", text: "Uthman ibn Affan (RA)", is_correct: false },
         { id: "o4", text: "Ali ibn Abi Talib (RA)", is_correct: false },
       ],
-      explanation: "Abu Bakr (RA) was the closest friend and first Caliph after the Prophet (PBUH).",
+      explanation:
+        "Abu Bakr (RA) was the closest friend and first Caliph after the Prophet (PBUH).",
     },
     {
       question_text: `Smiling at someone is considered a form of charity (Sadaqah) in Islam. True or False?`,
@@ -697,4 +734,3 @@ function generateFallbackQuiz(
     questions: defaultQuestions.slice(0, count),
   }
 }
-

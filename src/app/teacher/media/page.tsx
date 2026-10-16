@@ -233,8 +233,7 @@ export default function MediaPage() {
 
     const prepared = list.map((f) => {
       const fileType = fileTypeOf(f)
-      const paraNum =
-        bulkType === "quran" && fileType === "pdf" ? extractParaNumber(f.name) : null
+      const paraNum = bulkType === "quran" && fileType === "pdf" ? extractParaNumber(f.name) : null
       const title = paraNum ? `Para ${paraNum}` : titleFromFilename(f.name)
       return { file: f, fileType, paraNum, title }
     })
@@ -327,7 +326,9 @@ export default function MediaPage() {
       return next
     })
     setDeleting(false)
-    toast.success(toRemove.length === 1 ? `"${toRemove[0].title}" deleted` : `${toRemove.length} files deleted`)
+    toast.success(
+      toRemove.length === 1 ? `"${toRemove[0].title}" deleted` : `${toRemove.length} files deleted`,
+    )
     await loadItems()
   }
 
@@ -940,7 +941,9 @@ export default function MediaPage() {
                     <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-foreground/35 bg-transparent">
                       <input
                         type="checkbox"
-                        checked={groupItems.length > 0 && groupItems.every((i) => selected.has(i.id))}
+                        checked={
+                          groupItems.length > 0 && groupItems.every((i) => selected.has(i.id))
+                        }
                         onChange={() => toggleGroup(groupItems)}
                         className="sr-only"
                         aria-label={`Select all ${typeLabel}`}
@@ -968,7 +971,9 @@ export default function MediaPage() {
                       }
                     }}
                     className={`relative rounded-2xl border bg-card overflow-hidden hover:border-border transition-all text-left group cursor-pointer ${
-                      selected.has(item.id) ? "border-primary ring-2 ring-primary/20" : "border-border/50"
+                      selected.has(item.id)
+                        ? "border-primary ring-2 ring-primary/20"
+                        : "border-border/50"
                     }`}
                   >
                     <label

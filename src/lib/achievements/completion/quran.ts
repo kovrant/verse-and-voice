@@ -44,9 +44,6 @@ export function crossedHalfQuran(
   return totalParas(before.desc, before.asc) < 15 && totalParas(after.desc, after.asc) >= 15
 }
 
-export function khatmJustCompleted(
-  before: QuranRoundProgress,
-  after: QuranRoundProgress,
-): boolean {
+export function khatmJustCompleted(before: QuranRoundProgress, after: QuranRoundProgress): boolean {
   return !before.completed_at && isFullQuranComplete(after)
 }

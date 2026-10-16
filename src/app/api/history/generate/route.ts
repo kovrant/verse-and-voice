@@ -149,9 +149,7 @@ export async function POST(request: Request) {
       : "9-12"
 
   const category =
-    body.category && ALLOWED_CATEGORIES.has(body.category)
-      ? body.category
-      : "Prophets"
+    body.category && ALLOWED_CATEGORIES.has(body.category) ? body.category : "Prophets"
 
   const hijriMonth =
     typeof body.hijri_month === "number" && body.hijri_month >= 1 && body.hijri_month <= 12
@@ -159,7 +157,9 @@ export async function POST(request: Request) {
       : null
 
   const customInstructions =
-    typeof body.custom_instructions === "string" ? body.custom_instructions.trim().slice(0, 300) : ""
+    typeof body.custom_instructions === "string"
+      ? body.custom_instructions.trim().slice(0, 300)
+      : ""
 
   const topicSlug = normalizeTopicSlug(topic)
   const admin = createSupabaseAdminClient()
@@ -174,9 +174,10 @@ export async function POST(request: Request) {
 
     if (!searchError && existingStories && existingStories.length > 0) {
       const match = existingStories[0]
-      const suggestions = CURATED_ISLAMIC_TOPICS.filter(
-        (c) => c.topic_slug !== topicSlug,
-      ).slice(0, 3)
+      const suggestions = CURATED_ISLAMIC_TOPICS.filter((c) => c.topic_slug !== topicSlug).slice(
+        0,
+        3,
+      )
 
       return NextResponse.json(
         {
@@ -532,7 +533,10 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
     let schemaNotice: string | undefined
 
     if (storyError) {
-      console.warn("V2 story insert encountered schema mismatch, retrying with base columns:", storyError)
+      console.warn(
+        "V2 story insert encountered schema mismatch, retrying with base columns:",
+        storyError,
+      )
       // Retry with baseline columns if migration_islamic_history_v2.sql has not been run yet
       const { data: baseStory, error: baseError } = await admin
         .from("islamic_history")
@@ -553,7 +557,8 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
       }
 
       storyRecord = baseStory
-      schemaNotice = "Story saved! Run migration_islamic_history_v2.sql in Supabase SQL editor to enable the Quran Gem card & derived quiz."
+      schemaNotice =
+        "Story saved! Run migration_islamic_history_v2.sql in Supabase SQL editor to enable the Quran Gem card & derived quiz."
     }
 
     return NextResponse.json({
@@ -567,10 +572,7 @@ Output MUST be raw valid JSON strictly matching this schema with NO markdown wra
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to create story"
     console.error("Failed to save generated story:", err)
-    return NextResponse.json(
-      { error: errorMsg || "Failed to save story draft" },
-      { status: 500 },
-    )
+    return NextResponse.json({ error: errorMsg || "Failed to save story draft" }, { status: 500 })
   }
 }
 
@@ -603,7 +605,8 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
         surah_number: 11,
         surah_name: "Surah Hud",
         ayah_number: "11:41",
-        arabic: "وَقَالَ ارْكَبُوا فِيهَا بِسْمِ اللَّهِ مَجْرَاهَا وَمُرْسَاهَا ۚ إِنَّ رَبِّي لَغَفُورٌ رَّحِيمٌ",
+        arabic:
+          "وَقَالَ ارْكَبُوا فِيهَا بِسْمِ اللَّهِ مَجْرَاهَا وَمُرْسَاهَا ۚ إِنَّ رَبِّي لَغَفُورٌ رَّحِيمٌ",
         translation:
           "And he said: 'Embark upon it! In the Name of Allah is its sailing and its mooring. Truly my Lord is All-Forgiving, Most Merciful.'",
         child_takeaway:
@@ -640,7 +643,8 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
         badge_description: "Mastered the story of Prophet Nuh and the great Ark",
         questions: [
           {
-            question_text: "For how many years did Prophet Nuh (AS) patiently invite his people to goodness?",
+            question_text:
+              "For how many years did Prophet Nuh (AS) patiently invite his people to goodness?",
             question_type: "single_choice",
             options: [
               { id: "o1", text: "950 years", is_correct: true },
@@ -648,7 +652,8 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
               { id: "o3", text: "100 years", is_correct: false },
               { id: "o4", text: "10 years", is_correct: false },
             ],
-            explanation: "Prophet Nuh's incredible patience for 950 years is a beacon of perseverance for us all!",
+            explanation:
+              "Prophet Nuh's incredible patience for 950 years is a beacon of perseverance for us all!",
           },
           {
             question_text: "What phrase did Prophet Nuh say when embarking on the Ark?",
@@ -659,21 +664,29 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
               { id: "o3", text: "Alhamdulillah", is_correct: false },
               { id: "o4", text: "Subhanallah", is_correct: false },
             ],
-            explanation: "He sailed with the name of Allah, showing us to start all travels with Bismillah.",
+            explanation:
+              "He sailed with the name of Allah, showing us to start all travels with Bismillah.",
           },
           {
-            question_text: "What did the townspeople do when they saw Prophet Nuh building the Ark?",
+            question_text:
+              "What did the townspeople do when they saw Prophet Nuh building the Ark?",
             question_type: "single_choice",
             options: [
-              { id: "o1", text: "They mocked him because there was no sea nearby", is_correct: true },
+              {
+                id: "o1",
+                text: "They mocked him because there was no sea nearby",
+                is_correct: true,
+              },
               { id: "o2", text: "They helped him build it", is_correct: false },
               { id: "o3", text: "They sailed it away", is_correct: false },
               { id: "o4", text: "They bought the wood", is_correct: false },
             ],
-            explanation: "Even when people mocked him, Prophet Nuh never lost trust in Allah's promise.",
+            explanation:
+              "Even when people mocked him, Prophet Nuh never lost trust in Allah's promise.",
           },
           {
-            question_text: "Where did Prophet Nuh's Ark safely come to rest after the great waters receded?",
+            question_text:
+              "Where did Prophet Nuh's Ark safely come to rest after the great waters receded?",
             question_type: "single_choice",
             options: [
               { id: "o1", text: "Mount Judi", is_correct: true },
@@ -681,18 +694,24 @@ When the heavens opened and pure water gushed from the earth, pairs of peaceful 
               { id: "o3", text: "Mount Sinai", is_correct: false },
               { id: "o4", text: "Mount Nur", is_correct: false },
             ],
-            explanation: "As mentioned in Surah Hud, the Ark safely rested on Mount Judi by Allah's command.",
+            explanation:
+              "As mentioned in Surah Hud, the Ark safely rested on Mount Judi by Allah's command.",
           },
           {
             question_text: "What lesson of character does Prophet Nuh's story teach us most?",
             question_type: "single_choice",
             options: [
-              { id: "o1", text: "Patience and steadfast faith even when others mock", is_correct: true },
+              {
+                id: "o1",
+                text: "Patience and steadfast faith even when others mock",
+                is_correct: true,
+              },
               { id: "o2", text: "Giving up when tasks get difficult", is_correct: false },
               { id: "o3", text: "Building boats as a hobby", is_correct: false },
               { id: "o4", text: "Only helping those who are popular", is_correct: false },
             ],
-            explanation: "Prophet Nuh exemplifies perseverance and unwavering trust in Allah despite adversity.",
+            explanation:
+              "Prophet Nuh exemplifies perseverance and unwavering trust in Allah despite adversity.",
           },
         ],
       },
@@ -720,7 +739,8 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
       surah_number: 7,
       surah_name: "Surah Al-A'raf",
       ayah_number: "7:23",
-      arabic: "قَالَا رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ",
+      arabic:
+        "قَالَا رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ",
       translation:
         "They pleaded: 'Our Lord! We have wronged ourselves. If You do not forgive us and have mercy upon us, we will certainly be among the losers.'",
       child_takeaway:
@@ -765,21 +785,28 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
             { id: "o3", text: "Prophet Ibrahim (AS)", is_correct: false },
             { id: "o4", text: "Prophet Musa (AS)", is_correct: false },
           ],
-          explanation: "Prophet Adam (AS) is the father of all humanity and the first messenger of Allah.",
+          explanation:
+            "Prophet Adam (AS) is the father of all humanity and the first messenger of Allah.",
         },
         {
           question_text: "What did Prophet Adam (AS) do immediately after making a mistake?",
           question_type: "single_choice",
           options: [
-            { id: "o1", text: "He repented sincerely and asked Allah for forgiveness", is_correct: true },
+            {
+              id: "o1",
+              text: "He repented sincerely and asked Allah for forgiveness",
+              is_correct: true,
+            },
             { id: "o2", text: "He blamed someone else", is_correct: false },
             { id: "o3", text: "He ignored it", is_correct: false },
             { id: "o4", text: "He became angry", is_correct: false },
           ],
-          explanation: "Prophet Adam set the eternal example for all of us: when you make a mistake, turn to Allah in repentance.",
+          explanation:
+            "Prophet Adam set the eternal example for all of us: when you make a mistake, turn to Allah in repentance.",
         },
         {
-          question_text: "What special gift did Allah bestow upon Prophet Adam that impressed the angels?",
+          question_text:
+            "What special gift did Allah bestow upon Prophet Adam that impressed the angels?",
           question_type: "single_choice",
           options: [
             { id: "o1", text: "The knowledge of the names of all things", is_correct: true },
@@ -787,10 +814,12 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
             { id: "o3", text: "The ability to fly", is_correct: false },
             { id: "o4", text: "A palace of silver", is_correct: false },
           ],
-          explanation: "Allah taught Adam the names of all things, honoring him with knowledge and intellect.",
+          explanation:
+            "Allah taught Adam the names of all things, honoring him with knowledge and intellect.",
         },
         {
-          question_text: "What did Prophet Adam (AS) immediately say after Allah blew the soul into him and he sneezed?",
+          question_text:
+            "What did Prophet Adam (AS) immediately say after Allah blew the soul into him and he sneezed?",
           question_type: "single_choice",
           options: [
             { id: "o1", text: "Alhamdulillah (All praise is due to Allah)", is_correct: true },
@@ -798,18 +827,25 @@ Unlike Iblis who was arrogant and stubborn, Prophet Adam immediately turned to A
             { id: "o3", text: "Allahu Akbar", is_correct: false },
             { id: "o4", text: "Astaghfirullah", is_correct: false },
           ],
-          explanation: "Prophet Adam's first words upon sneezing were Alhamdulillah, and Allah replied with mercy: Yarhamukallah.",
+          explanation:
+            "Prophet Adam's first words upon sneezing were Alhamdulillah, and Allah replied with mercy: Yarhamukallah.",
         },
         {
-          question_text: "Why did Iblis refuse to bow down to Prophet Adam when Allah commanded the angels and jinn?",
+          question_text:
+            "Why did Iblis refuse to bow down to Prophet Adam when Allah commanded the angels and jinn?",
           question_type: "single_choice",
           options: [
-            { id: "o1", text: "Arrogance and pride because he thought fire was superior to clay", is_correct: true },
+            {
+              id: "o1",
+              text: "Arrogance and pride because he thought fire was superior to clay",
+              is_correct: true,
+            },
             { id: "o2", text: "He did not hear the command", is_correct: false },
             { id: "o3", text: "He was too busy", is_correct: false },
             { id: "o4", text: "He forgot Allah's command", is_correct: false },
           ],
-          explanation: "Iblis allowed pride and arrogance to blind him, refusing Allah's command out of haughtiness.",
+          explanation:
+            "Iblis allowed pride and arrogance to blind him, refusing Allah's command out of haughtiness.",
         },
       ],
     },

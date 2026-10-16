@@ -3,7 +3,11 @@ import { type NextRequest, NextResponse } from "next/server"
 
 import { isLoginDisabled } from "@/lib/student-auth"
 
-const PUBLIC_PATHS = ["/login", "/admin", "/auth", "/welcome"]
+const PUBLIC_PATHS = ["/login", "/teacher/login", "/auth", "/welcome"]
+const TEACHER_HOME = "/teacher"
+/** Pre-/teacher addresses of the dashboard pages, still in bookmarks and old notifications. */
+const LEGACY_TEACHER_PATH =
+  /^\/(students|class|hadiths|memorization|quran|qaida|namaz|history|quizzes|fees|media|ai-usage|notifications)(\/|$)/
 
 /** Drop Supabase auth cookies without a network signOut — middleware must stay local. */
 function clearSupabaseAuthCookies(response: NextResponse, request: NextRequest) {
@@ -85,11 +89,20 @@ export async function middleware(request: NextRequest) {
     return redirect
   }
 
-  // The front door: a visitor with no session sees the public website at "/".
-  // A rewrite, not a redirect, so the address stays the bare domain. The shell
-  // and palette key off the rendered route segment ("welcome"), not the URL,
-  // so this works on full loads and on client-side navigations alike.
-  if (!user && pathname === "/") {
+  // Old addresses keep working: /admin was the teacher login and the dashboard
+  // pages used to live at the root (/students/123 …). Redirect, query intact.
+  if (pathname === "/admin" || LEGACY_TEACHER_PATH.test(pathname)) {
+    const url = request.nextUrl.clone()
+    url.pathname = pathname === "/admin" ? "/teacher/login" : TEACHER_HOME + pathname
+    return redirectTo(url)
+  }
+
+  // The front door: "/" is the public website for everyone except a signed-in
+  // student, who is sent to their portal below. A rewrite, not a redirect, so
+  // the address stays the bare domain. The shell and palette key off the
+  // rendered route segment ("welcome"), not the URL, so this works on full
+  // loads and on client-side navigations alike.
+  if (pathname === "/" && !(user && isStudent)) {
     const url = request.nextUrl.clone()
     url.pathname = "/welcome"
     const rewrite = NextResponse.rewrite(url)
@@ -97,12 +110,13 @@ export async function middleware(request: NextRequest) {
     return rewrite
   }
 
-  // Unauthenticated elsewhere: the student login is the entry for everything.
-  // The teacher login lives at /admin and is only reached by going there directly.
+  // Unauthenticated elsewhere: each portal has its own door. Teacher pages go to
+  // the teacher login, everything else to the kids' login.
   // API routes are skipped — they return their own 401 rather than an HTML redirect.
   if (!user && !isPublic && !isApi) {
     const url = request.nextUrl.clone()
-    url.pathname = "/login"
+    url.pathname =
+      pathname === TEACHER_HOME || pathname.startsWith("/teacher/") ? "/teacher/login" : "/login"
     // Keep the query so deep links (/student/namaz?step=ruku&part=1) survive sign-in.
     url.search = ""
     url.searchParams.set("redirectTo", pathname + request.nextUrl.search)
@@ -110,8 +124,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // Already signed in but sitting on a login page → go to the right home.
-  if (user && (pathname === "/login" || pathname === "/admin")) {
-    return redirectPath(isStudent ? "/student" : "/")
+  if (user && (pathname === "/login" || pathname === "/teacher/login")) {
+    return redirectPath(isStudent ? "/student" : TEACHER_HOME)
   }
 
   // Students are confined to their portal; teachers may not roam into it.
@@ -120,7 +134,7 @@ export async function middleware(request: NextRequest) {
     return redirectPath("/student")
   }
   if (user && !isStudent && isStudentArea) {
-    return redirectPath("/")
+    return redirectPath(TEACHER_HOME)
   }
 
   return response

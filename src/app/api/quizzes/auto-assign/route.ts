@@ -21,10 +21,7 @@ export async function POST(request: Request) {
   const studentId = body.student_id?.trim()
 
   if (!quizId || !studentId) {
-    return NextResponse.json(
-      { error: "quiz_id and student_id are required" },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: "quiz_id and student_id are required" }, { status: 400 })
   }
 
   const { denied } = await requireStudentOrTeacher(studentId)

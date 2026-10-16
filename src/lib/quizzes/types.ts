@@ -1,11 +1,5 @@
 export type QuizCategory =
-  | "general"
-  | "seerah"
-  | "prophets"
-  | "quran"
-  | "hadith"
-  | "fiqh"
-  | "events"
+  "general" | "seerah" | "prophets" | "quran" | "hadith" | "fiqh" | "events"
 
 export type QuizAgeGroup = "5-8" | "9-12" | "13-16" | "all"
 

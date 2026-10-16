@@ -33,8 +33,7 @@ export async function POST(request: Request) {
   if (!title) return NextResponse.json({ error: "A title is required" }, { status: 400 })
 
   const message = str(body.body, 2000)
-  const priority =
-    body.priority === "low" || body.priority === "high" ? body.priority : "normal"
+  const priority = body.priority === "low" || body.priority === "high" ? body.priority : "normal"
 
   // Resolve recipient auth-user ids.
   let ids: string[] = []

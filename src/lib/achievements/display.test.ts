@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest"
 import type { TrophyItem } from "./display"
 import { groupTrophies, parseMemPartTitle, trophyHeadline } from "./display"
 
-function item(partial: Partial<TrophyItem> & Pick<TrophyItem, "slug" | "domain" | "title">): TrophyItem {
+function item(
+  partial: Partial<TrophyItem> & Pick<TrophyItem, "slug" | "domain" | "title">,
+): TrophyItem {
   return {
     description: null,
     earned_at: "2026-01-01",

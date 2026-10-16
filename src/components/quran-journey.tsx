@@ -86,7 +86,10 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
               "radial-gradient(120% 120% at 100% 0%, hsl(var(--c-p-500) / 0.10) 0%, transparent 55%)",
           }}
         />
-        <div className="islamic-pattern pointer-events-none absolute inset-0 opacity-40" aria-hidden />
+        <div
+          className="islamic-pattern pointer-events-none absolute inset-0 opacity-40"
+          aria-hidden
+        />
 
         <div className="relative p-5 sm:p-6">
           {/* Header row */}
@@ -162,7 +165,10 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
               {/* Legend + percent */}
               <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
                 <div className="flex items-center gap-3">
-                  <LegendDot className="bg-emerald-500/20 border-emerald-500/40" label="Completed" />
+                  <LegendDot
+                    className="bg-emerald-500/20 border-emerald-500/40"
+                    label="Completed"
+                  />
                   <LegendDot className="bg-emerald-500 border-emerald-500" label="Current" />
                   <LegendDot className="bg-secondary/60 border-border" label="Remaining" />
                 </div>
@@ -188,10 +194,7 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
         </p>
         <ol className="relative">
           {/* Vertical rail */}
-          <span
-            aria-hidden
-            className="absolute left-[18px] top-2 bottom-2 w-px bg-border"
-          />
+          <span aria-hidden className="absolute left-[18px] top-2 bottom-2 w-px bg-border" />
           {(() => {
             // Newest first: active on top, Qaida (the beginning) at the bottom.
             const sorted = [...rounds].sort((a, b) => {
@@ -211,7 +214,9 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
               const pct = (rTotal / 30) * 100
               const num = getChronologicalRoundNumber(rounds, r)
               const start = parseLocalDate(r.started_at) ?? new Date()
-              const end = r.completed_at ? (parseLocalDate(r.completed_at) ?? new Date()) : new Date()
+              const end = r.completed_at
+                ? (parseLocalDate(r.completed_at) ?? new Date())
+                : new Date()
               const Icon = isQaida ? BookMarked : r.completed_at ? Trophy : BookOpen
 
               return (
@@ -294,7 +299,8 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
 
                     <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
                       <span>
-                        {format(start, "MMM yyyy")} → {r.completed_at ? format(end, "MMM yyyy") : "Now"}
+                        {format(start, "MMM yyyy")} →{" "}
+                        {r.completed_at ? format(end, "MMM yyyy") : "Now"}
                       </span>
                       <span className="text-muted-foreground/40">·</span>
                       <span>{durationLabel(start, end)}</span>
@@ -327,4 +333,3 @@ function LegendDot({ className, label }: { className: string; label: string }) {
     </span>
   )
 }
-

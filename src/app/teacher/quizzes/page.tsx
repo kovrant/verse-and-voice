@@ -57,7 +57,10 @@ import { toast } from "@/lib/toast"
 import type { Student } from "@/lib/utils"
 
 type AttemptWithStudentJoin = QuizAttempt & {
-  students?: { id: string; name: string; guardian_name?: string | null } | { id: string; name: string; guardian_name?: string | null }[] | null
+  students?:
+    | { id: string; name: string; guardian_name?: string | null }
+    | { id: string; name: string; guardian_name?: string | null }[]
+    | null
 }
 
 export default function TeacherQuizzesPage() {
@@ -225,7 +228,9 @@ export default function TeacherQuizzesPage() {
         if (data.source === "gemini_ai") {
           toast.success("Quiz generated with Gemini AI!")
         } else if (data.notice) {
-          toast.info("Generated using Islamic question bank. Configure GEMINI_API_KEY in .env.local for live AI.")
+          toast.info(
+            "Generated using Islamic question bank. Configure GEMINI_API_KEY in .env.local for live AI.",
+          )
         }
       }
     } catch (err) {
@@ -320,7 +325,10 @@ export default function TeacherQuizzesPage() {
         if (updateErr) throw updateErr
 
         // Replace questions
-        const { error: delErr } = await supabase.from("quiz_questions").delete().eq("quiz_id", quizId)
+        const { error: delErr } = await supabase
+          .from("quiz_questions")
+          .delete()
+          .eq("quiz_id", quizId)
         if (delErr) throw delErr
       } else {
         // Insert new quiz
@@ -372,13 +380,21 @@ export default function TeacherQuizzesPage() {
   const handleDeleteQuiz = async (quiz: Quiz) => {
     // Strict Rule: Published quizzes cannot be deleted. First they have to unpublish and then delete.
     if (quiz.is_published) {
-      toast.error("Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.", {
-        duration: 5000,
-      })
+      toast.error(
+        "Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.",
+        {
+          duration: 5000,
+        },
+      )
       return
     }
 
-    if (!confirm(`Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`)) return
+    if (
+      !confirm(
+        `Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`,
+      )
+    )
+      return
 
     try {
       const res = await fetch("/api/quizzes/delete", {
@@ -462,7 +478,9 @@ export default function TeacherQuizzesPage() {
 
       if (!res.ok) throw new Error("Failed to re-assign")
       const studentName = studentsMap.get(studentId)?.name || "Student"
-      toast.success(`Re-assigned to ${studentName}! They can now retake this quest to improve their score.`)
+      toast.success(
+        `Re-assigned to ${studentName}! They can now retake this quest to improve their score.`,
+      )
       await loadData()
     } catch (err) {
       console.error("Error re-assigning quiz:", err)
@@ -486,7 +504,8 @@ export default function TeacherQuizzesPage() {
             Islamic Quiz Studio
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Create gamified Islamic knowledge quests with AI, assign to students, and reward achievement badges.
+            Create gamified Islamic knowledge quests with AI, assign to students, and reward
+            achievement badges.
           </p>
         </div>
 
@@ -649,7 +668,7 @@ export default function TeacherQuizzesPage() {
                   </div>
                   <CardTitle className="text-base font-bold line-clamp-1">
                     <Link
-                      href={`/quizzes/${quiz.id}`}
+                      href={`/teacher/quizzes/${quiz.id}`}
                       className="hover:text-primary transition-colors hover:underline"
                     >
                       {quiz.title}
@@ -698,7 +717,7 @@ export default function TeacherQuizzesPage() {
                       variant="outline"
                       className="flex-1 text-xs gap-1 h-8 font-semibold hover:border-amber-500/50 hover:bg-amber-500/10"
                     >
-                      <Link href={`/quizzes/${quiz.id}`}>
+                      <Link href={`/teacher/quizzes/${quiz.id}`}>
                         <Eye className="h-3.5 w-3.5 text-amber-600" />
                         View
                       </Link>
@@ -764,7 +783,8 @@ export default function TeacherQuizzesPage() {
               Generate Islamic Quiz with AI
             </DialogTitle>
             <DialogDescription>
-              Enter any Islamic topic or event, and AI will create an authentic, age-appropriate quiz with questions, options, and &quot;Did you know?&quot; facts.
+              Enter any Islamic topic or event, and AI will create an authentic, age-appropriate
+              quiz with questions, options, and &quot;Did you know?&quot; facts.
             </DialogDescription>
           </DialogHeader>
 
@@ -856,9 +876,7 @@ export default function TeacherQuizzesPage() {
       <Dialog open={builderOpen} onOpenChange={setBuilderOpen}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {builderQuiz.id ? "Edit Quiz Quest" : "Create Quiz Quest"}
-            </DialogTitle>
+            <DialogTitle>{builderQuiz.id ? "Edit Quiz Quest" : "Create Quiz Quest"}</DialogTitle>
             <DialogDescription>
               Configure the quiz details, badge rewards, and questions.
             </DialogDescription>
@@ -890,7 +908,9 @@ export default function TeacherQuizzesPage() {
                 <Label>Category</Label>
                 <Select
                   value={builderQuiz.category}
-                  onValueChange={(v) => setBuilderQuiz({ ...builderQuiz, category: v as QuizCategory })}
+                  onValueChange={(v) =>
+                    setBuilderQuiz({ ...builderQuiz, category: v as QuizCategory })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -909,7 +929,9 @@ export default function TeacherQuizzesPage() {
                 <Label>Age Group</Label>
                 <Select
                   value={builderQuiz.age_group}
-                  onValueChange={(v) => setBuilderQuiz({ ...builderQuiz, age_group: v as QuizAgeGroup })}
+                  onValueChange={(v) =>
+                    setBuilderQuiz({ ...builderQuiz, age_group: v as QuizAgeGroup })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1191,10 +1213,12 @@ export default function TeacherQuizzesPage() {
 
                         {(() => {
                           const attemptRow = attempts.find(
-                            (a) => a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
+                            (a) =>
+                              a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
                           )
                           const assignRow = assignments.find(
-                            (a) => a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
+                            (a) =>
+                              a.quiz_id === selectedQuizToAssign?.id && a.student_id === student.id,
                           )
 
                           if (attemptRow) {
@@ -1206,14 +1230,19 @@ export default function TeacherQuizzesPage() {
                                     : "bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-semibold"
                                 }
                               >
-                                {attemptRow.passed ? `Passed (${attemptRow.percentage}%)` : `Score: ${attemptRow.percentage}%`}
+                                {attemptRow.passed
+                                  ? `Passed (${attemptRow.percentage}%)`
+                                  : `Score: ${attemptRow.percentage}%`}
                               </Badge>
                             )
                           }
 
                           if (assignRow?.status === "pending") {
                             return (
-                              <Badge variant="outline" className="text-[10px] font-normal shrink-0 text-amber-600 border-amber-500/30">
+                              <Badge
+                                variant="outline"
+                                className="text-[10px] font-normal shrink-0 text-amber-600 border-amber-500/30"
+                              >
                                 Assigned
                               </Badge>
                             )
@@ -1222,7 +1251,6 @@ export default function TeacherQuizzesPage() {
                           return null
                         })()}
                       </label>
-
                     )
                   })
               )}
@@ -1283,10 +1311,12 @@ export default function TeacherQuizzesPage() {
                     const joinedStudent = Array.isArray(attempt.students)
                       ? attempt.students[0]
                       : attempt.students
-                    const studentInfo = studentsMap.get(attempt.student_id) || joinedStudent || attempt.student
+                    const studentInfo =
+                      studentsMap.get(attempt.student_id) || joinedStudent || attempt.student
                     const studentName = studentInfo?.name || "Student"
                     const guardianName =
-                      studentsMap.get(attempt.student_id)?.guardian_name ?? joinedStudent?.guardian_name
+                      studentsMap.get(attempt.student_id)?.guardian_name ??
+                      joinedStudent?.guardian_name
                     const studentGuardian = guardianName ? `Parent/Guardian: ${guardianName}` : ""
 
                     return (
@@ -1294,7 +1324,6 @@ export default function TeacherQuizzesPage() {
                         key={attempt.id}
                         className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/60"
                       >
-
                         <div className="flex items-center gap-3">
                           <div
                             className={`flex h-9 w-9 items-center justify-center rounded-xl ${
@@ -1343,7 +1372,9 @@ export default function TeacherQuizzesPage() {
 
                           {(() => {
                             const assignRow = assignments.find(
-                              (a) => a.quiz_id === attempt.quiz_id && a.student_id === attempt.student_id,
+                              (a) =>
+                                a.quiz_id === attempt.quiz_id &&
+                                a.student_id === attempt.student_id,
                             )
                             const isPending = assignRow?.status === "pending"
 
@@ -1363,11 +1394,18 @@ export default function TeacherQuizzesPage() {
                                 size="sm"
                                 variant="outline"
                                 disabled={reassigningStudentId === attempt.student_id}
-                                onClick={() => handleReassignSingle(selectedQuizForResults!.id, attempt.student_id)}
+                                onClick={() =>
+                                  handleReassignSingle(
+                                    selectedQuizForResults!.id,
+                                    attempt.student_id,
+                                  )
+                                }
                                 className="h-7 text-xs font-semibold gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
                               >
                                 <RotateCcw className="h-3 w-3" />
-                                {reassigningStudentId === attempt.student_id ? "Re-assigning..." : "Allow Retake"}
+                                {reassigningStudentId === attempt.student_id
+                                  ? "Re-assigning..."
+                                  : "Allow Retake"}
                               </Button>
                             )
                           })()}
@@ -1376,8 +1414,6 @@ export default function TeacherQuizzesPage() {
                     )
                   })}
                 </div>
-
-
               )
             })()}
           </div>

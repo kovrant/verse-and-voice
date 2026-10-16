@@ -71,7 +71,8 @@ function statusMeta(
       return {
         label: "Holiday",
         emoji: "🎉",
-        panel: "border-[hsl(var(--kid-saffron)/0.45)] bg-[hsl(var(--kid-saffron)/0.12)] shadow-soft",
+        panel:
+          "border-[hsl(var(--kid-saffron)/0.45)] bg-[hsl(var(--kid-saffron)/0.12)] shadow-soft",
         chip: "bg-[hsl(var(--kid-saffron)/0.35)] text-foreground",
       }
     case "upcoming":

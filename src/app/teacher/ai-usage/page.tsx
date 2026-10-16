@@ -99,14 +99,12 @@ export default function AiUsagePage() {
   }
 
   const usagePercent = data
-    ? Math.min(
-        100,
-        Math.round(((data.requests_today || 0) / (data.daily_limit || 1500)) * 100),
-      )
+    ? Math.min(100, Math.round(((data.requests_today || 0) / (data.daily_limit || 1500)) * 100))
     : 0
 
   const remainingPercent = 100 - usagePercent
-  const isWarning = (data?.requests_remaining ?? 1500) <= 300 && (data?.requests_remaining ?? 1500) > 50
+  const isWarning =
+    (data?.requests_remaining ?? 1500) <= 300 && (data?.requests_remaining ?? 1500) > 50
   const isCritical = (data?.requests_remaining ?? 1500) <= 50
 
   // Circular gauge math for the big overview
@@ -118,32 +116,27 @@ export default function AiUsagePage() {
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in-up pb-12">
       {/* Top Breadcrumb & Action Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-          <Link href="/">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <Link href="/teacher">
             <ArrowLeft className="h-4 w-4" /> Back to Dashboard
           </Link>
         </Button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 text-xs font-semibold"
-          >
-            <Link href="/history">
+          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-semibold">
+            <Link href="/teacher/history">
               <BookOpen className="h-3.5 w-3.5 text-teal-500" />
               <span>Story Studio</span>
             </Link>
           </Button>
 
-          <Button
-            asChild
-            size="sm"
-            variant="outline"
-            className="h-8 gap-1.5 text-xs font-semibold"
-          >
-            <Link href="/quizzes">
+          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-semibold">
+            <Link href="/teacher/quizzes">
               <Trophy className="h-3.5 w-3.5 text-amber-500" />
               <span>Quiz Studio</span>
             </Link>
@@ -203,7 +196,8 @@ export default function AiUsagePage() {
                 </Badge>
               </div>
               <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5">
-                Model: <strong className="text-foreground">{data?.model || "gemini-3.5-flash"}</strong> ·{" "}
+                Model:{" "}
+                <strong className="text-foreground">{data?.model || "gemini-3.5-flash"}</strong> ·{" "}
                 {data?.tier || "Free Tier (1,500 RPD / 15 RPM)"}
               </p>
             </div>
@@ -216,7 +210,9 @@ export default function AiUsagePage() {
             <p className="font-heading text-xl font-bold text-foreground">
               {formatCountdown(data?.reset_in_seconds ?? 0)}
             </p>
-            <p className="text-[10px] text-muted-foreground/80">(Midnight Pacific Time / 12:00 PM PKT)</p>
+            <p className="text-[10px] text-muted-foreground/80">
+              (Midnight Pacific Time / 12:00 PM PKT)
+            </p>
           </div>
         </div>
 
@@ -227,7 +223,8 @@ export default function AiUsagePage() {
             <div>
               <p className="font-bold">Daily Gemini Quota Almost Exhausted!</p>
               <p className="text-[11px] text-rose-300/80">
-                You have {data?.requests_remaining} calls left today. Offline backup templates will automatically activate if quota is fully reached.
+                You have {data?.requests_remaining} calls left today. Offline backup templates will
+                automatically activate if quota is fully reached.
               </p>
             </div>
           </div>
@@ -239,7 +236,8 @@ export default function AiUsagePage() {
             <div>
               <p className="font-bold">High AI Usage Today</p>
               <p className="text-[11px] text-amber-300/80">
-                You have used {usagePercent}% of your daily free requests ({data?.requests_remaining} remaining). Quota resets at midnight Pacific Time.
+                You have used {usagePercent}% of your daily free requests (
+                {data?.requests_remaining} remaining). Quota resets at midnight Pacific Time.
               </p>
             </div>
           </div>
@@ -313,9 +311,7 @@ export default function AiUsagePage() {
             <div className="font-heading text-2xl sm:text-3xl font-black text-foreground">
               {(data?.tokens_this_month ?? 0).toLocaleString()}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Monthly cumulative consumption
-            </p>
+            <p className="text-[11px] text-muted-foreground mt-2">Monthly cumulative consumption</p>
           </CardContent>
         </Card>
 
@@ -336,9 +332,7 @@ export default function AiUsagePage() {
               </span>
               <span className="text-xs text-muted-foreground font-semibold">RPM</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Max 15 requests per minute
-            </p>
+            <p className="text-[11px] text-muted-foreground mt-2">Max 15 requests per minute</p>
           </CardContent>
         </Card>
       </div>
@@ -373,11 +367,7 @@ export default function AiUsagePage() {
                     stroke="currentColor"
                     className={cn(
                       "transition-all duration-700 ease-out",
-                      isCritical
-                        ? "text-rose-500"
-                        : isWarning
-                          ? "text-amber-500"
-                          : "text-teal-500",
+                      isCritical ? "text-rose-500" : isWarning ? "text-amber-500" : "text-teal-500",
                     )}
                     strokeWidth="8"
                     strokeDasharray={circumference}
@@ -396,7 +386,8 @@ export default function AiUsagePage() {
                 </div>
               </div>
               <p className="text-xs font-semibold text-muted-foreground mt-3 text-center">
-                {data?.requests_remaining.toLocaleString()} of {data?.daily_limit.toLocaleString()} calls free
+                {data?.requests_remaining.toLocaleString()} of {data?.daily_limit.toLocaleString()}{" "}
+                calls free
               </p>
             </div>
 
@@ -405,7 +396,11 @@ export default function AiUsagePage() {
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-foreground">How Google Gemini Quota Works</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Google Gemini 2.0 / 3.5 provides a free allowance of <strong>1,500 daily requests (RPD)</strong> and <strong>15 requests per minute (RPM)</strong>. Every time you generate an Islamic History story or derived quest quiz, tokens and calls are deducted from this free pool.
+                  Google Gemini 2.0 / 3.5 provides a free allowance of{" "}
+                  <strong>1,500 daily requests (RPD)</strong> and{" "}
+                  <strong>15 requests per minute (RPM)</strong>. Every time you generate an Islamic
+                  History story or derived quest quiz, tokens and calls are deducted from this free
+                  pool.
                 </p>
               </div>
 
@@ -416,7 +411,8 @@ export default function AiUsagePage() {
                     <span>Automatic Midnight Reset</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    The 1,500 counter resets automatically every day at 00:00 Pacific Time (12:00 PM PKT).
+                    The 1,500 counter resets automatically every day at 00:00 Pacific Time (12:00 PM
+                    PKT).
                   </p>
                 </div>
 
@@ -426,7 +422,8 @@ export default function AiUsagePage() {
                     <span>Zero-Downtime Offline Fallback</span>
                   </div>
                   <p className="text-[11px] text-muted-foreground">
-                    If internet drops or the daily limit is ever reached, built-in offline templates seamlessly craft authentic stories so teaching never stops.
+                    If internet drops or the daily limit is ever reached, built-in offline templates
+                    seamlessly craft authentic stories so teaching never stops.
                   </p>
                 </div>
               </div>
@@ -450,9 +447,12 @@ export default function AiUsagePage() {
           {!data?.recent_logs || data.recent_logs.length === 0 ? (
             <div className="text-center py-8 space-y-2">
               <Sparkles className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p className="text-sm font-semibold text-foreground">No recent AI generations logged yet</p>
+              <p className="text-sm font-semibold text-foreground">
+                No recent AI generations logged yet
+              </p>
               <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Whenever you generate a new Islamic story or story quest quiz, the detailed tokens and execution metrics will appear here.
+                Whenever you generate a new Islamic story or story quest quiz, the detailed tokens
+                and execution metrics will appear here.
               </p>
             </div>
           ) : (
@@ -471,7 +471,10 @@ export default function AiUsagePage() {
                   {data.recent_logs.map((log) => (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
                       <td className="py-2.5 pl-2 font-mono text-muted-foreground">
-                        {new Date(log.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(log.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </td>
                       <td className="py-2.5 font-medium text-foreground max-w-xs truncate">
                         {log.topic || "Story & Quest Generation"}
@@ -503,7 +506,11 @@ export default function AiUsagePage() {
               <div>
                 <span className="font-bold">Permanent Log Storage:</span>
                 <p className="text-[11px] text-amber-300/80 mt-0.5">
-                  To persist every API call log across server restarts, execute <code className="font-mono bg-black/30 px-1 py-0.5 rounded text-[10px]">supabase/migration_ai_usage_logs.sql</code> in your Supabase SQL Editor.
+                  To persist every API call log across server restarts, execute{" "}
+                  <code className="font-mono bg-black/30 px-1 py-0.5 rounded text-[10px]">
+                    supabase/migration_ai_usage_logs.sql
+                  </code>{" "}
+                  in your Supabase SQL Editor.
                 </p>
               </div>
             </div>

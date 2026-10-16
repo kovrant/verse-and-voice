@@ -119,7 +119,7 @@ export function StoryReflectionPledge({
 
     if (!student?.id) {
       // Non-student (e.g. preview)
-      router.push(`/quizzes/${quizId}`)
+      router.push(`/teacher/quizzes/${quizId}`)
       return
     }
 
@@ -159,8 +159,7 @@ export function StoryReflectionPledge({
     <div
       className={`relative my-8 overflow-hidden rounded-[26px] border-[2px] border-[hsl(var(--kid-teal)/0.6)] p-5 sm:p-7 shadow-soft ${className}`}
       style={{
-        background:
-          "linear-gradient(150deg, hsl(var(--kid-teal)/0.18) 0%, hsl(var(--card)) 100%)",
+        background: "linear-gradient(150deg, hsl(var(--kid-teal)/0.18) 0%, hsl(var(--card)) 100%)",
       }}
     >
       {/* Confetti Overlay */}
@@ -258,7 +257,7 @@ export function StoryReflectionPledge({
             ) : (
               // Teacher / Classroom View: Link to Teacher Quiz View
               <Link
-                href={`/quizzes/${quizId}`}
+                href={`/teacher/quizzes/${quizId}`}
                 target="_blank"
                 className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 px-5 py-2.5 text-[14.5px] font-black text-white shadow-soft hover:brightness-105"
               >
@@ -269,7 +268,8 @@ export function StoryReflectionPledge({
           </>
         ) : (
           // Teacher View when quiz is missing or deleted: offer immediate generation
-          !student?.id && onGenerateQuiz && (
+          !student?.id &&
+          onGenerateQuiz && (
             <button
               type="button"
               onClick={onGenerateQuiz}

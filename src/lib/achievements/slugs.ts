@@ -34,7 +34,9 @@ export function hadithItemSlug(hadithNumber: number): string {
   return `hadith_${String(hadithNumber).padStart(2, "0")}`
 }
 
-export function domainForSlug(slug: string): "quran" | "qaida" | "memorization" | "quiz" | "hadith" {
+export function domainForSlug(
+  slug: string,
+): "quran" | "qaida" | "memorization" | "quiz" | "hadith" {
   if (slug === QAIDA_COMPLETE_SLUG) return "qaida"
   if (slug.startsWith("mem_")) return "memorization"
   if (slug.startsWith("badge_quiz_") || slug.startsWith("quiz_")) return "quiz"

@@ -299,11 +299,7 @@ export function formatCoverPromptWithText(prompt: string, title: string): string
   for (const trigger of styleTriggers) {
     const idx = lower.indexOf(trigger)
     if (idx !== -1) {
-      return (
-        prompt.slice(0, idx) +
-        `, ${textPhrase}` +
-        prompt.slice(idx)
-      )
+      return prompt.slice(0, idx) + `, ${textPhrase}` + prompt.slice(idx)
     }
   }
 
@@ -364,7 +360,12 @@ export function getCanvaDreamLabPrompt(story: {
     return `Deep mysterious yet peaceful ocean underwater scene with glowing turquoise bioluminescent light, shimmering water surface above with golden moonbeams, gentle bubbles, and the magnificent silhouette of a gentle giant whale swimming peacefully in crystal clear deep water, ${typographyDirective}, Pixar 3D animated movie still, magical children's storybook art, 8k. No human faces.`
   }
 
-  if (clean.includes("muhammad") || clean.includes("makkah") || clean.includes("hijrah") || clean.includes("isra")) {
+  if (
+    clean.includes("muhammad") ||
+    clean.includes("makkah") ||
+    clean.includes("hijrah") ||
+    clean.includes("isra")
+  ) {
     return `Historic ancient Makkah and desert hills under a magical twilight sky filled with glowing stars and glowing crescent moon, soft warm lantern lights glowing from peaceful clay houses, gentle desert wind, ${typographyDirective}, Pixar 3D animated storybook art, respectful and serene Islamic atmosphere, cinematic wide landscape, 8k. Strictly scenic, no facial depictions or human figures.`
   }
 
@@ -504,4 +505,3 @@ export function parseStoryScenes(content: string | null | undefined): StoryScene
     },
   ]
 }
-

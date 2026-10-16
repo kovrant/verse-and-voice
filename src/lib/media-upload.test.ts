@@ -103,4 +103,3 @@ describe("downscaleImageFile", () => {
     expect(res.originalSize).toBe(fakeFile.size)
   })
 })
-

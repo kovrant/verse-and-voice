@@ -2,7 +2,10 @@ import { NextRequest } from "next/server"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 // Shared, hoisted mock state so the factory below can read it.
-const state = vi.hoisted(() => ({ user: null as null | { id: string; app_metadata?: Record<string, unknown> }, rotate: true }))
+const state = vi.hoisted(() => ({
+  user: null as null | { id: string; app_metadata?: Record<string, unknown> },
+  rotate: true,
+}))
 
 // Mock the Supabase SSR client. getSession() reads from cookies locally — no
 // network round-trip — which is what production middleware uses.
@@ -32,9 +35,9 @@ beforeEach(() => {
 
 describe("middleware auth cookie handling (Bug 8)", () => {
   it("carries refreshed cookies onto the login redirect for anon users", async () => {
-    const res = await middleware(new NextRequest(new URL("http://localhost/students")))
+    const res = await middleware(new NextRequest(new URL("http://localhost/teacher/students")))
     expect(res.status).toBe(307)
-    expect(res.headers.get("location")).toContain("/login")
+    expect(res.headers.get("location")).toContain("/teacher/login")
     // The rotated cookie must survive the redirect, or the user gets logged out.
     expect(res.cookies.get("sb-access-token")?.value).toBe("rotated-token")
   })
@@ -50,8 +53,22 @@ describe("middleware auth cookie handling (Bug 8)", () => {
   it("passes through (no redirect) for an authenticated user on a normal page", async () => {
     state.user = { id: "u1" }
     state.rotate = false
-    const res = await middleware(new NextRequest(new URL("http://localhost/students")))
+    const res = await middleware(new NextRequest(new URL("http://localhost/teacher/students")))
     expect(res.headers.get("location")).toBeNull()
+  })
+
+  it("redirects the old root dashboard paths to /teacher, query and cookies intact", async () => {
+    state.user = { id: "u1" }
+    const res = await middleware(new NextRequest(new URL("http://localhost/students/123?tab=fees")))
+    expect(res.status).toBe(307)
+    expect(res.headers.get("location")).toBe("http://localhost/teacher/students/123?tab=fees")
+    expect(res.cookies.get("sb-access-token")?.value).toBe("rotated-token")
+  })
+
+  it("sends /admin to the teacher login", async () => {
+    const res = await middleware(new NextRequest(new URL("http://localhost/admin")))
+    expect(res.status).toBe(307)
+    expect(res.headers.get("location")).toBe("http://localhost/teacher/login")
   })
 
   it("does NOT redirect a student's POST to an API route (activity logging)", async () => {

@@ -49,7 +49,10 @@ function normalizeDays(classDays: number[] | null | undefined): number[] {
 }
 
 /** Walk backward to the most recent class day on or before `fromKey`. */
-function previousScheduledDay(fromKey: string, isClassDay: (key: string) => boolean): string | null {
+function previousScheduledDay(
+  fromKey: string,
+  isClassDay: (key: string) => boolean,
+): string | null {
   let key = fromKey
   for (let i = 0; i < 370; i++) {
     if (isClassDay(key)) return key
@@ -86,8 +89,7 @@ export function computeStreak(
     ...marks.filter((m) => m.status === "present").map((m) => m.class_date),
   ])
 
-  const emptyWeek = (): WeekDayStatus[] =>
-    Array.from({ length: 7 }, () => "off" as WeekDayStatus)
+  const emptyWeek = (): WeekDayStatus[] => Array.from({ length: 7 }, () => "off" as WeekDayStatus)
 
   if (days.length === 0) {
     return {
@@ -119,9 +121,7 @@ export function computeStreak(
   }
 
   // Best streak: scan all attended scheduled days chronologically.
-  const attendedScheduled = [...attended]
-    .filter((k) => isClassDay(k))
-    .sort()
+  const attendedScheduled = [...attended].filter((k) => isClassDay(k)).sort()
 
   let best = 0
   let run = 0

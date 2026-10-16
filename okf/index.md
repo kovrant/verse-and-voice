@@ -32,7 +32,7 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 ## 📚 Knowledge Modules
 
 ### 1. Architecture & Security
-* [Dual-Portal Routing & Confinement](architecture/dual-portal-routing.md): Strict separation between Teacher (`/admin`) and Student (`/student/**`) environments, layout styling, and middleware boundaries.
+* [Dual-Portal Routing & Confinement](architecture/dual-portal-routing.md): Strict separation between Teacher (`/teacher/**`, login `/teacher/login`) and Student (`/student/**`) environments, layout styling, and middleware boundaries.
 * [Authentication & Role Hierarchy](architecture/auth-and-roles.md): JWT `app_metadata.role` precedence, `profiles.role` fallback, and deterministic student username-to-email mapping.
 * [Row Level Security (RLS) Model](architecture/rls-security-model.md): The sole security boundary for client-side direct queries; policy patterns (`is_teacher()`, `my_student_id()`) and service-role bypass.
 * [Realtime Channel Protocol](architecture/realtime-protocol.md): Supabase Realtime broadcast and presence on `class:<studentId>` and `students:online`; normalized scroll ratios (0..1).

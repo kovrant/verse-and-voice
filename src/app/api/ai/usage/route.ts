@@ -43,7 +43,7 @@ export async function GET() {
     const year = parts.find((p) => p.type === "year")?.value
     const month = parts.find((p) => p.type === "month")?.value
     const day = parts.find((p) => p.type === "day")?.value
-    
+
     // Construct PT midnight in UTC
     ptMidnight = new Date(`${year}-${month}-${day}T00:00:00-07:00`)
     nextPtMidnight = new Date(ptMidnight.getTime() + 24 * 60 * 60 * 1000)
@@ -64,7 +64,9 @@ export async function GET() {
     // 1. Fetch today's logs
     const { data: todayLogs, error: todayErr } = await admin
       .from("ai_usage_logs")
-      .select("id, created_at, model, feature, prompt_tokens, completion_tokens, total_tokens, status, topic")
+      .select(
+        "id, created_at, model, feature, prompt_tokens, completion_tokens, total_tokens, status, topic",
+      )
       .gte("created_at", ptMidnight.toISOString())
       .order("created_at", { ascending: false })
 
@@ -83,7 +85,8 @@ export async function GET() {
         tokens_this_month: 0,
         reset_in_seconds: resetInSeconds,
         recent_logs: [],
-        notice: "Run migration_ai_usage_logs.sql in Supabase SQL editor to activate persistent logging.",
+        notice:
+          "Run migration_ai_usage_logs.sql in Supabase SQL editor to activate persistent logging.",
       })
     }
 

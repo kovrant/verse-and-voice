@@ -92,10 +92,14 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
 
   if (loading) {
     return (
-      <div className={cn("rounded-2xl border border-border bg-card/60 p-4 animate-pulse", className)}>
+      <div
+        className={cn("rounded-2xl border border-border bg-card/60 p-4 animate-pulse", className)}
+      >
         <div className="flex items-center gap-2.5">
           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-          <span className="text-xs font-semibold text-muted-foreground">Checking Gemini quota...</span>
+          <span className="text-xs font-semibold text-muted-foreground">
+            Checking Gemini quota...
+          </span>
         </div>
       </div>
     )
@@ -123,9 +127,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-            <span className="font-bold truncate text-foreground">
-              Gemini AI Daily Quota
-            </span>
+            <span className="font-bold truncate text-foreground">Gemini AI Daily Quota</span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
@@ -147,8 +149,10 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] font-semibold text-muted-foreground">
             <span>
-              <strong className="text-foreground font-black">{data.requests_remaining.toLocaleString()}</strong> of{" "}
-              {data.daily_limit.toLocaleString()} remaining
+              <strong className="text-foreground font-black">
+                {data.requests_remaining.toLocaleString()}
+              </strong>{" "}
+              of {data.daily_limit.toLocaleString()} remaining
             </span>
             <span>{usagePercent}% used</span>
           </div>
@@ -215,7 +219,11 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                   </Badge>
                 </div>
                 <p className="text-[11px] font-medium text-muted-foreground truncate">
-                  Model: <span className="font-semibold text-foreground/90">{data.model || "gemini-3.5-flash"}</span> · Free Tier
+                  Model:{" "}
+                  <span className="font-semibold text-foreground/90">
+                    {data.model || "gemini-3.5-flash"}
+                  </span>{" "}
+                  · Free Tier
                 </p>
               </div>
             </div>
@@ -255,11 +263,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                   stroke="currentColor"
                   className={cn(
                     "transition-all duration-700 ease-out",
-                    isCritical
-                      ? "text-rose-500"
-                      : isWarning
-                        ? "text-amber-500"
-                        : "text-teal-500",
+                    isCritical ? "text-rose-500" : isWarning ? "text-amber-500" : "text-teal-500",
                   )}
                   strokeWidth="5.5"
                   strokeDasharray={circumference}
@@ -285,7 +289,10 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                   Daily Requests
                 </span>
                 <span className="text-[10px] font-medium text-muted-foreground">
-                  Resets in <strong className="text-foreground">{formatCountdown(data.reset_in_seconds)}</strong>
+                  Resets in{" "}
+                  <strong className="text-foreground">
+                    {formatCountdown(data.reset_in_seconds)}
+                  </strong>
                 </span>
               </div>
 
@@ -299,7 +306,8 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               </div>
 
               <p className="text-[11px] text-muted-foreground">
-                Used today: <strong className="text-foreground">{data.requests_today}</strong> calls ({usagePercent}% allowance)
+                Used today: <strong className="text-foreground">{data.requests_today}</strong> calls
+                ({usagePercent}% allowance)
               </p>
             </div>
           </div>
@@ -339,7 +347,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                 variant="outline"
                 className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-teal-500/40 hover:bg-teal-500/10"
               >
-                <Link href="/history">
+                <Link href="/teacher/history">
                   <BookOpen className="h-3 w-3 text-teal-500" />
                   <span>Stories</span>
                 </Link>
@@ -350,7 +358,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                 variant="outline"
                 className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-amber-500/40 hover:bg-amber-500/10"
               >
-                <Link href="/quizzes">
+                <Link href="/teacher/quizzes">
                   <Trophy className="h-3 w-3 text-amber-500" />
                   <span>Quizzes</span>
                 </Link>
@@ -363,7 +371,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               variant="ghost"
               className="h-7 text-xs font-bold gap-1 text-muted-foreground hover:text-foreground group px-2"
             >
-              <Link href="/ai-usage">
+              <Link href="/teacher/ai-usage">
                 <span>Token Details</span>
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </Link>
@@ -411,8 +419,11 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                 </Badge>
               </div>
               <p className="text-xs font-medium text-muted-foreground mt-0.5">
-                Model: <span className="font-semibold text-foreground/90">{data.model || "gemini-3.5-flash"}</span> ·{" "}
-                {data.tier || "Free Tier (1,500 RPD / 15 RPM)"}
+                Model:{" "}
+                <span className="font-semibold text-foreground/90">
+                  {data.model || "gemini-3.5-flash"}
+                </span>{" "}
+                · {data.tier || "Free Tier (1,500 RPD / 15 RPM)"}
               </p>
             </div>
           </div>
@@ -424,7 +435,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               variant="outline"
               className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-teal-500/40 hover:bg-teal-500/10 text-foreground"
             >
-              <Link href="/history">
+              <Link href="/teacher/history">
                 <BookOpen className="h-3.5 w-3.5 text-teal-500" />
                 <span>Story Studio</span>
               </Link>
@@ -436,7 +447,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               variant="outline"
               className="h-8 gap-1.5 text-xs font-semibold border-border/80 hover:border-amber-500/40 hover:bg-amber-500/10 text-foreground"
             >
-              <Link href="/quizzes">
+              <Link href="/teacher/quizzes">
                 <Trophy className="h-3.5 w-3.5 text-amber-500" />
                 <span>Quiz Studio</span>
               </Link>
@@ -485,7 +496,10 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
 
             <div className="text-right">
               <span className="text-xs font-semibold text-muted-foreground">
-                Resets in: <strong className="text-foreground">{formatCountdown(data.reset_in_seconds)}</strong>
+                Resets in:{" "}
+                <strong className="text-foreground">
+                  {formatCountdown(data.reset_in_seconds)}
+                </strong>
               </span>
               <p className="text-[10px] text-muted-foreground/80">(Midnight Pacific Time)</p>
             </div>
@@ -507,7 +521,9 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
           </div>
 
           <div className="flex items-center justify-between text-xs font-medium text-muted-foreground pt-0.5">
-            <span>Used today: <strong className="text-foreground">{data.requests_today}</strong> calls</span>
+            <span>
+              Used today: <strong className="text-foreground">{data.requests_today}</strong> calls
+            </span>
             <span>{usagePercent}% of daily allowance</span>
           </div>
         </div>
@@ -543,7 +559,8 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               <span className="text-[10.5px] font-bold uppercase tracking-wider">RATE LIMIT</span>
             </div>
             <p className="font-heading text-lg font-bold text-foreground mt-1.5">
-              {data.rpm_limit || 15} <span className="text-xs font-normal text-muted-foreground">RPM</span>
+              {data.rpm_limit || 15}{" "}
+              <span className="text-xs font-normal text-muted-foreground">RPM</span>
             </p>
           </div>
         </div>
@@ -555,7 +572,11 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
             <div className="min-w-0">
               <span className="font-bold">Persistent Quota Logging:</span>
               <p className="text-[11px] text-amber-300/80 mt-0.5">
-                Run <code className="font-mono bg-black/30 px-1 py-0.5 rounded text-[10px]">supabase/migration_ai_usage_logs.sql</code> in the Supabase SQL Editor to save request logs permanently.
+                Run{" "}
+                <code className="font-mono bg-black/30 px-1 py-0.5 rounded text-[10px]">
+                  supabase/migration_ai_usage_logs.sql
+                </code>{" "}
+                in the Supabase SQL Editor to save request logs permanently.
               </p>
             </div>
           </div>

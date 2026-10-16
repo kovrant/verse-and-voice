@@ -156,7 +156,9 @@ export function StorySceneReader({
               {/* Scene Header */}
               <div className="border-b border-border/60 pb-3">
                 <div className="flex items-center gap-2 text-[12px] font-black uppercase tracking-wider text-[hsl(var(--kid-teal))]">
-                  <span>🎬 SCENE {currentScene.sceneNumber} OF {scenes.length}</span>
+                  <span>
+                    🎬 SCENE {currentScene.sceneNumber} OF {scenes.length}
+                  </span>
                   {storyTitle && (
                     <>
                       <span className="text-muted-foreground/50">·</span>
@@ -208,7 +210,9 @@ export function StorySceneReader({
                             Pause &amp; Think
                           </span>
                           <p className="mt-0.5 text-[15px] sm:text-[16px] font-bold leading-relaxed text-foreground">
-                            {p.replace(/^⚡\s*\*{0,2}(?:PAUSE & (?:REFLECT|THINK):?)\*{0,2}/i, "").trim()}
+                            {p
+                              .replace(/^⚡\s*\*{0,2}(?:PAUSE & (?:REFLECT|THINK):?)\*{0,2}/i, "")
+                              .trim()}
                           </p>
                         </div>
                       </div>

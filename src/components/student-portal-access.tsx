@@ -84,12 +84,7 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
             )}
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className="flex-shrink-0"
-        >
+        <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="flex-shrink-0">
           {hasLogin ? "Reset password" : "Create login"}
         </Button>
       </div>

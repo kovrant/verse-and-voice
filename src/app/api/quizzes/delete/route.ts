@@ -50,19 +50,13 @@ export async function POST(request: Request) {
 
   // 3. Clear linked quiz_id from any stories in islamic_history
   try {
-    await admin
-      .from("islamic_history")
-      .update({ quiz_id: null })
-      .eq("quiz_id", quizId)
+    await admin.from("islamic_history").update({ quiz_id: null }).eq("quiz_id", quizId)
   } catch (unlinkErr) {
     console.warn("Failed to unlink quiz from islamic_history:", unlinkErr)
   }
 
   // 4. Delete the quiz (quiz_questions, assignments, and attempts cascade delete)
-  const { error: deleteError } = await admin
-    .from("quizzes")
-    .delete()
-    .eq("id", quizId)
+  const { error: deleteError } = await admin.from("quizzes").delete().eq("id", quizId)
 
   if (deleteError) {
     console.error("Failed to delete quiz:", deleteError)

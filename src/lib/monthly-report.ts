@@ -155,7 +155,13 @@ export function computeReadingProgress(
   const end: Position | null = ends.at(-1) ?? null
 
   const parasCompleted: number[] = []
-  if (start && end && start.para !== end.para && start.para !== QAIDA_PARA && end.para !== QAIDA_PARA) {
+  if (
+    start &&
+    end &&
+    start.para !== end.para &&
+    start.para !== QAIDA_PARA &&
+    end.para !== QAIDA_PARA
+  ) {
     const step = end.para > start.para ? 1 : -1
     for (let p = start.para; p !== end.para; p += step) parasCompleted.push(p)
     parasCompleted.sort((x, y) => x - y)

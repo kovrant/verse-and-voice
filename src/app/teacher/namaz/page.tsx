@@ -170,7 +170,7 @@ export default function NamazAdminPage() {
         <Button asChild variant="outline">
           {/* Plain <a>, not <Link>: Permissions-Policy is fixed per document load, so a
               client-side navigation would keep this page's microphone=() block. */}
-          <a href="/namaz/audio">
+          <a href="/teacher/namaz/audio">
             <Mic className="h-4 w-4 mr-1" />
             Audio & review
           </a>

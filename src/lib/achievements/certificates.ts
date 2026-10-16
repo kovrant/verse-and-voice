@@ -4,7 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 export function buildCertificateNumber(studentId: string, slug: string): string {
   const year = new Date().getFullYear()
   const tail = studentId.replace(/-/g, "").slice(0, 6).toUpperCase()
-  const slugPart = slug.replace(/[^a-z0-9]+/gi, "-").slice(0, 12).toUpperCase()
+  const slugPart = slug
+    .replace(/[^a-z0-9]+/gi, "-")
+    .slice(0, 12)
+    .toUpperCase()
   return `VV-${year}-${slugPart}-${tail}`
 }
 

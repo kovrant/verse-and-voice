@@ -59,7 +59,7 @@ export function TeacherOnlinePanel() {
             {sorted.map((s) => (
               <li key={s.id}>
                 <Link
-                  href={`/students/${s.id}`}
+                  href={`/teacher/students/${s.id}`}
                   className="flex items-center gap-2.5 rounded-xl border border-border/50 px-3 py-2.5 hover:bg-secondary/50 transition-colors"
                 >
                   <OnlineDot />
@@ -72,7 +72,7 @@ export function TeacherOnlinePanel() {
             ))}
           </ul>
         )}
-        <Link href="/class" className="block mt-3">
+        <Link href="/teacher/class" className="block mt-3">
           <Button variant="outline" size="sm" className="w-full">
             Start a class
           </Button>

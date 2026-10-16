@@ -100,7 +100,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, reassigned: targetStudentIds.length })
   }
 
-  const toRemove = (currentAssignments || []).filter((a) => !targetStudentIds.includes(a.student_id))
+  const toRemove = (currentAssignments || []).filter(
+    (a) => !targetStudentIds.includes(a.student_id),
+  )
   const newlyAdded = targetStudentIds.filter((id) => !existingMap.has(id))
   const toReactivate = (currentAssignments || []).filter(
     (a) => targetStudentIds.includes(a.student_id) && a.status === "completed",
@@ -165,4 +167,3 @@ export async function POST(request: Request) {
     removedCount: toRemove.length,
   })
 }
-

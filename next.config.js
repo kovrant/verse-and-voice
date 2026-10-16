@@ -26,7 +26,7 @@ const nextConfig = {
       {
         // Teacher-only audio recorder (middleware keeps students out). Later entries
         // override earlier ones for the same key, so this must stay last.
-        source: "/namaz/audio",
+        source: "/teacher/namaz/audio",
         headers: [
           {
             key: "Permissions-Policy",

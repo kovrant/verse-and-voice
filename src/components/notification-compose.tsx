@@ -76,7 +76,9 @@ export function NotificationCompose() {
       })
       const json = (await res.json()) as { sent?: number; error?: string }
       if (!res.ok) return toast.error(json.error || "Couldn't send the notification.")
-      toast.success(json.sent && json.sent > 1 ? `Sent to ${json.sent} students.` : "Notification sent.")
+      toast.success(
+        json.sent && json.sent > 1 ? `Sent to ${json.sent} students.` : "Notification sent.",
+      )
       setForm(EMPTY)
       setOpen(false)
     } catch {

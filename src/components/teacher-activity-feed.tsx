@@ -8,12 +8,7 @@ import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  FEED_FILTERS,
-  type FeedFilter,
-  feedTypeMeta,
-  matchesFeedFilter,
-} from "@/lib/teacher-feed"
+import { FEED_FILTERS, type FeedFilter, feedTypeMeta, matchesFeedFilter } from "@/lib/teacher-feed"
 import { DASHBOARD_FEED_LIMIT, useNotifications } from "@/lib/use-notifications"
 import { cn } from "@/lib/utils"
 
@@ -49,7 +44,12 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
           </p>
         </div>
         {unread > 0 && (
-          <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => void markAllRead()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-8"
+            onClick={() => void markAllRead()}
+          >
             <CheckCheck className="h-3.5 w-3.5 mr-1" />
             Mark all read
           </Button>
@@ -130,7 +130,7 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
           )}
         </div>
 
-        <Link href="/notifications" className="block pt-1">
+        <Link href="/teacher/notifications" className="block pt-1">
           <Button variant="outline" size="sm" className="w-full text-xs">
             View all notifications <ArrowRight className="ml-1 h-3 w-3" />
           </Button>

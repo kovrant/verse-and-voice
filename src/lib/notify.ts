@@ -47,7 +47,13 @@ async function teacherIds(admin: Admin): Promise<string[]> {
 
 async function fanOutToTeachers(
   admin: Admin,
-  row: { type: string; title: string; body?: string | null; link?: string | null; priority?: string },
+  row: {
+    type: string
+    title: string
+    body?: string | null
+    link?: string | null
+    priority?: string
+  },
 ): Promise<void> {
   const ids = await teacherIds(admin)
   if (ids.length === 0) return
@@ -106,7 +112,7 @@ export async function notifyTeachersOfStudentPresence(
 
   const name = student?.name || profile.username || "A student"
   const title = event === "login" ? `${name} logged in` : `${name} logged out`
-  const link = `/students/${profile.student_id}`
+  const link = `/teacher/students/${profile.student_id}`
 
   // Presence rows fan out to every teacher at once, so the newest one for this
   // student is the state they all last saw. Re-announcing that same state
@@ -139,7 +145,7 @@ export async function notifyTeachersFeePaid(
     year: "numeric",
   })
   const title = `${name} paid ${monthLabel} fee`
-  const link = `/students/${studentId}`
+  const link = `/teacher/students/${studentId}`
 
   const ids = await teacherIds(admin)
   for (const recipientId of ids) {
@@ -163,7 +169,7 @@ export async function notifyTeachersAchievement(
   const admin = createSupabaseAdminClient()
   const name = (await studentName(admin, studentId)) || "A student"
   const title = `${name} earned ${achievementTitle}`
-  const link = `/students/${studentId}`
+  const link = `/teacher/students/${studentId}`
 
   const ids = await teacherIds(admin)
   for (const recipientId of ids) {
@@ -189,7 +195,7 @@ export async function notifyTeachersSessionEnded(
   const name = (await studentName(admin, studentId)) || "A student"
   const paraBit = endingPara != null ? ` · ended on ${paraLabel(endingPara)}` : ""
   const title = `Class with ${name} · ${durationMinutes} min${paraBit}`
-  const link = `/students/${studentId}`
+  const link = `/teacher/students/${studentId}`
 
   const ids = await teacherIds(admin)
   for (const recipientId of ids) {
@@ -290,7 +296,7 @@ export async function notifyTeacherStudentJoined(
     type: "live_class",
     title,
     body: "Student entered the live Quran class room.",
-    link: `/students/${studentId}`,
+    link: `/teacher/students/${studentId}`,
     priority: "normal",
     created_by: teacherUserId,
   })
@@ -313,7 +319,9 @@ export async function notifyStudentQuizAssigned(
     .maybeSingle()
   if (!profile?.id) return
 
-  const title = isReassigned ? `Quiz Quest Re-assigned: ${quizTitle}` : `New Quiz Assigned: ${quizTitle}`
+  const title = isReassigned
+    ? `Quiz Quest Re-assigned: ${quizTitle}`
+    : `New Quiz Assigned: ${quizTitle}`
   const body = isReassigned
     ? `Your teacher re-assigned "${quizTitle}" so you can retake it and improve your score! Tap to start.`
     : `Your teacher assigned you a new Islamic Quiz Quest: "${quizTitle}". Tap to start and earn your badge!`
@@ -360,5 +368,3 @@ export async function notifyStudentHadithAssigned(
     priority: "normal",
   })
 }
-
-

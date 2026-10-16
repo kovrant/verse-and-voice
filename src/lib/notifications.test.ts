@@ -63,8 +63,12 @@ describe("getNotificationCategory", () => {
   })
 
   it("categorizes memorization and revision under memorization", () => {
-    expect(getNotificationCategory("memorization", "Memorized Surah Al-Fatiha")).toBe("memorization")
-    expect(getNotificationCategory("revision", "Revision assigned: Ayat al-Kursi")).toBe("memorization")
+    expect(getNotificationCategory("memorization", "Memorized Surah Al-Fatiha")).toBe(
+      "memorization",
+    )
+    expect(getNotificationCategory("revision", "Revision assigned: Ayat al-Kursi")).toBe(
+      "memorization",
+    )
   })
 
   it("categorizes lesson and task assignments under assignments", () => {
@@ -86,11 +90,21 @@ describe("getNotificationCategory", () => {
 
 describe("getNotificationActionLabel", () => {
   it("resolves appropriate action button label based on category and title", () => {
-    expect(getNotificationActionLabel("live_class", "Your class is live", "/student/classes")).toBe("Join Class")
-    expect(getNotificationActionLabel("session", "Class with Asim", "/students/123")).toBe("View Session")
-    expect(getNotificationActionLabel("achievement", "Asim earned Trophy", "/student/achievements")).toBe("View Trophy")
-    expect(getNotificationActionLabel("revision", "Revision assigned", "/student/memorization")).toBe("Practice Now")
-    expect(getNotificationActionLabel("assignment", "New step assigned", "/student/namaz")).toBe("Open Lesson")
+    expect(getNotificationActionLabel("live_class", "Your class is live", "/student/classes")).toBe(
+      "Join Class",
+    )
+    expect(getNotificationActionLabel("session", "Class with Asim", "/teacher/students/123")).toBe(
+      "View Session",
+    )
+    expect(
+      getNotificationActionLabel("achievement", "Asim earned Trophy", "/student/achievements"),
+    ).toBe("View Trophy")
+    expect(
+      getNotificationActionLabel("revision", "Revision assigned", "/student/memorization"),
+    ).toBe("Practice Now")
+    expect(getNotificationActionLabel("assignment", "New step assigned", "/student/namaz")).toBe(
+      "Open Lesson",
+    )
     expect(getNotificationActionLabel("fee_paid", "Fee paid", "/student/fees")).toBe("View Receipt")
     expect(getNotificationActionLabel("presence", "Logged in", null)).toBeNull()
   })

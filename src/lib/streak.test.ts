@@ -46,11 +46,7 @@ describe("computeStreak", () => {
   })
 
   it("includes today once the class is taken", () => {
-    const sessions = [
-      sessionOn(2026, 6, 20),
-      sessionOn(2026, 6, 22),
-      sessionOn(2026, 6, 24),
-    ]
+    const sessions = [sessionOn(2026, 6, 20), sessionOn(2026, 6, 22), sessionOn(2026, 6, 24)]
     const info = computeStreak(MWF, sessions, localNoon(2026, 6, 24))
     expect(info.todayDone).toBe(true)
     expect(info.current).toBe(3)

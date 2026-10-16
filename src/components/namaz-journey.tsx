@@ -128,7 +128,10 @@ export function NamazJourney({
       />
 
       <KidCard color="rose" className="flex flex-col items-center gap-4 sm:px-8">
-        <div key={key} className="flex w-full flex-col items-center gap-4 motion-safe:animate-fade-in-up">
+        <div
+          key={key}
+          className="flex w-full flex-col items-center gap-4 motion-safe:animate-fade-in-up"
+        >
           {image && (
             <img
               src={image}

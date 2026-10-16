@@ -21,10 +21,7 @@ export async function POST(request: Request) {
   const reflectionPledged = body.reflection_pledged ?? true
 
   if (!studentId || !storyId) {
-    return NextResponse.json(
-      { error: "student_id and story_id are required" },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: "student_id and story_id are required" }, { status: 400 })
   }
 
   const { denied } = await requireStudentOrTeacher(studentId)

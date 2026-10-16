@@ -69,18 +69,19 @@ describe("studentPostLoginPath", () => {
 
 describe("teacherPostLoginPath", () => {
   it("keeps safe internal teacher routes", () => {
-    expect(teacherPostLoginPath("/")).toBe("/")
-    expect(teacherPostLoginPath("/students")).toBe("/students")
-    expect(teacherPostLoginPath("/quizzes")).toBe("/quizzes")
+    expect(teacherPostLoginPath("/teacher")).toBe("/teacher")
+    expect(teacherPostLoginPath("/teacher/students")).toBe("/teacher/students")
+    expect(teacherPostLoginPath("/teacher/quizzes")).toBe("/teacher/quizzes")
   })
 
   it("rejects external, protocol-relative, and student/auth paths", () => {
-    expect(teacherPostLoginPath("https://evil.example/phish")).toBe("/")
-    expect(teacherPostLoginPath("//evil.example")).toBe("/")
-    expect(teacherPostLoginPath("/student")).toBe("/")
-    expect(teacherPostLoginPath("/login")).toBe("/")
-    expect(teacherPostLoginPath("/admin")).toBe("/")
-    expect(teacherPostLoginPath(null)).toBe("/")
+    expect(teacherPostLoginPath("https://evil.example/phish")).toBe("/teacher")
+    expect(teacherPostLoginPath("//evil.example")).toBe("/teacher")
+    expect(teacherPostLoginPath("/student")).toBe("/teacher")
+    expect(teacherPostLoginPath("/login")).toBe("/teacher")
+    expect(teacherPostLoginPath("/teacher/login")).toBe("/teacher")
+    expect(teacherPostLoginPath("/")).toBe("/teacher")
+    expect(teacherPostLoginPath("/students")).toBe("/teacher")
+    expect(teacherPostLoginPath(null)).toBe("/teacher")
   })
 })
-

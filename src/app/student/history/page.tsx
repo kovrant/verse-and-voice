@@ -132,7 +132,7 @@ export default function StudentHistoryPage() {
                   {s.cover_image_url ? (
                     <img src={s.cover_image_url} alt="" className="h-full w-full object-cover" />
                   ) : (
-                    CATEGORY_ICON[s.category] ?? "📜"
+                    (CATEGORY_ICON[s.category] ?? "📜")
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
@@ -179,7 +179,7 @@ export default function StudentHistoryPage() {
                     : "border-border bg-card text-muted-foreground hover:text-foreground",
                 )}
               >
-                <span aria-hidden>{c === "All" ? "📚" : CATEGORY_ICON[c] ?? "📜"}</span>
+                <span aria-hidden>{c === "All" ? "📚" : (CATEGORY_ICON[c] ?? "📜")}</span>
                 {c}
               </button>
             )

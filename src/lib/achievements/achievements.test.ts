@@ -52,12 +52,8 @@ describe("achievement slugs", () => {
   })
 
   it("qualifies legacy khatm rounds closed with completed_at only", () => {
-    expect(
-      qualifiesForKhatm({ desc: 30, asc: 0, completed_at: "2026-01-01" }),
-    ).toBe(true)
-    expect(
-      qualifiesForKhatm({ desc: 0, asc: 0, completed_at: "2026-01-01" }),
-    ).toBe(true)
+    expect(qualifiesForKhatm({ desc: 30, asc: 0, completed_at: "2026-01-01" })).toBe(true)
+    expect(qualifiesForKhatm({ desc: 0, asc: 0, completed_at: "2026-01-01" })).toBe(true)
     expect(qualifiesForKhatm({ desc: 0, asc: 0, completed_at: null })).toBe(false)
     expect(qualifiesForKhatm({ desc: 10, asc: 5, completed_at: "2026-01-01" })).toBe(false)
   })

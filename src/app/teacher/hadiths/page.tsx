@@ -88,8 +88,15 @@ export default function TeacherHadithsPage() {
     try {
       const [hadithsRes, studentsRes, assignRes, progRes] = await Promise.all([
         supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
-        supabase.from("students").select("*").neq("status", "Left Uncompleted").order("name", { ascending: true }),
-        supabase.from("hadith_assignments").select("*, hadiths(*)").order("assigned_at", { ascending: false }),
+        supabase
+          .from("students")
+          .select("*")
+          .neq("status", "Left Uncompleted")
+          .order("name", { ascending: true }),
+        supabase
+          .from("hadith_assignments")
+          .select("*, hadiths(*)")
+          .order("assigned_at", { ascending: false }),
         supabase.from("student_hadith_progress").select("*"),
       ])
 
@@ -182,7 +189,11 @@ export default function TeacherHadithsPage() {
   const [markingMemorizedId, setMarkingMemorizedId] = useState<string | null>(null)
 
   // Teacher marks a Hadith as memorized for a student
-  const handleTeacherMarkMemorized = async (studentId: string, hadithId: string, studentName: string) => {
+  const handleTeacherMarkMemorized = async (
+    studentId: string,
+    hadithId: string,
+    studentName: string,
+  ) => {
     setMarkingMemorizedId(`${studentId}-${hadithId}`)
     try {
       const res = await fetch("/api/hadiths/progress", {
@@ -366,7 +377,8 @@ export default function TeacherHadithsPage() {
         if (error) throw error
         toast.success("Hadith updated successfully")
       } else {
-        const nextHadithNumber = hadiths.length > 0 ? Math.max(...hadiths.map((h) => h.hadith_number)) + 1 : 1
+        const nextHadithNumber =
+          hadiths.length > 0 ? Math.max(...hadiths.map((h) => h.hadith_number)) + 1 : 1
         const { error } = await supabase.from("hadiths").insert({
           hadith_number: nextHadithNumber,
           arabic_text: customArabic.trim(),
@@ -425,7 +437,8 @@ export default function TeacherHadithsPage() {
             Hadiths Studio
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Browse {hadiths.length} authentic Hadiths, assign weekly learning goals to your students, and monitor their memorization milestones.
+            Browse {hadiths.length} authentic Hadiths, assign weekly learning goals to your
+            students, and monitor their memorization milestones.
           </p>
         </div>
 
@@ -456,7 +469,9 @@ export default function TeacherHadithsPage() {
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalHadiths}</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">
+                {stats.totalHadiths}
+              </p>
               <p className="text-xs text-muted-foreground">Hadiths in Library</p>
             </div>
           </CardContent>
@@ -468,7 +483,9 @@ export default function TeacherHadithsPage() {
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalStudents}</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">
+                {stats.totalStudents}
+              </p>
               <p className="text-xs text-muted-foreground">Active Students</p>
             </div>
           </CardContent>
@@ -480,7 +497,9 @@ export default function TeacherHadithsPage() {
               <Award className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.totalMemorizations}</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">
+                {stats.totalMemorizations}
+              </p>
               <p className="text-xs text-muted-foreground">Total Memorized</p>
             </div>
           </CardContent>
@@ -492,7 +511,9 @@ export default function TeacherHadithsPage() {
               <Clock className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">{stats.activeAssignments}</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">
+                {stats.activeAssignments}
+              </p>
               <p className="text-xs text-muted-foreground">Active Assignments</p>
             </div>
           </CardContent>
@@ -564,18 +585,28 @@ export default function TeacherHadithsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredHadiths.map((hadith) => {
               const topicInfo = HADITH_TOPICS[hadith.topic] || HADITH_TOPICS.general
-              const assignedCount = assignments.filter((a) => a.hadith_id === hadith.id && a.status === "pending").length
-              const completedCount = progressList.filter((p) => p.hadith_id === hadith.id && p.status === "memorized").length
+              const assignedCount = assignments.filter(
+                (a) => a.hadith_id === hadith.id && a.status === "pending",
+              ).length
+              const completedCount = progressList.filter(
+                (p) => p.hadith_id === hadith.id && p.status === "memorized",
+              ).length
 
               return (
-                <Card key={hadith.id} className="flex flex-col justify-between border-border/80 bg-card hover:border-emerald-500/30 transition-all shadow-sm">
+                <Card
+                  key={hadith.id}
+                  className="flex flex-col justify-between border-border/80 bg-card hover:border-emerald-500/30 transition-all shadow-sm"
+                >
                   <div>
                     <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
                           {hadith.hadith_number}
                         </span>
-                        <Badge variant="outline" className={cn("text-[11px] font-medium border", topicInfo.bgColor)}>
+                        <Badge
+                          variant="outline"
+                          className={cn("text-[11px] font-medium border", topicInfo.bgColor)}
+                        >
                           <span>{topicInfo.icon}</span>
                           <span className="ml-1">{topicInfo.label}</span>
                         </Badge>
@@ -590,15 +621,22 @@ export default function TeacherHadithsPage() {
                     <CardContent className="p-4 space-y-3">
                       {/* Arabic Text in Calligraphic Hadith Font */}
                       <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 text-center">
-                        <p className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text" dir="rtl">
+                        <p
+                          className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text"
+                          dir="rtl"
+                        >
                           {hadith.arabic_text}
                         </p>
                       </div>
 
                       {/* English Translation */}
                       <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase">Meaning</p>
-                        <p className="text-sm font-medium text-foreground italic">&ldquo;{hadith.english_text}&rdquo;</p>
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase">
+                          Meaning
+                        </p>
+                        <p className="text-sm font-medium text-foreground italic">
+                          &ldquo;{hadith.english_text}&rdquo;
+                        </p>
                       </div>
 
                       {/* Urdu Translation */}
@@ -610,7 +648,10 @@ export default function TeacherHadithsPage() {
                       {/* Kid Lesson */}
                       <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-start gap-2">
                         <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Kid&apos;s Lesson: </span>{hadith.kids_lesson}</p>
+                        <p className="text-xs text-muted-foreground">
+                          <span className="font-bold text-foreground">Kid&apos;s Lesson: </span>
+                          {hadith.kids_lesson}
+                        </p>
                       </div>
 
                       {/* Reference */}
@@ -662,174 +703,212 @@ export default function TeacherHadithsPage() {
       {activeTab === "students" && (
         <Card className="border-border/80">
           <CardHeader className="py-4 border-b border-border/60">
-            <CardTitle className="text-base font-bold text-foreground">Student Hadith Progress & Milestones</CardTitle>
+            <CardTitle className="text-base font-bold text-foreground">
+              Student Hadith Progress & Milestones
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-border/60">
-              {studentRows.map(({ student, memorizedCount, milestone, activeAssignments, memorizedList }) => {
-                const isExpanded = expandedStudentId === student.id
+              {studentRows.map(
+                ({ student, memorizedCount, milestone, activeAssignments, memorizedList }) => {
+                  const isExpanded = expandedStudentId === student.id
 
-                return (
-                  <div key={student.id} className="transition-colors">
-                    <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/20">
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-bold text-sm text-foreground">{student.name}</p>
-                          <Badge variant="outline" className="text-[10px] bg-secondary border-border">
-                            {student.status || "Reading"}
-                          </Badge>
-                          {activeAssignments.length > 0 && (
-                            <Badge variant="secondary" className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold">
-                              {activeAssignments.length} active assignment{activeAssignments.length === 1 ? "" : "s"}
-                            </Badge>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-muted-foreground">
-                          Target: <span className="font-semibold text-emerald-600 dark:text-emerald-400">{milestone.badgeTitle}</span> ({memorizedCount} / {milestone.target} Hadiths)
-                        </p>
-
-                        {/* Progress Bar */}
-                        <div className="w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border/60 mt-1">
-                          <div
-                            className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
-                            style={{ width: `${milestone.percentage}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <div className="text-right text-xs mr-1">
-                          <p className="font-bold text-foreground tabular-nums">✅ {memorizedCount} Memorized</p>
-                          <p className="text-muted-foreground tabular-nums">🎯 {activeAssignments.length} Assigned</p>
-                        </div>
-
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-xs gap-1.5 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 h-8"
-                          onClick={() => openAssignModal(undefined, student.id)}
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          <span>Assign</span>
-                        </Button>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-xs gap-1 text-muted-foreground hover:text-foreground h-8"
-                          onClick={() => setExpandedStudentId(isExpanded ? null : student.id)}
-                        >
-                          <span>{isExpanded ? "Hide Details" : "Manage"}</span>
-                          <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isExpanded && "rotate-180")} />
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Expandable Details Section for Teacher */}
-                    {isExpanded && (
-                      <div className="p-4 bg-secondary/10 border-t border-border/40 space-y-4 animate-in fade-in-50 duration-150">
-                        {/* 1. Active Assignments */}
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
-                              <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Active Assignments ({activeAssignments.length})
-                            </p>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-7 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1 font-semibold"
-                              onClick={() => openAssignModal(undefined, student.id)}
+                  return (
+                    <div key={student.id} className="transition-colors">
+                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/20">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-sm text-foreground">{student.name}</p>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] bg-secondary border-border"
                             >
-                              <Plus className="h-3 w-3" /> Assign Another
-                            </Button>
+                              {student.status || "Reading"}
+                            </Badge>
+                            {activeAssignments.length > 0 && (
+                              <Badge
+                                variant="secondary"
+                                className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold"
+                              >
+                                {activeAssignments.length} active assignment
+                                {activeAssignments.length === 1 ? "" : "s"}
+                              </Badge>
+                            )}
                           </div>
 
-                          {activeAssignments.length === 0 ? (
-                            <p className="text-xs text-muted-foreground italic bg-secondary/20 rounded-lg p-3 border border-border/40">
-                              No active Hadith assignments for {student.name}. Click &ldquo;Assign&rdquo; above to assign one.
+                          <p className="text-xs text-muted-foreground">
+                            Target:{" "}
+                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                              {milestone.badgeTitle}
+                            </span>{" "}
+                            ({memorizedCount} / {milestone.target} Hadiths)
+                          </p>
+
+                          {/* Progress Bar */}
+                          <div className="w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border/60 mt-1">
+                            <div
+                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                              style={{ width: `${milestone.percentage}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="text-right text-xs mr-1">
+                            <p className="font-bold text-foreground tabular-nums">
+                              ✅ {memorizedCount} Memorized
                             </p>
-                          ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                              {activeAssignments.map((a) => {
-                                const h = a.hadiths
-                                if (!h) return null
-                                const isMarking = markingMemorizedId === `${student.id}-${h.id}`
+                            <p className="text-muted-foreground tabular-nums">
+                              🎯 {activeAssignments.length} Assigned
+                            </p>
+                          </div>
 
-                                return (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-xs gap-1.5 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 h-8"
+                            onClick={() => openAssignModal(undefined, student.id)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            <span>Assign</span>
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs gap-1 text-muted-foreground hover:text-foreground h-8"
+                            onClick={() => setExpandedStudentId(isExpanded ? null : student.id)}
+                          >
+                            <span>{isExpanded ? "Hide Details" : "Manage"}</span>
+                            <ChevronDown
+                              className={cn(
+                                "h-3.5 w-3.5 transition-transform",
+                                isExpanded && "rotate-180",
+                              )}
+                            />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Expandable Details Section for Teacher */}
+                      {isExpanded && (
+                        <div className="p-4 bg-secondary/10 border-t border-border/40 space-y-4 animate-in fade-in-50 duration-150">
+                          {/* 1. Active Assignments */}
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                                <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Active
+                                Assignments ({activeAssignments.length})
+                              </p>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1 font-semibold"
+                                onClick={() => openAssignModal(undefined, student.id)}
+                              >
+                                <Plus className="h-3 w-3" /> Assign Another
+                              </Button>
+                            </div>
+
+                            {activeAssignments.length === 0 ? (
+                              <p className="text-xs text-muted-foreground italic bg-secondary/20 rounded-lg p-3 border border-border/40">
+                                No active Hadith assignments for {student.name}. Click
+                                &ldquo;Assign&rdquo; above to assign one.
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {activeAssignments.map((a) => {
+                                  const h = a.hadiths
+                                  if (!h) return null
+                                  const isMarking = markingMemorizedId === `${student.id}-${h.id}`
+
+                                  return (
+                                    <div
+                                      key={a.id}
+                                      className="rounded-xl border border-amber-500/30 bg-card p-3.5 space-y-2.5 shadow-sm"
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                                          Hadith #{h.hadith_number}
+                                        </span>
+                                        <Badge
+                                          variant="outline"
+                                          className="text-[10px] bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+                                        >
+                                          Pending Memorization
+                                        </Badge>
+                                      </div>
+
+                                      <p className="font-hadith text-lg text-foreground" dir="rtl">
+                                        {h.arabic_text}
+                                      </p>
+
+                                      <p className="text-xs text-muted-foreground italic line-clamp-2">
+                                        &ldquo;{h.english_text}&rdquo;
+                                      </p>
+
+                                      <div className="pt-2 border-t border-border/40 flex items-center justify-between">
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {h.reference}
+                                        </span>
+                                        <Button
+                                          size="sm"
+                                          disabled={isMarking}
+                                          onClick={() =>
+                                            handleTeacherMarkMemorized(
+                                              student.id,
+                                              h.id,
+                                              student.name,
+                                            )
+                                          }
+                                          className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow-sm"
+                                        >
+                                          {isMarking ? (
+                                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                          ) : (
+                                            <CheckCircle2 className="h-3.5 w-3.5" />
+                                          )}
+                                          <span>Mark as Memorized</span>
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* 2. Memorized Hadiths */}
+                          {memorizedList.length > 0 && (
+                            <div className="space-y-2 pt-2 border-t border-border/40">
+                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                                <Award className="h-3.5 w-3.5 text-emerald-500" /> Memorized Hadiths
+                                ({memorizedList.length})
+                              </p>
+                              <div className="flex flex-wrap gap-2">
+                                {memorizedList.map((m) => (
                                   <div
-                                    key={a.id}
-                                    className="rounded-xl border border-amber-500/30 bg-card p-3.5 space-y-2.5 shadow-sm"
+                                    key={m.id}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-foreground"
                                   >
-                                    <div className="flex items-center justify-between">
-                                      <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                                        Hadith #{h.hadith_number}
-                                      </span>
-                                      <Badge variant="outline" className="text-[10px] bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300">
-                                        Pending Memorization
-                                      </Badge>
-                                    </div>
-
-                                    <p className="font-hadith text-lg text-foreground" dir="rtl">
-                                      {h.arabic_text}
-                                    </p>
-
-                                    <p className="text-xs text-muted-foreground italic line-clamp-2">
-                                      &ldquo;{h.english_text}&rdquo;
-                                    </p>
-
-                                    <div className="pt-2 border-t border-border/40 flex items-center justify-between">
-                                      <span className="text-[10px] text-muted-foreground">{h.reference}</span>
-                                      <Button
-                                        size="sm"
-                                        disabled={isMarking}
-                                        onClick={() => handleTeacherMarkMemorized(student.id, h.id, student.name)}
-                                        className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow-sm"
-                                      >
-                                        {isMarking ? (
-                                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                        ) : (
-                                          <CheckCircle2 className="h-3.5 w-3.5" />
-                                        )}
-                                        <span>Mark as Memorized</span>
-                                      </Button>
-                                    </div>
+                                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                                      Hadith #{m.hadith?.hadith_number}
+                                    </span>
+                                    <span className="text-muted-foreground text-[11px] truncate max-w-[12rem]">
+                                      {m.hadith?.english_text?.slice(0, 35)}...
+                                    </span>
                                   </div>
-                                )
-                              })}
+                                ))}
+                              </div>
                             </div>
                           )}
                         </div>
-
-                        {/* 2. Memorized Hadiths */}
-                        {memorizedList.length > 0 && (
-                          <div className="space-y-2 pt-2 border-t border-border/40">
-                            <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
-                              <Award className="h-3.5 w-3.5 text-emerald-500" /> Memorized Hadiths ({memorizedList.length})
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                              {memorizedList.map((m) => (
-                                <div
-                                  key={m.id}
-                                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-foreground"
-                                >
-                                  <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                  <span className="font-bold text-emerald-800 dark:text-emerald-300">
-                                    Hadith #{m.hadith?.hadith_number}
-                                  </span>
-                                  <span className="text-muted-foreground text-[11px] truncate max-w-[12rem]">
-                                    {m.hadith?.english_text?.slice(0, 35)}...
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+                      )}
+                    </div>
+                  )
+                },
+              )}
             </div>
           </CardContent>
         </Card>
@@ -904,7 +983,10 @@ export default function TeacherHadithsPage() {
                 filteredModalStudents.map((student) => {
                   const isSelected = targetStudentIds.includes(student.id)
                   const isMemorized = progressList.some(
-                    (p) => p.student_id === student.id && p.hadith_id === selectedHadithForAssign?.id && p.status === "memorized",
+                    (p) =>
+                      p.student_id === student.id &&
+                      p.hadith_id === selectedHadithForAssign?.id &&
+                      p.status === "memorized",
                   )
 
                   return (
@@ -931,12 +1013,17 @@ export default function TeacherHadithsPage() {
 
                         <div>
                           <p className="text-xs font-bold text-foreground">{student.name}</p>
-                          <p className="text-[10px] text-muted-foreground">{student.status || "Reading"}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {student.status || "Reading"}
+                          </p>
                         </div>
                       </div>
 
                       {isMemorized && (
-                        <Badge variant="secondary" className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold"
+                        >
                           Already Memorized
                         </Badge>
                       )}
@@ -960,7 +1047,8 @@ export default function TeacherHadithsPage() {
             </div>
 
             <p className="text-[11px] text-muted-foreground text-center">
-              Selected: <span className="font-bold text-foreground">{targetStudentIds.length}</span> of {students.length} students
+              Selected: <span className="font-bold text-foreground">{targetStudentIds.length}</span>{" "}
+              of {students.length} students
             </p>
           </div>
 
@@ -973,7 +1061,11 @@ export default function TeacherHadithsPage() {
               disabled={submittingAssign || targetStudentIds.length === 0}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
             >
-              {submittingAssign ? <Loader2 className="h-4 w-4 animate-spin" /> : `Assign to ${targetStudentIds.length} Student${targetStudentIds.length === 1 ? "" : "s"}`}
+              {submittingAssign ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                `Assign to ${targetStudentIds.length} Student${targetStudentIds.length === 1 ? "" : "s"}`
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1037,7 +1129,10 @@ export default function TeacherHadithsPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
                 <Label className="text-xs font-bold">Topic Category</Label>
-                <Select value={customTopic} onValueChange={(val) => setCustomTopic(val as HadithTopic)}>
+                <Select
+                  value={customTopic}
+                  onValueChange={(val) => setCustomTopic(val as HadithTopic)}
+                >
                   <SelectTrigger className="text-xs">
                     <SelectValue />
                   </SelectTrigger>

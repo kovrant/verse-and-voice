@@ -103,7 +103,7 @@ export function TeacherTopBar() {
       initial={(user?.email?.[0] || "?").toUpperCase()}
       title={email}
       role="Teacher"
-      signOutNext="/admin"
+      signOutNext="/teacher/login"
       actions={<NotificationCompose />}
     />
   )

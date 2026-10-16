@@ -11,7 +11,11 @@ export function extractParaNumber(filename: string): number | null {
 
 /** `surah-fatiha.png` → `Surah Fatiha`. */
 export function titleFromFilename(name: string): string {
-  const base = name.replace(/\.[^.]+$/, "").replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim()
+  const base = name
+    .replace(/\.[^.]+$/, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
   if (!base) return name
   return base.replace(/\b[\p{L}\p{N}]/gu, (c) => c.toUpperCase())
 }
@@ -79,7 +83,8 @@ export function safeUploadExtension(
 export function storagePathFromPublicUrl(url: string, bucket = "media"): string | null {
   const marker = `/object/public/${bucket}/`
   const i = url.indexOf(marker)
-  const raw = i >= 0 ? url.slice(i + marker.length) : url.split(`/${bucket}/`).slice(1).join(`/${bucket}/`)
+  const raw =
+    i >= 0 ? url.slice(i + marker.length) : url.split(`/${bucket}/`).slice(1).join(`/${bucket}/`)
   const path = decodeURIComponent(raw.split("?")[0] ?? "")
   return path || null
 }
@@ -296,4 +301,3 @@ export async function downscaleImageFile(
     img.src = objectUrl
   })
 }
-

@@ -64,7 +64,9 @@ export function SessionStat({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
-      <span className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}>
+      <span
+        className={cn("flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}
+      >
         <Icon className="h-4 w-4" />
       </span>
       <div className="min-w-0">

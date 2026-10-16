@@ -386,7 +386,7 @@ export function ClassStudentCard({
         {qaidaMissing && (
           <p className="mt-3 text-center text-[13px] font-medium text-muted-foreground">
             No Qaida book assigned.{" "}
-            <Link href={`/students/${student.id}`} className="text-primary hover:underline">
+            <Link href={`/teacher/students/${student.id}`} className="text-primary hover:underline">
               Assign one on the student page
             </Link>{" "}
             to start a Qaida class.
@@ -396,7 +396,7 @@ export function ClassStudentCard({
         {/* View full profile link */}
         <div className="mt-4 mb-2 flex justify-center">
           <Link
-            href={`/students/${student.id}`}
+            href={`/teacher/students/${student.id}`}
             className="text-[13px] font-medium transition-colors text-muted-foreground hover:text-primary"
           >
             View full student profile →

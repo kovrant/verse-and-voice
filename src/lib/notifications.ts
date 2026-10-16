@@ -3,13 +3,7 @@
 import { differenceInCalendarDays } from "date-fns"
 
 export type NotificationCategory =
-  | "all"
-  | "classes"
-  | "trophies"
-  | "memorization"
-  | "assignments"
-  | "fees"
-  | "general"
+  "all" | "classes" | "trophies" | "memorization" | "assignments" | "fees" | "general"
 
 export interface CategoryTabItem {
   key: NotificationCategory

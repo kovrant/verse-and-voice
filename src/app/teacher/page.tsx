@@ -139,7 +139,7 @@ export default function Dashboard() {
               <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">
-              <Link href="/students/new">
+              <Link href="/teacher/students/new">
                 <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
                     <UserPlus className="h-5 w-5" />
@@ -151,7 +151,7 @@ export default function Dashboard() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Link>
-              <Link href="/media">
+              <Link href="/teacher/media">
                 <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
                     <Upload className="h-5 w-5" />
@@ -163,7 +163,7 @@ export default function Dashboard() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                 </div>
               </Link>
-              <Link href="/memorization">
+              <Link href="/teacher/memorization">
                 <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
                     <BookMarked className="h-5 w-5" />
@@ -188,7 +188,9 @@ export default function Dashboard() {
             style={{ animationDelay: `${i * 80}ms` }}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                {stat.label}
+              </CardTitle>
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
                 <stat.icon className="h-4.5 w-4.5 text-muted-foreground" />
               </div>
@@ -196,7 +198,9 @@ export default function Dashboard() {
             <CardContent>
               <div className="stat-number text-3xl tracking-tight tabular-nums text-foreground">
                 {stat.prefix && (
-                  <span className="text-lg font-medium text-muted-foreground mr-2">{stat.prefix}</span>
+                  <span className="text-lg font-medium text-muted-foreground mr-2">
+                    {stat.prefix}
+                  </span>
                 )}
                 {stat.value}
               </div>
@@ -239,7 +243,7 @@ export default function Dashboard() {
           <CardContent className="px-4 sm:px-5 pb-4 pt-1 flex-1 flex flex-col justify-between">
             <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
               <Link
-                href="/class"
+                href="/teacher/class"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:scale-105 transition-transform shrink-0">
@@ -254,7 +258,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                href="/students/new"
+                href="/teacher/students/new"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
@@ -269,7 +273,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                href="/students"
+                href="/teacher/students"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
@@ -279,12 +283,14 @@ export default function Dashboard() {
                   <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                     All Students
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Manage {totalStudents} enrolled</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    Manage {totalStudents} enrolled
+                  </p>
                 </div>
               </Link>
 
               <Link
-                href="/history"
+                href="/teacher/history"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-teal-500/10 hover:border-teal-500/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-500 group-hover:scale-105 transition-transform shrink-0">
@@ -294,12 +300,14 @@ export default function Dashboard() {
                   <p className="text-xs font-semibold text-foreground group-hover:text-teal-500 transition-colors truncate">
                     Story Studio
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Islamic stories &amp; AI</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    Islamic stories &amp; AI
+                  </p>
                 </div>
               </Link>
 
               <Link
-                href="/quizzes"
+                href="/teacher/quizzes"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500 group-hover:scale-105 transition-transform shrink-0">
@@ -314,7 +322,7 @@ export default function Dashboard() {
               </Link>
 
               <Link
-                href="/media"
+                href="/teacher/media"
                 className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
               >
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
@@ -324,14 +332,19 @@ export default function Dashboard() {
                   <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
                     Media Library
                   </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Quran paras &amp; assets</p>
+                  <p className="text-[10px] text-muted-foreground truncate">
+                    Quran paras &amp; assets
+                  </p>
                 </div>
               </Link>
             </div>
 
             <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
               <span>Looking for AI logs and token limits?</span>
-              <Link href="/ai-usage" className="inline-flex items-center text-primary font-semibold hover:underline">
+              <Link
+                href="/teacher/ai-usage"
+                className="inline-flex items-center text-primary font-semibold hover:underline"
+              >
                 AI Quota Details &rarr;
               </Link>
             </div>
@@ -350,7 +363,7 @@ export default function Dashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Fees due</CardTitle>
-              <Link href="/fees">
+              <Link href="/teacher/fees">
                 <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">
                   Manage <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
@@ -382,7 +395,7 @@ export default function Dashboard() {
                     </div>
                   ))}
                   {unpaidFees.length > 5 && (
-                    <Link href="/fees" className="block pt-1">
+                    <Link href="/teacher/fees" className="block pt-1">
                       <Button variant="outline" size="sm" className="w-full text-xs">
                         View all {unpaidFees.length} unpaid
                       </Button>

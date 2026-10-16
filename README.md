@@ -54,10 +54,11 @@ midnight and renders as the previous day west of UTC. Use `parseLocalDate` /
 `formatLocalDate` from `src/lib/utils.ts`. `class_sessions.started_at` *is* a real
 timestamptz, so plain `new Date()` is correct there.
 
-**Two apps, two logins, one front door.** `/` shows the public website to anyone without a
-session (a middleware rewrite of `/welcome`). `/login` is the student login and the entry point
-for everything; `/admin` is the teacher login and is only reachable by typing it.
-`src/middleware.ts` confines students to `/student/**` and keeps teachers out of it.
+**Two apps, two logins, one front door.** `/` is the public website (a middleware rewrite of
+`/welcome`). Kids sign in at `/login` and live under `/student/**`; the teacher signs in at
+`/teacher/login` (`/admin` still redirects there) and lives under `/teacher/**`. Old root
+dashboard paths such as `/students/123` redirect to `/teacher/...`. `src/middleware.ts`
+confines students to `/student/**` and keeps teachers out of it.
 API routes are deliberately exempt from every redirect — a 307 would drop the request
 body of a `sendBeacon` to `/api/activity`.
 

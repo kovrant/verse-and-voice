@@ -19,10 +19,7 @@ function HeaderSkeleton({
 }) {
   return (
     <div
-      className={cn(
-        "flex flex-wrap items-start justify-between gap-4",
-        student ? "mb-0" : "mb-0",
-      )}
+      className={cn("flex flex-wrap items-start justify-between gap-4", student ? "mb-0" : "mb-0")}
     >
       <div className="space-y-2.5 min-w-0 flex-1">
         <Skeleton className={cn("h-8 rounded-xl", student ? "w-56" : "w-48")} />
@@ -67,11 +64,7 @@ export function PageLoading({
 }) {
   const wrap = (node: ReactNode) => (
     <div
-      className={cn(
-        "space-y-6 animate-fade-in-up",
-        student && "mx-auto max-w-5xl",
-        className,
-      )}
+      className={cn("space-y-6 animate-fade-in-up", student && "mx-auto max-w-5xl", className)}
       role="status"
       aria-label="Loading"
     >
@@ -104,14 +97,10 @@ export function PageLoading({
           <div
             className={cn(
               "grid gap-3",
-              student
-                ? "gap-4"
-                : "grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10",
+              student ? "gap-4" : "grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10",
             )}
             style={
-              student
-                ? { gridTemplateColumns: "repeat(auto-fill, minmax(196px, 1fr))" }
-                : undefined
+              student ? { gridTemplateColumns: "repeat(auto-fill, minmax(196px, 1fr))" } : undefined
             }
           >
             {Array.from({ length: count ?? 30 }).map((_, i) => (
@@ -132,7 +121,9 @@ export function PageLoading({
           <div
             className={cn(
               "grid gap-4",
-              student ? "gap-[22px] sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-3",
+              student
+                ? "gap-[22px] sm:grid-cols-2 lg:grid-cols-3"
+                : "sm:grid-cols-2 lg:grid-cols-3",
             )}
           >
             {Array.from({ length: count ?? 6 }).map((_, i) => (
@@ -240,7 +231,11 @@ export function PageLoading({
 
     case "rows":
       return (
-        <div className={cn("space-y-3 animate-fade-in-up", className)} role="status" aria-label="Loading">
+        <div
+          className={cn("space-y-3 animate-fade-in-up", className)}
+          role="status"
+          aria-label="Loading"
+        >
           {Array.from({ length: count ?? 4 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-2xl" />
           ))}

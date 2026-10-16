@@ -33,7 +33,12 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { syncQuranRoundAchievements } from "@/lib/achievements"
 import { MEM_ITEM_SELECT, type MemItem } from "@/lib/memorization"
-import { clearBookmark, loadBookmark, saveBookmark, savePageKeepingBookmark } from "@/lib/para-progress"
+import {
+  clearBookmark,
+  loadBookmark,
+  saveBookmark,
+  savePageKeepingBookmark,
+} from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
@@ -649,12 +654,7 @@ export default function LiveSession({
           <SessionTimer startedAt={startedAt} />
 
           {/* End Class */}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={openEndDialog}
-            className="gap-1.5"
-          >
+          <Button variant="destructive" size="sm" onClick={openEndDialog} className="gap-1.5">
             <Square className="h-3 w-3 fill-current" />
             End Class
           </Button>
@@ -692,9 +692,14 @@ export default function LiveSession({
                 )}
                 {memorizing.length > 0 && (
                   <div className="text-xs pt-1 border-t border-border/50">
-                    <span className="text-muted-foreground block text-[10px] font-semibold uppercase">Currently Memorizing:</span>
+                    <span className="text-muted-foreground block text-[10px] font-semibold uppercase">
+                      Currently Memorizing:
+                    </span>
                     <span className="font-medium text-foreground">
-                      {memorizing.map((m) => m.memorization_catalog?.title).filter(Boolean).join(", ")}
+                      {memorizing
+                        .map((m) => m.memorization_catalog?.title)
+                        .filter(Boolean)
+                        .join(", ")}
                     </span>
                   </div>
                 )}
@@ -919,10 +924,7 @@ export default function LiveSession({
       </Dialog>
 
       {/* Tajweed Rule Card Popup — shown on the teacher's screen identically to the student's screen */}
-      <StudentTajweedAlert
-        rule={activeTajweedRule}
-        onDismiss={() => setActiveTajweedRule(null)}
-      />
+      <StudentTajweedAlert rule={activeTajweedRule} onDismiss={() => setActiveTajweedRule(null)} />
     </div>
   )
 }

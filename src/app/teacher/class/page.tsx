@@ -326,7 +326,7 @@ function ClassPageContent() {
             <p className="text-sm text-muted-foreground mb-5">
               Add your first student to start a class session
             </p>
-            <Link href="/students/new">
+            <Link href="/teacher/students/new">
               <Button>
                 <UserPlus className="h-4 w-4 mr-2" />
                 Add Student

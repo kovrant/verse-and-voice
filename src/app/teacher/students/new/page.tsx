@@ -88,7 +88,7 @@ export default function NewStudentPage() {
       setSaving(false)
     }
 
-    router.push(`/students/${student.id}`)
+    router.push(`/teacher/students/${student.id}`)
   }
 
   return (
@@ -99,14 +99,14 @@ export default function NewStudentPage() {
             Dashboard
           </Link>
           <span className="text-muted-foreground/40">/</span>
-          <Link href="/students" className="hover:text-foreground transition-colors">
+          <Link href="/teacher/students" className="hover:text-foreground transition-colors">
             Students
           </Link>
           <span className="text-muted-foreground/40">/</span>
           <span className="text-foreground font-medium">New</span>
         </nav>
         <div className="flex items-center gap-4">
-          <Link href="/students">
+          <Link href="/teacher/students">
             <Button variant="outline" size="icon" className="rounded-xl">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -359,7 +359,7 @@ export default function NewStudentPage() {
                   </>
                 )}
               </Button>
-              <Link href="/students">
+              <Link href="/teacher/students">
                 <Button type="button" variant="outline">
                   Cancel
                 </Button>

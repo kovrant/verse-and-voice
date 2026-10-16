@@ -131,11 +131,7 @@ export function StudentQaidaAssign({
         </div>
 
         {!loading && items.length > 0 && (
-          <Select
-            value={assigned ?? NONE}
-            onValueChange={assign}
-            disabled={saving}
-          >
+          <Select value={assigned ?? NONE} onValueChange={assign} disabled={saving}>
             <SelectTrigger className="w-full sm:w-56 flex-shrink-0">
               <SelectValue placeholder="Select a Qaida" />
             </SelectTrigger>

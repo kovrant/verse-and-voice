@@ -146,4 +146,3 @@ describe("ensureFourOptions", () => {
     expect(ensureFourOptions(null)).toEqual([])
   })
 })
-

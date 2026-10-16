@@ -6,7 +6,7 @@ import { notifyTeachersOfStudentPresence } from "@/lib/notify"
 
 // Where each portal's sign-out should land. Passed explicitly via ?next= so we
 // don't depend on reading the (about-to-be-cleared) session's role here.
-const ALLOWED_NEXT = new Set(["/login", "/admin"])
+const ALLOWED_NEXT = new Set(["/login", "/teacher/login"])
 
 export async function POST(request: Request) {
   const url = new URL(request.url)

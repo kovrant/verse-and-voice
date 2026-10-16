@@ -21,19 +21,21 @@ export interface ActivityLog {
   occurred_at: string
 }
 
-const EVENT_STYLES: Record<ActivityLog["event_type"], { icon: LucideIcon; tint: string; verb: string }> =
-  {
-    page_view: { icon: FileText, tint: "text-blue-400 bg-blue-500/10", verb: "Viewed page" },
-    para_open: { icon: BookOpen, tint: "text-emerald-400 bg-emerald-500/10", verb: "Opened" },
-    pdf_page: { icon: FileText, tint: "text-amber-400 bg-amber-500/10", verb: "Turned to" },
-    live_class: { icon: WifiOff, tint: "text-rose-400 bg-rose-500/10", verb: "Live class" },
-    link_click: {
-      icon: ExternalLink,
-      tint: "text-purple-400 bg-purple-500/10",
-      verb: "Clicked link",
-    },
-    click: { icon: MousePointerClick, tint: "text-muted-foreground bg-secondary", verb: "Clicked" },
-  }
+const EVENT_STYLES: Record<
+  ActivityLog["event_type"],
+  { icon: LucideIcon; tint: string; verb: string }
+> = {
+  page_view: { icon: FileText, tint: "text-blue-400 bg-blue-500/10", verb: "Viewed page" },
+  para_open: { icon: BookOpen, tint: "text-emerald-400 bg-emerald-500/10", verb: "Opened" },
+  pdf_page: { icon: FileText, tint: "text-amber-400 bg-amber-500/10", verb: "Turned to" },
+  live_class: { icon: WifiOff, tint: "text-rose-400 bg-rose-500/10", verb: "Live class" },
+  link_click: {
+    icon: ExternalLink,
+    tint: "text-purple-400 bg-purple-500/10",
+    verb: "Clicked link",
+  },
+  click: { icon: MousePointerClick, tint: "text-muted-foreground bg-secondary", verb: "Clicked" },
+}
 
 function activityPrimaryText(log: ActivityLog): string {
   const style = EVENT_STYLES[log.event_type]
@@ -68,7 +70,7 @@ export function ActivityFeed({ logs, loading }: { logs: ActivityLog[]; loading: 
 
   // Group by calendar day for a scannable timeline (descending: newest first).
   const sortedLogs = [...logs].sort(
-    (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime()
+    (a, b) => new Date(b.occurred_at).getTime() - new Date(a.occurred_at).getTime(),
   )
   const groups: { day: string; items: ActivityLog[] }[] = []
   for (const log of sortedLogs) {

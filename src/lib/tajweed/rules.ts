@@ -1,21 +1,8 @@
 export type TajweedCategory =
-  | "harakaat"
-  | "echo_nasal"
-  | "madd"
-  | "noon_meem"
-  | "heavy_light"
-  | "makharij"
-  | "waqf"
+  "harakaat" | "echo_nasal" | "madd" | "noon_meem" | "heavy_light" | "makharij" | "waqf"
 
 export type KidCrayonColor =
-  | "sage"
-  | "coral"
-  | "caramel"
-  | "saffron"
-  | "sky"
-  | "teal"
-  | "rose"
-  | "lavender"
+  "sage" | "coral" | "caramel" | "saffron" | "sky" | "teal" | "rose" | "lavender"
 
 export interface TajweedExample {
   arabic: string
@@ -98,7 +85,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "A Zer produces a short 'I' sound (as in 'bit'). Drop your lower jaw slightly without dragging.",
     commonMistake: "Turning it into an Urdu 'ay' sound or stretching it into Yaa Maddah.",
     examples: [
-      { arabic: "إِبِلِ", transliteration: "I · bi · li", note: "Sharp 'I' sounds, do not stretch" },
+      {
+        arabic: "إِبِلِ",
+        transliteration: "I · bi · li",
+        note: "Sharp 'I' sounds, do not stretch",
+      },
       { arabic: "شَهِدَ", transliteration: "Sha · hi · da", note: "Middle letter 'hi' is quick" },
     ],
     color: "teal",
@@ -140,8 +131,7 @@ export const TAJWEED_RULES: TajweedRule[] = [
     doSay: "Baa (1 – 2)",
     dontSay: "Ba (Too short)",
     shortCue: "Stretch for 1 Alif (2 counts/seconds).",
-    explanation:
-      "A Khari Zabar is equal to an Alif Maddah. Stretch the sound gently for 2 counts.",
+    explanation: "A Khari Zabar is equal to an Alif Maddah. Stretch the sound gently for 2 counts.",
     commonMistake: "Reading it too short like a normal Zabar or over-stretching beyond 2 counts.",
     examples: [
       { arabic: "مٰلِكِ", transliteration: "Maa · li · ki", note: "Stretch 'Maa' for 2 counts" },
@@ -167,9 +157,21 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "A Khari Zer is equal to a Yaa Maddah. Stretch the 'Ee' sound gently for 2 counts.",
     commonMistake: "Reading it fast like a normal Zer without elongation.",
     examples: [
-      { arabic: "بِهٖ", transliteration: "Bi · hee", note: "Stretch 'hee' with Khari Zer for 2 counts" },
-      { arabic: "عِبَادِهٖ", transliteration: "I · baa · di · hee", note: "Khari Zer on Haa stretched for 2 counts" },
-      { arabic: "فِيهٖ", transliteration: "Fee · hee", note: "Stretch 'hee' with Khari Zer for 2 counts" },
+      {
+        arabic: "بِهٖ",
+        transliteration: "Bi · hee",
+        note: "Stretch 'hee' with Khari Zer for 2 counts",
+      },
+      {
+        arabic: "عِبَادِهٖ",
+        transliteration: "I · baa · di · hee",
+        note: "Khari Zer on Haa stretched for 2 counts",
+      },
+      {
+        arabic: "فِيهٖ",
+        transliteration: "Fee · hee",
+        note: "Stretch 'hee' with Khari Zer for 2 counts",
+      },
     ],
     color: "teal",
     isQuickPick: false,
@@ -191,9 +193,21 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "An Ulta Pesh is equal to a Waw Maddah. Round your lips and stretch the 'Oo' sound for 2 counts.",
     commonMistake: "Skipping the stretch and reading it like a normal short Pesh.",
     examples: [
-      { arabic: "لَهٗ", transliteration: "La · hoo", note: "Stretch 'hoo' with Ulta Pesh for 2 counts" },
-      { arabic: "دَاوٗدُ", transliteration: "Daa · woo · du", note: "Stretch 'woo' with Ulta Pesh for 2 counts" },
-      { arabic: "رَسُولُهٗ", transliteration: "Ra · soo · lu · hoo", note: "Stretch 'hoo' with Ulta Pesh for 2 counts" },
+      {
+        arabic: "لَهٗ",
+        transliteration: "La · hoo",
+        note: "Stretch 'hoo' with Ulta Pesh for 2 counts",
+      },
+      {
+        arabic: "دَاوٗدُ",
+        transliteration: "Daa · woo · du",
+        note: "Stretch 'woo' with Ulta Pesh for 2 counts",
+      },
+      {
+        arabic: "رَسُولُهٗ",
+        transliteration: "Ra · soo · lu · hoo",
+        note: "Stretch 'hoo' with Ulta Pesh for 2 counts",
+      },
     ],
     color: "sky",
     isQuickPick: false,
@@ -215,7 +229,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "Sukoon indicates a resting letter without a vowel. Join the previous vowel to this letter firmly.",
     commonMistake: "Adding an extra phantom vowel sound (e.g. saying 'Ab-a' instead of 'Ab').",
     examples: [
-      { arabic: "أَنْعَمْتَ", transliteration: "An · 'am · ta", note: "Stop cleanly on Noon and Meem" },
+      {
+        arabic: "أَنْعَمْتَ",
+        transliteration: "An · 'am · ta",
+        note: "Stop cleanly on Noon and Meem",
+      },
       { arabic: "يَعْلَمُ", transliteration: "Ya' · la · mu", note: "Firm rest on Ayn" },
     ],
     color: "sage",
@@ -313,7 +331,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
     commonMistake: "Rushing past Noon or Meem without holding the 2-count nasal resonance.",
     examples: [
       { arabic: "إِنَّ", transliteration: "Innn · na", note: "Hold the 'nnn' sound for 2 counts" },
-      { arabic: "ثُمَّ", transliteration: "Thummm · ma", note: "Hold the 'mmm' sound for 2 counts" },
+      {
+        arabic: "ثُمَّ",
+        transliteration: "Thummm · ma",
+        note: "Hold the 'mmm' sound for 2 counts",
+      },
     ],
     color: "lavender",
     isQuickPick: true,
@@ -340,7 +362,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
     commonMistake: "Reading too fast (chopping to 1 count) or over-stretching to 4 counts.",
     examples: [
       { arabic: "قَالَ", transliteration: "Qaa · la", note: "2 counts on 'Qaa'" },
-      { arabic: "نُوحِيهَا", transliteration: "Noo · hee · haa", note: "All three natural Madd letters!" },
+      {
+        arabic: "نُوحِيهَا",
+        transliteration: "Noo · hee · haa",
+        note: "All three natural Madd letters!",
+      },
     ],
     color: "saffron",
     isQuickPick: true,
@@ -363,7 +389,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
     commonMistake: "Under-stretching like a normal 2-count Madd.",
     examples: [
       { arabic: "جَآءَ", transliteration: "Jaaaa · 'a", note: "Stretch 'Jaa' for 4-5 counts" },
-      { arabic: "السَّمَآءِ", transliteration: "As · Samaaaa · 'i", note: "Wavy mark = 4-5 counts" },
+      {
+        arabic: "السَّمَآءِ",
+        transliteration: "As · Samaaaa · 'i",
+        note: "Wavy mark = 4-5 counts",
+      },
     ],
     color: "saffron",
     isQuickPick: false,
@@ -385,7 +415,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "When a Madd letter is at the end of a word and Hamza is at the start of the NEXT word.",
     commonMistake: "Rushing past it without noticing the wavy symbol above the letter.",
     examples: [
-      { arabic: "إِنَّآ أَعْطَيْنٰكَ", transliteration: "Innaaa · a'taynaak", note: "Stretch 'Innaaa' before 'a'taynaak" },
+      {
+        arabic: "إِنَّآ أَعْطَيْنٰكَ",
+        transliteration: "Innaaa · a'taynaak",
+        note: "Stretch 'Innaaa' before 'a'taynaak",
+      },
       { arabic: "فِيۤ أَنفُسِكُمْ", transliteration: "Feeee · anfusikum", note: "Stretch 'Feeee'" },
     ],
     color: "saffron",
@@ -408,8 +442,16 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "When a Madd letter is followed by a Sukoon or Tashdeed. Obligatory stretch of 6 full counts.",
     commonMistake: "Stopping at 3 or 4 counts instead of giving the full 6 counts.",
     examples: [
-      { arabic: "ٱلضَّآلِّينَ", transliteration: "Ad · Daaaaall · leen", note: "6 full counts on Dhaad" },
-      { arabic: "الٓمٓ", transliteration: "Alif · Laaaam · Meeeem", note: "6 counts on Laam and Meem" },
+      {
+        arabic: "ٱلضَّآلِّينَ",
+        transliteration: "Ad · Daaaaall · leen",
+        note: "6 full counts on Dhaad",
+      },
+      {
+        arabic: "الٓمٓ",
+        transliteration: "Alif · Laaaam · Meeeem",
+        note: "6 counts on Laam and Meem",
+      },
     ],
     color: "saffron",
     isQuickPick: false,
@@ -433,9 +475,14 @@ export const TAJWEED_RULES: TajweedRule[] = [
     shortCue: "Hide the Noon sound in the nose with a 2-count hum!",
     explanation:
       "When Noon Saakin or Tanween is followed by any of the 15 Ikhfa letters, conceal the Noon with light Ghunnah.",
-    commonMistake: "Touching the tongue to the roof of the mouth (making a clear 'N' instead of a soft hum).",
+    commonMistake:
+      "Touching the tongue to the roof of the mouth (making a clear 'N' instead of a soft hum).",
     examples: [
-      { arabic: "مِن قَبْلُ", transliteration: "Ming · qab · lu", note: "Soft nasal hum before Qaf" },
+      {
+        arabic: "مِن قَبْلُ",
+        transliteration: "Ming · qab · lu",
+        note: "Soft nasal hum before Qaf",
+      },
       { arabic: "أَنتُمْ", transliteration: "Ang · tum", note: "Do not touch tongue on 'n'" },
     ],
     color: "lavender",
@@ -482,7 +529,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
     commonMistake: "Pronouncing the Noon distinctly instead of blending seamlessly.",
     examples: [
       { arabic: "مَن يَّقُولُ", transliteration: "May · ya · qool", note: "Noon blends into Yaa" },
-      { arabic: "مِّن رَّبِّهِمْ", transliteration: "Mir · rab · bi · him", note: "Noon merges into Raa" },
+      {
+        arabic: "مِّن رَّبِّهِمْ",
+        transliteration: "Mir · rab · bi · him",
+        note: "Noon merges into Raa",
+      },
     ],
     color: "caramel",
     isQuickPick: false,
@@ -504,8 +555,16 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "When Noon Saakin or Tanween is followed by the letter Baa (ب), change the sound to a gentle Meem with Ghunnah.",
     commonMistake: "Pronouncing the Noon as 'N' or clamping the lips too hard on the Meem.",
     examples: [
-      { arabic: "مِنۢ بَعْدِ", transliteration: "Mim · ba' · di", note: "Tiny Meem mark above Noon" },
-      { arabic: "سَمِيعٌۢ بَصِيرٌ", transliteration: "Samee'um · baseer", note: "Tanween turns into Meem" },
+      {
+        arabic: "مِنۢ بَعْدِ",
+        transliteration: "Mim · ba' · di",
+        note: "Tiny Meem mark above Noon",
+      },
+      {
+        arabic: "سَمِيعٌۢ بَصِيرٌ",
+        transliteration: "Samee'um · baseer",
+        note: "Tanween turns into Meem",
+      },
     ],
     color: "coral",
     isQuickPick: false,
@@ -529,10 +588,19 @@ export const TAJWEED_RULES: TajweedRule[] = [
     shortCue: "Full mouth, deep and heavy! Back of tongue raised.",
     explanation:
       "These 7 letters are ALWAYS pronounced thick, heavy, and resonant with a full mouth.",
-    commonMistake: "Reading them light and flat like English letters (e.g. flat 'K' instead of deep 'Qaf').",
+    commonMistake:
+      "Reading them light and flat like English letters (e.g. flat 'K' instead of deep 'Qaf').",
     examples: [
-      { arabic: "خَلَقَ", transliteration: "Kha · la · qa", note: "Kha and Qaf are heavy; Laam is light" },
-      { arabic: "صِرَاطَ", transliteration: "Si · raa · ta", note: "Saad, Raa, and Taa are all heavy" },
+      {
+        arabic: "خَلَقَ",
+        transliteration: "Kha · la · qa",
+        note: "Kha and Qaf are heavy; Laam is light",
+      },
+      {
+        arabic: "صِرَاطَ",
+        transliteration: "Si · raa · ta",
+        note: "Saad, Raa, and Taa are all heavy",
+      },
     ],
     color: "rose",
     isQuickPick: false,
@@ -554,8 +622,16 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "Raa is pronounced heavy (Tafkheem) when it has Zabar or Pesh. It is light (Tarqeeq) when it has Zer.",
     commonMistake: "Reading Raa with Zer as heavy, or Raa with Zabar as light.",
     examples: [
-      { arabic: "رَبَّنَا", transliteration: "Rab · ba · naa (Heavy)", note: "Heavy Raa (has Zabar)" },
-      { arabic: "رِزْقًا", transliteration: "Riz · qan (Light)", note: "Light, smiling Raa (has Zer)" },
+      {
+        arabic: "رَبَّنَا",
+        transliteration: "Rab · ba · naa (Heavy)",
+        note: "Heavy Raa (has Zabar)",
+      },
+      {
+        arabic: "رِزْقًا",
+        transliteration: "Riz · qan (Light)",
+        note: "Light, smiling Raa (has Zer)",
+      },
     ],
     color: "teal",
     isQuickPick: false,
@@ -577,8 +653,16 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "The word 'Allah' has a heavy Laam if the letter before it has Zabar or Pesh. If preceded by Zer, it is light.",
     commonMistake: "Saying heavy 'Bismil-Laah' instead of light 'Bismil-laah'.",
     examples: [
-      { arabic: "هُوَ ٱللَّهُ", transliteration: "Huwal · Laah (Heavy)", note: "Heavy Laam after Zabar" },
-      { arabic: "بِسْمِ ٱللَّهِ", transliteration: "Bismil · laah (Light)", note: "Light, flat Laam after Zer" },
+      {
+        arabic: "هُوَ ٱللَّهُ",
+        transliteration: "Huwal · Laah (Heavy)",
+        note: "Heavy Laam after Zabar",
+      },
+      {
+        arabic: "بِسْمِ ٱللَّهِ",
+        transliteration: "Bismil · laah (Light)",
+        note: "Light, flat Laam after Zer",
+      },
     ],
     color: "sky",
     isQuickPick: false,
@@ -627,7 +711,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
       "ح is crisp and comes from the center of the throat (like blowing on glasses). ه comes from deep in the chest.",
     commonMistake: "Saying soft chest 'Haa' (ہ) for 'Al-Hamd' instead of clean throat 'Haa' (ح).",
     examples: [
-      { arabic: "ٱلْحَمْدُ", transliteration: "Al · Hamd (Throat ح)", note: "Center of throat (ح)" },
+      {
+        arabic: "ٱلْحَمْدُ",
+        transliteration: "Al · Hamd (Throat ح)",
+        note: "Center of throat (ح)",
+      },
       { arabic: "هُوَ", transliteration: "Hu · wa (Chest ه)", note: "Deep bottom of throat (ه)" },
     ],
     color: "rose",
@@ -648,9 +736,14 @@ export const TAJWEED_RULES: TajweedRule[] = [
     shortCue: "ع = squeeze the middle of throat! ء = sharp stop.",
     explanation:
       "Ayn (ع) requires squeezing the vocal cords gently in the middle throat. Hamza (ء) is a quick sharp glottal stop.",
-    commonMistake: "Reading Ayn like a plain Alif (e.g. saying 'Alameen' without the deep throat squeeze).",
+    commonMistake:
+      "Reading Ayn like a plain Alif (e.g. saying 'Alameen' without the deep throat squeeze).",
     examples: [
-      { arabic: "عَلِيمٌ", transliteration: "'A · leem (Throat ع)", note: "Squeezed middle throat (ع)" },
+      {
+        arabic: "عَلِيمٌ",
+        transliteration: "'A · leem (Throat ع)",
+        note: "Squeezed middle throat (ع)",
+      },
       { arabic: "أَلِيمٌ", transliteration: "A · leem (Plain ء)", note: "Sharp clear stop (ء)" },
     ],
     color: "caramel",
@@ -674,7 +767,11 @@ export const TAJWEED_RULES: TajweedRule[] = [
     commonMistake: "Reading Qaf as a light 'K' (e.g. saying 'Kul' instead of 'Qul').",
     examples: [
       { arabic: "قُلْ", transliteration: "Qul (Deep ق)", note: "Deep heavy Qaf" },
-      { arabic: "كُلْ", transliteration: "Kul (Light ك)", note: "Light friendly Kaf with slight air" },
+      {
+        arabic: "كُلْ",
+        transliteration: "Kul (Light ك)",
+        note: "Light friendly Kaf with slight air",
+      },
     ],
     color: "teal",
     isQuickPick: false,
@@ -698,7 +795,8 @@ export const TAJWEED_RULES: TajweedRule[] = [
     shortCue: "م = must stop; ط = better to stop; ج = either way; لا = do not stop!",
     explanation:
       "Waqf symbols tell you where to breathe and stop. When stopping on a word, turn the last vowel into a Sukoon.",
-    commonMistake: "Pronouncing the last vowel when stopping, or stopping on 'لا' in the middle of an ayah.",
+    commonMistake:
+      "Pronouncing the last vowel when stopping, or stopping on 'لا' in the middle of an ayah.",
     examples: [
       { arabic: "ٱلرَّحِيمْ", transliteration: "Ar · Ra · heem (Stop)", note: "Drop Zer and rest" },
       { arabic: "مـ  /  لا", transliteration: "مـ Stop · لا Don't stop", note: "Follow the sign" },

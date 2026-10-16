@@ -145,7 +145,7 @@ export default function StudentDetailPage() {
     const studentAndFeesPromise = (async () => {
       const { data } = await supabase.from("students").select("*").eq("id", params.id).single()
       if (!data) {
-        router.push("/students")
+        router.push("/teacher/students")
         return false
       }
       setStudent(data)
@@ -682,7 +682,7 @@ export default function StudentDetailPage() {
           Dashboard
         </Link>
         <span className="text-muted-foreground/40">/</span>
-        <Link href="/students" className="hover:text-foreground transition-colors">
+        <Link href="/teacher/students" className="hover:text-foreground transition-colors">
           Students
         </Link>
         <span className="text-muted-foreground/40">/</span>
@@ -692,7 +692,7 @@ export default function StudentDetailPage() {
       {/* Clean Command Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 print:hidden">
         <div className="flex items-center gap-3 min-w-0">
-          <Link href="/students">
+          <Link href="/teacher/students">
             <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -727,7 +727,7 @@ export default function StudentDetailPage() {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <Link href={`/class?student=${student.id}`}>
+          <Link href={`/teacher/class?student=${student.id}`}>
             <Button size="sm">
               <Play className="h-3.5 w-3.5 mr-1.5" />
               Start class

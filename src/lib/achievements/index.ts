@@ -13,7 +13,15 @@ export {
   parasCompleted,
   totalParas,
 } from "./completion/quran"
-export { khatmSlug, paraSlug, QAIDA_COMPLETE_SLUG, quizBadgeSlug, QURAN_HALF_SLUG, QURAN_KHATM_SLUG, slugIssuesCertificate } from "./slugs"
+export {
+  khatmSlug,
+  paraSlug,
+  QAIDA_COMPLETE_SLUG,
+  quizBadgeSlug,
+  QURAN_HALF_SLUG,
+  QURAN_KHATM_SLUG,
+  slugIssuesCertificate,
+} from "./slugs"
 export type {
   AchievementDefinition,
   AchievementDomain,

@@ -36,12 +36,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AGE_GROUP_LABELS, CATEGORY_LABELS } from "@/lib/quizzes/quiz-engine"
-import type {
-  Quiz,
-  QuizAssignment,
-  QuizAttempt,
-  QuizQuestion,
-} from "@/lib/quizzes/types"
+import type { Quiz, QuizAssignment, QuizAttempt, QuizQuestion } from "@/lib/quizzes/types"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import type { Student } from "@/lib/utils"
@@ -55,7 +50,10 @@ interface LinkedStory {
 }
 
 type AttemptWithStudent = QuizAttempt & {
-  students?: { id: string; name: string; guardian_name?: string | null } | { id: string; name: string; guardian_name?: string | null }[] | null
+  students?:
+    | { id: string; name: string; guardian_name?: string | null }
+    | { id: string; name: string; guardian_name?: string | null }[]
+    | null
 }
 
 export default function TeacherQuizViewPage() {
@@ -228,13 +226,21 @@ export default function TeacherQuizViewPage() {
 
     // Strict Rule: Published quizzes cannot be deleted. First they have to unpublish and then delete.
     if (quiz.is_published) {
-      toast.error("Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.", {
-        duration: 5000,
-      })
+      toast.error(
+        "Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.",
+        {
+          duration: 5000,
+        },
+      )
       return
     }
 
-    if (!confirm(`Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`)) return
+    if (
+      !confirm(
+        `Are you sure you want to delete "${quiz.title}"? All student attempts will be deleted.`,
+      )
+    )
+      return
 
     try {
       const res = await fetch("/api/quizzes/delete", {
@@ -249,7 +255,7 @@ export default function TeacherQuizViewPage() {
       }
 
       toast.success("Quiz deleted successfully")
-      router.push("/quizzes")
+      router.push("/teacher/quizzes")
     } catch (err: unknown) {
       console.error("Failed to delete quiz:", err)
       const errorMsg = err instanceof Error ? err.message : "Failed to delete quiz"
@@ -301,7 +307,7 @@ export default function TeacherQuizViewPage() {
           This quiz may have been removed or does not exist.
         </p>
         <Button asChild className="mt-6 gap-2" variant="outline">
-          <Link href="/quizzes">
+          <Link href="/teacher/quizzes">
             <ArrowLeft className="h-4 w-4" /> Back to Quizzes
           </Link>
         </Button>
@@ -316,8 +322,13 @@ export default function TeacherQuizViewPage() {
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in-up pb-12">
       {/* Top Back & Action Breadcrumb */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button asChild variant="ghost" size="sm" className="gap-1.5 text-muted-foreground hover:text-foreground">
-          <Link href="/quizzes">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="gap-1.5 text-muted-foreground hover:text-foreground"
+        >
+          <Link href="/teacher/quizzes">
             <ArrowLeft className="h-4 w-4" /> Back to Quizzes
           </Link>
         </Button>
@@ -411,8 +422,13 @@ export default function TeacherQuizViewPage() {
                   <p className="text-sm font-semibold">{linkedStory.title}</p>
                 </div>
               </div>
-              <Button asChild size="sm" variant="outline" className="h-8 gap-1 text-xs font-bold border-teal-500/40 bg-card">
-                <Link href="/history">
+              <Button
+                asChild
+                size="sm"
+                variant="outline"
+                className="h-8 gap-1 text-xs font-bold border-teal-500/40 bg-card"
+              >
+                <Link href="/teacher/history">
                   <span>Open in Story Studio</span>
                   <ExternalLink className="h-3 w-3" />
                 </Link>
@@ -457,7 +473,9 @@ export default function TeacherQuizViewPage() {
                 <span>Pass Rate</span>
               </div>
               <p className="mt-1 text-2xl font-bold text-foreground">{stats.passRate}%</p>
-              <p className="text-[11px] text-muted-foreground">{stats.totalAttempts} total attempts</p>
+              <p className="text-[11px] text-muted-foreground">
+                {stats.totalAttempts} total attempts
+              </p>
             </div>
           </div>
 
@@ -612,15 +630,11 @@ export default function TeacherQuizViewPage() {
 
                     return (
                       <tr key={attempt.id} className="hover:bg-muted/20 transition-colors">
-                        <td className="px-4 py-3 font-semibold text-foreground">
-                          {studentName}
-                        </td>
+                        <td className="px-4 py-3 font-semibold text-foreground">{studentName}</td>
                         <td className="px-4 py-3 font-medium">
                           {attempt.score} / {attempt.total_questions}
                         </td>
-                        <td className="px-4 py-3 font-bold">
-                          {attempt.percentage}%
-                        </td>
+                        <td className="px-4 py-3 font-bold">{attempt.percentage}%</td>
                         <td className="px-4 py-3">
                           <Badge
                             variant={passed ? "default" : "outline"}
@@ -699,7 +713,9 @@ export default function TeacherQuizViewPage() {
             </div>
 
             <div className="flex items-center justify-between text-xs px-1 text-muted-foreground">
-              <span>{selectedStudentIds.length} of {students.length} selected</span>
+              <span>
+                {selectedStudentIds.length} of {students.length} selected
+              </span>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -772,7 +788,12 @@ export default function TeacherQuizViewPage() {
           </div>
 
           <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" onClick={() => setAssignOpen(false)} disabled={savingAssign}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setAssignOpen(false)}
+              disabled={savingAssign}
+            >
               Cancel
             </Button>
             <Button
@@ -792,7 +813,10 @@ export default function TeacherQuizViewPage() {
         <DialogContent className="max-w-lg p-6">
           <DialogHeader>
             <div className="flex items-center justify-between">
-              <Badge variant="outline" className="border-amber-500/40 text-amber-600 text-xs font-bold">
+              <Badge
+                variant="outline"
+                className="border-amber-500/40 text-amber-600 text-xs font-bold"
+              >
                 Student Player Preview
               </Badge>
               {!previewFinished && questions.length > 0 && (
@@ -836,12 +860,14 @@ export default function TeacherQuizViewPage() {
 
                   if (showFeedback) {
                     if (opt.is_correct) {
-                      btnStyle = "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold"
+                      btnStyle =
+                        "border-emerald-500 bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 font-bold"
                     } else if (isSelected) {
                       btnStyle = "border-rose-500 bg-rose-500/15 text-rose-800 dark:text-rose-200"
                     }
                   } else if (isSelected) {
-                    btnStyle = "border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-bold"
+                    btnStyle =
+                      "border-amber-500 bg-amber-500/10 text-amber-900 dark:text-amber-200 font-bold"
                   }
 
                   return (

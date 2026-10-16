@@ -180,8 +180,8 @@ export function StudentSessionsList({
                       {oldSessionsCount === 1 ? "" : "s"}?
                     </p>
                     <p className="mb-3 text-xs text-muted-foreground">
-                      This removes every session older than 1 month for {studentName}. Only the
-                      last month is kept. This can&rsquo;t be undone.
+                      This removes every session older than 1 month for {studentName}. Only the last
+                      month is kept. This can&rsquo;t be undone.
                     </p>
                     <div className="flex gap-2">
                       <Button

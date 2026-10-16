@@ -194,11 +194,7 @@ export default function StudentHistoryReaderPage() {
 
       {/* 2. 📖 The Adventure (Interactive Flip-Card Scenes) */}
       {story.content ? (
-        <StorySceneReader
-          content={story.content}
-          storyTitle={story.title}
-          className="mb-8"
-        />
+        <StorySceneReader content={story.content} storyTitle={story.title} className="mb-8" />
       ) : (
         !story.file_url && (
           <KidEmpty

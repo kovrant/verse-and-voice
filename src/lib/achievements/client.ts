@@ -1,11 +1,7 @@
 import type { MemChunk } from "@/lib/memorization"
 import { supabase } from "@/lib/supabase"
 
-import {
-  syncMemorizationChunk,
-  syncMemorizationLesson,
-  syncQuranRound,
-} from "./sync"
+import { syncMemorizationChunk, syncMemorizationLesson, syncQuranRound } from "./sync"
 import type { QuranRoundProgress, QuranRoundRef } from "./types"
 
 export type RoundProgress = QuranRoundProgress

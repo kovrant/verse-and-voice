@@ -8,11 +8,7 @@ interface StoryMoralCompassProps {
   className?: string
 }
 
-export function StoryMoralCompass({
-  lessons,
-  virtue,
-  className = "",
-}: StoryMoralCompassProps) {
+export function StoryMoralCompass({ lessons, virtue, className = "" }: StoryMoralCompassProps) {
   if (!lessons || lessons.length === 0) return null
 
   // Card themes for the 3 kid contexts

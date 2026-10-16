@@ -32,7 +32,7 @@ The only page a visitor can see without an account. It tells one child's journey
 
 | Concern | Where | Rule |
 |---|---|---|
-| Front door | `src/middleware.ts` | A request to `/` with no session is **rewritten** (not redirected) to `/welcome`, so the bare domain shows the website. Signed-in teachers still get the dashboard at `/`; signed-in students are sent to `/student` as before. |
+| Front door | `src/middleware.ts` | A request to `/` is **rewritten** (not redirected) to `/welcome` for everyone except a signed-in student, who is sent to `/student`. The teacher dashboard lives at `/teacher`, so the bare domain is the website for teachers too. |
 | Public access | `src/middleware.ts` `PUBLIC_PATHS` | `/welcome` is listed too, so the page is also reachable directly (handy for previewing while signed in as the teacher). |
 | Shell and palette | `src/components/app-shell.tsx`, `src/components/theme-provider.tsx` | Both read `useSelectedLayoutSegment()` and treat the segment `welcome` as the landing page: no shell, student palette. The segment follows the **rendered route**, so it is right on a full load of `/` and after a client-side navigation to `/` (e.g. the login page's "Back to website" link). Never key this off the pathname: it is `/` there, and the root layout is kept across client navigations. |
 | Palette stamp | `src/components/theme-provider.tsx` `portalForPath` and the first-paint script in `src/app/layout.tsx` | Both stamp `data-portal="student"` for `/welcome`. The page uses fixed hex colours, so this only matters for the brief pre-hydration body background. Keep the two lists in sync. |

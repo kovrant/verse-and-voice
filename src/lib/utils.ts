@@ -38,7 +38,7 @@ export function safeFormatDate(
       value instanceof Date
         ? value
         : typeof value === "string"
-          ? parseLocalDate(value) ?? new Date(value)
+          ? (parseLocalDate(value) ?? new Date(value))
           : new Date(value)
     if (isNaN(d.getTime())) return fallback
     return format(d, fmt)

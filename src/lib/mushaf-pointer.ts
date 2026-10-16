@@ -40,4 +40,3 @@ export function calculateLineBounds(
     heightPercent: Number((lineHeight * 100).toFixed(3)),
   }
 }
-

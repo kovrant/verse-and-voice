@@ -10,13 +10,7 @@ import {
 } from "lucide-react"
 
 export type FeedFilter =
-  | "all"
-  | "presence"
-  | "fee_paid"
-  | "achievement"
-  | "live_class"
-  | "session"
-  | "announcement"
+  "all" | "presence" | "fee_paid" | "achievement" | "live_class" | "session" | "announcement"
 
 export const FEED_FILTERS: { id: FeedFilter; label: string }[] = [
   { id: "all", label: "All" },

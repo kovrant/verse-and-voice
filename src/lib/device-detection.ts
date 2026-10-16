@@ -29,11 +29,13 @@ export function detectDevice(
   }
 
   const ua = nav?.userAgent ?? (typeof navigator !== "undefined" ? navigator.userAgent : "")
-  const touchPoints = nav?.maxTouchPoints ?? (typeof navigator !== "undefined" ? navigator.maxTouchPoints || 0 : 0)
+  const touchPoints =
+    nav?.maxTouchPoints ?? (typeof navigator !== "undefined" ? navigator.maxTouchPoints || 0 : 0)
   const isTouch = touchPoints > 0
   const width = scr?.width ?? (typeof window !== "undefined" ? window.screen.width : 0)
   const height = scr?.height ?? (typeof window !== "undefined" ? window.screen.height : 0)
-  const pixelRatio = scr?.devicePixelRatio ?? (typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1)
+  const pixelRatio =
+    scr?.devicePixelRatio ?? (typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1)
 
   const minDim = Math.min(width, height)
   const maxDim = Math.max(width, height)

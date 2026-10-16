@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  findNewAchievementIds,
-  hasUnseenAchievements,
-} from "./celebrations"
+import { findNewAchievementIds, hasUnseenAchievements } from "./celebrations"
 
 describe("findNewAchievementIds", () => {
   it("baselines on first visit without celebrating", () => {

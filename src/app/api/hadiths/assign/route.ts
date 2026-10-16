@@ -42,7 +42,11 @@ export async function POST(request: Request) {
 
   // 1. Fetch Hadith info and existing assignments in parallel
   const [{ data: hadith, error: hadithError }, { data: currentAssignments }] = await Promise.all([
-    admin.from("hadiths").select("id, hadith_number, english_text").eq("id", hadithId).maybeSingle(),
+    admin
+      .from("hadiths")
+      .select("id, hadith_number, english_text")
+      .eq("id", hadithId)
+      .maybeSingle(),
     admin.from("hadith_assignments").select("id, student_id").eq("hadith_id", hadithId),
   ])
 

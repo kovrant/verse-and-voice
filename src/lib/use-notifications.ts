@@ -12,7 +12,7 @@
 // teacher policy leak (and mark-read) every user's feed — see
 // supabase/migration_notifications_rls_fix.sql.
 
-import { type Dispatch, type SetStateAction,useCallback, useEffect, useState } from "react"
+import { type Dispatch, type SetStateAction, useCallback, useEffect, useState } from "react"
 
 import { retentionCutoffIso } from "@/lib/notifications"
 import { supabase } from "@/lib/supabase"

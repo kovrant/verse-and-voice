@@ -86,11 +86,15 @@ export const AGE_GROUP_LABELS: Record<string, string> = {
  * Validates whether a quiz can be deleted according to platform rules:
  * Published quizzes CANNOT be deleted. First they have to unpublish and then delete.
  */
-export function canDeleteQuiz(quiz: { is_published: boolean }): { allowed: boolean; reason?: string } {
+export function canDeleteQuiz(quiz: { is_published: boolean }): {
+  allowed: boolean
+  reason?: string
+} {
   if (quiz.is_published) {
     return {
       allowed: false,
-      reason: "Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.",
+      reason:
+        "Published quizzes cannot be deleted. Please unpublish the quiz first before deleting.",
     }
   }
   return { allowed: true }

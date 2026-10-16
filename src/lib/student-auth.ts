@@ -73,30 +73,29 @@ export function resolveLoginEmail(identifier: string): string {
  * visible on the next request yet.
  */
 export function studentPostLoginPath(redirectTo: string | null | undefined): string {
-  if (redirectTo === "/student" || (redirectTo?.startsWith("/student/") && !redirectTo.includes("://"))) {
+  if (
+    redirectTo === "/student" ||
+    (redirectTo?.startsWith("/student/") && !redirectTo.includes("://"))
+  ) {
     return redirectTo
   }
   return "/student"
 }
 
 /**
- * After a teacher signs in at /admin, only internal teacher paths are safe.
- * Rejects external URLs (`https://...`), protocol-relative URLs (`//evil.com`),
- * and student/auth routes to prevent Open Redirect phishing.
+ * After a teacher signs in at /teacher/login, only paths inside the teacher
+ * portal (/teacher/**) are safe to return to. Rejects external URLs
+ * (`https://...`), protocol-relative URLs (`//evil.com`), the login page itself
+ * and anything outside the portal, to prevent Open Redirect phishing.
  */
 export function teacherPostLoginPath(redirectTo: string | null | undefined): string {
   if (
     redirectTo &&
-    redirectTo.startsWith("/") &&
-    !redirectTo.startsWith("//") &&
-    !redirectTo.includes("://") &&
-    redirectTo !== "/student" &&
-    !redirectTo.startsWith("/student/") &&
-    !redirectTo.startsWith("/login") &&
-    !redirectTo.startsWith("/admin")
+    (redirectTo === "/teacher" || redirectTo.startsWith("/teacher/")) &&
+    !redirectTo.startsWith("/teacher/login") &&
+    !redirectTo.includes("://")
   ) {
     return redirectTo
   }
-  return "/"
+  return "/teacher"
 }
-

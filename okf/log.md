@@ -267,3 +267,11 @@ tags:
   * Later the same day: replaced the first build with a 1:1 port of the owner's approved Claude Design mock (`Verse and Voice.dc.html`); `welcome-art.tsx` removed, Framer Motion no longer used on the page.
   * Front door: `/` now serves the website to visitors without a session (middleware rewrite + `x-vv-landing` header read by the root layout). Signed-in teachers keep the dashboard at `/`, students still go to `/student`.
   * Fix: after a client-side navigation from /login to "/", the teacher sidebar wrapped the website (the root layout kept its first render). Shell and palette now key off `useSelectedLayoutSegment() === "welcome"` instead of a request header.
+
+### [2026-10-16] - Teacher Portal Moves Under /teacher
+* **Scope:** `src/app/teacher/**` (moved from the root), `src/middleware.ts`, `src/lib/student-auth.ts`, `src/components/sidebar.tsx`, `src/components/app-shell.tsx`, `src/components/topbar.tsx`, `src/app/auth/signout/route.ts`, `src/lib/notify.ts`, `next.config.js`, every teacher link.
+* **Entries Updated:** `architecture/dual-portal-routing.md`, `architecture/public-welcome-page.md`, `README.md`, `log.md`.
+* **Changes:**
+  * The dashboard and all teacher pages now live under `/teacher/**`; the teacher login is `/teacher/login`. `/` is the public website for everyone except signed-in students.
+  * `/admin` and the old root paths (`/students/…`, `/class`, …) redirect to their `/teacher` equivalents, so bookmarks and notification links keep working.
+  * `teacherPostLoginPath` accepts only `/teacher/**` and falls back to `/teacher`.

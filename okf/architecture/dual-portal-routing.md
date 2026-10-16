@@ -19,8 +19,10 @@ tags:
 # Dual-Portal Routing and Confinement
 
 Quran Academy hosts two distinct user-facing applications inside a single Next.js 14 App Router project:
-1. **Teacher Administrative Dashboard:** Rooted at `/`, managing students, analytics, fees, curriculum, and live teaching.
+1. **Teacher Administrative Dashboard:** Rooted at `/teacher/**`, managing students, analytics, fees, curriculum, and live teaching.
 2. **Student Learning Portal:** Rooted at `/student/**`, providing live class attendance, Mushaf reading, Namaz tracking, and assignments.
+
+In front of both sits the **public website** at `/` (see [Public Welcome Page](public-welcome-page.md)).
 
 ---
 
@@ -28,15 +30,19 @@ Quran Academy hosts two distinct user-facing applications inside a single Next.j
 
 | User Role | Login URL | Default Home | Confined Routes | Entry Visibility |
 |---|---|---|---|---|
-| **Student** | `/login` | `/student` | `/student/**` only | Default entry for all unauthenticated traffic |
-| **Teacher** | `/admin` | `/` | All routes *except* `/student/**` | Hidden URL; reachable only by direct navigation |
+| **Visitor** | — | `/` (website) | `/`, `/welcome`, `/login`, `/teacher/login` | The bare domain |
+| **Student** | `/login` | `/student` | `/student/**` only | Kids login button on the website |
+| **Teacher** | `/teacher/login` (`/admin` redirects there) | `/teacher` | `/teacher/**` | Not linked from the website; reached by typing it |
 
 ### Confinement Rules in Middleware (`src/middleware.ts`)
 The edge middleware enforces strict separation:
-* **Unauthenticated traffic:** Redirected to `/login?redirectTo=<target>`. (API routes `/api/**` are explicitly exempted to prevent body-dropping on HTTP 307 redirects).
-* **Students attempting admin routes:** Immediately redirected to `/student`.
-* **Teachers attempting student routes:** Immediately redirected to `/` (teachers must not roam inside the student portal).
-* **Already authenticated on login pages:** Visiting `/login` or `/admin` redirects students to `/student` and teachers to `/`.
+* **Legacy addresses:** `/admin` → `/teacher/login`; the old root dashboard paths (`/students/123`, `/class`, `/fees` …) → the same path under `/teacher`, query intact. Covers bookmarks and links stored in old notifications.
+* **Front door:** `/` is rewritten to `/welcome` for everyone except a signed-in student, who goes to `/student`.
+* **Unauthenticated traffic:** `/teacher/**` redirects to `/teacher/login?redirectTo=<target>`; everything else to `/login?redirectTo=<target>`. (API routes `/api/**` are explicitly exempted to prevent body-dropping on HTTP 307 redirects).
+* **Students attempting teacher routes:** Immediately redirected to `/student`.
+* **Teachers attempting student routes:** Immediately redirected to `/teacher` (teachers must not roam inside the student portal).
+* **Already authenticated on login pages:** Visiting `/login` or `/teacher/login` redirects students to `/student` and teachers to `/teacher`.
+* **`teacherPostLoginPath`** only returns paths inside `/teacher/**` (never the login page itself); everything else falls back to `/teacher`.
 
 ---
 

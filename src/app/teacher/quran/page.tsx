@@ -174,7 +174,7 @@ export default function QuranPage() {
                 <p className="text-sm text-muted-foreground mb-5">
                   Go to Media Library to upload Quran PDFs
                 </p>
-                <Button variant="outline" onClick={() => (window.location.href = "/media")}>
+                <Button variant="outline" onClick={() => (window.location.href = "/teacher/media")}>
                   Go to Media Library
                 </Button>
               </>

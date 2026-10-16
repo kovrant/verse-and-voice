@@ -161,5 +161,4 @@ export async function POST(request: Request) {
     badgeAwarded,
     badgeTitle: quiz.badge_title,
   })
-
 }

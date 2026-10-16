@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const segment = useSelectedLayoutSegment()
   const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
   // Auth/entry pages hide the chrome (matches Sidebar returning null there).
-  const isAuthArea = pathname === "/login" || pathname === "/admin"
+  const isAuthArea = pathname === "/login" || pathname === "/teacher/login"
 
   // The public landing page draws its own sky, nav and mascot: no shell at all.
   if (segment === "welcome") return <>{children}</>

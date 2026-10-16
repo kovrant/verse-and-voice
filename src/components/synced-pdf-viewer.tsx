@@ -20,7 +20,11 @@ import type { PDFDocumentProxy } from "pdfjs-dist"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Document, Page } from "react-pdf"
 
-import { calculateLineBounds, calculateMushafLine,DEFAULT_MUSHAF_LINES } from "@/lib/mushaf-pointer"
+import {
+  calculateLineBounds,
+  calculateMushafLine,
+  DEFAULT_MUSHAF_LINES,
+} from "@/lib/mushaf-pointer"
 import { loadPdfBytes, prefetchPdf } from "@/lib/pdf-document-cache"
 import type { PointerState } from "@/lib/use-class-channel"
 
@@ -65,8 +69,6 @@ function PdfSkeleton() {
     </div>
   )
 }
-
-
 
 /**
  * Single-page Quran Mushaf PDF viewer with:
@@ -287,8 +289,7 @@ export function SyncedPdfViewer({
         ? baseWidth * zoom
         : undefined
 
-  const pageHeight =
-    fitMode === "page" && baseHeight > 0 ? baseHeight * zoom : undefined
+  const pageHeight = fitMode === "page" && baseHeight > 0 ? baseHeight * zoom : undefined
 
   const atFirst = page <= 1
   const atLast = numPages > 0 && page >= numPages
@@ -307,7 +308,9 @@ export function SyncedPdfViewer({
             : "text-muted-foreground hover:text-foreground"
         }`
       : `flex h-6 sm:h-7 items-center gap-1 rounded-md px-1.5 sm:px-2 text-xs font-semibold transition-all ${
-          active ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          active
+            ? "bg-card text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
         }`
 
   return (
@@ -341,7 +344,9 @@ export function SyncedPdfViewer({
           >
             <span className="hidden sm:inline">Page </span>
             {page}
-            {numPages ? <span className="text-muted-foreground font-normal"> / {numPages}</span> : null}
+            {numPages ? (
+              <span className="text-muted-foreground font-normal"> / {numPages}</span>
+            ) : null}
           </span>
           <button
             type="button"
@@ -365,7 +370,9 @@ export function SyncedPdfViewer({
                   : "hidden md:inline-flex mr-1 items-center rounded-full bg-secondary px-2.5 py-1 text-[11px] font-semibold text-muted-foreground"
               }
             >
-              {kid && <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--kid-sage))]" />}
+              {kid && (
+                <span className="h-2 w-2 animate-pulse rounded-full bg-[hsl(var(--kid-sage))]" />
+              )}
               {followingLabel}
             </span>
           ) : null}
@@ -390,7 +397,9 @@ export function SyncedPdfViewer({
           {/* View Mode Segmented Controls */}
           <div
             className={
-              kid ? `flex items-center ${kidPill} p-1` : "flex items-center rounded-lg border border-border bg-muted/50 p-0.5"
+              kid
+                ? `flex items-center ${kidPill} p-1`
+                : "flex items-center rounded-lg border border-border bg-muted/50 p-0.5"
             }
           >
             <button
@@ -500,59 +509,59 @@ export function SyncedPdfViewer({
               loading={<PdfSkeleton />}
               error={null}
             >
-                <div
-                  className={`relative inline-block overflow-hidden rounded-md bg-white shadow-soft ${
-                    allowPointing ? "cursor-crosshair" : "cursor-default"
-                  }`}
-                  onClick={allowPointing ? handlePageClick : undefined}
-                >
-                  <Page
-                    key={`${loadedUrl}-p${page}`}
-                    pageNumber={page}
-                    width={pageWidth}
-                    height={pageHeight}
-                    renderAnnotationLayer={false}
-                    renderTextLayer={false}
-                    loading={null}
-                  />
+              <div
+                className={`relative inline-block overflow-hidden rounded-md bg-white shadow-soft ${
+                  allowPointing ? "cursor-crosshair" : "cursor-default"
+                }`}
+                onClick={allowPointing ? handlePageClick : undefined}
+              >
+                <Page
+                  key={`${loadedUrl}-p${page}`}
+                  pageNumber={page}
+                  width={pageWidth}
+                  height={pageHeight}
+                  renderAnnotationLayer={false}
+                  renderTextLayer={false}
+                  loading={null}
+                />
 
-                  {/* 16-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
-                  {activePointer && typeof activePointer.y === "number" && (
-                    <div className="pointer-events-none absolute inset-0 z-20">
-                      {/* 16-Line Mild Green Highlight Strip */}
-                      {lineBounds && (
-                        <div
-                          className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
-                          style={{
-                            top: `${lineBounds.topPercent}%`,
-                            height: `${lineBounds.heightPercent}%`,
-                          }}
-                        >
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
-                            <span>📍</span>
-                            <span>Line {activePointer.line}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Glowing Mild Green Laser Pointer Pin */}
+                {/* 16-Line Mild Green Highlight Strip & Laser Pointer Overlay */}
+                {activePointer && typeof activePointer.y === "number" && (
+                  <div className="pointer-events-none absolute inset-0 z-20">
+                    {/* 16-Line Mild Green Highlight Strip */}
+                    {lineBounds && (
                       <div
-                        className="absolute transition-all duration-150"
+                        className="absolute inset-x-0 border-y border-emerald-500/35 bg-emerald-500/15 backdrop-blur-[0.5px] transition-all duration-200"
                         style={{
-                          left: `${Math.max(0, Math.min(1, activePointer.x)) * 100}%`,
-                          top: `${Math.max(0, Math.min(1, activePointer.y)) * 100}%`,
+                          top: `${lineBounds.topPercent}%`,
+                          height: `${lineBounds.heightPercent}%`,
                         }}
                       >
-                        <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
-                          <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
-                          <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
-                            <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                          </span>
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded bg-emerald-700/90 dark:bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
+                          <span>📍</span>
+                          <span>Line {activePointer.line}</span>
                         </div>
                       </div>
+                    )}
+
+                    {/* Glowing Mild Green Laser Pointer Pin */}
+                    <div
+                      className="absolute transition-all duration-150"
+                      style={{
+                        left: `${Math.max(0, Math.min(1, activePointer.x)) * 100}%`,
+                        top: `${Math.max(0, Math.min(1, activePointer.y)) * 100}%`,
+                      }}
+                    >
+                      <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
+                        <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
+                        <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
+                          <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
             </Document>
           </div>
         ) : (

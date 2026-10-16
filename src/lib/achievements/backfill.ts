@@ -122,4 +122,3 @@ export async function backfillStudentAchievements(
   const after = await countAchievements(db, studentId)
   return { newlyAwarded: Math.max(0, after - before) }
 }
-

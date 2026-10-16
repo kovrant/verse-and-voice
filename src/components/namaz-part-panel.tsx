@@ -27,7 +27,12 @@ const REPEAT_GAP_MS = 700
  * single word when timings exist. Reports the word playing for the karaoke
  * highlight; timings fall back to an even spread over the clip.
  */
-function usePartAudio(src: string | null, timings: number[] | null, wordCount: number, onEnded: () => void) {
+function usePartAudio(
+  src: string | null,
+  timings: number[] | null,
+  wordCount: number,
+  onEnded: () => void,
+) {
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const runRef = useRef(0) // bumps on every new play/stop so stale callbacks bail
   const [playing, setPlaying] = useState(false)
@@ -131,7 +136,12 @@ export function NamazPartPanel({
   const chips = wordChips(part?.arabic_text ?? null, part?.word_tr ?? null)
   const wordCount = chips?.length ?? 0
   const timed = !!part?.word_timings && part.word_timings.length === wordCount && wordCount > 0
-  const audio = usePartAudio(part?.audio_url ?? null, part?.word_timings ?? null, wordCount, onListened)
+  const audio = usePartAudio(
+    part?.audio_url ?? null,
+    part?.word_timings ?? null,
+    wordCount,
+    onListened,
+  )
   const repeat = part?.repeat_count ?? null
 
   return (
@@ -176,14 +186,20 @@ export function NamazPartPanel({
                 >
                   {chip.ar}
                 </span>
-                <span dir="ltr" lang="en" className="text-[13px] font-bold leading-tight sm:text-[14px]">
+                <span
+                  dir="ltr"
+                  lang="en"
+                  className="text-[13px] font-bold leading-tight sm:text-[14px]"
+                >
                   {chip.tr}
                 </span>
               </>
             )
             const cls = cn(
               "flex flex-col items-center rounded-[16px] px-2 pb-1.5 transition-colors",
-              active ? "bg-accent/15 text-accent" : "text-foreground [&>span:last-child]:text-foreground/70",
+              active
+                ? "bg-accent/15 text-accent"
+                : "text-foreground [&>span:last-child]:text-foreground/70",
             )
             return timed && part?.audio_url ? (
               <button
@@ -206,12 +222,17 @@ export function NamazPartPanel({
         <p
           dir="rtl"
           lang="ar"
-          className={cn("font-hadith font-bold leading-[1.9] text-foreground", arabicSize(part.arabic_text))}
+          className={cn(
+            "font-hadith font-bold leading-[1.9] text-foreground",
+            arabicSize(part.arabic_text),
+          )}
         >
           {part.arabic_text}
         </p>
       ) : (
-        <p className="text-[17px] font-semibold text-foreground/85">🌟 Practise this step with your teacher.</p>
+        <p className="text-[17px] font-semibold text-foreground/85">
+          🌟 Practise this step with your teacher.
+        </p>
       )}
 
       {part?.translation && (

@@ -219,7 +219,7 @@ export default function StudentsPage() {
             {filtered.length} of {students.length} students
           </p>
         </div>
-        <Link href="/students/new">
+        <Link href="/teacher/students/new">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Add Student
@@ -336,7 +336,7 @@ export default function StudentsPage() {
                 <p className="text-sm text-muted-foreground mb-5">
                   Add your first student to get started
                 </p>
-                <Link href="/students/new">
+                <Link href="/teacher/students/new">
                   <Button>
                     <Plus className="h-4 w-4 mr-2" />
                     Add Student
@@ -355,7 +355,7 @@ export default function StudentsPage() {
             {paginated.map((student) => {
               const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
               return (
-                <Link key={student.id} href={`/students/${student.id}`}>
+                <Link key={student.id} href={`/teacher/students/${student.id}`}>
                   <Card className="group hover:border-border transition-all">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
@@ -496,7 +496,7 @@ export default function StudentsPage() {
                     return (
                       <tr
                         key={student.id}
-                        onClick={() => router.push(`/students/${student.id}`)}
+                        onClick={() => router.push(`/teacher/students/${student.id}`)}
                         className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group cursor-pointer"
                       >
                         <td className="px-5 py-4">
@@ -564,7 +564,10 @@ export default function StudentsPage() {
                           </td>
                         )}
                         <td className="px-5 py-4 text-right">
-                          <Link href={`/students/${student.id}`} aria-label={`View ${student.name}`}>
+                          <Link
+                            href={`/teacher/students/${student.id}`}
+                            aria-label={`View ${student.name}`}
+                          >
                             <ArrowRight className="h-4 w-4 inline-block text-muted-foreground/30 group-hover:text-foreground transition-colors" />
                           </Link>
                         </td>

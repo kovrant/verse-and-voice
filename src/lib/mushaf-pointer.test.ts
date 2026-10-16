@@ -21,13 +21,13 @@ describe("mushaf-pointer (16-line Mushaf)", () => {
     expect(calculateMushafLine(0.075)).toBe(1)
 
     // First line of text (0.075 to ~0.129)
-    expect(calculateMushafLine(0.10)).toBe(1)
+    expect(calculateMushafLine(0.1)).toBe(1)
 
     // Second line of text (~0.129 to ~0.184)
     expect(calculateMushafLine(0.14)).toBe(2)
 
     // Middle lines
-    expect(calculateMushafLine(0.50)).toBe(8)
+    expect(calculateMushafLine(0.5)).toBe(8)
 
     // 15th line of text (~0.836 to ~0.891) is no longer the last line
     expect(calculateMushafLine(0.88)).toBe(15)
@@ -54,12 +54,16 @@ describe("mushaf-pointer (16-line Mushaf)", () => {
     expect(line1.heightPercent).toBe(expectedLineHeightPercent)
 
     const line8 = calculateLineBounds(8)
-    const expectedLine8Top = Number(((DEFAULT_TOP_MARGIN_RATIO + 7 * (textHeight / 16)) * 100).toFixed(3))
+    const expectedLine8Top = Number(
+      ((DEFAULT_TOP_MARGIN_RATIO + 7 * (textHeight / 16)) * 100).toFixed(3),
+    )
     expect(line8.topPercent).toBe(expectedLine8Top)
     expect(line8.heightPercent).toBe(expectedLineHeightPercent)
 
     const line16 = calculateLineBounds(16)
-    const expectedLine16Top = Number(((DEFAULT_TOP_MARGIN_RATIO + 15 * (textHeight / 16)) * 100).toFixed(3))
+    const expectedLine16Top = Number(
+      ((DEFAULT_TOP_MARGIN_RATIO + 15 * (textHeight / 16)) * 100).toFixed(3),
+    )
     expect(line16.topPercent).toBe(expectedLine16Top)
     expect(line16.heightPercent).toBe(expectedLineHeightPercent)
     // line16 top + height should equal exactly 100% - bottom margin (94.5%)

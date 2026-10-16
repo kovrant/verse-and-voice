@@ -523,7 +523,10 @@ export default function HistoryAdminPage() {
     }
 
     if (form.quiz_id) {
-      await supabase.from("quizzes").update({ is_published: form.is_published }).eq("id", form.quiz_id)
+      await supabase
+        .from("quizzes")
+        .update({ is_published: form.is_published })
+        .eq("id", form.quiz_id)
     }
 
     setSaving(false)
@@ -786,12 +789,15 @@ export default function HistoryAdminPage() {
                   </Badge>
                   {story.quiz_id && existingQuizMap.has(story.quiz_id) ? (
                     <Link
-                      href={`/quizzes/${story.quiz_id}`}
+                      href={`/teacher/quizzes/${story.quiz_id}`}
                       target="_blank"
                       className="inline-flex items-center"
                       title="View linked quiz"
                     >
-                      <Badge variant="outline" className="text-[10px] py-0 bg-card/90 text-amber-600 hover:border-amber-500/60 cursor-pointer">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] py-0 bg-card/90 text-amber-600 hover:border-amber-500/60 cursor-pointer"
+                      >
                         <Trophy className="h-3 w-3 mr-1" /> Quiz
                       </Badge>
                     </Link>
@@ -929,7 +935,10 @@ export default function HistoryAdminPage() {
                     </Badge>
 
                     {story.hero_virtue && (
-                      <Badge variant="outline" className="text-[10px] py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                      >
                         <Sparkles className="h-2.5 w-2.5 mr-1" />
                         {story.hero_virtue}
                       </Badge>
@@ -988,7 +997,8 @@ export default function HistoryAdminPage() {
               Draft Kid Storybook with AI
             </DialogTitle>
             <DialogDescription>
-              Generates an authentic 5-part Islamic storybook for kids with a directly derived mini-quest quiz. Saved safely as a draft.
+              Generates an authentic 5-part Islamic storybook for kids with a directly derived
+              mini-quest quiz. Saved safely as a draft.
             </DialogDescription>
           </DialogHeader>
 
@@ -1115,7 +1125,9 @@ export default function HistoryAdminPage() {
 
             {/* Islamic Month (optional) */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Islamic Month (optional season feature)</Label>
+              <Label className="text-xs font-semibold">
+                Islamic Month (optional season feature)
+              </Label>
               <Select
                 value={aiHijriMonth || "none"}
                 onValueChange={(v) => setAiHijriMonth(v === "none" ? "" : v)}
@@ -1150,11 +1162,7 @@ export default function HistoryAdminPage() {
           </div>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
-            <Button
-              variant="outline"
-              onClick={() => setAiModalOpen(false)}
-              disabled={generatingAi}
-            >
+            <Button variant="outline" onClick={() => setAiModalOpen(false)} disabled={generatingAi}>
               Cancel
             </Button>
             <Button
@@ -1187,7 +1195,8 @@ export default function HistoryAdminPage() {
                 {editing ? "Edit Storybook" : "New Story"}
               </DialogTitle>
               <DialogDescription>
-                Review or customize the story narrative, Quranic gem, moral compass, and linked quiz.
+                Review or customize the story narrative, Quranic gem, moral compass, and linked
+                quiz.
               </DialogDescription>
             </div>
             {form.title.trim() && (
@@ -1426,8 +1435,13 @@ export default function HistoryAdminPage() {
 
                   {form.quiz_id && existingQuizMap.has(form.quiz_id) ? (
                     <div className="flex items-center gap-2">
-                      <Button asChild size="sm" variant="outline" className="h-7 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300">
-                        <Link href={`/quizzes/${form.quiz_id}`} target="_blank">
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300"
+                      >
+                        <Link href={`/teacher/quizzes/${form.quiz_id}`} target="_blank">
                           <span>View Quiz</span>
                           <ExternalLink className="h-3 w-3 ml-1" />
                         </Link>
@@ -1481,7 +1495,9 @@ export default function HistoryAdminPage() {
 
                 {(!form.quiz_id || !existingQuizMap.has(form.quiz_id)) && (
                   <p className="text-[11px] text-amber-900/80 dark:text-amber-200/80">
-                    ⚡ No active quiz is attached to this story. Click <strong>Generate Quest Quiz</strong> to create an interactive 4-5 question quiz with 4 options each directly from this story content.
+                    ⚡ No active quiz is attached to this story. Click{" "}
+                    <strong>Generate Quest Quiz</strong> to create an interactive 4-5 question quiz
+                    with 4 options each directly from this story content.
                   </p>
                 )}
               </div>
@@ -1497,7 +1513,9 @@ export default function HistoryAdminPage() {
                   <div>
                     <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
                       Canva AI Dream Lab Cover Prompt
-                      <span className="text-[10px] font-normal text-muted-foreground">(16:9 Landscape)</span>
+                      <span className="text-[10px] font-normal text-muted-foreground">
+                        (16:9 Landscape)
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -1537,7 +1555,9 @@ export default function HistoryAdminPage() {
               <p className="text-[11px] font-medium text-muted-foreground leading-relaxed flex items-start gap-1.5">
                 <span className="text-sm leading-none">💡</span>
                 <span>
-                  <strong>Tip for Teachers:</strong> Click <strong>Copy Prompt</strong> ➜ Open <strong>Canva → Dream Lab</strong> ➜ Select <strong>16:9 landscape</strong> ➜ Generate &amp; download ➜ Upload into <strong>Add cover</strong> below!
+                  <strong>Tip for Teachers:</strong> Click <strong>Copy Prompt</strong> ➜ Open{" "}
+                  <strong>Canva → Dream Lab</strong> ➜ Select <strong>16:9 landscape</strong> ➜
+                  Generate &amp; download ➜ Upload into <strong>Add cover</strong> below!
                 </span>
               </p>
             </div>
@@ -1582,12 +1602,15 @@ export default function HistoryAdminPage() {
                         ) : coverOptimization && coverOptimization.savingsPercent > 0 ? (
                           <div className="space-y-0.5 mt-0.5">
                             <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                              <span>⚡ {coverOptimization.width}×{coverOptimization.height} WebP</span>
+                              <span>
+                                ⚡ {coverOptimization.width}×{coverOptimization.height} WebP
+                              </span>
                               <span>·</span>
                               <span>{formatFileSize(coverOptimization.optimizedSize)}</span>
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              Saved {coverOptimization.savingsPercent}% (down from {formatFileSize(coverOptimization.originalSize)})
+                              Saved {coverOptimization.savingsPercent}% (down from{" "}
+                              {formatFileSize(coverOptimization.originalSize)})
                             </p>
                           </div>
                         ) : coverFile ? (
@@ -1633,7 +1656,9 @@ export default function HistoryAdminPage() {
                     className="w-full gap-1.5 border-dashed"
                   >
                     <ImagePlus className="h-4 w-4" />
-                    {optimizingImage ? "Optimizing resolution..." : "Add cover (Canva Dream Lab 16:9)"}
+                    {optimizingImage
+                      ? "Optimizing resolution..."
+                      : "Add cover (Canva Dream Lab 16:9)"}
                   </Button>
                 )}
               </div>
@@ -1655,7 +1680,9 @@ export default function HistoryAdminPage() {
                   <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-secondary/30 p-2">
                     <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
                     <span className="text-xs text-muted-foreground flex-1 truncate">
-                      {attachFile ? attachFile.name : (existingAttach?.type ?? "file").toUpperCase()}
+                      {attachFile
+                        ? attachFile.name
+                        : (existingAttach?.type ?? "file").toUpperCase()}
                     </span>
                     <Button
                       variant="ghost"
@@ -1898,10 +1925,7 @@ export default function HistoryAdminPage() {
 
                 {/* Bottom Footer Actions */}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setReadingStory(null)}
-                  >
+                  <Button variant="outline" onClick={() => setReadingStory(null)}>
                     Close Reading View
                   </Button>
 

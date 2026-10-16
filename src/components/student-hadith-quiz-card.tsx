@@ -1,13 +1,6 @@
 "use client"
 
-import {
-  Check,
-  ChevronDown,
-  Loader2,
-  Plus,
-  RotateCcw,
-  Trash2,
-} from "lucide-react"
+import { Check, ChevronDown, Loader2, Plus, RotateCcw, Trash2 } from "lucide-react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
@@ -61,33 +54,27 @@ export function StudentHadithQuizCard({
   const [busyId, setBusyId] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
-    const [
-      hadithsRes,
-      hAssignRes,
-      hProgRes,
-      quizzesRes,
-      qAssignRes,
-      qAttemptsRes,
-    ] = await Promise.all([
-      supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
-      supabase
-        .from("hadith_assignments")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("assigned_at", { ascending: false }),
-      supabase.from("student_hadith_progress").select("*").eq("student_id", studentId),
-      supabase.from("quizzes").select("*").order("created_at", { ascending: false }),
-      supabase
-        .from("quiz_assignments")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("assigned_at", { ascending: false }),
-      supabase
-        .from("quiz_attempts")
-        .select("*")
-        .eq("student_id", studentId)
-        .order("completed_at", { ascending: false }),
-    ])
+    const [hadithsRes, hAssignRes, hProgRes, quizzesRes, qAssignRes, qAttemptsRes] =
+      await Promise.all([
+        supabase.from("hadiths").select("*").order("hadith_number", { ascending: true }),
+        supabase
+          .from("hadith_assignments")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("assigned_at", { ascending: false }),
+        supabase.from("student_hadith_progress").select("*").eq("student_id", studentId),
+        supabase.from("quizzes").select("*").order("created_at", { ascending: false }),
+        supabase
+          .from("quiz_assignments")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("assigned_at", { ascending: false }),
+        supabase
+          .from("quiz_attempts")
+          .select("*")
+          .eq("student_id", studentId)
+          .order("completed_at", { ascending: false }),
+      ])
 
     const rawHadiths = (hadithsRes.data as RawHadithRow[]) || []
     const formattedHadiths: Hadith[] = rawHadiths.map((h, idx) => ({
@@ -342,7 +329,10 @@ export function StudentHadithQuizCard({
                   title="Choose another Hadith"
                 >
                   <ChevronDown
-                    className={cn("h-3.5 w-3.5 transition-transform", assignHadithOpen && "rotate-180")}
+                    className={cn(
+                      "h-3.5 w-3.5 transition-transform",
+                      assignHadithOpen && "rotate-180",
+                    )}
                   />
                 </Button>
               </>
@@ -384,7 +374,8 @@ export function StudentHadithQuizCard({
                   className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-secondary/60 disabled:opacity-50"
                 >
                   <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                    <strong className="text-foreground">#{h.hadith_number}</strong> · {h.english_text}
+                    <strong className="text-foreground">#{h.hadith_number}</strong> ·{" "}
+                    {h.english_text}
                   </span>
                   <span className="text-[11px] font-semibold text-emerald-600 flex-shrink-0">
                     + Assign

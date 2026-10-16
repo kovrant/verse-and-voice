@@ -37,30 +37,30 @@ const SidebarContext = createContext({ collapsed: false })
 const navSections = [
   {
     items: [
-      { href: "/", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/notifications", label: "Notifications", icon: Bell },
+      { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
+      { href: "/teacher/notifications", label: "Notifications", icon: Bell },
     ],
   },
   {
     label: "Academics",
     items: [
-      { href: "/students", label: "Students", icon: Users },
-      { href: "/class", label: "Class Session", icon: BookOpen },
-      { href: "/hadiths", label: "Hadiths", icon: BookAudio },
-      { href: "/memorization", label: "Memorization", icon: BookMarked },
-      { href: "/quran", label: "Quran Paras", icon: BookOpenCheck },
-      { href: "/qaida", label: "Qaida", icon: SpellCheck },
-      { href: "/namaz", label: "Namaz", icon: Moon },
-      { href: "/history", label: "Islamic History", icon: ScrollText },
-      { href: "/quizzes", label: "Quizzes", icon: Sparkles },
+      { href: "/teacher/students", label: "Students", icon: Users },
+      { href: "/teacher/class", label: "Class Session", icon: BookOpen },
+      { href: "/teacher/hadiths", label: "Hadiths", icon: BookAudio },
+      { href: "/teacher/memorization", label: "Memorization", icon: BookMarked },
+      { href: "/teacher/quran", label: "Quran Paras", icon: BookOpenCheck },
+      { href: "/teacher/qaida", label: "Qaida", icon: SpellCheck },
+      { href: "/teacher/namaz", label: "Namaz", icon: Moon },
+      { href: "/teacher/history", label: "Islamic History", icon: ScrollText },
+      { href: "/teacher/quizzes", label: "Quizzes", icon: Sparkles },
     ],
   },
   {
     label: "Management",
     items: [
-      { href: "/fees", label: "Fee Management", icon: CreditCard },
-      { href: "/media", label: "Media Library", icon: Upload },
-      { href: "/ai-usage", label: "AI Usage", icon: Cpu },
+      { href: "/teacher/fees", label: "Fee Management", icon: CreditCard },
+      { href: "/teacher/media", label: "Media Library", icon: Upload },
+      { href: "/teacher/ai-usage", label: "AI Usage", icon: Cpu },
     ],
   },
 ]
@@ -78,7 +78,7 @@ export const Sidebar = memo(function Sidebar() {
     } catch {}
   }, [])
 
-  if (pathname === "/login" || pathname === "/admin") return null
+  if (pathname === "/login" || pathname === "/teacher/login") return null
 
   const hijri = getHijriToday()
   const hideOnCollapse = collapsed ? "lg:hidden" : ""
@@ -184,7 +184,7 @@ export const Sidebar = memo(function Sidebar() {
             Don't copy the student --primary/--sage classes: admin has no --sage
             and inverts --primary in dark mode, which made this white-on-white. */}
         <Link
-          href="/history"
+          href="/teacher/history"
           title={`${ordinalDay(hijri.day)} ${hijri.monthInfo.name} ${hijri.year} AH`}
           onClick={() => setMobileOpen(false)}
           className={cn(
@@ -199,7 +199,9 @@ export const Sidebar = memo(function Sidebar() {
               background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.45), transparent 70%)",
             }}
           />
-          <Moon className={cn("relative h-[22px] w-[22px]", collapsed ? "hidden lg:block" : "hidden")} />
+          <Moon
+            className={cn("relative h-[22px] w-[22px]", collapsed ? "hidden lg:block" : "hidden")}
+          />
           <span className={cn("relative", hideOnCollapse)}>
             <span className="font-heading text-[22px] font-bold leading-tight">
               {ordinalDay(hijri.day)} {hijri.monthInfo.name}
@@ -220,7 +222,9 @@ export const Sidebar = memo(function Sidebar() {
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const isActive =
-                    item.href === "/" ? pathname === "/" : pathname.startsWith(item.href)
+                    item.href === "/teacher"
+                      ? pathname === "/teacher"
+                      : pathname.startsWith(item.href)
                   return (
                     <Link
                       key={item.href}

@@ -32,7 +32,9 @@ export default function StudentQuizzesPage() {
           .order("completed_at", { ascending: false }),
       ])
 
-      type RawAssignmentRow = QuizAssignment & { quizzes?: QuizAssignment["quiz"] | QuizAssignment["quiz"][] }
+      type RawAssignmentRow = QuizAssignment & {
+        quizzes?: QuizAssignment["quiz"] | QuizAssignment["quiz"][]
+      }
       const rawAssignments = (assignRes.data as RawAssignmentRow[]) || []
       const formattedAssignments: QuizAssignment[] = rawAssignments.map((a) => {
         const quizObj = a.quiz || a.quizzes

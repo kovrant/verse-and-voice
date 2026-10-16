@@ -168,7 +168,14 @@ export async function syncMemorizationLesson(
 
 export const HADITH_MILESTONE_DEFINITIONS: Record<
   string,
-  { slug: string; title: string; description: string; domain: "hadith"; kind: "badge"; issuesCertificate: boolean }
+  {
+    slug: string
+    title: string
+    description: string
+    domain: "hadith"
+    kind: "badge"
+    issuesCertificate: boolean
+  }
 > = {
   [HADITH_BADGE_SLUGS.STARTER]: {
     slug: HADITH_BADGE_SLUGS.STARTER,
@@ -250,4 +257,3 @@ export async function syncHadithMemorized(
   }
   return newlyAwarded
 }
-

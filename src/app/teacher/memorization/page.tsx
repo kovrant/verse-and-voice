@@ -18,7 +18,7 @@ import {
 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { labelFor, loadChunksFor,type MemChunk } from "@/components/memorization-chunks"
+import { labelFor, loadChunksFor, type MemChunk } from "@/components/memorization-chunks"
 import { PageLoading } from "@/components/page-loading"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -837,16 +837,14 @@ export default function MemorizationPage() {
           <DialogHeader>
             <DialogTitle>Parts — {manageItem?.title}</DialogTitle>
             <DialogDescription>
-              Break this into ordered pieces students memorize one at a time. A student only shows as
-              fully memorized once every part is done.
+              Break this into ordered pieces students memorize one at a time. A student only shows
+              as fully memorized once every part is done.
             </DialogDescription>
           </DialogHeader>
           {manageItem && (
             <ChunkManager
               item={manageItem}
-              onChanged={(count) =>
-                setChunkCounts((prev) => ({ ...prev, [manageItem.id]: count }))
-              }
+              onChanged={(count) => setChunkCounts((prev) => ({ ...prev, [manageItem.id]: count }))}
             />
           )}
         </DialogContent>
@@ -942,9 +940,7 @@ function ChunkManager({
   }
 
   const pct =
-    uploadProgress.total > 0
-      ? Math.round((uploadProgress.done / uploadProgress.total) * 100)
-      : 0
+    uploadProgress.total > 0 ? Math.round((uploadProgress.done / uploadProgress.total) * 100) : 0
 
   return (
     <div className="space-y-4 pt-1">

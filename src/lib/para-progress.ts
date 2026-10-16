@@ -162,7 +162,7 @@ export async function clearBookmark(
   page?: number,
 ): Promise<void> {
   const existing = readLocalBookmark(studentId, paraNumber)
-  const currentPage = typeof page === "number" && page > 0 ? page : existing?.page ?? 1
+  const currentPage = typeof page === "number" && page > 0 ? page : (existing?.page ?? 1)
   const timestamp = new Date().toISOString()
   const bm: ParaBookmark = {
     page: currentPage,
