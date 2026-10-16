@@ -2078,7 +2078,13 @@ export function WelcomeStory({
                   <span
                     lang="ar"
                     dir="rtl"
-                    style={{ ...ar(600, "18px", "1.45"), whiteSpace: "nowrap" }}
+                    style={{
+                      ...ar(700, "19px", "1.45"),
+                      // Amiri for the juz names: a classical Naskh suits these titles better
+                      // than the mushaf face used for recitation text.
+                      fontFamily: "var(--font-arabic), 'Amiri', 'Traditional Arabic', serif",
+                      whiteSpace: "nowrap",
+                    }}
                   >
                     {name}
                   </span>
