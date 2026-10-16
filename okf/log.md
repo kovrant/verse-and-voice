@@ -256,3 +256,14 @@ tags:
   * Zoyal couldn't join a live class: her portal never detected the teacher and the "Tap to join" notification only opened the Classes page. A failed realtime subscribe was silently ignored.
   * The class channel now retries failed subscribes with backoff, rebuilds on tab wake / network return, and exposes `reconnect()`; the student Classes page offers "Teacher already started? Tap here".
   * New `live_class` activity event records connection failures and recoveries for the teacher to see.
+
+### [2026-10-14] - Public Welcome Landing Page
+* **Scope:** `src/app/welcome/page.tsx`, `src/components/welcome/*`, `src/middleware.ts`, `src/components/app-shell.tsx`, `src/components/theme-provider.tsx`, `src/app/layout.tsx`.
+* **Entries Added:** `architecture/public-welcome-page.md`; `index.md` updated.
+* **Changes:**
+  * New public `/welcome` route: a ten-chapter scroll story (dawn → night) built on the student palette and `kid-ui`, outside the app shell.
+  * `/welcome` added to `PUBLIC_PATHS` and to both student-palette stampers (`portalForPath` and the layout first-paint script).
+  * Trial-request form is local-only for now; parent quotes are unnamed placeholders.
+  * Later the same day: replaced the first build with a 1:1 port of the owner's approved Claude Design mock (`Verse and Voice.dc.html`); `welcome-art.tsx` removed, Framer Motion no longer used on the page.
+  * Front door: `/` now serves the website to visitors without a session (middleware rewrite + `x-vv-landing` header read by the root layout). Signed-in teachers keep the dashboard at `/`, students still go to `/student`.
+  * Fix: after a client-side navigation from /login to "/", the teacher sidebar wrapped the website (the root layout kept its first render). Shell and palette now key off `useSelectedLayoutSegment() === "welcome"` instead of a request header.

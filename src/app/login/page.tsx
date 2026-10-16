@@ -1,7 +1,8 @@
 "use client"
 
 import type { User } from "@supabase/supabase-js"
-import { Eye, EyeOff, Lock, User as UserIcon } from "lucide-react"
+import { ArrowLeft, Eye, EyeOff, Lock, User as UserIcon } from "lucide-react"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Suspense, useState } from "react"
 
@@ -127,6 +128,15 @@ function StudentLoginForm() {
     <div className="relative isolate -m-4 grid min-h-dvh place-items-center overflow-hidden px-4 py-10 lg:-m-8">
       <StudentBackdrop />
 
+      {/* Back to the public website (the bare domain) — mirrors the day/night switch. */}
+      <Link
+        href="/"
+        className="absolute left-4 top-4 z-20 flex h-11 items-center gap-2 rounded-full border-[1.5px] border-border bg-card pl-3 pr-4 font-heading text-[15px] font-bold text-primary shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99] sm:left-8 sm:top-8"
+      >
+        <ArrowLeft className="h-4 w-4" strokeWidth={2.5} />
+        <span className="hidden sm:inline">Back to website</span>
+        <span className="sm:hidden">Website</span>
+      </Link>
       <DayNightSwitch className="absolute right-4 top-4 z-20 sm:right-8 sm:top-8" />
 
       <div className="relative w-full max-w-[380px]">
@@ -146,7 +156,10 @@ function StudentLoginForm() {
 
         {/* Hilal peeks over the card with a speech bubble */}
         <div className="relative z-10 flex items-end gap-2 pl-3" style={{ marginBottom: -18 }}>
-          <MoonMascot mood={mood} className="h-[78px] w-[78px] flex-shrink-0 animate-float-gentle" />
+          <MoonMascot
+            mood={mood}
+            className="h-[78px] w-[78px] flex-shrink-0 animate-float-gentle"
+          />
           <span
             key={bubble}
             className="mb-9 animate-vv-bubble rounded-[18px] rounded-bl-[6px] border-[1.5px] border-border bg-card px-3.5 py-2 font-heading text-[15px] font-bold text-primary shadow-soft"

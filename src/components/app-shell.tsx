@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useSelectedLayoutSegment } from "next/navigation"
 
 import { AchievementCelebrationProvider } from "@/components/achievement-celebration-provider"
 import { LiveClassProvider } from "@/components/live-class-provider"
@@ -17,9 +17,15 @@ import { TeacherTopBar } from "@/components/topbar"
  */
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  // The rendered route segment, not the URL: "/" is rewritten to /welcome for
+  // visitors without a session, and this stays correct across client navigations.
+  const segment = useSelectedLayoutSegment()
   const isStudentArea = pathname === "/student" || pathname.startsWith("/student/")
   // Auth/entry pages hide the chrome (matches Sidebar returning null there).
   const isAuthArea = pathname === "/login" || pathname === "/admin"
+
+  // The public landing page draws its own sky, nav and mascot: no shell at all.
+  if (segment === "welcome") return <>{children}</>
 
   const shell = (
     // Student: `isolate` (no bg) so the backdrop's -z-10 paints behind this

@@ -37,6 +37,7 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 * [Row Level Security (RLS) Model](architecture/rls-security-model.md): The sole security boundary for client-side direct queries; policy patterns (`is_teacher()`, `my_student_id()`) and service-role bypass.
 * [Realtime Channel Protocol](architecture/realtime-protocol.md): Supabase Realtime broadcast and presence on `class:<studentId>` and `students:online`; normalized scroll ratios (0..1).
 * [Student Portal Design System](architecture/student-design-system.md): The kid-facing visual language of `/student/**` — crayon palette tokens, the `kid-ui` kit, the opt-in `kid` prop that keeps the teacher UI unchanged, and the flat-surface rule.
+* [Public Welcome Page](architecture/public-welcome-page.md): The `/welcome` marketing landing page — a 1:1 port of the approved Claude Design mock, ten chapters from dawn to night, self-hosted fonts, outside the app shell, public in middleware, placeholder enquiry form.
 * [Timezone & Date Invariants](architecture/timezone-and-dates.md): Strict Pakistan Standard Time (PKT / UTC+5), string time sorting via `classTimeToMinutes`, and `YYYY-MM-DD` vs `timestamptz` rules.
 
 ### 2. Domain Logic & Curriculum

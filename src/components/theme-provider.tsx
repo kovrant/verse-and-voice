@@ -1,6 +1,6 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { usePathname, useSelectedLayoutSegment } from "next/navigation"
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
 
 // Portal-scoped theming. The active portal is stamped on <html data-portal>,
@@ -12,7 +12,12 @@ export type Portal = "admin" | "student"
 const DARK_KEY = "qa-dark"
 
 function portalForPath(pathname: string): Portal {
-  if (pathname === "/login" || pathname === "/student" || pathname.startsWith("/student/")) {
+  if (
+    pathname === "/login" ||
+    pathname === "/welcome" ||
+    pathname === "/student" ||
+    pathname.startsWith("/student/")
+  ) {
     return "student"
   }
   return "admin"
@@ -32,7 +37,10 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() || "/"
-  const portal = portalForPath(pathname)
+  // The public website is served at "/" by a middleware rewrite of /welcome, so
+  // the pathname lies there; the rendered route segment does not.
+  const segment = useSelectedLayoutSegment()
+  const portal = segment === "welcome" ? "student" : portalForPath(pathname)
   const [dark, setDark] = useState(false)
 
   useEffect(() => {

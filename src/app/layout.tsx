@@ -81,11 +81,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${heading.variable} ${body.variable} ${scheherazade.variable} ${naskh.variable} ${arabic.variable} ${body.className}`}>
+      <body
+        className={`${heading.variable} ${body.variable} ${scheherazade.variable} ${naskh.variable} ${arabic.variable} ${body.className}`}
+      >
         {/* Set the portal palette (and admin dark mode) before first paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=location.pathname;var portal=(p==='/login'||p==='/student'||p.indexOf('/student/')===0)?'student':'admin';var d=document.documentElement;d.setAttribute('data-portal',portal);if(localStorage.getItem('qa-dark')==='true'){d.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var p=location.pathname;var portal=(p==='/login'||p==='/welcome'||p==='/student'||p.indexOf('/student/')===0)?'student':'admin';var d=document.documentElement;d.setAttribute('data-portal',portal);if(localStorage.getItem('qa-dark')==='true'){d.classList.add('dark')}}catch(e){}})()`,
           }}
         />
         <ThemeProvider>

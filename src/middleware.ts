@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 import { isLoginDisabled } from "@/lib/student-auth"
 
-const PUBLIC_PATHS = ["/login", "/admin", "/auth"]
+const PUBLIC_PATHS = ["/login", "/admin", "/auth", "/welcome"]
 
 /** Drop Supabase auth cookies without a network signOut — middleware must stay local. */
 function clearSupabaseAuthCookies(response: NextResponse, request: NextRequest) {
@@ -85,7 +85,19 @@ export async function middleware(request: NextRequest) {
     return redirect
   }
 
-  // Unauthenticated: the student login is the default entry for everything.
+  // The front door: a visitor with no session sees the public website at "/".
+  // A rewrite, not a redirect, so the address stays the bare domain. The shell
+  // and palette key off the rendered route segment ("welcome"), not the URL,
+  // so this works on full loads and on client-side navigations alike.
+  if (!user && pathname === "/") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/welcome"
+    const rewrite = NextResponse.rewrite(url)
+    response.cookies.getAll().forEach((cookie) => rewrite.cookies.set(cookie))
+    return rewrite
+  }
+
+  // Unauthenticated elsewhere: the student login is the entry for everything.
   // The teacher login lives at /admin and is only reached by going there directly.
   // API routes are skipped — they return their own 401 rather than an HTML redirect.
   if (!user && !isPublic && !isApi) {
