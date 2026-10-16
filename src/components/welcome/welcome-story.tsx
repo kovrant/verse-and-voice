@@ -996,24 +996,36 @@ export function WelcomeStory({
           n.style.transition = `transform ${dur}ms ${n.dataset.ease || ease} ${d}ms, opacity ${n.dataset.endop ? dur : Math.min(Number(dur), 500)}ms ease ${d}ms`
         } else if (n.dataset.trigger === "medal") n.style.opacity = "0"
       })
+      const reveal = (n: HTMLElement) => {
+        if (n.hasAttribute("data-reveal")) {
+          n.style.opacity = "1"
+          n.style.transform = "none"
+        } else if (n.dataset.from) {
+          n.style.transform = n.dataset.to || "none"
+          n.style.opacity = n.dataset.endop || "1"
+        }
+        fire(n, false)
+      }
       r.io = new IntersectionObserver(
         (es) =>
           es.forEach((e) => {
             if (!e.isIntersecting) return
             const n = e.target as HTMLElement
             r.io?.unobserve(n)
-            if (n.hasAttribute("data-reveal")) {
-              n.style.opacity = "1"
-              n.style.transform = "none"
-            } else if (n.dataset.from) {
-              n.style.transform = n.dataset.to || "none"
-              n.style.opacity = n.dataset.endop || "1"
-            }
-            fire(n, false)
+            // A group reveals all its children at once. Needed where a child's
+            // start position is outside its clipped section (the flying letters
+            // begin 400px off to the side), so the child itself never intersects.
+            if (n.hasAttribute("data-reveal-group"))
+              n.querySelectorAll<HTMLElement>("[data-from],[data-reveal]").forEach(reveal)
+            else reveal(n)
           }),
         { threshold: 0.18, rootMargin: "0px 0px -6% 0px" },
       )
-      els.forEach((n) => r.io!.observe(n))
+      const groups = el.querySelectorAll<HTMLElement>("[data-reveal-group]")
+      els.forEach((n) => {
+        if (![...groups].some((g) => g.contains(n))) r.io!.observe(n)
+      })
+      groups.forEach((g) => r.io!.observe(g))
     }
 
     const onResize = () => {
@@ -1777,6 +1789,7 @@ export function WelcomeStory({
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 28, alignItems: "center" }}>
             <div
+              data-reveal-group=""
               dir="rtl"
               lang="ar"
               aria-label="Arabic letters Alif, Baa, Taa, Thaa, Jeem"
