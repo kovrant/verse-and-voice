@@ -1108,6 +1108,16 @@ export function WelcomeStory({
       ref={root}
       className="vvw"
       style={{ color: "#2E3A2F", fontFamily: BODY, WebkitFontSmoothing: "antialiased" }}
+      onClick={(e) => {
+        // In-page links ("Book a free trial" → #ch10, the chapter dots, the logo)
+        // scroll smoothly without writing "#ch10" into the address bar.
+        const a = (e.target as HTMLElement).closest("a[href^='#']")
+        if (!a) return
+        const target = document.getElementById(a.getAttribute("href")!.slice(1))
+        if (!target) return
+        e.preventDefault()
+        target.scrollIntoView({ behavior: "smooth", block: "start" })
+      }}
     >
       <style dangerouslySetInnerHTML={{ __html: CSS }} />
 
