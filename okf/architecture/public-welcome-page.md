@@ -54,7 +54,7 @@ Chapters are `<section id="chN" data-chapter>`, all `max-width:1180px` rounded c
 | 3 | `ch3` | sky 18% | Teacher / You phones, highlight bar steps through Al-Fatiha (`vvLines`) |
 | 4 | `ch4` | sage 32% | Progress ring + 30 stones in the eight crayon tints, filled by scroll, "Khatm!" star burst |
 | 5 | `ch5` | white | Al-Ikhlas chunks drop in; hadith card flips on hover/tap |
-| 6 | `ch6` | rose 18% | The five daily prayers along a dawn-to-night arc; the sun crosses once when the card scrolls into view, sets at Maghrib, and the crescent appears at Isha |
+| 6 | `ch6` | rose 18% | Three cards, Learn / Repeat / Pray, with arrows between (`PrayMoves`); no step list, no Arabic |
 | 7 | `ch7` | saffron 22% | Medal drop, streak counts to 30, badges scale in, certificate, confetti spray |
 | 8 | `ch8` | teal 22% | Book covers swing open; three scenes of Prophet Yunus with a moral compass |
 | 9 | `ch9` | sand 55% | Three parent quotes and a parent-app phone mock |

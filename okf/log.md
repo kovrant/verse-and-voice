@@ -276,3 +276,4 @@ tags:
   * `/admin` and the old root paths (`/students/…`, `/class`, …) redirect to their `/teacher` equivalents, so bookmarks and notification links keep working.
   * `teacherPostLoginPath` accepts only `/teacher/**` and falls back to `/teacher`.
   * Chapter 6 is now the five daily prayers on a dawn-to-night arc (`PrayerDay`); the namaz-table loader `src/lib/welcome-namaz.ts` is removed and the page is static again.
+  * Chapter 6 reduced again to three moves, Learn / Repeat / Pray (`PrayMoves`), after the prayers-day arc was rejected.

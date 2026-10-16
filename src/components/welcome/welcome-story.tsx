@@ -37,7 +37,7 @@ import {
   SKY,
   STARS,
 } from "@/components/welcome/welcome-data"
-import { PrayerDay } from "@/components/welcome/welcome-pray"
+import { PrayMoves } from "@/components/welcome/welcome-pray"
 import {
   ar,
   BODY,
@@ -87,6 +87,7 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz .star{opacity:0;transform:scale(0);transition:opacity .4s .3s,transform .5s cubic-bezier(.34,1.56,.64,1) .3s}.vvw .juz.lit .star{opacity:1;transform:scale(1)}
 @keyframes vvFlame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 @keyframes vvBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@media (max-width:760px){.vvw .pray-arrow{display:none}}
 @media (prefers-reduced-motion: reduce){.vvw *,.vvw *::before,.vvw *::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
 `
 
@@ -2421,13 +2422,12 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               Pray with me
             </h2>
             <p style={para()}>
-              Five prayers shape a Muslim&apos;s day. Your child learns each one step by step, with
-              a picture, the words your teacher checked, and the teacher&apos;s own voice to repeat
-              after in class.
+              Every part of salah, in three moves. The same picture, words and voice your child
+              meets in class, until they can pray on their own.
             </p>
           </div>
           <div data-reveal="" data-delay="150">
-            <PrayerDay />
+            <PrayMoves />
           </div>
         </section>
 
