@@ -36,7 +36,7 @@ export function StoryReflectionPledge({
   isGeneratingQuiz = false,
 }: StoryReflectionPledgeProps) {
   const router = useRouter()
-  const { student } = useStudent()
+  const { student, loading: studentLoading } = useStudent()
   const [completed, setCompleted] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -115,7 +115,7 @@ export function StoryReflectionPledge({
   }
 
   async function handleTakeQuest() {
-    if (!quizId || assigningQuiz) return
+    if (!quizId || assigningQuiz || studentLoading) return
 
     if (!student?.id) {
       // Non-student (e.g. preview)
@@ -229,10 +229,12 @@ export function StoryReflectionPledge({
           </button>
         )}
 
-        {/* Quest Link / Button */}
+        {/* Quest Link / Button. Nothing until we know who is reading: before the
+            student record loads, `student` is null and a kid would briefly see
+            the teacher's link to /teacher/quizzes, which the middleware bounces. */}
         {quizId ? (
           <>
-            {student?.id ? (
+            {studentLoading ? null : student?.id ? (
               // Student View: If already assigned to this student, the button disappears!
               !isQuizAssigned && (
                 <button
