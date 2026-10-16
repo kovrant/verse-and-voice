@@ -82,9 +82,9 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz{background:#FFFFFF;color:#2E3A2F;transition:background .4s,color .4s,transform .4s cubic-bezier(.34,1.56,.64,1),border-color .4s}
 .vvw .juz.lit{background:#8FA97A;border-color:#8FA97A;color:#F8F6EE;transform:scale(1.04)}.vvw .juz.lit .n{color:rgba(248,246,238,.75)}
 .vvw .juz.milestone.lit{background:#E3B04B;border-color:#E3B04B;color:#2E3A2F}.vvw .juz.milestone.lit .n{color:rgba(46,58,47,.65)}
-.vvw .ring .disc{transition:fill .5s}.vvw .ring.done .disc{fill:#F6E3B4}
-.vvw .ring .face-count{transition:opacity .3s,transform .3s}.vvw .ring.done .face-count{opacity:0;transform:scale(.7)}
-.vvw .ring .face-done{opacity:0;transform:scale(.5) rotate(-20deg);transition:opacity .35s .2s,transform .6s cubic-bezier(.34,1.56,.64,1) .2s}.vvw .ring.done .face-done{opacity:1;transform:scale(1) rotate(0)}
+.vvw .para-ring .disc{transition:fill .5s}.vvw .para-ring.done .disc{fill:#F6E3B4}
+.vvw .para-ring .face-count{transition:opacity .3s,transform .3s}.vvw .para-ring.done .face-count{opacity:0;transform:scale(.7)}
+.vvw .para-ring .face-done{opacity:0;transform:scale(.5) rotate(-20deg);transition:opacity .35s .2s,transform .6s cubic-bezier(.34,1.56,.64,1) .2s}.vvw .para-ring.done .face-done{opacity:1;transform:scale(1) rotate(0)}
 .vvw .juz .star{opacity:0;transform:scale(0);transition:opacity .4s .3s,transform .5s cubic-bezier(.34,1.56,.64,1) .3s}.vvw .juz.lit .star{opacity:1;transform:scale(1)}
 @keyframes vvFlame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 @keyframes vvBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
@@ -1967,7 +1967,7 @@ export function WelcomeStory({
             </div>
             <div
               data-burst=""
-              className="ring"
+              className="para-ring"
               role="img"
               aria-label="Progress ring counting paras from 1 to 30"
               style={{ position: "relative", width: 150, height: 150, flexShrink: 0 }}
