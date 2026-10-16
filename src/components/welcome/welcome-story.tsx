@@ -2286,7 +2286,6 @@ export function WelcomeStory({
                 }
               }}
               style={{
-                perspective: 1200,
                 minHeight: 340,
                 height: "100%",
                 cursor: "pointer",
@@ -2298,9 +2297,6 @@ export function WelcomeStory({
                   position: "relative",
                   height: "100%",
                   minHeight: 340,
-                  transformStyle: "preserve-3d",
-                  transform: `rotateY(${flipped ? 180 : 0}deg)`,
-                  transition: "transform .7s cubic-bezier(.34,1.3,.64,1)",
                   borderRadius: 28,
                   pointerEvents: "none",
                 }}
@@ -2309,10 +2305,9 @@ export function WelcomeStory({
                   style={{
                     position: "absolute",
                     inset: 0,
-                    backfaceVisibility: "hidden",
-                    WebkitBackfaceVisibility: "hidden",
                     opacity: flipped ? 0 : 1,
-                    transition: "opacity 0s linear .3s",
+                    transform: flipped ? "translateY(-6px)" : "none",
+                    transition: "opacity .35s ease, transform .35s ease",
                     borderRadius: 28,
                     padding: "clamp(20px,3vw,32px)",
                     background: mix("#C9A06B", 24),
@@ -2349,18 +2344,16 @@ export function WelcomeStory({
                   <span
                     style={{ alignSelf: "center", ...f(600, "14px", "1", BODY), color: "#7A5A2E" }}
                   >
-                    Hover or tap to see the meaning ↻
+                    Hover or tap to see the meaning
                   </span>
                 </div>
                 <div
                   style={{
                     position: "absolute",
                     inset: 0,
-                    backfaceVisibility: "hidden",
-                    WebkitBackfaceVisibility: "hidden",
-                    transform: "rotateY(180deg)",
                     opacity: flipped ? 1 : 0,
-                    transition: "opacity 0s linear .3s",
+                    transform: flipped ? "none" : "translateY(8px)",
+                    transition: "opacity .35s ease, transform .4s cubic-bezier(.34,1.3,.64,1)",
                     borderRadius: 28,
                     padding: "clamp(20px,3vw,32px)",
                     background: "#FFFFFF",
