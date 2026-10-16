@@ -29,6 +29,7 @@ import {
   HADITH_AR,
   HEADLINES,
   IKHLAS,
+  JUZ_NAMES,
   MUSHAF_PAGES,
   NAV,
   QUOTES,
@@ -51,25 +52,6 @@ import {
 import type { NamazSlide } from "@/lib/welcome-namaz"
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
-
-/* ── Chapter 4: the lantern road ──
- * A gentle S-curve from the bottom-left up to the mosque. Thirty lanterns stand
- * along it, one per para; Hilal walks beneath them as they light. */
-const ROAD = { w: 640, h: 400 }
-function roadPoint(s: number) {
-  return { x: 34 + s * 520, y: 372 - s * 212 + Math.sin(s * Math.PI * 3) * 30 }
-}
-const ROAD_D =
-  "M" +
-  Array.from({ length: 121 }, (_, i) => {
-    const p = roadPoint(i / 120)
-    return `${p.x.toFixed(1)} ${p.y.toFixed(1)}`
-  }).join(" L")
-const LANTERNS = Array.from({ length: 30 }, (_, i) => ({
-  ...roadPoint((i + 0.5) / 30),
-  milestone: (i + 1) % 5 === 0,
-}))
-const MOSQUE = { x: 560, base: 162 }
 
 const CSS = `
 html{background:var(--sky,#F8F6EE);scroll-behavior:smooth}
@@ -97,10 +79,10 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .line-out{animation:vvLineOut .32s ease-in both}
 .vvw .line-in{animation:vvLineIn .5s cubic-bezier(.34,1.3,.64,1) both}
 .vvw .page-glow{animation:vvPageGlow 1.15s ease-in-out both}
-.vvw .lantern .body{fill:#F3EBDA;transition:fill .45s}.vvw .lantern .glow{opacity:0;transition:opacity .5s}.vvw .lantern .flame{opacity:0;transition:opacity .3s}
-.vvw .lantern.lit .body{fill:#E3B04B}.vvw .lantern.lit .glow{opacity:.55}.vvw .lantern.lit .flame{opacity:1}
-.vvw .mosque .dome{fill:#FFFFFF;transition:fill .6s}.vvw .mosque .domeglow{opacity:0;transition:opacity .8s}.vvw .mosque .star{opacity:0;transform:translateY(0);transition:opacity .8s .3s,transform 1.2s cubic-bezier(.34,1.3,.64,1) .3s}
-.vvw .mosque.lit .dome{fill:#E3B04B}.vvw .mosque.lit .domeglow{opacity:.6}.vvw .mosque.lit .star{opacity:1;transform:translateY(-34px)}
+.vvw .juz{background:#FFFFFF;color:#2E3A2F;transition:background .4s,color .4s,transform .4s cubic-bezier(.34,1.56,.64,1),border-color .4s}
+.vvw .juz.lit{background:#8FA97A;border-color:#8FA97A;color:#F8F6EE;transform:scale(1.04)}.vvw .juz.lit .n{color:rgba(248,246,238,.75)}
+.vvw .juz.milestone.lit{background:#E3B04B;border-color:#E3B04B;color:#2E3A2F}.vvw .juz.milestone.lit .n{color:rgba(46,58,47,.65)}
+.vvw .juz .star{opacity:0;transform:scale(0);transition:opacity .4s .3s,transform .5s cubic-bezier(.34,1.56,.64,1) .3s}.vvw .juz.lit .star{opacity:1;transform:scale(1)}
 @keyframes vvFlame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 @keyframes vvBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @media (prefers-reduced-motion: reduce){.vvw *,.vvw *::before,.vvw *::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
@@ -860,17 +842,11 @@ export function WelcomeStory({
     r.reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const de = document.documentElement
 
-    const setLanterns = (n: number) => {
+    const setJuz = (n: number) => {
       r.stoneN = n
-      el.querySelectorAll<SVGElement>("[data-lantern]").forEach((g, i) =>
-        g.classList.toggle("lit", i < n),
+      el.querySelectorAll<HTMLElement>("[data-juz]").forEach((c, i) =>
+        c.classList.toggle("lit", i < n),
       )
-      const walker = el.querySelector<SVGElement>("[data-walker]")
-      if (walker) {
-        const pt = n <= 0 ? roadPoint(0.01) : n >= 30 ? roadPoint(0.985) : LANTERNS[n - 1]
-        walker.style.transform = `translate(${pt.x + (n > 0 && n < 30 ? 12 : 0)}px, ${pt.y - 4}px)`
-      }
-      el.querySelector("[data-mosque]")?.classList.toggle("lit", n >= 30)
       const ring = el.querySelector<SVGCircleElement>("[data-ring]")
       if (ring) ring.style.strokeDashoffset = String(351.9 * (1 - n / 30))
       const num = el.querySelector<HTMLElement>("[data-ring-num]")
@@ -927,15 +903,6 @@ export function WelcomeStory({
         clearTimeout(r.bubbleT)
         r.bubbleT = window.setTimeout(() => setBubble(false), 3500)
       }
-      const st = el.querySelector("[data-road]")
-      if (st) {
-        const rect = st.getBoundingClientRect()
-        const n = r.reduced
-          ? 30
-          : Math.round(clamp((vh * 0.85 - rect.top) / (rect.height + vh * 0.2)) * 30)
-        // Lanterns stay lit: scrolling back up never un-reads a para.
-        if (n > r.stoneN) setLanterns(n)
-      }
     }
 
     const fire = (node: HTMLElement, instant: boolean) => {
@@ -954,6 +921,18 @@ export function WelcomeStory({
           num.textContent = String(i)
           if (i >= 30) clearInterval(iv)
         }, 45)
+      }
+      if (k === "juz") {
+        if (instant) {
+          setJuz(30)
+          return
+        }
+        let i = 0
+        const iv = setInterval(() => {
+          i++
+          setJuz(i)
+          if (i >= 30) clearInterval(iv)
+        }, 60)
       }
       if (k === "confetti" && !instant) setTimeout(() => spray(node, 60, false), 500)
       if (k === "medal") {
@@ -1955,7 +1934,7 @@ export function WelcomeStory({
           </div>
         </section>
 
-        {/* ── 4. Para by para: the lantern road ── */}
+        {/* ── 4. Para by para: the thirty juz, by name ── */}
         <section
           id="ch4"
           data-chapter=""
@@ -1965,7 +1944,7 @@ export function WelcomeStory({
             border: `1.5px solid ${mix("#8FA97A", 60)}`,
             display: "flex",
             flexDirection: "column",
-            gap: "clamp(24px,4vw,40px)",
+            gap: "clamp(22px,3vw,32px)",
           })}
         >
           <div
@@ -1983,12 +1962,12 @@ export function WelcomeStory({
                 Para by para
               </h2>
               <p style={para()}>
-                One para at a time, and every para lights another lantern on the road. Tajweed notes
-                from your teacher after every lesson, a celebration at every milestone, and a
-                certificate at the end.
+                Thirty paras, each known by its first words. Tajweed notes from your teacher after
+                every lesson, a celebration at every fifth, and a certificate at the khatm.
               </p>
             </div>
             <div
+              data-burst=""
               role="img"
               aria-label="Progress ring counting paras from 1 to 30"
               style={{ position: "relative", width: 150, height: 150, flexShrink: 0 }}
@@ -2045,219 +2024,76 @@ export function WelcomeStory({
               </div>
             </div>
           </div>
-          <div
-            data-road=""
-            data-reveal=""
-            data-delay="150"
-            role="img"
-            aria-label="A winding road to a mosque with thirty lanterns, one per para, lighting up as you read; Hilal the moon walks along it"
-            style={{ position: "relative", width: "100%" }}
+          <ol
+            data-trigger="juz"
+            aria-label="The thirty paras of the Quran, each by its opening words"
+            style={{
+              listStyle: "none",
+              margin: 0,
+              padding: 0,
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill,minmax(min(100%,88px),1fr))",
+              gap: 8,
+            }}
           >
-            {/* ponytail: one landscape scene at every width; lanterns get small on phones. Upgrade: a taller viewBox below 640px. */}
-            <svg
-              viewBox={`0 0 ${ROAD.w} ${ROAD.h}`}
-              width="100%"
-              aria-hidden="true"
-              style={{ display: "block", overflow: "visible" }}
-            >
-              <defs>
-                <radialGradient id="lanternGlow" cx="50%" cy="50%" r="50%">
-                  <stop offset="0" stopColor="#E3B04B" stopOpacity="0.9" />
-                  <stop offset="1" stopColor="#E3B04B" stopOpacity="0" />
-                </radialGradient>
-                <mask id="walkerMask">
-                  <rect x="-20" y="-20" width="40" height="40" fill="#FFFFFF" />
-                  <circle cx="6" cy="-6" r="10" fill="#000000" />
-                </mask>
-              </defs>
-              {/* sky bits and hills */}
-              <circle cx="92" cy="64" r="26" fill="#E3B04B" opacity=".3" />
-              <circle cx="92" cy="64" r="16" fill="#E3B04B" opacity=".45" />
-              <ellipse cx="150" cy="430" rx="330" ry="110" fill={mix("#8FA97A", 55)} />
-              <ellipse cx="520" cy="440" rx="300" ry="100" fill={mix("#8FA97A", 45)} />
-              {/* the road */}
-              <path
-                d={ROAD_D}
-                fill="none"
-                stroke="#D9C9B2"
-                strokeWidth="20"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d={ROAD_D}
-                fill="none"
-                stroke="#FFFFFF"
-                strokeWidth="2"
-                strokeDasharray="6 10"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                opacity=".8"
-              />
-              {/* the mosque at the end of the road */}
-              <g
-                data-mosque=""
-                className="mosque"
-                transform={`translate(${MOSQUE.x} ${MOSQUE.base})`}
-              >
-                <circle className="domeglow" cx="0" cy="-48" r="54" fill="url(#lanternGlow)" />
-                <rect
-                  x="-58"
-                  y="-46"
-                  width="116"
-                  height="46"
-                  rx="4"
-                  fill="#FFFFFF"
-                  stroke="#2E3A2F"
-                  strokeWidth="2.5"
-                />
-                <path d="M-62 -46 h124" stroke="#2E3A2F" strokeWidth="2.5" strokeLinecap="round" />
-                <path
-                  className="dome"
-                  d="M-34 -46 C -34 -92, 34 -92, 34 -46 Z"
-                  stroke="#2E3A2F"
-                  strokeWidth="2.5"
-                  strokeLinejoin="round"
-                />
-                <path d="M0 -84 v-10" stroke="#2E3A2F" strokeWidth="2.5" strokeLinecap="round" />
-                <path
-                  d="M3 -99 a6 6 0 1 0 0 10 a4.5 4.5 0 1 1 0 -10z"
-                  fill="#E3B04B"
-                  stroke="#2E3A2F"
-                  strokeWidth="1.5"
-                />
-                {[-76, 76].map((mx) => (
-                  <g key={mx} transform={`translate(${mx} 0)`}>
-                    <rect
-                      x="-6"
-                      y="-92"
-                      width="12"
-                      height="92"
-                      rx="3"
-                      fill="#FFFFFF"
-                      stroke="#2E3A2F"
-                      strokeWidth="2.5"
-                    />
-                    <path
-                      d="M-9 -92 C -9 -106, 9 -106, 9 -92 Z"
-                      fill="#E3B04B"
-                      stroke="#2E3A2F"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                    <rect x="-9" y="-64" width="18" height="4" rx="2" fill="#2E3A2F" />
-                  </g>
-                ))}
-                <path d="M-10 0 v-16 a10 10 0 0 1 20 0 v16 z" fill="#2E3A2F" />
-                <path
-                  d="M-40 -14 a5 5 0 0 1 10 0 v10 h-10z M30 -14 a5 5 0 0 1 10 0 v10 h-10z"
-                  fill="#8FA97A"
-                  stroke="#2E3A2F"
-                  strokeWidth="1.5"
-                />
-                <g className="star" transform="translate(0 -100)">
-                  <rect x="-7" y="-7" width="14" height="14" fill="#E3B04B" />
-                  <rect
-                    x="-7"
-                    y="-7"
-                    width="14"
-                    height="14"
-                    fill="#E3B04B"
-                    transform="rotate(45)"
-                  />
-                </g>
-              </g>
-              {/* thirty lanterns, one per para */}
-              {LANTERNS.map((l, i) => {
-                const h = l.milestone ? 40 : 28
-                const bw = l.milestone ? 14 : 10
-                const bh = l.milestone ? 18 : 13
-                return (
-                  <g
-                    key={i}
-                    data-lantern=""
-                    className="lantern"
-                    transform={`translate(${l.x.toFixed(1)} ${(l.y - 8).toFixed(1)})`}
+            {JUZ_NAMES.map((name, i) => {
+              const n = i + 1
+              const milestone = n % 5 === 0
+              return (
+                <li
+                  key={n}
+                  data-juz=""
+                  className={milestone ? "juz milestone" : "juz"}
+                  style={{
+                    position: "relative",
+                    minHeight: 66,
+                    padding: "8px 8px 6px",
+                    borderRadius: 16,
+                    border: `1.5px solid ${mix("#8FA97A", 60)}`,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 2,
+                    boxShadow: "0 4px 10px rgba(46,58,47,0.06)",
+                  }}
+                >
+                  <span
+                    className="n"
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      left: 9,
+                      ...f(700, "11px", "1", HEAD),
+                      color: "#6B7F5B",
+                    }}
                   >
-                    <circle
-                      className="glow"
-                      cx="0"
-                      cy={-h - bh / 2}
-                      r={l.milestone ? 26 : 18}
-                      fill="url(#lanternGlow)"
-                    />
-                    <path
-                      d={`M0 0 v${-h}`}
-                      stroke="#2E3A2F"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                    <rect
-                      className="body"
-                      x={-bw / 2}
-                      y={-h - bh}
-                      width={bw}
-                      height={bh}
-                      rx="3"
-                      stroke="#2E3A2F"
-                      strokeWidth="1.8"
-                    />
-                    <path
-                      d={`M${-bw / 2 - 1} ${-h - bh} h${bw + 2}`}
-                      stroke="#2E3A2F"
-                      strokeWidth="2.2"
-                      strokeLinecap="round"
-                    />
-                    <ellipse
-                      className="flame"
-                      cx="0"
-                      cy={-h - bh / 2 + 1}
-                      rx={bw * 0.22}
-                      ry={bh * 0.3}
-                      fill="#FFFFFF"
-                      opacity="0"
-                    />
-                    {l.milestone && (
-                      <path
-                        d={`M0 ${-h - bh - 2} v-12 l12 4 -12 4`}
-                        fill="#D98363"
-                        stroke="#2E3A2F"
-                        strokeWidth="1.5"
-                        strokeLinejoin="round"
-                      />
-                    )}
-                  </g>
-                )
-              })}
-              {/* Hilal walks the road */}
-              <g
-                data-walker=""
-                style={{
-                  transform: `translate(${roadPoint(0.01).x}px, ${roadPoint(0.01).y - 4}px)`,
-                  transition: "transform .7s cubic-bezier(.34,1.3,.64,1)",
-                }}
-              >
-                <g transform="translate(0 -16)">
-                  <circle cx="0" cy="0" r="14" fill="#E3B04B" mask="url(#walkerMask)" />
-                  <circle cx="-7" cy="2" r="1.8" fill="#2E3A2F" />
-                  <circle cx="-1" cy="4" r="1.8" fill="#2E3A2F" />
-                  <path
-                    d="M-8 8 q5 5 10 0"
-                    fill="none"
-                    stroke="#2E3A2F"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="-11" cy="7" r="2" fill="#D98363" opacity=".5" />
-                </g>
-              </g>
-            </svg>
-            <div
-              data-burst=""
-              aria-hidden="true"
-              style={{ position: "absolute", left: "87.5%", top: "28%", width: 1, height: 1 }}
-            />
-          </div>
+                    {n}
+                  </span>
+                  <span
+                    lang="ar"
+                    dir="rtl"
+                    style={{
+                      ...ar(600, "17px", "1.45"),
+                      textAlign: "center",
+                      overflowWrap: "anywhere",
+                    }}
+                  >
+                    {name}
+                  </span>
+                  {n === 30 && (
+                    <span
+                      className="star"
+                      aria-hidden="true"
+                      style={{ position: "absolute", top: -9, right: -7 }}
+                    >
+                      <Star size={22} />
+                    </span>
+                  )}
+                </li>
+              )
+            })}
+          </ol>
         </section>
 
         {/* ── 5. Words that stay ── */}
