@@ -3209,9 +3209,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               aria-label="Footer"
               style={{ display: "flex", gap: 22, flexWrap: "wrap", marginLeft: "auto" }}
             >
-              <Link href="/login" className="gold" style={footLink}>
-                Student login
-              </Link>
               <a href="#" className="gold" style={footLink}>
                 Privacy
               </a>
