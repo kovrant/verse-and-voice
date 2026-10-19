@@ -45,6 +45,7 @@ erDiagram
 * **`class_sessions`:** Historic records of conducted 1-on-1 classes.
 * **`fee_payments`:** Monthly tuition status ledger.
 * **`media_library`:** Uploaded Quran and Qaida PDFs.
+* **`qaida_audio`, `student_qaida_progress`, `student_qaida_checks`:** The card-based [Qaida course](../domain/qaida-course.md): teacher recordings per audio key, per-card mastery, unit check results. Course content itself is code (`src/content/qaida`).
 * **`memorization_catalog` & `chunks`:** Structured Hifz curriculum and sub-parts.
 * **`namaz_steps` & `parts`:** Prayer postures and Arabic text.
 * **`achievements` & `student_achievements`:** Gamification badges and milestone awards.

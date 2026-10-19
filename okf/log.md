@@ -13,6 +13,16 @@ tags:
 
 # Knowledge Catalog Curation Log
 
+
+### [2026-10-19] - Qaida Course: Content Module, Migration and Teacher Recording Page
+* **Scope:** `src/content/qaida/**` (new), `src/lib/qaida-course.ts`, `src/lib/use-audio-recorder.ts`, `src/lib/storage.ts`, `src/lib/namaz.ts`, `src/components/qaida-audio-row.tsx`, `src/components/qaida-card-tile.tsx`, `src/app/teacher/qaida/page.tsx` (rewritten), `supabase/migration_qaida_course.sql` (new), `scripts/qaida-deck-json.mjs` (new), `qaida-draft/` (review page, implementation plan).
+* **Entries Updated:** `domain/qaida-course.md` (new), `domain/qaida-curriculum.md` (superseded note), `database/migration-pipeline.md` (step 45), `database/schema-overview.md`, `index.md`, `log.md`.
+* **Changes:**
+  * The Noorani Qaida becomes a ten-unit card course in code (291 cards, 62 exercises), designed as teach → try → check per unit and ending in Al-Fatiha, Al-Ikhlas and An-Nas. Card ids are stable slugs that progress and audio rows key on.
+  * `migration_qaida_course.sql` adds `qaida_audio`, `student_qaida_progress` (+ column-lock trigger), `student_qaida_checks`, `students.qaida_card_id`, `class_sessions.ending_card_id`, ten `qaida_unit_NN` badges and the `qaida-audio` bucket.
+  * `/teacher/qaida` now shows the course and a recording list keyed by audio key (about 330 clips), with "Record next missing". The Qaida PDF list is gone from that page; PDFs stay in the Media Library.
+  * Audio type and bucket-path helpers moved from `namaz.ts` into `storage.ts` and are shared.
+
 ### [2026-09-24] - Initial Catalog Genesis (v0.2 Standard)
 * **Author:** OKF Specialist (Agentic System)
 * **Scope:** Full repository review and catalog creation.

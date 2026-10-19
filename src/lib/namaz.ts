@@ -1,5 +1,7 @@
 // Pure Namaz helpers — no Supabase import so they're unit-testable.
 
+import { audioUploadType, bucketObjectPath } from "@/lib/storage"
+
 export interface NamazStep {
   id: string
   title: string
@@ -144,39 +146,11 @@ export function activeWordIndex(timings: number[], time: number): number {
 
 export const NAMAZ_AUDIO_BUCKET = "namaz-audio"
 
-/** Audio types the `namaz-audio` bucket accepts (migration_namaz_audio.sql), with the file extension to save. */
-const NAMAZ_AUDIO_TYPES: Record<string, string> = {
-  "audio/webm": "webm",
-  "audio/ogg": "ogg",
-  "audio/mpeg": "mp3",
-  "audio/mp3": "mp3",
-  "audio/mp4": "m4a",
-  "audio/x-m4a": "m4a",
-  "audio/m4a": "m4a",
-  "audio/aac": "aac",
-  "audio/wav": "wav",
-}
-
-/**
- * Bucket-safe content type and extension for a recording or uploaded file, or
- * null if the bucket would refuse it. Drops `;codecs=…` (MediaRecorder adds
- * it) and falls back to the file extension when the browser gives no type.
- */
-export function namazAudioType(mime: string, fileName = ""): { type: string; ext: string } | null {
-  let type = mime.split(";")[0].trim().toLowerCase()
-  if (!NAMAZ_AUDIO_TYPES[type]) {
-    const ext = fileName.split(".").pop()?.toLowerCase()
-    type = Object.keys(NAMAZ_AUDIO_TYPES).find((t) => NAMAZ_AUDIO_TYPES[t] === ext) ?? ""
-  }
-  return NAMAZ_AUDIO_TYPES[type] ? { type, ext: NAMAZ_AUDIO_TYPES[type] } : null
-}
+/** Bucket-safe content type and extension for a recording, or null if the bucket would refuse it. */
+export const namazAudioType = audioUploadType
 
 /** Object path inside the namaz-audio bucket for a stored public URL, or null for any other URL. */
-export function namazAudioPath(url: string | null): string | null {
-  const marker = `/${NAMAZ_AUDIO_BUCKET}/`
-  const i = url?.indexOf(marker) ?? -1
-  return url && i !== -1 ? decodeURIComponent(url.slice(i + marker.length).split("?")[0]) : null
-}
+export const namazAudioPath = (url: string | null) => bucketObjectPath(NAMAZ_AUDIO_BUCKET, url)
 
 /** Word timings a teacher tapped are usable: one per word, never going backwards. */
 export function validWordTimings(timings: number[] | null, wordCount: number): boolean {

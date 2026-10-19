@@ -42,7 +42,8 @@ Welcome to the **Quran Academy** Open Knowledge Format (OKF) catalog. This catal
 
 ### 2. Domain Logic & Curriculum
 * [Quran Progress Tracking](domain/quran-progress-tracking.md): Dual-direction round progress math (`desc_completed + max(asc_completed - 1, 0)`), khatm transitions, and active round detection.
-* [Qaida Curriculum & Sentinel](domain/qaida-curriculum.md): Sentinel value `para_number = 0`, media library mapping, and curriculum progression.
+* [Qaida Curriculum & Sentinel](domain/qaida-curriculum.md): Sentinel value `para_number = 0`, media library mapping, and the PDF-based Qaida live class (being replaced by the course).
+* [Qaida Course](domain/qaida-course.md): The ten-unit card course in `src/content/qaida` (stable card ids, teach-try-check), teacher recordings keyed by audio key in `qaida_audio` / `qaida-audio`, per-card progress, unit checks and badges, and the `/teacher/qaida` course and recording page.
 * [Memorization (Hifz) & Revision](domain/memorization-and-hifz.md): Sabaq, Sabqi, Manzil lifecycle, chunk allocation, and revision scheduling triggers.
 * [Live Interactive Class](domain/live-class-session.md): Realtime whiteboard/mushaf pointer sync, debounced progress writes, and class session lifecycles.
 * [Namaz & Islamic Studies](domain/namaz-and-learning.md): Namaz step verification, Arabic normalization, streak calculation, and Hadith/history modules.

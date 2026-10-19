@@ -24,6 +24,12 @@ tags:
 
 Beginner students start their studies on **Norani Qaida** before advancing to the 30 Paras of the Holy Quran.
 
+> [!NOTE]
+> **Being replaced.** The Qaida PDF is giving way to the card-based [Qaida Course](qaida-course.md)
+> (`src/content/qaida`, `migration_qaida_course.sql`). Phase 1 (content, migration, teacher recording
+> page at `/teacher/qaida`) is done; the live class and the child's page below still render the PDF
+> until phase 2. The `para_number = 0` sentinel stays: only what para 0 renders changes.
+
 ---
 
 ## 🛑 The Sentinel Invariant: `para_number = 0`
