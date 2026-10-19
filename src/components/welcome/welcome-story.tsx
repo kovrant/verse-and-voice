@@ -71,8 +71,8 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz{min-width:88px;min-height:64px;padding:10px 16px 8px}
 @media (max-width:1119px){.vvw .lbl-long{display:none}.vvw .lbl-short{display:inline}}
 @media (min-width:761px){.vvw .progress{display:none}}
-@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .topbar .cta{display:none!important}.vvw .kids{height:46px;padding:0 16px}.vvw .kids .lbl-long{display:inline}.vvw .kids .lbl-short{display:none}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
-@media (max-width:480px){.vvw .juz{min-width:66px;min-height:56px;padding:8px 10px 6px}.vvw .juz .nm{font-size:16px!important}.vvw .wordmark{display:none}.vvw .topbar > div{padding-left:12px!important;padding-right:12px!important;gap:10px!important}}
+@media (max-width:760px){.vvw .foot{justify-content:center;text-align:center}.vvw .foot nav{margin-left:0!important;width:100%;justify-content:center}.vvw .foot > div:first-child{justify-content:center}.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .topbar .cta{display:none!important}.vvw .kids{height:46px;padding:0 16px}.vvw .kids .lbl-long{display:inline}.vvw .kids .lbl-short{display:none}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
+@media (max-width:480px){.vvw .phones{flex-direction:column;align-items:center;gap:16px!important}.vvw .phone{width:min(100%,270px);max-width:270px!important;flex:0 0 auto!important;transform-origin:center bottom!important}.vvw .mushaf-line{font-size:15px!important}.vvw .juz{min-width:66px;min-height:56px;padding:8px 10px 6px}.vvw .juz .nm{font-size:16px!important}.vvw .wordmark{display:none}.vvw .topbar > div{padding-left:12px!important;padding-right:12px!important;gap:10px!important}}
 @keyframes vvBar{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
 @keyframes vvTwinkle{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
 @keyframes vvShine{0%{transform:translateX(-160%) skewX(-20deg)}55%,100%{transform:translateX(380%) skewX(-20deg)}}
@@ -407,6 +407,7 @@ function PageTurnDemo() {
   return (
     <div
       ref={box}
+      className="phones"
       role="img"
       aria-label="Two phones. The teacher taps Next page and the lines change to the next page; then the student's phone comes into focus and its lines change to the same page."
       style={{
@@ -418,7 +419,7 @@ function PageTurnDemo() {
       }}
     >
       {/* Teacher: the plain dashboard look */}
-      <div style={spot("teacher")}>
+      <div className="phone" style={spot("teacher")}>
         <div
           style={{
             background: "#FFFFFF",
@@ -476,7 +477,7 @@ function PageTurnDemo() {
       </div>
 
       {/* Student: the kid portal look */}
-      <div style={spot("student")}>
+      <div className="phone" style={spot("student")}>
         <div
           style={{
             position: "relative",
@@ -639,7 +640,10 @@ function MushafPage({
       {page.lines.map((l, i) => (
         <div
           key={`${page.page}-${i}`}
-          className={phase === "out" ? "line-out" : phase === "in" ? "line-in" : undefined}
+          className={cn(
+            "mushaf-line",
+            phase === "out" ? "line-out" : phase === "in" ? "line-in" : undefined,
+          )}
           style={{ ...line, animationDelay: `${i * 60}ms` }}
         >
           {l}
@@ -3199,6 +3203,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             </div>
           </div>
           <footer
+            className="foot"
             style={{
               width: "100%",
               borderTop: "1px solid #2C362C",
