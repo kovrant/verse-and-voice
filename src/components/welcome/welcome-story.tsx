@@ -49,6 +49,7 @@ import {
   para,
   SHADOW,
 } from "@/components/welcome/welcome-styles"
+import { cn } from "@/lib/utils"
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
@@ -64,6 +65,14 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .press{transition:transform .2s,background .2s}.vvw .press:hover{transform:translateY(-2px)}.vvw .press:active{transform:scale(.96)}
 .vvw .gold:hover{color:#E3B04B!important}
 .vvw .film{scrollbar-width:thin}
+/* breakpoints live here, not in JS: the layout must not depend on innerWidth */
+.vvw .lbl-short{display:none}.vvw .only-phone{display:none}
+.vvw .kids{height:58px;padding:0 20px}.vvw .hilal{width:92px;height:92px}
+.vvw .juz{min-width:88px;min-height:64px;padding:10px 16px 8px}
+@media (max-width:1119px){.vvw .lbl-long{display:none}.vvw .lbl-short{display:inline}}
+@media (min-width:761px){.vvw .progress{display:none}}
+@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .kids-label{display:none}.vvw .kids{height:46px;padding:0 12px}.vvw .topbar .cta{height:46px!important;padding:0 5px 0 18px!important}.vvw .topbar .cta .pad{width:36px!important;height:36px!important}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
+@media (max-width:480px){.vvw .juz{min-width:66px;min-height:56px;padding:8px 10px 6px}.vvw .juz .nm{font-size:16px!important}.vvw .wordmark{display:none}.vvw .topbar > div{padding-left:12px!important;padding-right:12px!important;gap:10px!important}}
 @keyframes vvBar{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
 @keyframes vvTwinkle{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
 @keyframes vvShine{0%{transform:translateX(-160%) skewX(-20deg)}55%,100%{transform:translateX(380%) skewX(-20deg)}}
@@ -87,7 +96,7 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz .star{opacity:0;transform:scale(0);transition:opacity .4s .3s,transform .5s cubic-bezier(.34,1.56,.64,1) .3s}.vvw .juz.lit .star{opacity:1;transform:scale(1)}
 @keyframes vvFlame{0%,100%{transform:scale(1) rotate(-3deg)}50%{transform:scale(1.12) rotate(3deg)}}
 @keyframes vvBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-@media (max-width:760px){.vvw .pray-arrow{display:none}}
+@media (max-width:760px){.vvw .pray-arrow{display:none!important}}
 @media (prefers-reduced-motion: reduce){.vvw *,.vvw *::before,.vvw *::after{animation:none!important;transition:none!important}html{scroll-behavior:auto}}
 `
 
@@ -213,15 +222,17 @@ function SunrisePill({
   delay,
   submit,
   shadow = SHADOW,
+  className,
 }: {
   href?: string
-  label: string
+  label: ReactNode
   h?: number
   pad?: number
   size?: string
   delay?: string
   submit?: boolean
   shadow?: string
+  className?: string
 }) {
   const style: CSSProperties = {
     position: "relative",
@@ -245,6 +256,7 @@ function SunrisePill({
       <Shine delay={delay} />
       <span style={{ position: "relative", whiteSpace: "nowrap" }}>{label}</span>
       <span
+        className="pad"
         style={{
           position: "relative",
           width: pad,
@@ -260,11 +272,11 @@ function SunrisePill({
     </>
   )
   return submit ? (
-    <button type="submit" className="lift" style={style}>
+    <button type="submit" className={cn("lift", className)} style={style}>
       {inner}
     </button>
   ) : (
-    <a href={href} className="lift" style={style}>
+    <a href={href} className={cn("lift", className)} style={style}>
       {inner}
     </a>
   )
@@ -765,8 +777,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
   const root = useRef<HTMLDivElement>(null)
   const [age, setAge] = useState<AgeBand | null>(null)
   const [chapter, setChapter] = useState(0)
-  const [mobile, setMobile] = useState(false)
-  const [compact, setCompact] = useState(false)
   const [bubble, setBubble] = useState(true)
   const [scene, setScene] = useState(0)
   const [flipped, setFlipped] = useState(false)
@@ -1001,13 +1011,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
       groups.forEach((g) => r.io!.observe(g))
     }
 
-    const onResize = () => {
-      const w = window.innerWidth
-      setMobile(w < 760)
-      setCompact(w < 1120)
-    }
-    onResize()
-    window.addEventListener("resize", onResize)
     const onScroll = () => {
       if (!r.raf)
         r.raf = requestAnimationFrame(() => {
@@ -1023,7 +1026,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
     }, 60)
 
     return () => {
-      window.removeEventListener("resize", onResize)
       window.removeEventListener("scroll", onScroll)
       cancelAnimationFrame(r.raf)
       r.io?.disconnect()
@@ -1087,6 +1089,55 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
     color: "#F0ECDE",
     textDecoration: "none",
   }
+
+  // The age toggle lives in the top bar on wide screens and in the hero on
+  // phones, so the sticky header stays one slim row there.
+  const ageToggle = (
+    <div
+      role="group"
+      aria-label="Choose an age group"
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        padding: 4,
+        gap: 4,
+        background: "#FFFFFF",
+        border: "1.5px solid #D9C9B2",
+        borderRadius: 999,
+      }}
+    >
+      {AGES.map(([k, l, rng]) => {
+        const on = curAge === k
+        return (
+          <button
+            key={k}
+            type="button"
+            aria-pressed={on}
+            aria-label={`${l} ${rng}`}
+            onClick={() => {
+              setAge(k)
+              setBubble(true)
+            }}
+            style={{
+              flex: 1,
+              border: 0,
+              cursor: "pointer",
+              borderRadius: 999,
+              padding: "9px 14px",
+              background: on ? "#2E3A2F" : "transparent",
+              color: on ? "#F8F6EE" : "#2E3A2F",
+              ...f(700, "14px", "1", BODY),
+              whiteSpace: "nowrap",
+              transition: "background .25s,color .25s",
+            }}
+          >
+            <span className="lbl-long">{`${l} ${rng}`}</span>
+            <span className="lbl-short">{`${l.split(" ")[0]} ${rng}`}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
 
   return (
     <div
@@ -1183,6 +1234,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
 
       {/* Sticky top bar */}
       <header
+        className="topbar"
         style={{
           position: "sticky",
           top: 0,
@@ -1203,7 +1255,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             alignItems: "center",
             justifyContent: "space-between",
             gap: "12px 20px",
-            flexWrap: mobile ? "wrap" : "nowrap",
+            flexWrap: "nowrap",
           }}
         >
           <a
@@ -1218,69 +1270,26 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             }}
           >
             <Logo size={44} id="lgA" label="Verse & Voice logo: an open book with voice waves" />
-            <span style={{ ...f(700, "23px", "1", HEAD), whiteSpace: "nowrap" }}>
+            <span
+              className="wordmark"
+              style={{ ...f(700, "23px", "1", HEAD), whiteSpace: "nowrap" }}
+            >
               Verse{" "}
               <span style={{ fontWeight: 600, fontStyle: "italic", color: "#C96F4F" }}>&amp;</span>{" "}
               Voice
             </span>
           </a>
-          <div
-            role="group"
-            aria-label="Choose an age group"
-            style={{
-              order: mobile ? 3 : 0,
-              flex: mobile ? "1 1 100%" : "0 1 auto",
-              display: "flex",
-              justifyContent: "center",
-              padding: 4,
-              gap: 4,
-              background: "#FFFFFF",
-              border: "1.5px solid #D9C9B2",
-              borderRadius: 999,
-            }}
-          >
-            {AGES.map(([k, l, rng]) => {
-              const on = curAge === k
-              return (
-                <button
-                  key={k}
-                  type="button"
-                  aria-pressed={on}
-                  aria-label={`${l} ${rng}`}
-                  onClick={() => {
-                    setAge(k)
-                    setBubble(true)
-                  }}
-                  style={{
-                    flex: 1,
-                    border: 0,
-                    cursor: "pointer",
-                    borderRadius: 999,
-                    padding: "9px 16px",
-                    background: on ? "#2E3A2F" : "transparent",
-                    color: on ? "#F8F6EE" : "#2E3A2F",
-                    ...f(700, "14px", "1", BODY),
-                    whiteSpace: "nowrap",
-                    transition: "background .25s,color .25s",
-                  }}
-                >
-                  {compact ? `${l.split(" ")[0]} ${rng}` : `${l} ${rng}`}
-                </button>
-              )
-            })}
-          </div>
+          <div className="only-wide">{ageToggle}</div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* Kids login: the student portal's own door, right in the top bar */}
             <Link
               href="/login"
-              className="lift"
+              className="lift kids"
               aria-label="Kids login"
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                height: mobile ? 46 : 58,
-                padding: mobile ? "0 12px" : "0 20px",
                 borderRadius: 999,
                 background: "#FFFFFF",
                 border: "1.5px solid #D9C9B2",
@@ -1309,93 +1318,96 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                   strokeLinecap="round"
                 />
               </svg>
-              {!mobile && (compact ? "Login" : "Kids login")}
+              <span className="kids-label">
+                <span className="lbl-long">Kids login</span>
+                <span className="lbl-short">Login</span>
+              </span>
             </Link>
             <SunrisePill
               href="#ch10"
-              label={compact ? "Free trial" : "Book a free trial"}
-              h={mobile ? 46 : 58}
-              pad={mobile ? 36 : 46}
+              className="cta"
+              label={
+                <>
+                  <span className="lbl-long">Book a free trial</span>
+                  <span className="lbl-short">Free trial</span>
+                </>
+              }
               size="17px"
             />
           </div>
         </div>
-        {mobile && (
-          <div style={{ height: 3, background: "rgba(217,201,178,.4)" }}>
-            <div
-              data-progress=""
-              style={{
-                height: "100%",
-                background: "linear-gradient(90deg,#8FA97A,#E3B04B)",
-                transformOrigin: "left",
-                transform: "scaleX(0)",
-              }}
-            />
-          </div>
-        )}
+        <div className="progress" style={{ height: 3, background: "rgba(217,201,178,.4)" }}>
+          <div
+            data-progress=""
+            style={{
+              height: "100%",
+              background: "linear-gradient(90deg,#8FA97A,#E3B04B)",
+              transformOrigin: "left",
+              transform: "scaleX(0)",
+            }}
+          />
+        </div>
       </header>
 
       {/* Chapter dots (desktop) */}
-      {!mobile && (
-        <nav
-          aria-label="Chapters"
+      <nav
+        className="sidenav"
+        aria-label="Chapters"
+        style={{
+          position: "fixed",
+          left: 22,
+          top: "50%",
+          transform: "translateY(-50%)",
+          zIndex: 20,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 14,
+        }}
+      >
+        <span
+          aria-hidden="true"
           style={{
-            position: "fixed",
-            left: 22,
-            top: "50%",
-            transform: "translateY(-50%)",
-            zIndex: 20,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 14,
+            position: "absolute",
+            top: 6,
+            bottom: 6,
+            left: "50%",
+            width: 2,
+            marginLeft: -1,
+            background: "var(--navline,#D9C9B2)",
+            borderRadius: 2,
           }}
-        >
-          <span
-            aria-hidden="true"
+        />
+        {NAV.map((t, i) => (
+          <a
+            key={t}
+            href={`#ch${i + 1}`}
+            title={t}
+            aria-label={`Chapter ${i + 1}: ${t}`}
+            aria-current={i === ch ? "step" : undefined}
             style={{
-              position: "absolute",
-              top: 6,
-              bottom: 6,
-              left: "50%",
-              width: 2,
-              marginLeft: -1,
-              background: "var(--navline,#D9C9B2)",
-              borderRadius: 2,
+              position: "relative",
+              display: "block",
+              width: 16,
+              height: 13,
+              borderRadius: "50%",
+              background: i === ch ? "#E3B04B" : i < ch ? "#8FA97A" : "var(--navoff,#D9C9B2)",
+              boxShadow: i === ch ? "0 0 0 4px rgba(227,176,75,.28)" : "none",
+              transform: `scale(${i === ch ? 1.45 : 1})`,
+              transition: "transform .3s cubic-bezier(.34,1.56,.64,1),background .3s",
             }}
           />
-          {NAV.map((t, i) => (
-            <a
-              key={t}
-              href={`#ch${i + 1}`}
-              title={t}
-              aria-label={`Chapter ${i + 1}: ${t}`}
-              aria-current={i === ch ? "step" : undefined}
-              style={{
-                position: "relative",
-                display: "block",
-                width: 16,
-                height: 13,
-                borderRadius: "50%",
-                background: i === ch ? "#E3B04B" : i < ch ? "#8FA97A" : "var(--navoff,#D9C9B2)",
-                boxShadow: i === ch ? "0 0 0 4px rgba(227,176,75,.28)" : "none",
-                transform: `scale(${i === ch ? 1.45 : 1})`,
-                transition: "transform .3s cubic-bezier(.34,1.56,.64,1),background .3s",
-              }}
-            />
-          ))}
-        </nav>
-      )}
+        ))}
+      </nav>
 
       {/* Hilal, the crescent moon mascot */}
       <div
+        className="hilal"
         style={{
           position: "fixed",
           right: "clamp(10px,2vw,26px)",
           bottom: "clamp(10px,2vw,22px)",
           zIndex: 25,
-          width: mobile ? 64 : 92,
-          height: mobile ? 64 : 92,
           animation: "vvPop .8s cubic-bezier(.34,1.56,.64,1) .5s both",
           pointerEvents: "none",
         }}
@@ -1526,6 +1538,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
         >
           <div data-reveal="" style={col(22)}>
             <span style={eyebrow("#6B7F5B")}>Chapter 1 · Dawn</span>
+            <div className="only-phone">{ageToggle}</div>
             <h1
               id="h-ch1"
               style={
@@ -2078,10 +2091,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                   style={{
                     position: "relative",
                     flex: "1 0 auto",
-                    minWidth: 88,
                     maxWidth: 200, // a lone tile on the last row shouldn't span the whole width
-                    minHeight: 64,
-                    padding: "10px 16px 8px",
                     borderRadius: 16,
                     border: `1.5px solid ${mix("#8FA97A", 60)}`,
                     display: "flex",
@@ -2105,6 +2115,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                     {n}
                   </span>
                   <span
+                    className="nm"
                     lang="ar"
                     dir="rtl"
                     style={{

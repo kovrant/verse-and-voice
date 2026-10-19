@@ -77,6 +77,9 @@ Reveals use `data-reveal` / `data-from` / `data-to` / `data-trigger` attributes 
 
 ## 🧩 Behaviour
 
+* **Age toggle** (`AGES`): little / young / teens swaps the hero headline and Hilal's dawn mood. It sits in the top bar on wide screens and in the hero on phones.
+* **Breakpoints are CSS, never `innerWidth`.** The page's `CSS` string carries them: labels shorten below 1120px; below 760px the top bar is one slim row (icon login, short CTA, no toggle), the side dots hide and the progress line shows; below 480px the wordmark text hides too. Inline styles that a breakpoint must override are overridden with `!important` in that block.
+
 * **Age toggle** swaps only the hero headline and Hilal's dawn mood (`little` excited, `young` awake, `teens` wink). Labels shorten below 1120px; the top bar wraps to three rows below 760px.
 * **Hilal** bubble shows for 5.5s on load and 3.5s after each chapter change.
 * **Form** confirms locally and sends nothing (`// ponytail` in the submit handler). `WHATSAPP_URL` in `welcome-data.ts` is empty, so the WhatsApp line keeps the mock's `#` link.
