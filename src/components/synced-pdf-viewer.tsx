@@ -544,7 +544,8 @@ export function SyncedPdfViewer({
                       </div>
                     )}
 
-                    {/* Glowing Mild Green Laser Pointer Pin */}
+                    {/* Pointer pin: terracotta, so it stands out inside the green line strip.
+                        Fixed hex so it looks the same in both portals and in dark mode. */}
                     <div
                       className="absolute transition-all duration-150"
                       style={{
@@ -553,8 +554,8 @@ export function SyncedPdfViewer({
                       }}
                     >
                       <div className="relative -left-3 -top-3 flex h-6 w-6 items-center justify-center">
-                        <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-emerald-500/40" />
-                        <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-emerald-600 shadow-md">
+                        <span className="absolute inline-flex h-8 w-8 animate-ping rounded-full bg-[#D9603B]/45" />
+                        <span className="relative flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#D9603B] shadow-md">
                           <span className="h-1.5 w-1.5 rounded-full bg-white" />
                         </span>
                       </div>
