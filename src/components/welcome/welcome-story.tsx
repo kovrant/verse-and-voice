@@ -71,7 +71,7 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .juz{min-width:88px;min-height:64px;padding:10px 16px 8px}
 @media (max-width:1119px){.vvw .lbl-long{display:none}.vvw .lbl-short{display:inline}}
 @media (min-width:761px){.vvw .progress{display:none}}
-@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .kids-label{display:none}.vvw .kids{height:46px;padding:0 12px}.vvw .topbar .cta{height:46px!important;padding:0 5px 0 18px!important}.vvw .topbar .cta .pad{width:36px!important;height:36px!important}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
+@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .topbar .cta{display:none!important}.vvw .kids{height:46px;padding:0 16px}.vvw .kids .lbl-long{display:inline}.vvw .kids .lbl-short{display:none}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
 @media (max-width:480px){.vvw .juz{min-width:66px;min-height:56px;padding:8px 10px 6px}.vvw .juz .nm{font-size:16px!important}.vvw .wordmark{display:none}.vvw .topbar > div{padding-left:12px!important;padding-right:12px!important;gap:10px!important}}
 @keyframes vvBar{0%,100%{transform:scaleY(.45)}50%{transform:scaleY(1)}}
 @keyframes vvTwinkle{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
