@@ -10,6 +10,7 @@ import {
   getCompletedRounds,
   type QuranRound,
 } from "@/components/quran-progress"
+import { locateCard } from "@/content/qaida"
 import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
 import { parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
 
@@ -30,6 +31,8 @@ export interface ClassSession {
   ending_line?: number | null
   ending_pointer_x?: number | null
   ending_pointer_y?: number | null
+  /** Qaida course card the class ended on (migration_qaida_course.sql). */
+  ending_card_id?: string | null
   paras_covered: number[]
   memorization_revised: string[]
   notes: string | null
@@ -49,6 +52,7 @@ export function classPosition(rounds: QuranRound[], sessions: ClassSession[]) {
       para: QAIDA_PARA,
       page: qaidaSession?.ending_page ?? qaidaSession?.last_page ?? null,
       line: qaidaSession?.ending_line ?? null,
+      cardId: qaidaSession?.ending_card_id ?? null,
     }
   }
   const latestSession = sessions[0]
@@ -61,7 +65,16 @@ export function classPosition(rounds: QuranRound[], sessions: ClassSession[]) {
     para,
     page: latestSession?.ending_page ?? latestSession?.last_page ?? null,
     line: latestSession?.ending_line ?? null,
+    cardId: null as string | null,
   }
+}
+
+/** "Unit 3 · Letters hold hands · card 14 of 32" for a course card id, else null. */
+export function qaidaCardLabel(cardId: string | null | undefined): string | null {
+  const loc = cardId ? locateCard(cardId) : null
+  return loc
+    ? `Unit ${loc.unit.number} · ${loc.unit.title} · card ${loc.index + 1} of ${loc.total}`
+    : null
 }
 
 /** The selected student's class card: schedule, position, progress, round history, Start Class. */
@@ -86,7 +99,9 @@ export function ClassStudentCard({
     para: latestPara,
     page: latestPage,
     line: latestLine,
+    cardId: latestCardId,
   } = classPosition(rounds, sessions)
+  const courseLabel = qaidaCardLabel(latestCardId)
   const currentPara = latestPara
 
   return (
@@ -143,9 +158,11 @@ export function ClassStudentCard({
                 Currently On
               </p>
               <p className="text-xl font-bold text-primary mt-0.5">
-                {activeRound
-                  ? `${paraLabel(latestPara)}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
-                  : "Not started"}
+                {activeRound && courseLabel
+                  ? `Norani Qaida · ${courseLabel}`
+                  : activeRound
+                    ? `${paraLabel(latestPara)}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
+                    : "Not started"}
               </p>
             </div>
           </div>

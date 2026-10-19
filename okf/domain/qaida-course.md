@@ -18,6 +18,17 @@ sources:
   - "src/components/qaida-audio-row.tsx"
   - "src/components/qaida-card-tile.tsx"
   - "src/app/teacher/qaida/page.tsx"
+  - "src/lib/qaida-live.ts"
+  - "src/lib/qaida-live.test.ts"
+  - "src/lib/use-qaida-audio.ts"
+  - "src/lib/use-class-channel.ts"
+  - "src/components/qaida-card-view.tsx"
+  - "src/components/qaida-live-deck.tsx"
+  - "src/components/live-session.tsx"
+  - "src/components/student-live-class.tsx"
+  - "src/components/live-class-provider.tsx"
+  - "src/components/class-student-card.tsx"
+  - "src/app/teacher/class/page.tsx"
   - "supabase/migration_qaida_course.sql"
   - "scripts/qaida-deck-json.mjs"
   - "qaida-draft/IMPLEMENTATION-PLAN.md"
@@ -37,7 +48,7 @@ practises them alone, and progress is tracked per card. The PDF is being retired
 
 The build runs in phases; this document describes what exists. The full plan with the settled
 decisions is `qaida-draft/IMPLEMENTATION-PLAN.md`. The older PDF-based behaviour is in
-[Qaida Curriculum & Sentinel](qaida-curriculum.md) and still applies to the live class until phase 2.
+[Qaida Curriculum & Sentinel](qaida-curriculum.md); since phase 2 the live class renders cards instead.
 
 ---
 
@@ -94,6 +105,29 @@ Replaces the old Qaida PDF list (PDFs remain in the Media Library).
 * Decision 3 in the plan: the teacher's voice, Units 1 and 2 first (about 110 clips); a card without
   a clip hides its speaker button on the child's side (phase 2).
 
+## 🎓 Live class (phase 2)
+
+A Qaida round (para `0`) teaches the course; no PDF is needed to start (`qaidaMissing` is always false).
+* **Start:** the class page reads `students.qaida_card_id` in its own query (so a database without the
+  column still lists students) and `startingCard()` falls back to the first card.
+* **Teacher (`QaidaLiveDeck` inside `live-session.tsx`):** the card as the child sees it plus teacher
+  notes and exercise answers; Prev / Next (also ← →); **Play** (plays locally and broadcasts `play`);
+  **Hide / Show hint**; tap any tile to highlight it on both screens; **Needs work** / **Mastered**
+  upsert `student_qaida_progress` immediately; a course tree on the right jumps to any card and shows
+  each card's mark. Showing a card upserts `seen` with `ignoreDuplicates`, so it never downgrades a
+  mark. The Tajweed deck starts closed for Qaida.
+* **Child (`student-live-class.tsx`):** on para `0` with a `cardId` it renders `QaidaCardView` in the
+  kid frame and follows the teacher's card, hint and highlight (held in `LiveClassProvider` so a
+  late-mounting viewer still gets them), and plays the clip on `play`. Tapping a tile with its own clip
+  plays it. Speaker buttons hide when no clip is recorded.
+* **Tiles:** `cardTiles(card)`: family members, drill items, the four shapes, exercise items, or the
+  card's Arabic split on spaces (never inside a word, Arabic must stay joined).
+* **End:** `class_sessions.ending_card_id`, `ending_page = cardPage(card)` (1-based course position),
+  `students.qaida_card_id` updated best-effort, no PDF bookmark. The class card's "Currently On" reads
+  `Norani Qaida · Unit 3 · Letters hold hands · card 14 of 32` (`qaidaCardLabel`).
+* **Exercises** are shown but run out loud in phase 2: the teacher points at items; live answers,
+  scoring and confetti arrive in phase 3.
+
 ## 🗄️ Database (`migration_qaida_course.sql`)
 
 | Table / column | Purpose | Writes |
@@ -114,7 +148,7 @@ renders changes (phase 2).
 |---|---|
 | 0 content module | done 2026-10-19 |
 | 1 migration, bucket, teacher course page with recording | done 2026-10-19 (migration file written; apply in the SQL editor) |
-| 2 live deck (teacher + child), `nav.cardId`, `qaida` broadcast event | next |
-| 3 exercises live, unit check scoreboard, badges, confetti | |
+| 2 live deck (teacher + child), `nav.cardId`, `qaida` broadcast event | done 2026-10-19 |
+| 3 exercises live, unit check scoreboard, badges, confetti | next |
 | 4 child's course home and self-practice, teacher Qaida tab, dashboard, monthly report | |
 | 5 retire the PDF path | |

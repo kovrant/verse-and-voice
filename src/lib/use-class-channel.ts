@@ -3,6 +3,7 @@
 import type { RealtimeChannel } from "@supabase/supabase-js"
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { parseQaidaMessage, type QaidaMessage } from "@/lib/qaida-live"
 import { supabase } from "@/lib/supabase"
 import type { TajweedRule } from "@/lib/tajweed/rules"
 import { ensureRealtimeAuth } from "@/lib/use-current-user"
@@ -10,6 +11,8 @@ import { ensureRealtimeAuth } from "@/lib/use-current-user"
 export interface NavState {
   paraNumber: number
   page: number
+  /** Qaida course card shown (paraNumber is 0 then). Absent for Quran paras and the old Qaida PDF. */
+  cardId?: string
 }
 
 type ClassRole = "teacher" | "student"
@@ -50,6 +53,8 @@ interface UseClassChannelOptions {
   onEnd?: () => void
   /** Fired when the other party triggers a real-time Tajweed or reading rule reminder. */
   onTajweedRule?: (rule: TajweedRule) => void
+  /** Fired for Qaida course card-deck messages (hint, play, highlight). */
+  onQaida?: (msg: QaidaMessage) => void
   /** Fired when the other role newly joins (presence join) — e.g. so the
    * teacher can push its authoritative position to a fresh joiner. */
   onPeerJoin?: () => void
@@ -72,6 +77,8 @@ interface ClassChannel {
   sendPointer: (pointer: PointerState | null) => void
   /** Broadcast a real-time Tajweed rule card reminder to the peer. */
   sendTajweedRule: (rule: TajweedRule) => void
+  /** Broadcast a Qaida course card-deck message. */
+  sendQaida: (msg: QaidaMessage) => void
   /** Broadcast an explicit "class ended" signal and leave presence immediately. */
   endClass: () => Promise<void>
   /** Tear down and re-subscribe now (e.g. a "reconnect" button). */
@@ -108,6 +115,7 @@ export function useClassChannel({
   onPointer,
   onEnd,
   onTajweedRule,
+  onQaida,
   onPeerJoin,
   onConnectionIssue,
 }: UseClassChannelOptions): ClassChannel {
@@ -123,6 +131,7 @@ export function useClassChannel({
   const onPointerRef = useRef(onPointer)
   const onEndRef = useRef(onEnd)
   const onTajweedRuleRef = useRef(onTajweedRule)
+  const onQaidaRef = useRef(onQaida)
   const onPeerJoinRef = useRef(onPeerJoin)
   const onConnectionIssueRef = useRef(onConnectionIssue)
   // Bumped to rebuild the channel: after a failed subscribe (with backoff),
@@ -140,9 +149,10 @@ export function useClassChannel({
     onPointerRef.current = onPointer
     onEndRef.current = onEnd
     onTajweedRuleRef.current = onTajweedRule
+    onQaidaRef.current = onQaida
     onPeerJoinRef.current = onPeerJoin
     onConnectionIssueRef.current = onConnectionIssue
-  }, [onNav, onScroll, onPointer, onEnd, onTajweedRule, onPeerJoin, onConnectionIssue])
+  }, [onNav, onScroll, onPointer, onEnd, onTajweedRule, onQaida, onPeerJoin, onConnectionIssue])
 
   // Channel lifecycle — deliberately does NOT depend on `present` so joining
   // (track) doesn't tear down and rebuild the channel.
@@ -162,6 +172,7 @@ export function useClassChannel({
           role?: ClassRole
           paraNumber?: number
           page?: number
+          cardId?: string
           device?: string
           deviceType?: PeerDevice["type"]
         }>
@@ -175,6 +186,7 @@ export function useClassChannel({
             otherPresent = true
             if (typeof p.paraNumber === "number" && typeof p.page === "number") {
               nav = { paraNumber: p.paraNumber, page: p.page }
+              if (typeof p.cardId === "string") nav.cardId = p.cardId
             }
             if (p.device) {
               otherDevice = { label: p.device, type: p.deviceType || "tablet" }
@@ -207,9 +219,11 @@ export function useClassChannel({
       })
       .on("broadcast", { event: "nav" }, ({ payload }) => {
         if (!payload || (payload as { by?: string }).by === clientId) return
-        const { paraNumber, page } = payload as NavState
+        const { paraNumber, page, cardId } = payload as NavState
         if (typeof paraNumber === "number" && typeof page === "number") {
-          onNavRef.current?.({ paraNumber, page })
+          onNavRef.current?.(
+            typeof cardId === "string" ? { paraNumber, page, cardId } : { paraNumber, page },
+          )
         }
       })
       .on("broadcast", { event: "scroll" }, ({ payload }) => {
@@ -258,6 +272,11 @@ export function useClassChannel({
         if (rule) {
           onTajweedRuleRef.current?.(rule)
         }
+      })
+      .on("broadcast", { event: "qaida" }, ({ payload }) => {
+        if (!payload || (payload as { by?: string }).by === clientId) return
+        const msg = parseQaidaMessage(payload)
+        if (msg) onQaidaRef.current?.(msg)
       })
 
     // Guard the (possibly deferred) subscribe against this effect being torn
@@ -361,6 +380,7 @@ export function useClassChannel({
         role,
         paraNumber: nav.paraNumber,
         page: nav.page,
+        cardId: nav.cardId,
         device: deviceInfo?.label,
         deviceType: deviceInfo?.type,
       }).catch(() => {})
@@ -416,6 +436,15 @@ export function useClassChannel({
     [clientId],
   )
 
+  const sendQaida = useCallback(
+    (msg: QaidaMessage) => {
+      const ch = channelRef.current
+      if (!ch || !subscribedRef.current) return
+      ch.send({ type: "broadcast", event: "qaida", payload: { ...msg, by: clientId } })
+    },
+    [clientId],
+  )
+
   const endClass = useCallback(async () => {
     const ch = channelRef.current
     if (!ch || !subscribedRef.current) return
@@ -437,6 +466,7 @@ export function useClassChannel({
     sendScroll,
     sendPointer,
     sendTajweedRule,
+    sendQaida,
     endClass,
     reconnect,
   }

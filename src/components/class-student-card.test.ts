@@ -69,3 +69,18 @@ describe("classPosition — Qaida round", () => {
     })
   })
 })
+
+describe("Qaida course position", () => {
+  it("carries the last Qaida session's card and labels it", async () => {
+    const { qaidaCardLabel } = await import("./class-student-card")
+    const pos = classPosition(
+      [round({ type: "qaida" })],
+      [session({ ending_para: 0, ending_page: 120, ending_card_id: "u3.word.kataba" })],
+    )
+    expect(pos.cardId).toBe("u3.word.kataba")
+    expect(qaidaCardLabel(pos.cardId)).toMatch(/^Unit 3 · Letters hold hands · card \d+ of \d+$/)
+    expect(qaidaCardLabel(null)).toBeNull()
+    expect(qaidaCardLabel("u99.gone")).toBeNull()
+    expect(classPosition([round({})], []).cardId).toBeNull()
+  })
+})

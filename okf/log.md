@@ -14,6 +14,15 @@ tags:
 # Knowledge Catalog Curation Log
 
 
+
+### [2026-10-19] - Qaida Course Phase 2: Live Class Card Deck
+* **Scope:** `src/lib/use-class-channel.ts`, `src/lib/qaida-live.ts` (new), `src/lib/use-qaida-audio.ts` (new), `src/components/qaida-card-view.tsx` (new), `src/components/qaida-live-deck.tsx` (new), `src/components/live-session.tsx`, `src/components/student-live-class.tsx`, `src/components/live-class-provider.tsx`, `src/components/class-student-card.tsx`, `src/app/teacher/class/page.tsx`, `src/app/teacher/qaida/page.tsx`, `src/content/qaida/index.ts`.
+* **Entries Updated:** `domain/qaida-course.md`, `domain/live-class-session.md`, `architecture/realtime-protocol.md`, `log.md`.
+* **Changes:**
+  * A Qaida round now teaches the card course in the live class instead of the PDF. Teacher: Prev/Next, Play, hint, tile highlight, Mastered/Needs work, course tree. Child: the same card, following the teacher.
+  * `nav` carries `cardId`; one new `qaida` broadcast event (`reveal`, `play`, `highlight`).
+  * Ending a Qaida class saves `class_sessions.ending_card_id` and `students.qaida_card_id`; the class card shows the unit and card.
+
 ### [2026-10-19] - Qaida Course: Content Module, Migration and Teacher Recording Page
 * **Scope:** `src/content/qaida/**` (new), `src/lib/qaida-course.ts`, `src/lib/use-audio-recorder.ts`, `src/lib/storage.ts`, `src/lib/namaz.ts`, `src/components/qaida-audio-row.tsx`, `src/components/qaida-card-tile.tsx`, `src/app/teacher/qaida/page.tsx` (rewritten), `supabase/migration_qaida_course.sql` (new), `scripts/qaida-deck-json.mjs` (new), `qaida-draft/` (review page, implementation plan).
 * **Entries Updated:** `domain/qaida-course.md` (new), `domain/qaida-curriculum.md` (superseded note), `database/migration-pipeline.md` (step 45), `database/schema-overview.md`, `index.md`, `log.md`.

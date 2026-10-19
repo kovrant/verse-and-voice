@@ -17,6 +17,7 @@ import dynamic from "next/dynamic"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { InlineLoader } from "@/components/page-loading"
+import { QaidaLiveDeck } from "@/components/qaida-live-deck"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { StudentTajweedAlert } from "@/components/student-tajweed-alert"
@@ -41,10 +42,12 @@ import {
 } from "@/lib/para-progress"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
+import { cardPage, startingCard } from "@/lib/qaida-live"
 import { supabase } from "@/lib/supabase"
 import type { TajweedRule } from "@/lib/tajweed/rules"
 import { toast } from "@/lib/toast"
 import { type PointerState, useClassChannel } from "@/lib/use-class-channel"
+import { useQaidaAudio } from "@/lib/use-qaida-audio"
 import { cn, formatLocalDate, formatSessionDuration } from "@/lib/utils"
 
 // react-pdf renders client-side only.
@@ -70,6 +73,8 @@ interface LiveSessionProps {
   memItems: MemItem[]
   paras: QuranPara[]
   initialParaNumber: number
+  /** Qaida course: the card the class opens on (students.qaida_card_id). */
+  initialCardId?: string | null
   // Returns false if the save failed so the live session can recover.
   onEnd: (sessionData: SessionEndData) => void | boolean | Promise<void | boolean>
   onMemItemsChange: (items: MemItem[]) => void
@@ -88,6 +93,8 @@ export interface SessionEndData {
   endingLine?: number | null
   endingPointerX?: number | null
   endingPointerY?: number | null
+  /** Qaida course card the class ended on (null for Quran paras). */
+  endingCardId?: string | null
   parasCovered: number[]
   memorizationRevised: string[]
   notes: string
@@ -127,6 +134,7 @@ export default function LiveSession({
   memItems,
   paras,
   initialParaNumber,
+  initialCardId,
   onEnd,
   onMemItemsChange,
   onRoundsChange,
@@ -138,7 +146,15 @@ export default function LiveSession({
   const currentPointerRef = useRef<PointerState | null>(null)
   currentPointerRef.current = currentPointer
   const [startedAt] = useState(() => new Date())
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Qaida classes need the room for the card deck; the Tajweed deck is one tap away.
+  const [sidebarOpen, setSidebarOpen] = useState(initialParaNumber !== QAIDA_PARA)
+  // Qaida course: current card, English hint, highlighted tile (all mirrored to the child).
+  const [startCardId] = useState(() => startingCard(initialCardId).id)
+  const [qaidaCardId, setQaidaCardId] = useState(startCardId)
+  const [qaidaHint, setQaidaHint] = useState(true)
+  const [qaidaHighlight, setQaidaHighlight] = useState<number | null>(null)
+  const qaidaRef = useRef({ cardId: qaidaCardId, hint: qaidaHint, highlight: qaidaHighlight })
+  qaidaRef.current = { cardId: qaidaCardId, hint: qaidaHint, highlight: qaidaHighlight }
   const [revisionPick, setRevisionPick] = useState<MemItem | null>(null)
   const [revisionsThisSession, setRevisionsThisSession] = useState<string[]>([])
   const [sessionRules, setSessionRules] = useState<string[]>([])
@@ -171,6 +187,7 @@ export default function LiveSession({
   const currentPara = paras.find((p) => p.meta?.para_number === currentParaNumber) || null
   // Qaida (para 0) is a single book: page navigation only, no para switching.
   const isQaida = currentParaNumber === QAIDA_PARA
+  const qaidaAudio = useQaidaAudio(isQaida)
 
   // Warm the PDF cache for nearby paras so para switches don't flash white.
   useEffect(() => {
@@ -220,11 +237,14 @@ export default function LiveSession({
     sendScroll: _sendScroll,
     sendPointer,
     sendTajweedRule,
+    sendQaida,
     endClass,
   } = useClassChannel({
     studentId: student.id,
     role: "teacher",
     onNav: (nav) => {
+      // Qaida cards are teacher-led: the child never moves the deck.
+      if (isQaida) return
       // The teacher leads the para; only accept the student's PAGE turns within
       // the teacher's current para. Ignore any other-para position (e.g. the
       // student's pre-sync default of para 1), which must not move the teacher.
@@ -237,7 +257,14 @@ export default function LiveSession({
     // A student just joined → push our authoritative position so they land here,
     // and record a one-time "student joined" notification for the teacher.
     onPeerJoin: () => {
-      sendNav({ paraNumber: currentParaNumber, page: pdfPage })
+      if (isQaida) {
+        const q = qaidaRef.current
+        sendNav({ paraNumber: QAIDA_PARA, page: cardPage(q.cardId), cardId: q.cardId })
+        sendQaida({ kind: "reveal", hint: q.hint })
+        if (q.highlight !== null) sendQaida({ kind: "highlight", tile: q.highlight })
+      } else {
+        sendNav({ paraNumber: currentParaNumber, page: pdfPage })
+      }
       if (currentPointerRef.current) {
         sendPointer(currentPointerRef.current)
       }
@@ -277,10 +304,40 @@ export default function LiveSession({
 
   // Broadcast the teacher's position on every local change (skip our own echoes).
   useEffect(() => {
+    if (isQaida) {
+      sendNav({ paraNumber: QAIDA_PARA, page: cardPage(qaidaCardId), cardId: qaidaCardId })
+      return
+    }
     const lr = lastRemote.current
     if (lr && lr.paraNumber === currentParaNumber && lr.page === pdfPage) return
     sendNav({ paraNumber: currentParaNumber, page: pdfPage })
-  }, [currentParaNumber, pdfPage, sendNav])
+  }, [currentParaNumber, pdfPage, sendNav, isQaida, qaidaCardId])
+
+  // Qaida deck controls: change locally and mirror to the child.
+  const changeQaidaCard = useCallback((id: string) => {
+    setQaidaCardId(id)
+    setQaidaHighlight(null) // the child clears its own on the nav
+  }, [])
+  const changeQaidaHint = useCallback(
+    (hint: boolean) => {
+      setQaidaHint(hint)
+      sendQaida({ kind: "reveal", hint })
+    },
+    [sendQaida],
+  )
+  const changeQaidaHighlight = useCallback(
+    (tile: number | null) => {
+      setQaidaHighlight(tile)
+      sendQaida({ kind: "highlight", tile })
+    },
+    [sendQaida],
+  )
+  const playQaida = useCallback(
+    (key: string) => {
+      if (qaidaAudio.play(key)) sendQaida({ kind: "play", key })
+    },
+    [qaidaAudio, sendQaida],
+  )
 
   // ── Persist the reading position & bookmark (student_para_progress) ──
   const currentParaRef = useRef(currentParaNumber)
@@ -349,11 +406,12 @@ export default function LiveSession({
 
   // Debounced save of the current page for this para.
   useEffect(() => {
+    if (isQaida) return // the course position is saved at the end of class
     const t = setTimeout(() => {
       void savePageKeepingBookmark(student.id, currentParaNumber, pdfPage)
     }, 1200)
     return () => clearTimeout(t)
-  }, [student.id, currentParaNumber, pdfPage])
+  }, [student.id, currentParaNumber, pdfPage, isQaida])
 
   // Resume the starting para at its last-read page & bookmark (once, on open).
   const resumedRef = useRef(false)
@@ -361,6 +419,7 @@ export default function LiveSession({
   useEffect(() => {
     if (resumedRef.current) return
     resumedRef.current = true
+    if (initialParaNumber === QAIDA_PARA) return // the deck opens on its card instead
     loadBookmark(student.id, initialParaNumber).then((bm) => {
       if (currentParaRef.current === initialParaNumber) {
         if (bm.page > 0) startingPageRef.current = bm.page
@@ -495,9 +554,10 @@ export default function LiveSession({
       endedAt,
       durationSeconds: Math.floor((endedAt.getTime() - startedAt.getTime()) / 1000),
       startingPara: initialParaNumber,
-      startingPage: startingPageRef.current,
+      startingPage: isQaida ? cardPage(startCardId) : startingPageRef.current,
       endingPara: currentParaNumber,
-      endingPage: pdfPage,
+      endingPage: isQaida ? cardPage(qaidaCardId) : pdfPage,
+      endingCardId: isQaida ? qaidaCardId : null,
       endingLine: currentPointer?.line ?? null,
       endingPointerX: currentPointer?.x ?? null,
       endingPointerY: currentPointer?.y ?? null,
@@ -506,12 +566,14 @@ export default function LiveSession({
       notes,
     }
 
-    await saveBookmark(student.id, currentParaNumber, {
-      page: pdfPage,
-      line: currentPointer?.line,
-      x: currentPointer?.x,
-      y: currentPointer?.y,
-    }).catch(() => {})
+    if (!isQaida) {
+      await saveBookmark(student.id, currentParaNumber, {
+        page: pdfPage,
+        line: currentPointer?.line,
+        x: currentPointer?.x,
+        y: currentPointer?.y,
+      }).catch(() => {})
+    }
 
     try {
       const result = await onEnd(sessionData)
@@ -746,9 +808,21 @@ export default function LiveSession({
           />
         )}
 
-        {/* Quran Para Viewer */}
+        {/* Quran Para Viewer, or the Qaida course card deck */}
         <div className="flex-1 flex flex-col overflow-hidden">
-          {currentPara ? (
+          {isQaida ? (
+            <QaidaLiveDeck
+              studentId={student.id}
+              cardId={qaidaCardId}
+              onCardChange={changeQaidaCard}
+              hint={qaidaHint}
+              onHintChange={changeQaidaHint}
+              highlight={qaidaHighlight}
+              onHighlightChange={changeQaidaHighlight}
+              hasAudio={(k) => !!qaidaAudio.urls[k]}
+              onPlay={playQaida}
+            />
+          ) : currentPara ? (
             currentPara.file_type === "pdf" ? (
               <SyncedPdfViewer
                 fileUrl={currentPara.file_url}

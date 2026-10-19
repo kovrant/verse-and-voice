@@ -35,6 +35,9 @@ There are two primary channel categories:
   * `scroll`: Carries normalized scroll position `{ ratio: number }` (0.0 to 1.0).
   * `pointer`: Transmits `{ x: number, y: number, active: boolean }` coordinates for live Mushaf pointer/highlighter.
   * `end`: Signal from teacher ending the live session.
+  * `tajweed_rule`: `{ rule }`, a Tajweed reminder card the teacher pushes.
+  * `qaida`: `{ kind, … }`, the [Qaida course](../domain/qaida-course.md) card deck (`src/lib/qaida-live.ts`, validated by `parseQaidaMessage`): `reveal { hint }` shows or hides the English hint, `play { key }` plays a recording on the child's device, `highlight { tile }` lights one tile of the current card (`null` clears). Exercise kinds come in phase 3.
+* **`nav` for the Qaida course** carries `cardId` with `paraNumber: 0` and `page` = the card's 1-based course position (`cardPage`). Presence carries `cardId` too, so a late joiner lands on the card. Course cards are teacher-led: the teacher ignores the child's `nav`, and the child never broadcasts its own while on para 0.
 
 ### 2. Global Student Online Channel: `students:online`
 * Owned by `src/lib/use-online-students.ts`.

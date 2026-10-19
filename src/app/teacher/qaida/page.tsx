@@ -16,6 +16,7 @@ import {
   QAIDA_AUDIO_SELECT,
   type QaidaAudioRow as AudioRow,
 } from "@/lib/qaida-course"
+import { cardAudioKeys } from "@/lib/qaida-live"
 import { supabase } from "@/lib/supabase"
 import { cn } from "@/lib/utils"
 
@@ -26,25 +27,6 @@ const GROUPS: { id: string; label: string }[] = [
   { id: "words", label: "Words" },
   { id: "quran", label: "Quran" },
 ]
-
-/** Audio keys a card plays, for the recorded / missing dot on its tile. */
-function cardAudioKeys(card: CourseCard): string[] {
-  switch (card.type) {
-    case "letter":
-    case "syllable":
-    case "word":
-    case "ayah":
-      return [card.audio]
-    case "drill":
-      return card.items.map((i) => i.audio)
-    case "exercise":
-      return card.items.flatMap((i) =>
-        Array.isArray(i.audio) ? i.audio : i.audio ? [i.audio] : [],
-      )
-    default:
-      return []
-  }
-}
 
 /**
  * The Qaida course for the teacher: browse every unit, step and card, and record the

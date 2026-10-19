@@ -7,13 +7,16 @@ import { useEffect, useRef, useState } from "react"
 import { QuranBookIcon } from "@/components/kid-ui"
 import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
+import { QaidaCardView } from "@/components/qaida-card-view"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { StudentBackdrop } from "@/components/student-backdrop"
 import { StudentTajweedAlert } from "@/components/student-tajweed-alert"
+import { cardById, locateCard } from "@/content/qaida"
 import { prefetchParaUrls } from "@/lib/pdf-document-cache"
 import { paraLabel, QAIDA_PARA, resolveAssignedQaida } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import type { NavState, PointerState } from "@/lib/use-class-channel"
+import { useQaidaAudio } from "@/lib/use-qaida-audio"
 import { useStudent } from "@/lib/use-student"
 
 const SyncedPdfViewer = dynamic(
@@ -39,6 +42,9 @@ export function StudentLiveClass() {
     subscribePointer,
     activeTajweedRule,
     dismissTajweedRule,
+    qaidaHint,
+    qaidaHighlight,
+    subscribeQaida,
     leave,
   } = useLiveClass()
   const { setVisible: setAppSidebarVisible } = useSidebarVisibility()
@@ -53,6 +59,8 @@ export function StudentLiveClass() {
 
   const [para, setPara] = useState(1)
   const [page, setPage] = useState(1)
+  // Qaida course card the teacher is showing (nav.cardId).
+  const [cardId, setCardId] = useState<string | null>(null)
   // Seeded from the provider so a bookmark set before this screen mounted still shows.
   const [remotePointer, setRemotePointer] = useState<PointerState | null>(peerPointer)
   const [synced, setSynced] = useState(false)
@@ -76,6 +84,7 @@ export function StudentLiveClass() {
     () =>
       subscribeNav((nav) => {
         lastRemote.current = { paraNumber: nav.paraNumber, page: nav.page }
+        setCardId(nav.cardId ?? null)
         if (nav.paraNumber !== paraRef.current) {
           setPara(nav.paraNumber)
           setRemotePointer(null)
@@ -101,6 +110,7 @@ export function StudentLiveClass() {
         lastRemote.current = { paraNumber: peerNav.paraNumber, page: peerNav.page }
         setPara(peerNav.paraNumber)
         setPage(peerNav.page)
+        setCardId(peerNav.cardId ?? null)
       }
       setSynced(true)
     }, 2500)
@@ -147,7 +157,7 @@ export function StudentLiveClass() {
   // only when our position exactly matches what the teacher last pushed us to —
   // that's an echo, not a user turn.
   useEffect(() => {
-    if (!synced) return
+    if (!synced || para === QAIDA_PARA) return // Qaida cards are teacher-led
     const lr = lastRemote.current
     if (lr && lr.paraNumber === para && lr.page === page) return
     sendNav({ paraNumber: para, page })
@@ -155,6 +165,19 @@ export function StudentLiveClass() {
 
   const ready = synced && mediaLoaded
   const fileUrl = mediaMap[para]
+  const card = para === QAIDA_PARA && cardId ? cardById(cardId) : null
+  const cardLoc = card ? locateCard(card.id) : null
+  const qaidaAudio = useQaidaAudio(para === QAIDA_PARA)
+  const playRef = useRef(qaidaAudio.play)
+  playRef.current = qaidaAudio.play
+  // The teacher pressed Play: the same clip plays here (the child tapped Join, so audio is allowed).
+  useEffect(
+    () =>
+      subscribeQaida((msg) => {
+        if (msg.kind === "play") playRef.current(msg.key)
+      }),
+    [subscribeQaida],
+  )
 
   return (
     // `isolate` so the backdrop's -z-10 stays inside this overlay, behind its content.
@@ -173,6 +196,12 @@ export function StudentLiveClass() {
             {ready ? (
               <span className="font-heading text-[16px] font-bold text-primary">
                 {paraLabel(para)}
+                {cardLoc && (
+                  <span className="text-[13px] font-semibold text-muted-foreground">
+                    {" "}
+                    · Unit {cardLoc.unit.number}
+                  </span>
+                )}
                 {para !== QAIDA_PARA && (
                   <span className="text-[13px] font-semibold text-muted-foreground"> / 30</span>
                 )}
@@ -203,6 +232,18 @@ export function StudentLiveClass() {
       {/* Body */}
       {!ready ? (
         <InlineLoader label="Connecting to your teacher…" />
+      ) : card ? (
+        <div className="flex flex-1 items-center overflow-auto px-3 sm:px-6">
+          <div className="mx-auto w-full max-w-5xl rounded-[32px] border-[1.5px] border-border bg-card/90 px-3 shadow-soft backdrop-blur-sm sm:px-8">
+            <QaidaCardView
+              card={card}
+              hint={qaidaHint}
+              highlight={qaidaHighlight}
+              hasAudio={(k) => !!qaidaAudio.urls[k]}
+              onPlay={qaidaAudio.play}
+            />
+          </div>
+        </div>
       ) : fileUrl ? (
         <SyncedPdfViewer
           fileUrl={fileUrl}

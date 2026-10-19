@@ -56,6 +56,8 @@ function ClassPageContent() {
   // The selected student's assigned Qaida book (students.qaida_media_id).
   const [qaidaBook, setQaidaBook] = useState<QuranPara | null>(null)
   const [sessions, setSessions] = useState<ClassSession[]>([])
+  // Qaida course: the card this student is on (students.qaida_card_id).
+  const [qaidaCardId, setQaidaCardId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
   const [starting, setStarting] = useState(false)
@@ -75,38 +77,46 @@ function ClassPageContent() {
       const student = students.find((s) => s.id === studentId) || null
       setSelected(student)
       if (student) {
-        const [memResult, roundsResult, sessionsResult, qaidaResult] = await Promise.all([
-          supabase
-            .from("student_memorization")
-            .select(MEM_ITEM_SELECT)
-            .eq("student_id", student.id)
-            .order("created_at", { ascending: false }),
-          supabase
-            .from("quran_rounds")
-            .select("*")
-            .eq("student_id", student.id)
-            .order("round_number", { ascending: true }),
-          supabase
-            .from("class_sessions")
-            .select("*")
-            .eq("student_id", student.id)
-            .order("started_at", { ascending: false })
-            .limit(10),
-          student.qaida_media_id
-            ? supabase.from("media_library").select("*").eq("id", student.qaida_media_id)
-            : Promise.resolve({ data: [] as QuranPara[] }),
-        ])
+        const [memResult, roundsResult, sessionsResult, qaidaResult, cardResult] =
+          await Promise.all([
+            supabase
+              .from("student_memorization")
+              .select(MEM_ITEM_SELECT)
+              .eq("student_id", student.id)
+              .order("created_at", { ascending: false }),
+            supabase
+              .from("quran_rounds")
+              .select("*")
+              .eq("student_id", student.id)
+              .order("round_number", { ascending: true }),
+            supabase
+              .from("class_sessions")
+              .select("*")
+              .eq("student_id", student.id)
+              .order("started_at", { ascending: false })
+              .limit(10),
+            student.qaida_media_id
+              ? supabase.from("media_library").select("*").eq("id", student.qaida_media_id)
+              : Promise.resolve({ data: [] as QuranPara[] }),
+            // Separate query: before migration_qaida_course.sql the column is missing,
+            // and that must not break the student list. An error just means "start".
+            supabase.from("students").select("qaida_card_id").eq("id", student.id).maybeSingle(),
+          ])
         // A newer selection started while we were loading — discard these results.
         if (seq !== selectSeq.current) return
         setMemItems((memResult.data as unknown as MemItem[]) || [])
         setRounds(roundsResult.data || [])
         setSessions(sessionsResult.data || [])
         setQaidaBook(resolveAssignedQaida(qaidaResult.data || [], student.qaida_media_id))
+        setQaidaCardId(
+          (cardResult.data as { qaida_card_id?: string | null } | null)?.qaida_card_id ?? null,
+        )
       } else {
         setMemItems([])
         setRounds([])
         setSessions([])
         setQaidaBook(null)
+        setQaidaCardId(null)
       }
     },
     [students],
@@ -147,8 +157,9 @@ function ClassPageContent() {
   }
 
   const { activeRound, para: currentPara } = classPosition(rounds, sessions)
-  // A Qaida round teaches the assigned Qaida PDF as the sentinel para 0.
-  const qaidaMissing = currentPara === QAIDA_PARA && !qaidaBook
+  // A Qaida round teaches the card course on the sentinel para 0; no PDF needed.
+  // ponytail: qaidaBook/liveParas stay until phase 5 retires the PDF path.
+  const qaidaMissing = false
   const liveParas = qaidaBook
     ? [{ ...qaidaBook, meta: { ...qaidaBook.meta, para_number: QAIDA_PARA } }, ...paras]
     : paras
@@ -180,6 +191,7 @@ function ClassPageContent() {
       ending_line: data.endingLine ?? null,
       ending_pointer_x: data.endingPointerX ?? null,
       ending_pointer_y: data.endingPointerY ?? null,
+      ending_card_id: data.endingCardId ?? null,
       paras_covered: data.parasCovered,
       memorization_revised: data.memorizationRevised,
       notes: data.notes || null,
@@ -192,6 +204,7 @@ function ClassPageContent() {
       delete sessionInsert.ending_line
       delete sessionInsert.ending_pointer_x
       delete sessionInsert.ending_pointer_y
+      delete sessionInsert.ending_card_id
       const retry = await supabase.from("class_sessions").insert(sessionInsert)
       error = retry.error
     }
@@ -215,9 +228,20 @@ function ClassPageContent() {
     )
     if (attendanceError) console.error("Failed to mark attendance:", attendanceError)
 
+    // Qaida course: remember the card so the next class (and the child's
+    // Continue) opens there. Best-effort, like attendance.
+    if (data.endingCardId) {
+      const { error: cardError } = await supabase
+        .from("students")
+        .update({ qaida_card_id: data.endingCardId })
+        .eq("id", selected!.id)
+      if (cardError) console.error("Failed to save Qaida card:", cardError)
+      else setQaidaCardId(data.endingCardId)
+    }
+
     // Save the exact bookmark position for this para
-    // != null, not truthiness: Qaida is para 0.
-    if (data.endingPara != null && data.endingPage) {
+    // != null, not truthiness: Qaida is para 0. The course has no PDF bookmark.
+    if (data.endingPara != null && data.endingPage && !data.endingCardId) {
       // With a bookmark, save it; without one, keep whatever the teacher marked
       // earlier rather than overwriting it with "no bookmark".
       const save =
@@ -296,6 +320,7 @@ function ClassPageContent() {
         memItems={memItems}
         paras={liveParas}
         initialParaNumber={currentPara}
+        initialCardId={qaidaCardId}
         onEnd={handleEndSession}
         onMemItemsChange={setMemItems}
         onRoundsChange={setRounds}

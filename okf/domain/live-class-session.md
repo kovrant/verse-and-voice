@@ -31,7 +31,8 @@ The Live Interactive Class is the core teaching module where a teacher conducts 
 
 The class page picks the starting position with `classPosition()` (`src/components/class-student-card.tsx`):
 * **Quran round:** the latest session's `ending_para` (if `1..30`), else the active round's `asc_completed || 1`. Prev/Next para buttons switch between paras `1..30`.
-* **Qaida round:** always para `0`, the student's assigned Qaida book (`students.qaida_media_id`), injected into the para list as `meta.para_number = 0`. Page/line come from the latest session with `ending_para = 0`. Para switching is hidden; only pages turn. With no book assigned, Start Class is disabled. Full details: [Qaida Curriculum](qaida-curriculum.md#-qaida-in-the-live-class).
+* **Qaida round (course):** always para `0`, rendered as the [Qaida course](qaida-course.md) card deck (`QaidaLiveDeck` for the teacher, `QaidaCardView` on the child's screen). It opens on `students.qaida_card_id` (else the first card); ending the class writes `class_sessions.ending_card_id` and `students.qaida_card_id`, and skips the PDF bookmark. No Qaida PDF is needed to start.
+* **Qaida round (legacy PDF, until phase 5):** always para `0`, the student's assigned Qaida book (`students.qaida_media_id`), injected into the para list as `meta.para_number = 0`. Page/line come from the latest session with `ending_para = 0`. Para switching is hidden; only pages turn. With no book assigned, Start Class is disabled. Full details: [Qaida Curriculum](qaida-curriculum.md#-qaida-in-the-live-class).
 
 ## 🎯 Pointer & 16-Line Mushaf Calibration
 

@@ -82,16 +82,24 @@ export interface CardLocation {
   index: number
   /** Cards in the unit. */
   total: number
+  /** 0-based position in the whole course. */
+  courseIndex: number
 }
 
 const FLAT: CardLocation[] = QAIDA_UNITS.flatMap((unit) => {
   const total = unit.steps.reduce((n, s) => n + s.cards.length, 0)
   let index = 0
   return unit.steps.flatMap((step, stepIndex) =>
-    step.cards.map((card) => ({ card, unit, stepIndex, index: index++, total })),
+    step.cards.map((card) => ({ card, unit, stepIndex, index: index++, total, courseIndex: 0 })),
   )
 })
+FLAT.forEach((loc, i) => (loc.courseIndex = i))
 const BY_ID = new Map(FLAT.map((loc) => [loc.card.id, loc]))
+
+/** The card at a 0-based course position, or null when out of range. */
+export function cardAt(courseIndex: number): Card | null {
+  return FLAT[courseIndex]?.card ?? null
+}
 
 /** Every card in teaching order, across all units. */
 export function allCards(): Card[] {

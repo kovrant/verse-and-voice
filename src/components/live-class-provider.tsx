@@ -8,6 +8,7 @@ import { MoonMascot } from "@/components/student-mascot"
 import { logActivity } from "@/lib/activity-log"
 import { detectDevice } from "@/lib/device-detection"
 import { kidToast } from "@/lib/kid-toast"
+import type { QaidaMessage } from "@/lib/qaida-live"
 import type { TajweedRule } from "@/lib/tajweed/rules"
 import { type NavState, type PointerState, useClassChannel } from "@/lib/use-class-channel"
 import { useTrackStudentOnline } from "@/lib/use-online-students"
@@ -16,6 +17,7 @@ import { useStudent } from "@/lib/use-student"
 type NavListener = (nav: NavState) => void
 type ScrollListener = (ratio: number) => void
 type PointerListener = (pointer: PointerState | null) => void
+type QaidaListener = (msg: QaidaMessage) => void
 
 interface LiveClassContextValue {
   /** Is the teacher currently hosting a live class for this student? */
@@ -47,6 +49,12 @@ interface LiveClassContextValue {
   activeTajweedRule: TajweedRule | null
   /** Dismiss the current Tajweed rule alert. */
   dismissTajweedRule: () => void
+  /** Qaida course: is the English hint shown (teacher-controlled; default on). */
+  qaidaHint: boolean
+  /** Qaida course: the tile the teacher highlighted on the current card. */
+  qaidaHighlight: number | null
+  /** Subscribe to every Qaida card-deck message (e.g. "play"); returns an unsubscribe fn. */
+  subscribeQaida: (fn: QaidaListener) => () => void
 }
 
 const LiveClassContext = createContext<LiveClassContextValue>({
@@ -66,6 +74,9 @@ const LiveClassContext = createContext<LiveClassContextValue>({
   subscribePointer: () => () => {},
   activeTajweedRule: null,
   dismissTajweedRule: () => {},
+  qaidaHint: true,
+  qaidaHighlight: null,
+  subscribeQaida: () => () => {},
 })
 
 export const useLiveClass = () => useContext(LiveClassContext)
@@ -86,6 +97,9 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const [peerPointer, setPeerPointer] = useState<PointerState | null>(null)
   const [activeTajweedRule, setActiveTajweedRule] = useState<TajweedRule | null>(null)
   const [alertOpen, setAlertOpen] = useState(false)
+  // Held here, like peerPointer: the teacher re-sends them on join, before the viewer mounts.
+  const [qaidaHint, setQaidaHint] = useState(true)
+  const [qaidaHighlight, setQaidaHighlight] = useState<number | null>(null)
   const [deviceInfo] = useState(() => (typeof window !== "undefined" ? detectDevice() : null))
 
   // Advertise this student as online (green dot in the teacher portal) for as
@@ -94,6 +108,7 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   const navCbs = useRef<Set<NavListener>>(new Set())
   const scrollCbs = useRef<Set<ScrollListener>>(new Set())
   const pointerCbs = useRef<Set<PointerListener>>(new Set())
+  const qaidaCbs = useRef<Set<QaidaListener>>(new Set())
 
   // Close the live viewer once per join (dedupes explicit-end vs presence-drop).
   const closingRef = useRef(false)
@@ -113,7 +128,6 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     deviceInfo,
     enabled: !!studentId,
     present: joined, // listen-only until the student joins
-    onNav: (nav) => navCbs.current.forEach((fn) => fn(nav)),
     onScroll: (ratio) => scrollCbs.current.forEach((fn) => fn(ratio)),
     onPointer: (pointer) => {
       setPeerPointer(pointer)
@@ -121,6 +135,16 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     },
     onTajweedRule: (rule) => {
       setActiveTajweedRule(rule)
+    },
+    onQaida: (msg) => {
+      if (msg.kind === "reveal") setQaidaHint(msg.hint)
+      if (msg.kind === "highlight") setQaidaHighlight(msg.tile)
+      qaidaCbs.current.forEach((fn) => fn(msg))
+    },
+    // A new card clears the highlight (the teacher's deck does the same).
+    onNav: (nav) => {
+      setQaidaHighlight(null)
+      navCbs.current.forEach((fn) => fn(nav))
     },
     onEnd: endNow, // explicit "class ended" from the teacher → close immediately
     // Shows up in the teacher's Portal Activity for this student.
@@ -147,6 +171,12 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       scrollCbs.current.delete(fn)
     }
   }, [])
+  const subscribeQaida = useCallback((fn: QaidaListener) => {
+    qaidaCbs.current.add(fn)
+    return () => {
+      qaidaCbs.current.delete(fn)
+    }
+  }, [])
   const subscribePointer = useCallback((fn: PointerListener) => {
     pointerCbs.current.add(fn)
     return () => {
@@ -157,10 +187,13 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
   // one right after we join, and a stale one from the last class must not flash.
   const join = useCallback(() => {
     setPeerPointer(null)
+    setQaidaHint(true)
+    setQaidaHighlight(null)
     setJoined(true)
   }, [])
   const leave = useCallback(() => {
     setPeerPointer(null)
+    setQaidaHighlight(null)
     setActiveTajweedRule(null)
     setJoined(false)
   }, [])
@@ -224,6 +257,9 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       subscribePointer,
       activeTajweedRule,
       dismissTajweedRule,
+      qaidaHint,
+      qaidaHighlight,
+      subscribeQaida,
     }),
     [
       live,
@@ -242,6 +278,9 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
       subscribePointer,
       activeTajweedRule,
       dismissTajweedRule,
+      qaidaHint,
+      qaidaHighlight,
+      subscribeQaida,
     ],
   )
 
