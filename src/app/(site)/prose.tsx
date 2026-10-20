@@ -11,7 +11,9 @@ export function SitePage({
   children: React.ReactNode
 }) {
   return (
-    <article>
+    // Pin heading ink: the global h1–h6 rule uses the portal's --foreground, which
+    // turns light when the visitor has dark mode on, but these pages are always cream.
+    <article className="[&_h1]:text-[#2E3A2F] [&_h2]:text-[#2E3A2F]">
       <h1 className="[font-family:var(--font-heading)] text-4xl font-bold leading-tight sm:text-5xl">
         {title}
       </h1>
