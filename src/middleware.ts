@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 import { isLoginDisabled } from "@/lib/student-auth"
 
-const PUBLIC_PATHS = ["/login", "/teacher/login", "/auth", "/welcome"]
+const PUBLIC_PATHS = ["/login", "/teacher/login", "/auth", "/welcome", "/faq", "/privacy", "/terms"]
 const TEACHER_HOME = "/teacher"
 /** Pre-/teacher addresses of the dashboard pages, still in bookmarks and old notifications. */
 const LEGACY_TEACHER_PATH =
@@ -142,7 +142,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Run on everything except static assets, images, and Next internals
-    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    // Run on everything except static assets, images, crawler files (robots.txt,
+    // sitemap.xml, llms.txt) and Next internals
+    "/((?!_next/static|_next/image|favicon.ico|icon|apple-icon|opengraph-image|manifest.json|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|txt|xml)$).*)",
   ],
 }

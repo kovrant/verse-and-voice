@@ -24,8 +24,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   // Auth/entry pages hide the chrome (matches Sidebar returning null there).
   const isAuthArea = pathname === "/login" || pathname === "/teacher/login"
 
-  // The public landing page draws its own sky, nav and mascot: no shell at all.
-  if (segment === "welcome") return <>{children}</>
+  // The public website (landing page, FAQ, policies) draws its own chrome: no shell at all.
+  if (segment === "welcome" || segment === "(site)") return <>{children}</>
 
   const shell = (
     // Student: `isolate` (no bg) so the backdrop's -z-10 paints behind this

@@ -1567,7 +1567,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 } as CSSProperties
               }
             >
-              Live one-to-one Quran classes for kids and teens, by voice, with a teacher who
+              Live one-to-one online Quran classes for kids and teens, by voice, with a teacher who
               listens.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
@@ -3225,10 +3225,16 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               aria-label="Footer"
               style={{ display: "flex", gap: 22, flexWrap: "wrap", marginLeft: "auto" }}
             >
-              <a href="#" className="gold" style={footLink}>
+              <a href="/faq" className="gold" style={footLink}>
+                FAQ
+              </a>
+              <a href="/privacy" className="gold" style={footLink}>
                 Privacy
               </a>
-              <a href="#" className="gold" style={footLink}>
+              <a href="/terms" className="gold" style={footLink}>
+                Terms
+              </a>
+              <a href="#ch10" className="gold" style={footLink}>
                 Contact
               </a>
             </nav>
