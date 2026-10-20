@@ -43,7 +43,7 @@ The only page a visitor can see without an account. It tells one child's journey
 
 ## 📖 Structure
 
-`src/components/welcome/welcome-story.tsx` owns the page; `welcome-data.ts` holds copy, posture paths, scenes, the mock calendar and the deterministic star/doodle scatter.
+`src/components/welcome/welcome-story.tsx` owns the page; the top bar, footer, logo and sunrise pill live in `site-chrome.tsx` because `/faq`, `/privacy` and `/terms` wear them too; `welcome-data.ts` holds copy, posture paths, scenes, the mock calendar and the deterministic star/doodle scatter.
 
 Chapters are `<section id="chN" data-chapter>`, all `max-width:1180px` rounded cards except 1 (hero) and 10 (night):
 

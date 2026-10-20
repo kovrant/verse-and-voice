@@ -13,6 +13,7 @@ sources:
   - "public/llms.txt"
   - "src/app/welcome/page.tsx"
   - "src/app/(site)/layout.tsx"
+  - "src/components/welcome/site-chrome.tsx"
   - "src/app/(site)/prose.tsx"
   - "src/app/(site)/faq/page.tsx"
   - "src/app/(site)/privacy/page.tsx"
@@ -44,9 +45,13 @@ The public website is `/` (the [welcome page](public-welcome-page.md)) plus thre
 | `/llms.txt` | `public/llms.txt` | Plain-language summary for LLM crawlers. |
 | `/opengraph-image` | `app/opengraph-image.tsx` | 1200×630 link-preview card for WhatsApp/Facebook/search, inherited by every route. |
 | `/` | `welcome/page.tsx` | Canonical `/` (the page is also reachable at `/welcome`), `EducationalOrganization` + `WebSite` + `Course` JSON-LD. |
-| `/faq` `/privacy` `/terms` | `(site)/*` | Shared header/footer in `(site)/layout.tsx`, prose wrapper `SitePage` in `(site)/prose.tsx`. |
+| `/faq` `/privacy` `/terms` | `(site)/*` | `(site)/layout.tsx` wraps them in the landing page's own `SiteHeader` / `SiteFooter` (see below); prose wrapper `SitePage` in `(site)/prose.tsx`. |
 
 Root `metadata` in `app/layout.tsx` sets `metadataBase`, the `%s | Verse & Voice` title template, Open Graph/Twitter defaults, and Search Console / Bing verification from `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION`.
+
+## One header and footer for every public page
+
+`src/components/welcome/site-chrome.tsx` owns `SiteHeader`, `SiteFooter`, `Logo`, `SunrisePill` and `CHROME_CSS`. The landing page passes `home="#ch1"`, `trial="#ch10"`, its age toggle as `middle` and its scroll progress line as children; the text pages pass `home="/"` and `trial`/`contact` = `"/#ch10"`. Both need a `.vvw` ancestor and `CHROME_CSS` on the page. On phones the landing page hides the header's trial button (its hero has one); the text pages keep it.
 
 ## Invariants
 
