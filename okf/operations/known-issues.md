@@ -33,3 +33,12 @@ This catalog serves as the canonical record of active defects and architectural 
 * **Impact:** Saving a completed live class session fails on a clean migration database.
 * **Details:** See full DDL in [Schema Drift & Production Parity](../database/schema-drift-and-parity.md).
 
+
+---
+
+## 🟡 Styling
+
+### 3. Tailwind `font-heading` / `font-display` / `font-brand` / `font-serif` never apply Baloo 2
+* **Cause:** `tailwind.config` lists the family as `"Baloo 2"` without inner quotes, so the generated CSS is `font-family: var(--font-heading), Baloo 2, …`. An unquoted name containing a number is invalid, so the whole declaration is dropped at computed-value time and the element inherits the body font (Nunito Sans).
+* **Impact:** Any element using these utilities renders in the body font. Plain `h1`–`h6` are unaffected (the base rule in `globals.css` quotes the name). Fixing it (`"'Baloo 2'"` in the config) will visibly change headings across both portals, so do it as its own reviewed change.
+* **Workaround:** `[font-family:var(--font-heading)]`, as the public text pages do.

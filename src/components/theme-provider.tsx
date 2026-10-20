@@ -7,6 +7,9 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 // which selects the palette block in globals.css. Both portals support a
 // light/dark toggle, sharing a single preference.
 
+/** Public website pages beside /welcome (src/app/(site)); keep in sync with the layout's first-paint script. */
+export const SITE_PAGES = ["/faq", "/privacy", "/terms"]
+
 export type Portal = "admin" | "student"
 
 const DARK_KEY = "qa-dark"
@@ -15,6 +18,7 @@ function portalForPath(pathname: string): Portal {
   if (
     pathname === "/login" ||
     pathname === "/welcome" ||
+    SITE_PAGES.includes(pathname) ||
     pathname === "/student" ||
     pathname.startsWith("/student/")
   ) {
@@ -40,7 +44,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   // The public website is served at "/" by a middleware rewrite of /welcome, so
   // the pathname lies there; the rendered route segment does not.
   const segment = useSelectedLayoutSegment()
-  const portal = segment === "welcome" ? "student" : portalForPath(pathname)
+  const portal = segment === "welcome" || segment === "(site)" ? "student" : portalForPath(pathname)
   const [dark, setDark] = useState(false)
 
   useEffect(() => {

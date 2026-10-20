@@ -13,7 +13,13 @@ tags:
 
 # Knowledge Catalog Curation Log
 
+### [2026-10-20] - Shared website header and footer
+* **Scope:** `src/components/welcome/site-chrome.tsx` (new), `src/components/welcome/welcome-story.tsx`, `src/app/(site)/layout.tsx`.
+* **Entries Updated:** `architecture/seo-and-public-pages.md`, `architecture/public-welcome-page.md`, `log.md`.
 
+### [2026-10-20] - SEO, GEO and public policy pages
+* **Scope:** `src/lib/site.ts` (new), `src/app/robots.ts` (new), `src/app/sitemap.ts` (new), `src/app/opengraph-image.tsx` (new), `public/llms.txt` (new), `src/app/(site)/**` (new: `/faq`, `/privacy`, `/terms`), `src/app/layout.tsx`, `src/app/welcome/page.tsx`, `src/components/welcome/welcome-story.tsx` (footer links, hero copy), `src/middleware.ts`, `next.config.js`, `src/components/app-shell.tsx`, `src/components/theme-provider.tsx`, `package.json` (`@vercel/analytics`).
+* **Entries Updated:** `architecture/seo-and-public-pages.md` (new), `architecture/public-welcome-page.md`, `operations/known-issues.md`, `index.md`, `log.md`.
 
 ### [2026-10-19] - Qaida Course Phase 2: Live Class Card Deck
 * **Scope:** `src/lib/use-class-channel.ts`, `src/lib/qaida-live.ts` (new), `src/lib/use-qaida-audio.ts` (new), `src/components/qaida-card-view.tsx` (new), `src/components/qaida-live-deck.tsx` (new), `src/components/live-session.tsx`, `src/components/student-live-class.tsx`, `src/components/live-class-provider.tsx`, `src/components/class-student-card.tsx`, `src/app/teacher/class/page.tsx`, `src/app/teacher/qaida/page.tsx`, `src/content/qaida/index.ts`.
