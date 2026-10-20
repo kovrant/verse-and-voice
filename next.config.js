@@ -24,6 +24,11 @@ const nextConfig = {
         ],
       },
       {
+        // The portals are private: keep sign-in pages and dashboards out of search results.
+        source: "/:portal(login|student|teacher)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
+      {
         // Teacher-only audio recorder (middleware keeps students out). Later entries
         // override earlier ones for the same key, so this must stay last.
         source: "/teacher/namaz/audio",

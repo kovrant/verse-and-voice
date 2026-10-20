@@ -8,6 +8,7 @@ import { AppShell } from "@/components/app-shell"
 import { GoeyToasterHost } from "@/components/goey-toaster"
 import { SidebarVisibilityProvider } from "@/components/sidebar-visibility"
 import { ThemeProvider } from "@/components/theme-provider"
+import { SITE } from "@/lib/site"
 
 // Self-hosted fonts (via @fontsource, copied into ./fonts) so the app never
 // depends on Google Fonts at build/dev time.
@@ -64,8 +65,26 @@ const arabic = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "Verse & Voice",
-  description: "A friendly Quran learning space for kids",
+  metadataBase: new URL(SITE.url),
+  title: { default: `${SITE.title} | ${SITE.name}`, template: `%s | ${SITE.name}` },
+  description: SITE.description,
+  applicationName: SITE.name,
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    locale: "en_US",
+    url: "/",
+    title: `${SITE.title} | ${SITE.name}`,
+    description: SITE.description,
+  },
+  twitter: { card: "summary_large_image" },
+  // Paste the codes from Search Console / Bing Webmaster Tools into Vercel env vars.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -87,7 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {/* Set the portal palette (and admin dark mode) before first paint to avoid a flash. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var p=location.pathname;var portal=(p==='/login'||p==='/welcome'||p==='/student'||p.indexOf('/student/')===0)?'student':'admin';var d=document.documentElement;d.setAttribute('data-portal',portal);if(localStorage.getItem('qa-dark')==='true'){d.classList.add('dark')}}catch(e){}})()`,
+            __html: `(function(){try{var p=location.pathname;var portal=(p==='/login'||p==='/welcome'||p==='/faq'||p==='/privacy'||p==='/terms'||p==='/student'||p.indexOf('/student/')===0)?'student':'admin';var d=document.documentElement;d.setAttribute('data-portal',portal);if(localStorage.getItem('qa-dark')==='true'){d.classList.add('dark')}}catch(e){}})()`,
           }}
         />
         <ThemeProvider>

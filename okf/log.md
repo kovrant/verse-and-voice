@@ -13,6 +13,10 @@ tags:
 
 # Knowledge Catalog Curation Log
 
+### [2026-10-20] - SEO, GEO and public policy pages
+* **Scope:** `src/lib/site.ts` (new), `src/app/robots.ts` (new), `src/app/sitemap.ts` (new), `src/app/opengraph-image.tsx` (new), `public/llms.txt` (new), `src/app/(site)/**` (new: `/faq`, `/privacy`, `/terms`), `src/app/layout.tsx`, `src/app/welcome/page.tsx`, `src/components/welcome/welcome-story.tsx` (footer links, hero copy), `src/middleware.ts`, `next.config.js`, `src/components/app-shell.tsx`, `src/components/theme-provider.tsx`, `package.json` (`@vercel/analytics`).
+* **Entries Updated:** `architecture/seo-and-public-pages.md` (new), `architecture/public-welcome-page.md`, `operations/known-issues.md`, `index.md`, `log.md`.
+
 ### [2026-09-24] - Initial Catalog Genesis (v0.2 Standard)
 * **Author:** OKF Specialist (Agentic System)
 * **Scope:** Full repository review and catalog creation.

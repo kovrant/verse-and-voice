@@ -83,7 +83,8 @@ Reveals use `data-reveal` / `data-from` / `data-to` / `data-trigger` attributes 
 * **Age toggle** swaps only the hero headline and Hilal's dawn mood (`little` excited, `young` awake, `teens` wink). Labels shorten below 1120px; the top bar wraps to three rows below 760px.
 * **Hilal** bubble shows for 5.5s on load and 3.5s after each chapter change.
 * **Form** confirms locally and sends nothing (`// ponytail` in the submit handler). `WHATSAPP_URL` in `welcome-data.ts` is empty, so the WhatsApp line keeps the mock's `#` link.
-* **Placeholders to replace before launch:** the three named parent quotes, "Awarded to Yusuf", the Privacy and Contact footer links, and the enquiry destination.
+* **Footer** links to `/faq`, `/privacy`, `/terms` and `#ch10` (contact). SEO metadata and JSON-LD for this page live in `src/app/welcome/page.tsx`; see [SEO, GEO and Public Text Pages](seo-and-public-pages.md).
+* **Placeholders to replace:** the three named parent quotes (invented; must become real parent words or be removed, since fake testimonials are unlawful under UK consumer law) and "Awarded to Yusuf".
 
 ---
 
