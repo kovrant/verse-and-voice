@@ -20,7 +20,14 @@ import { toast } from "@/lib/toast"
  * Teacher-facing card to create or reset a student's portal login. Talks to
  * /api/students/:id/credentials (service-role, teacher-guarded).
  */
-export function StudentPortalAccess({ studentId }: { studentId: string }) {
+/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+export function StudentPortalAccess({
+  studentId,
+  bare = false,
+}: {
+  studentId: string
+  bare?: boolean
+}) {
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -44,7 +51,11 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
   const hasLogin = !!username
 
   return (
-    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
+    <div
+      className={
+        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+      }
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">

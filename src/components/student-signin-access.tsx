@@ -11,7 +11,14 @@ import { forceSignOutStudent } from "@/lib/use-online-students"
  * app_metadata.login_disabled via /api/students/:id/access (teacher-guarded,
  * service role). Turning access OFF also kicks any live session.
  */
-export function StudentSignInAccess({ studentId }: { studentId: string }) {
+/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+export function StudentSignInAccess({
+  studentId,
+  bare = false,
+}: {
+  studentId: string
+  bare?: boolean
+}) {
   const [hasLogin, setHasLogin] = useState(false)
   const [enabled, setEnabled] = useState(true) // access on = login NOT disabled
   const [loading, setLoading] = useState(true)
@@ -67,7 +74,11 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
+    <div
+      className={
+        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+      }
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">

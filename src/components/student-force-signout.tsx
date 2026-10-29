@@ -20,7 +20,14 @@ import { forceSignOutStudent, useOnlineStudents } from "@/lib/use-online-student
  * revoking their refresh tokens server-side). Only works while the student has
  * the portal open — there's no offline/admin revoke.
  */
-export function StudentForceSignOut({ studentId }: { studentId: string }) {
+/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+export function StudentForceSignOut({
+  studentId,
+  bare = false,
+}: {
+  studentId: string
+  bare?: boolean
+}) {
   const online = useOnlineStudents()
   const isOnline = online.has(studentId)
   const [open, setOpen] = useState(false)
@@ -40,7 +47,11 @@ export function StudentForceSignOut({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
+    <div
+      className={
+        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+      }
+    >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">

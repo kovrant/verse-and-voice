@@ -8,6 +8,7 @@ import {
   BookOpen,
   CalendarCheck,
   Check,
+  ChevronRight,
   Clock,
   Pencil,
   Play,
@@ -677,28 +678,16 @@ export default function StudentDetailPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <nav className="flex items-center gap-1.5 text-sm text-text-tertiary mb-3 print:hidden">
-        <Link href="/" className="hover:text-text-primary transition-colors">
-          Dashboard
-        </Link>
-        <span className="text-text-tertiary">/</span>
-        <Link href="/teacher/students" className="hover:text-text-primary transition-colors">
-          Students
-        </Link>
-        <span className="text-text-tertiary">/</span>
-        <span className="text-text-primary font-medium truncate max-w-[150px]">{student.name}</span>
-      </nav>
-
-      {/* Clean Command Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 print:hidden">
-        <div className="flex items-center gap-3 min-w-0">
+      {/* NextAdmin page header: title left, breadcrumbs + action right */}
+      <div className="mb-5 flex flex-col-reverse items-start justify-between gap-3 lg:flex-row lg:items-center print:hidden">
+        <div className="flex min-w-0 items-center gap-3">
           <Link href="/teacher/students">
-            <Button variant="outline" size="icon" className="rounded-lg h-9 w-9 flex-shrink-0">
+            <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <h1 className="text-2xl font-semibold leading-8 text-text-primary truncate">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="truncate text-[28px] font-medium leading-8 text-text-primary">
               {student.name}
             </h1>
             <Badge variant={statusCfg.variant} className="flex-shrink-0">
@@ -726,295 +715,301 @@ export default function StudentDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="flex w-full flex-wrap items-center justify-between gap-3 lg:w-auto lg:justify-end">
+          <nav
+            className="flex items-center gap-1.5 text-sm text-text-tertiary"
+            aria-label="Breadcrumb"
+          >
+            <Link href="/teacher" className="transition-colors hover:text-text-primary">
+              Dashboard
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <Link href="/teacher/students" className="transition-colors hover:text-text-primary">
+              Students
+            </Link>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="max-w-[150px] truncate font-medium text-text-primary">
+              {student.name}
+            </span>
+          </nav>
           <Link href={`/teacher/class?student=${student.id}`}>
             <Button size="sm">
-              <Play className="h-3.5 w-3.5 mr-1.5" />
+              <Play className="mr-1.5 h-3.5 w-3.5" />
               Start class
             </Button>
           </Link>
         </div>
       </div>
 
-      {/* Top Underline Navigation */}
-      <div className="print:hidden">
-        <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
-      </div>
+      {/* NextAdmin profile layout: section list left, content right */}
+      <div className="flex flex-col overflow-hidden rounded-xl border-[0.5px] border-card-border bg-card-background lg:min-h-[600px] lg:flex-row print:block print:overflow-visible print:border-0 print:bg-transparent">
+        <div className="contents print:hidden">
+          <StudentDetailNav active={activeTab} onChange={setActiveTab} items={navItems} />
+        </div>
 
-      {/* Full-width Workspace */}
-      <div className="min-w-0">
-        {activeTab === "profile" && (
-          <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12 items-start">
-            {/* Left Column: Student Profile & Schedule Settings */}
-            <StudentProfileCard
-              student={student}
-              currentFee={currentFee}
-              onToggleFee={(fee) => void toggleFee(fee)}
-              onOpenBilling={() => setActiveTab("account")}
-              onSaved={() => void loadStudent()}
-            />
-
-            {/* Right Column: Portal Access & Security */}
-            <div className="lg:col-span-5 space-y-4">
-              <StudentPortalAccess studentId={student.id} />
-              <StudentSignInAccess studentId={student.id} />
-              <StudentForceSignOut studentId={student.id} />
-            </div>
-          </div>
-        )}
-        {activeTab === "overview" && (
-          <StudentOverview
-            student={student}
-            rounds={rounds}
-            sessions={sessions}
-            memItems={memItems}
-            catalog={catalog}
-            chunksByItem={chunksByItem}
-            memorizedChunkIds={memorizedChunkIds}
-            onNavigate={handleNavigate}
-            onUpdateProgress={() => {
-              if (!activeRound) return
-              setRoundForm({
-                desc_completed: (activeRound.desc_completed || 0).toString(),
-                asc_completed: (activeRound.asc_completed || 0).toString(),
-              })
-              setRoundEditOpen(true)
-            }}
-            onStepRoundProgress={(deltaAsc, deltaDesc) =>
-              void stepRoundProgress(deltaAsc, deltaDesc)
-            }
-            onCompleteRound={() => void completeActiveRound()}
-            onOpenNewRound={() => setNewRoundOpen(true)}
-            onLoadCatalog={() => void loadCatalog()}
-            onAssignMemItem={(catalogId) => void assignItem(catalogId)}
-            onUnassignMemItem={(id) => void unassignItem(id)}
-            onToggleMemStatus={(item) => void toggleMemStatus(item)}
-            onToggleChunk={(chunk, memorized) => void toggleChunk(chunk, memorized)}
-            onAssignMemRevision={(id) => void assignRevision(id)}
-            onMarkMemRevised={(id) => void markRevised(id)}
-            onAchievementEarned={() => void loadAchievementCount()}
-          />
-        )}
-
-        {activeTab === "sessions" && (
-          <div className="space-y-6 animate-fade-in-up">
-            {/* Sub-filter pill bar for Sessions, Timeline & Portal Activity */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  {
-                    id: "sessions",
-                    label: `Class Sessions (${sessions.length})`,
-                    icon: Clock,
-                  },
-                  {
-                    id: "attendance",
-                    label: "Attendance",
-                    icon: CalendarCheck,
-                  },
-                  {
-                    id: "timeline",
-                    label: `Quran Timeline (${rounds.length})`,
-                    icon: BookOpen,
-                  },
-                  {
-                    id: "activity",
-                    label: `Portal Activity (${activity.length})`,
-                    icon: Activity,
-                  },
-                ] as const
-              ).map((pill) => {
-                const PillIcon = pill.icon
-                const isSelected = historySection === pill.id
-                return (
-                  <button
-                    key={pill.id}
-                    type="button"
-                    onClick={() => setHistorySection(pill.id)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                      isSelected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
-                    )}
-                  >
-                    <PillIcon className="h-3.5 w-3.5" />
-                    {pill.label}
-                  </button>
-                )
-              })}
-            </div>
-
-            {/* 1. CLASS SESSIONS SECTION */}
-            {(historySection === "all" || historySection === "sessions") && (
-              <StudentSessionsList
-                studentId={student.id}
-                studentName={student.name}
-                sessions={sessions}
-                onSessionsChange={setSessions}
-                onReload={loadSessions}
-              />
-            )}
-
-            {(historySection === "all" || historySection === "attendance") && (
-              <StudentAttendanceCalendar
+        <div className="min-w-0 flex-1 p-4 sm:p-6 print:p-0">
+          {activeTab === "profile" && (
+            <div className="animate-fade-in-up space-y-6">
+              <StudentProfileCard
                 student={student}
-                sessionStarts={sessions.map((s) => s.started_at)}
+                currentFee={currentFee}
+                onToggleFee={(fee) => void toggleFee(fee)}
+                onOpenBilling={() => setActiveTab("account")}
+                onSaved={() => void loadStudent()}
               />
-            )}
+              <StudentAccessCard studentId={student.id} />
+            </div>
+          )}
+          {activeTab === "overview" && (
+            <StudentOverview
+              student={student}
+              rounds={rounds}
+              sessions={sessions}
+              memItems={memItems}
+              catalog={catalog}
+              chunksByItem={chunksByItem}
+              memorizedChunkIds={memorizedChunkIds}
+              onNavigate={handleNavigate}
+              onUpdateProgress={() => {
+                if (!activeRound) return
+                setRoundForm({
+                  desc_completed: (activeRound.desc_completed || 0).toString(),
+                  asc_completed: (activeRound.asc_completed || 0).toString(),
+                })
+                setRoundEditOpen(true)
+              }}
+              onStepRoundProgress={(deltaAsc, deltaDesc) =>
+                void stepRoundProgress(deltaAsc, deltaDesc)
+              }
+              onCompleteRound={() => void completeActiveRound()}
+              onOpenNewRound={() => setNewRoundOpen(true)}
+              onLoadCatalog={() => void loadCatalog()}
+              onAssignMemItem={(catalogId) => void assignItem(catalogId)}
+              onUnassignMemItem={(id) => void unassignItem(id)}
+              onToggleMemStatus={(item) => void toggleMemStatus(item)}
+              onToggleChunk={(chunk, memorized) => void toggleChunk(chunk, memorized)}
+              onAssignMemRevision={(id) => void assignRevision(id)}
+              onMarkMemRevised={(id) => void markRevised(id)}
+              onAchievementEarned={() => void loadAchievementCount()}
+            />
+          )}
 
-            {/* 2. QURAN TIMELINE SECTION */}
-            {(historySection === "all" || historySection === "timeline") && (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
+          {activeTab === "sessions" && (
+            <div className="space-y-6 animate-fade-in-up">
+              {/* Sub-filter pill bar for Sessions, Timeline & Portal Activity */}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(
+                  [
+                    {
+                      id: "sessions",
+                      label: `Class Sessions (${sessions.length})`,
+                      icon: Clock,
+                    },
+                    {
+                      id: "attendance",
+                      label: "Attendance",
+                      icon: CalendarCheck,
+                    },
+                    {
+                      id: "timeline",
+                      label: `Quran Timeline (${rounds.length})`,
+                      icon: BookOpen,
+                    },
+                    {
+                      id: "activity",
+                      label: `Portal Activity (${activity.length})`,
+                      icon: Activity,
+                    },
+                  ] as const
+                ).map((pill) => {
+                  const PillIcon = pill.icon
+                  const isSelected = historySection === pill.id
+                  return (
+                    <button
+                      key={pill.id}
+                      type="button"
+                      onClick={() => setHistorySection(pill.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                        isSelected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
+                      )}
+                    >
+                      <PillIcon className="h-3.5 w-3.5" />
+                      {pill.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* 1. CLASS SESSIONS SECTION */}
+              {(historySection === "all" || historySection === "sessions") && (
+                <StudentSessionsList
+                  studentId={student.id}
+                  studentName={student.name}
+                  sessions={sessions}
+                  onSessionsChange={setSessions}
+                  onReload={loadSessions}
+                />
+              )}
+
+              {(historySection === "all" || historySection === "attendance") && (
+                <StudentAttendanceCalendar
+                  student={student}
+                  sessionStarts={sessions.map((s) => s.started_at)}
+                />
+              )}
+
+              {/* 2. QURAN TIMELINE SECTION */}
+              {(historySection === "all" || historySection === "timeline") && (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                        Quran & Qaida Journey
+                      </h2>
+                      <p className="text-sm text-text-tertiary">
+                        Completed rounds, active para map, and historical milestones
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {activeRound && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setRoundForm({
+                                desc_completed: (activeRound.desc_completed || 0).toString(),
+                                asc_completed: (activeRound.asc_completed || 0).toString(),
+                              })
+                              setRoundEditOpen(true)
+                            }}
+                          >
+                            <Pencil className="h-3.5 w-3.5 mr-1" />
+                            Update Progress
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={completeActiveRound}
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <Check className="h-3.5 w-3.5 mr-1" />
+                            Complete
+                          </Button>
+                        </>
+                      )}
+                      <Button size="sm" onClick={() => setNewRoundOpen(true)}>
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        Add Round
+                      </Button>
+                    </div>
+                  </div>
+
+                  <QuranJourney
+                    rounds={rounds}
+                    onEditRound={openEditRound}
+                    onDeleteRound={deleteRound}
+                  />
+                </div>
+              )}
+
+              {/* 3. PORTAL ACTIVITY SECTION */}
+              {(historySection === "all" || historySection === "activity") && (
+                <Card>
+                  <div className="px-5 py-4 border-b border-border-primary">
                     <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
-                      Quran & Qaida Journey
+                      Portal Activity
                     </h2>
-                    <p className="text-sm text-text-tertiary">
-                      Completed rounds, active para map, and historical milestones
+                    <p className="text-sm text-text-tertiary mt-0.5">
+                      {activity.length > 0
+                        ? `${activity.length} events logged from the student app`
+                        : "Clicks and page views from the student app"}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {activeRound && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setRoundForm({
-                              desc_completed: (activeRound.desc_completed || 0).toString(),
-                              asc_completed: (activeRound.asc_completed || 0).toString(),
-                            })
-                            setRoundEditOpen(true)
-                          }}
-                        >
-                          <Pencil className="h-3.5 w-3.5 mr-1" />
-                          Update Progress
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={completeActiveRound}
-                          className="text-green-600 hover:text-green-700"
-                        >
-                          <Check className="h-3.5 w-3.5 mr-1" />
-                          Complete
-                        </Button>
-                      </>
-                    )}
-                    <Button size="sm" onClick={() => setNewRoundOpen(true)}>
-                      <Plus className="h-3.5 w-3.5 mr-1" />
-                      Add Round
-                    </Button>
-                  </div>
-                </div>
+                  <CardContent className="pt-4 pb-5">
+                    <ActivityFeed logs={activity.slice(0, 50)} loading={activityLoading} />
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
 
-                <QuranJourney
-                  rounds={rounds}
-                  onEditRound={openEditRound}
-                  onDeleteRound={deleteRound}
-                />
-              </div>
-            )}
+          {activeTab === "trophies" && (
+            <div className="animate-fade-in-up">
+              <StudentAchievementsPanel
+                studentId={student.id}
+                onUpdated={() => void loadAchievementCount()}
+              />
+            </div>
+          )}
 
-            {/* 3. PORTAL ACTIVITY SECTION */}
-            {(historySection === "all" || historySection === "activity") && (
-              <Card>
-                <div className="px-5 py-4 border-b border-border-primary">
-                  <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
-                    Portal Activity
+          {activeTab === "report" && <StudentMonthlyReport studentId={student.id} />}
+
+          {activeTab === "account" && (
+            <div className="animate-fade-in-up space-y-8">
+              <div className="space-y-4">
+                <div>
+                  <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
+                    Billing & Fee Ledger
                   </h2>
-                  <p className="text-sm text-text-tertiary mt-0.5">
-                    {activity.length > 0
-                      ? `${activity.length} events logged from the student app`
-                      : "Clicks and page views from the student app"}
+                  <p className="text-sm text-text-tertiary mb-4">
+                    Monthly fees and payment history
                   </p>
-                </div>
-                <CardContent className="pt-4 pb-5">
-                  <ActivityFeed logs={activity.slice(0, 50)} loading={activityLoading} />
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        )}
-
-        {activeTab === "trophies" && (
-          <div className="animate-fade-in-up">
-            <StudentAchievementsPanel
-              studentId={student.id}
-              onUpdated={() => void loadAchievementCount()}
-            />
-          </div>
-        )}
-
-        {activeTab === "report" && <StudentMonthlyReport studentId={student.id} />}
-
-        {activeTab === "account" && (
-          <div className="animate-fade-in-up grid gap-6 lg:grid-cols-12">
-            {/* Left Column: Billing & Fee Ledger */}
-            <div className="lg:col-span-7 space-y-4">
-              <div>
-                <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
-                  Billing & Fee Ledger
-                </h2>
-                <p className="text-sm text-text-tertiary mb-4">Monthly fees and payment history</p>
-                <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-green-500" />
-                    <span className="text-text-tertiary">Paid</span>
-                    <span className="font-semibold text-text-primary">{paidCount}</span>
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-amber-400" />
-                    <span className="text-text-tertiary">Unpaid</span>
-                    <span className="font-semibold text-text-primary">{unpaidCount}</span>
-                  </span>
-                  <span className="text-text-tertiary">|</span>
-                  <FeeDisplay
-                    amount={student.fee}
-                    currency={student.fee_currency}
-                    rates={rates}
-                    size="sm"
+                  <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-green-500" />
+                      <span className="text-text-tertiary">Paid</span>
+                      <span className="font-semibold text-text-primary">{paidCount}</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      <span className="text-text-tertiary">Unpaid</span>
+                      <span className="font-semibold text-text-primary">{unpaidCount}</span>
+                    </span>
+                    <span className="text-text-tertiary">|</span>
+                    <FeeDisplay
+                      amount={student.fee}
+                      currency={student.fee_currency}
+                      rates={rates}
+                      size="sm"
+                    />
+                    <span className="text-text-tertiary text-xs">/ month</span>
+                  </div>
+                  <FeeHistoryTable
+                    fees={fees}
+                    sortKey={feeSortKey}
+                    sortDir={feeSortDir}
+                    page={feePage}
+                    pageSize={feePageSize}
+                    onSort={(key) => {
+                      const result = toggleSort(feeSortKey, feeSortDir, key)
+                      setFeeSortKey(result.direction ? result.key : null)
+                      setFeeSortDir(result.direction)
+                      setFeePage(1)
+                    }}
+                    onPageChange={setFeePage}
+                    onToggleFee={toggleFee}
                   />
-                  <span className="text-text-tertiary text-xs">/ month</span>
                 </div>
-                <FeeHistoryTable
-                  fees={fees}
-                  sortKey={feeSortKey}
-                  sortDir={feeSortDir}
-                  page={feePage}
-                  pageSize={feePageSize}
-                  onSort={(key) => {
-                    const result = toggleSort(feeSortKey, feeSortDir, key)
-                    setFeeSortKey(result.direction ? result.key : null)
-                    setFeeSortDir(result.direction)
-                    setFeePage(1)
-                  }}
-                  onPageChange={setFeePage}
-                  onToggleFee={toggleFee}
-                />
               </div>
-            </div>
 
-            {/* Right Column: Portal Access & Security */}
-            <div className="lg:col-span-5 space-y-4">
               <div>
-                <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
-                  Portal Access & Security
-                </h2>
-                <p className="text-sm text-text-tertiary mb-4">
-                  Student login credentials, sign-in permissions, and active sessions
-                </p>
-                <div className="space-y-4">
-                  <StudentPortalAccess studentId={student.id} />
-                  <StudentSignInAccess studentId={student.id} />
-                  <StudentForceSignOut studentId={student.id} />
+                <div>
+                  <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
+                    Portal Access & Security
+                  </h2>
+                  <p className="text-sm text-text-tertiary mb-4">
+                    Student login credentials, sign-in permissions, and active sessions
+                  </p>
+                  <StudentAccessCard studentId={student.id} />
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <UpdateProgressDialog
@@ -1042,5 +1037,18 @@ export default function StudentDetailPage() {
         onSave={() => void saveEditRound()}
       />
     </div>
+  )
+}
+
+/** Portal access, sign-in and active session as divided rows in one card (NextAdmin's action rows). */
+function StudentAccessCard({ studentId }: { studentId: string }) {
+  return (
+    <Card className="p-5">
+      <StudentPortalAccess studentId={studentId} bare />
+      <hr className="my-4 border-border-secondary-alt" />
+      <StudentSignInAccess studentId={studentId} bare />
+      <hr className="my-4 border-border-secondary-alt" />
+      <StudentForceSignOut studentId={studentId} bare />
+    </Card>
   )
 }

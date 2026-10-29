@@ -1,5 +1,15 @@
 "use client"
 
+import {
+  CreditCard,
+  FileText,
+  LayoutDashboard,
+  type LucideIcon,
+  Trophy,
+  UserRound,
+  Video,
+} from "lucide-react"
+
 import { cn } from "@/lib/utils"
 
 export type StudentView = "profile" | "overview" | "sessions" | "trophies" | "report" | "account"
@@ -7,6 +17,8 @@ export type StudentView = "profile" | "overview" | "sessions" | "trophies" | "re
 export interface StudentNavItem {
   id: StudentView
   label: string
+  description: string
+  icon: LucideIcon
   count?: number
   alert?: boolean
 }
@@ -17,43 +29,58 @@ interface StudentDetailNavProps {
   items: StudentNavItem[]
 }
 
+/**
+ * Student page sections, after NextAdmin's profile page: a left column of
+ * icon tiles with a title + description (lg+), a sideways-scrolling row below.
+ */
 export function StudentDetailNav({ active, onChange, items }: StudentDetailNavProps) {
   return (
-    <div className="mb-6 border-b border-border-primary overflow-x-auto">
-      <nav className="-mb-px flex items-center gap-6" aria-label="Student sections">
-        {items.map((item) => {
-          const isActive = active === item.id
-          return (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => onChange(item.id)}
+    <nav
+      aria-label="Student sections"
+      className="no-scrollbar flex gap-2 overflow-x-auto border-b border-card-border px-3 py-3 lg:w-[300px] lg:flex-shrink-0 lg:flex-col lg:overflow-visible lg:border-b-0 lg:border-r lg:py-6"
+    >
+      {items.map((item) => {
+        const isActive = active === item.id
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onChange(item.id)}
+            aria-current={isActive ? "page" : undefined}
+            className={cn(
+              "flex flex-shrink-0 items-center gap-3 rounded-xl p-2 text-left transition-colors lg:w-full lg:items-start",
+              isActive ? "bg-background-gray-secondary_alt" : "hover:bg-background-gray-primary",
+            )}
+          >
+            <span
               className={cn(
-                "relative inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 py-3 text-sm transition-colors",
-                isActive
-                  ? "border-primary font-medium text-primary"
-                  : "border-transparent font-medium text-text-secondary hover:border-border-primary hover:text-text-primary",
+                "flex size-9 flex-shrink-0 items-center justify-center rounded-lg border border-border-secondary-alt bg-background-gray-secondary_alt lg:size-11",
+                isActive ? "text-primary" : "text-icon-secondary",
               )}
             >
-              <span>{item.label}</span>
-              {typeof item.count === "number" && (
-                <span
-                  className={cn("tabular-nums", isActive ? "text-primary" : "text-text-tertiary")}
-                >
-                  ({item.count})
-                </span>
-              )}
-              {item.alert && (
-                <span
-                  className="ml-0.5 h-2 w-2 flex-shrink-0 rounded-full bg-amber-400"
-                  title="Fee unpaid this month"
-                />
-              )}
-            </button>
-          )
-        })}
-      </nav>
-    </div>
+              <item.icon className="h-5 w-5" />
+            </span>
+            <span className="flex min-w-0 flex-col items-start gap-1 pr-1">
+              <span className="flex items-center gap-1.5 whitespace-nowrap text-sm font-semibold text-text-primary">
+                {item.label}
+                {typeof item.count === "number" && (
+                  <span className="font-medium tabular-nums text-text-tertiary">
+                    ({item.count})
+                  </span>
+                )}
+                {item.alert && (
+                  <span
+                    className="h-2 w-2 flex-shrink-0 rounded-full bg-amber-400"
+                    title="Fee unpaid this month"
+                  />
+                )}
+              </span>
+              <span className="hidden text-xs text-text-tertiary lg:block">{item.description}</span>
+            </span>
+          </button>
+        )
+      })}
+    </nav>
   )
 }
 
@@ -66,28 +93,40 @@ export function studentNavItems(signals: {
     {
       id: "profile",
       label: "Profile",
+      description: "Personal details, schedule & portal access",
+      icon: UserRound,
     },
     {
       id: "overview",
       label: "Overview",
+      description: "Rounds, memorization & revision",
+      icon: LayoutDashboard,
     },
     {
       id: "sessions",
       label: "Sessions",
+      description: "Class history & portal activity",
+      icon: Video,
       count: signals.sessionCount,
     },
     {
       id: "trophies",
       label: "Trophies",
+      description: "Badges & certificates",
+      icon: Trophy,
       count: signals.achievementCount ?? 0,
     },
     {
       id: "report",
-      label: "Monthly Report",
+      label: "Monthly report",
+      description: "Printable report for parents",
+      icon: FileText,
     },
     {
       id: "account",
-      label: "Fees & Access",
+      label: "Fees & access",
+      description: "Fee ledger & sign-in settings",
+      icon: CreditCard,
       alert: signals.unpaidThisMonth,
     },
   ]
