@@ -1,7 +1,7 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { ChevronDown, LogOut, Menu, Moon } from "lucide-react"
+import { CalendarDays, ChevronDown, LogOut, Menu } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
@@ -61,7 +61,7 @@ function PortalTopBar({
         className="group hidden min-w-0 items-center gap-3 rounded-lg py-1 pr-2 md:flex"
       >
         <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
-          <Moon className="h-5 w-5" />
+          <CalendarDays className="h-5 w-5" />
         </span>
         <span className="min-w-0">
           <span className="block whitespace-nowrap text-sm font-semibold leading-5 text-text-primary">
