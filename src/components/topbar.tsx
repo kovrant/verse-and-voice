@@ -1,7 +1,7 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { ChevronDown, LogOut, Menu } from "lucide-react"
+import { ChevronDown, LogOut, Menu, Moon } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
 
@@ -11,6 +11,7 @@ import { NotificationBell } from "@/components/notification-bell"
 import { NotificationCompose } from "@/components/notification-compose"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { ThemeSwitch } from "@/components/theme-switch"
+import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { useCurrentUser } from "@/lib/use-current-user"
 
 const avatarStyle = { background: "hsl(var(--primary))" }
@@ -32,6 +33,7 @@ function PortalTopBar({
   actions?: ReactNode
   onMenuClick: () => void
 }) {
+  const hijri = getHijriToday()
   return (
     <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-2.5 border-b-[0.5px] border-card-border bg-card-surface-area px-3 lg:px-5">
       {/* Below lg: menu button + logo (the sidebar is a drawer there) */}
@@ -51,6 +53,23 @@ function PortalTopBar({
           </span>
         </Link>
       </div>
+
+      {/* Today's Islamic date → Islamic History */}
+      <Link
+        href="/teacher/history"
+        title="Islamic History"
+        className="group hidden min-w-0 items-center gap-3 rounded-lg py-1 pr-2 md:flex"
+      >
+        <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+          <Moon className="h-5 w-5" />
+        </span>
+        <span className="min-w-0">
+          <span className="block whitespace-nowrap text-sm font-semibold leading-5 text-text-primary">
+            {ordinalDay(hijri.day)} {hijri.monthInfo.name} {hijri.year} AH
+          </span>
+          <span className="block text-xs leading-4 text-text-tertiary">Islamic date</span>
+        </span>
+      </Link>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-2.5">
         <ThemeSwitch />

@@ -651,6 +651,14 @@
     background: hsl(var(--muted-foreground) / 0.4);
   }
 
+  /* Scrolls without showing a scrollbar (teacher sidebar nav) */
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Main content scroll — sage thumb, emerald hover, slightly wider */
   .main-scroll {
     scrollbar-width: thin;

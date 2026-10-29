@@ -6,7 +6,6 @@ import {
   BookMarked,
   BookOpen,
   BookOpenCheck,
-  ChevronRight,
   Cpu,
   CreditCard,
   LayoutDashboard,
@@ -28,7 +27,6 @@ import { memo, useEffect, useState } from "react"
 import { Brand } from "@/components/brand"
 import { BrandLogo } from "@/components/brand-logo"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
-import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { cn } from "@/lib/utils"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
@@ -84,7 +82,6 @@ export const Sidebar = memo(function Sidebar() {
 
   if (pathname === "/login" || pathname === "/teacher/login") return null
 
-  const hijri = getHijriToday()
   const close = () => setMobileOpen(false)
 
   function toggleCollapsed() {
@@ -176,7 +173,7 @@ export const Sidebar = memo(function Sidebar() {
         {/* Nav */}
         <nav
           className={cn(
-            "mt-3 flex-1 overflow-y-auto overflow-x-hidden pb-4",
+            "no-scrollbar mt-3 flex-1 overflow-y-auto overflow-x-hidden pb-4",
             collapsed ? "px-4 lg:px-2" : "px-4",
           )}
         >
@@ -209,22 +206,38 @@ export const Sidebar = memo(function Sidebar() {
                       onClick={close}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
                         collapsed && "lg:justify-center lg:py-2.5",
                         isActive
-                          ? "bg-sidebar-navigation-nav-item-nav-hover-background text-text-primary"
+                          ? "bg-primary/10 text-primary"
                           : "text-text-secondary hover:bg-sidebar-navigation-nav-item-nav-hover-background hover:text-text-primary",
                       )}
                     >
-                      <item.icon
+                      {/* Accent bar: full on the current page, a hint on hover */}
+                      <span
+                        aria-hidden
                         className={cn(
-                          "h-5 w-5 flex-shrink-0 transition-colors",
+                          "absolute left-0 top-1/2 w-[3px] -translate-y-1/2 rounded-r-full bg-primary transition-all duration-200",
                           isActive
-                            ? "text-icon-primary"
-                            : "text-icon-tertiary group-hover:text-icon-primary",
+                            ? "h-5 opacity-100"
+                            : "h-0 opacity-0 group-hover:h-3 group-hover:opacity-60",
                         )}
                       />
-                      <span className={cn("whitespace-nowrap", collapsed && "lg:hidden")}>
+                      <item.icon
+                        className={cn(
+                          "h-5 w-5 flex-shrink-0 transition-all duration-200",
+                          isActive
+                            ? "text-primary"
+                            : "text-icon-tertiary group-hover:scale-110 group-hover:text-primary",
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "whitespace-nowrap transition-transform duration-200",
+                          !isActive && "group-hover:translate-x-0.5",
+                          collapsed && "lg:hidden",
+                        )}
+                      >
                         {item.label}
                       </span>
                     </Link>
@@ -234,27 +247,6 @@ export const Sidebar = memo(function Sidebar() {
             </div>
           ))}
         </nav>
-
-        {/* Footer: today's Islamic date → Islamic History (NextAdmin's footer card) */}
-        <div className={cn("px-4 pb-4", collapsed && "lg:hidden")}>
-          <Link
-            href="/teacher/history"
-            onClick={close}
-            className="group block rounded-2xl bg-background-gray-primary px-4 py-4 transition-colors hover:bg-background-gray-tertiary"
-          >
-            <span className="flex items-center gap-2 text-xs uppercase text-text-tertiary">
-              <Moon className="h-3.5 w-3.5" />
-              Islamic date
-            </span>
-            <span className="mt-1.5 block whitespace-nowrap font-semibold leading-6 text-text-primary">
-              {ordinalDay(hijri.day)} {hijri.monthInfo.name}
-            </span>
-            <span className="flex items-center justify-between text-sm text-text-tertiary">
-              {hijri.year} AH
-              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </Link>
-        </div>
       </aside>
     </>
   )
