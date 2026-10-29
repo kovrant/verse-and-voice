@@ -1,7 +1,13 @@
 import type { StudentGender } from "@/lib/utils"
 
-/** Avatar variants per gender in public/avatars (boy-1.png … girl-4.png). */
-export const AVATAR_VARIANTS = 4
+/**
+ * Avatar images in public/avatars, per gender. Add a file there and list it
+ * here to give students more variety; each student keeps the same one.
+ */
+export const AVATARS: Record<StudentGender, string[]> = {
+  boy: ["boy-1.jpg"],
+  girl: ["girl-1.jpg"],
+}
 
 /**
  * Teacher-portal avatar for a student: one of the boy/girl images, picked by a
@@ -10,7 +16,8 @@ export const AVATAR_VARIANTS = 4
  */
 export function studentAvatarSrc(id: string, gender: StudentGender | null | undefined) {
   if (gender !== "boy" && gender !== "girl") return null
+  const files = AVATARS[gender]
   let hash = 0
   for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) >>> 0
-  return `/avatars/${gender}-${(hash % AVATAR_VARIANTS) + 1}.png`
+  return `/avatars/${files[hash % files.length]}`
 }

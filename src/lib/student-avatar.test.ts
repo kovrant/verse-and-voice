@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { AVATAR_VARIANTS, studentAvatarSrc } from "./student-avatar"
+import { AVATARS, studentAvatarSrc } from "./student-avatar"
 
 describe("studentAvatarSrc", () => {
   it("is null until boy/girl is set", () => {
@@ -13,10 +13,11 @@ describe("studentAvatarSrc", () => {
     expect(studentAvatarSrc(id, "girl")).toBe(studentAvatarSrc(id, "girl"))
   })
 
-  it("picks from the gender's variants", () => {
+  it("only picks that gender's listed images", () => {
     const ids = Array.from({ length: 50 }, (_, i) => `student-${i}`)
-    const seen = new Set(ids.map((id) => studentAvatarSrc(id, "boy")))
-    for (const src of Array.from(seen)) expect(src).toMatch(/^\/avatars\/boy-[1-4]\.png$/)
-    expect(seen.size).toBe(AVATAR_VARIANTS)
+    for (const gender of ["boy", "girl"] as const) {
+      const allowed = new Set(AVATARS[gender].map((f) => `/avatars/${f}`))
+      for (const id of ids) expect(allowed.has(studentAvatarSrc(id, gender)!)).toBe(true)
+    }
   })
 })
