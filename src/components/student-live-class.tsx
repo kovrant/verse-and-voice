@@ -1,10 +1,10 @@
 "use client"
 
-import { LogOut } from "lucide-react"
 import dynamic from "next/dynamic"
 import { useEffect, useRef, useState } from "react"
 
 import { QuranBookIcon } from "@/components/kid-ui"
+import { LeaveDoorButton } from "@/components/leave-door-button"
 import { useLiveClass } from "@/components/live-class-provider"
 import { InlineLoader } from "@/components/page-loading"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
@@ -190,14 +190,7 @@ export function StudentLiveClass() {
             </span>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={leave}
-          className="inline-flex flex-shrink-0 items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-4 py-2 text-[14px] font-bold text-muted-foreground shadow-soft backdrop-blur-sm transition-transform hover:-translate-y-0.5 hover:text-destructive active:scale-[0.99]"
-        >
-          <LogOut className="h-4 w-4" />
-          Leave class
-        </button>
+        <LeaveDoorButton onClick={leave} />
       </div>
 
       {/* Body */}
