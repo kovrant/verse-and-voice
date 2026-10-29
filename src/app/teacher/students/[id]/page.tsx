@@ -757,41 +757,44 @@ export default function StudentDetailPage() {
                 onOpenBilling={() => setActiveTab("account")}
                 onSaved={() => void loadStudent()}
               />
-              <StudentAccessCard studentId={student.id} />
             </div>
           )}
           {activeTab === "overview" && (
-            <StudentOverview
-              student={student}
-              rounds={rounds}
-              sessions={sessions}
-              memItems={memItems}
-              catalog={catalog}
-              chunksByItem={chunksByItem}
-              memorizedChunkIds={memorizedChunkIds}
-              onNavigate={handleNavigate}
-              onUpdateProgress={() => {
-                if (!activeRound) return
-                setRoundForm({
-                  desc_completed: (activeRound.desc_completed || 0).toString(),
-                  asc_completed: (activeRound.asc_completed || 0).toString(),
-                })
-                setRoundEditOpen(true)
-              }}
-              onStepRoundProgress={(deltaAsc, deltaDesc) =>
-                void stepRoundProgress(deltaAsc, deltaDesc)
-              }
-              onCompleteRound={() => void completeActiveRound()}
-              onOpenNewRound={() => setNewRoundOpen(true)}
-              onLoadCatalog={() => void loadCatalog()}
-              onAssignMemItem={(catalogId) => void assignItem(catalogId)}
-              onUnassignMemItem={(id) => void unassignItem(id)}
-              onToggleMemStatus={(item) => void toggleMemStatus(item)}
-              onToggleChunk={(chunk, memorized) => void toggleChunk(chunk, memorized)}
-              onAssignMemRevision={(id) => void assignRevision(id)}
-              onMarkMemRevised={(id) => void markRevised(id)}
-              onAchievementEarned={() => void loadAchievementCount()}
-            />
+            <div className="animate-fade-in-up space-y-6">
+              {/* Portal login, sign-in and session controls, first thing on the page */}
+              <StudentAccessCard studentId={student.id} />
+              <StudentOverview
+                student={student}
+                rounds={rounds}
+                sessions={sessions}
+                memItems={memItems}
+                catalog={catalog}
+                chunksByItem={chunksByItem}
+                memorizedChunkIds={memorizedChunkIds}
+                onNavigate={handleNavigate}
+                onUpdateProgress={() => {
+                  if (!activeRound) return
+                  setRoundForm({
+                    desc_completed: (activeRound.desc_completed || 0).toString(),
+                    asc_completed: (activeRound.asc_completed || 0).toString(),
+                  })
+                  setRoundEditOpen(true)
+                }}
+                onStepRoundProgress={(deltaAsc, deltaDesc) =>
+                  void stepRoundProgress(deltaAsc, deltaDesc)
+                }
+                onCompleteRound={() => void completeActiveRound()}
+                onOpenNewRound={() => setNewRoundOpen(true)}
+                onLoadCatalog={() => void loadCatalog()}
+                onAssignMemItem={(catalogId) => void assignItem(catalogId)}
+                onUnassignMemItem={(id) => void unassignItem(id)}
+                onToggleMemStatus={(item) => void toggleMemStatus(item)}
+                onToggleChunk={(chunk, memorized) => void toggleChunk(chunk, memorized)}
+                onAssignMemRevision={(id) => void assignRevision(id)}
+                onMarkMemRevised={(id) => void markRevised(id)}
+                onAchievementEarned={() => void loadAchievementCount()}
+              />
+            </div>
           )}
 
           {activeTab === "sessions" && (
