@@ -91,16 +91,16 @@ export function studentNavItems(signals: {
 }): StudentNavItem[] {
   return [
     {
-      id: "profile",
-      label: "Profile",
-      description: "Personal details, schedule & portal access",
-      icon: UserRound,
-    },
-    {
       id: "overview",
       label: "Overview",
       description: "Rounds, memorization & revision",
       icon: LayoutDashboard,
+    },
+    {
+      id: "profile",
+      label: "Profile",
+      description: "Personal details, schedule & portal access",
+      icon: UserRound,
     },
     {
       id: "sessions",

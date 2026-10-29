@@ -114,7 +114,7 @@ export default function StudentDetailPage() {
   const [activityLoaded, setActivityLoaded] = useState(false)
   const [achievementCount, setAchievementCount] = useState(0)
 
-  const [activeTab, setActiveTab] = useState<StudentView>("profile")
+  const [activeTab, setActiveTab] = useState<StudentView>("overview")
   const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
   // Round editing
