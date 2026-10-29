@@ -176,9 +176,24 @@
     --kid-teal: 177 22% 54%;
     --kid-rose: 0 37% 66%;
 
-    --radius-button: 0.5rem; /* 8px — tighter, minimal */
-    --radius-card: 0.75rem; /* 12px */
-    --radius-input: 0.5rem; /* 8px */
+    /* NextAdmin's radius scale: with tailwind.config's lg = card, md = button,
+       sm = input, xl = card+4, 2xl = card+8, rounded-* below match the template
+       (sm 4 · md 6 · lg 8 · xl 12 · 2xl 16). The student portal sets its own. */
+    --radius-button: 0.375rem; /* 6px */
+    --radius-card: 0.5rem; /* 8px */
+    --radius-input: 0.25rem; /* 4px */
+  }
+
+  /* Teacher-only (not :root, which the student portal also matches): flat
+     NextAdmin cards — hairline border, no hover lift (see .card-premium). */
+  [data-portal="admin"] {
+    --card-premium-border: var(--card-border);
+    --card-premium-radius: 0.75rem;
+    --card-premium-shadow: none;
+    --card-hover-glow: 0;
+    --card-hover-lift: none;
+    --card-hover-shadow: none;
+    --dialog-shadow: var(--shadow-3xl);
   }
 
   /* ── ADMIN — NextAdmin (dark) ── from the template's src/app/css/dark.css ── */
@@ -737,11 +752,13 @@
   }
 
   /* Card — clean ivory with cream border + emerald-tinted shadow */
+  /* Each look is a var with the student default, so the teacher palette can
+     restyle cards (flat, NextAdmin) without touching the student portal. */
   .card-premium {
     background: hsl(var(--card));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--radius-card);
-    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--card-premium-border, hsl(var(--border)));
+    border-radius: var(--card-premium-radius, var(--radius-card));
+    box-shadow: var(--card-premium-shadow, var(--shadow-soft));
   }
   :root.light .card-premium {
     box-shadow: var(--shadow-soft);
@@ -778,11 +795,11 @@
     pointer-events: none;
   }
   .card-hover-glow:hover::before {
-    opacity: 1;
+    opacity: var(--card-hover-glow, 1);
   }
   .card-hover-glow:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-soft-lg);
+    transform: var(--card-hover-lift, translateY(-2px));
+    box-shadow: var(--card-hover-shadow, var(--shadow-soft-lg));
   }
   :root.light .card-hover-glow:hover {
     box-shadow:

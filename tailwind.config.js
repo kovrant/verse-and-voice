@@ -223,7 +223,13 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    /* kid: — student-portal-only styles. Shared ui primitives default to the
+       teacher (NextAdmin) look and use kid: to keep the student one; only on
+       properties callers don't override, since kid: outranks a plain class. */
+    ({ addVariant }) => addVariant("kid", '[data-portal="student"] &'),
+  ],
 }
 
 module.exports = config

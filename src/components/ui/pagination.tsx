@@ -36,7 +36,7 @@ export function Pagination({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="h-8 rounded-lg border border-border/50 bg-secondary/50 px-2 text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="h-8 rounded-lg border border-input-border bg-input-background px-2 text-xs text-foreground focus:outline-none focus:ring-4 focus:ring-primary/20 kid:border-border/50 kid:bg-secondary/50 kid:focus:ring-2 kid:focus:ring-emerald-500/30"
           >
             {pageSizeOptions.map((size) => (
               <option key={size} value={size}>
@@ -118,8 +118,8 @@ function PaginationButton({
       className={cn(
         "flex h-8 min-w-[32px] items-center justify-center rounded-lg px-2 text-sm transition-all",
         active
-          ? "bg-emerald-500/15 text-emerald-400 font-semibold"
-          : "text-muted-foreground hover:bg-secondary hover:text-foreground",
+          ? "bg-primary font-medium text-primary-foreground kid:bg-emerald-500/15 kid:font-semibold kid:text-emerald-400"
+          : "text-text-secondary hover:bg-background-gray-primary hover:text-text-primary kid:text-muted-foreground kid:hover:bg-secondary kid:hover:text-foreground",
         disabled && "pointer-events-none opacity-30",
       )}
       {...props}

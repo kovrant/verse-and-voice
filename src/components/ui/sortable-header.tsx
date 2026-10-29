@@ -28,8 +28,8 @@ export function SortableHeader({
       type="button"
       onClick={() => onSort(sortKey)}
       className={cn(
-        "flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider transition-colors group",
-        isActive ? "text-emerald-400" : "text-muted-foreground hover:text-foreground",
+        "flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide transition-colors group",
+        isActive ? "text-text-primary" : "text-text-tertiary hover:text-text-primary",
       )}
     >
       {label}

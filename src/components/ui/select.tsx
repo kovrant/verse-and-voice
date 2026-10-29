@@ -16,10 +16,9 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 w-full items-center justify-between rounded-xl border border-input bg-card px-4 py-2 text-sm text-foreground ring-offset-background transition-all duration-200",
-      "placeholder:text-muted-foreground/60",
-      "hover:border-[hsl(var(--border-strong))]",
-      "focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500/40",
+      "flex h-11 w-full items-center justify-between rounded-lg border border-input-border bg-input-background px-4 py-2 text-sm text-foreground transition-colors duration-200",
+      "placeholder:text-input-placeholder-text",
+      "focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary",
       "disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
       className,
     )}
@@ -41,7 +40,7 @@ const SelectContent = React.forwardRef<
     <SelectPrimitive.Content
       ref={ref}
       className={cn(
-        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-soft-lg",
+        "relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-xl border border-card-border bg-dropdowns-background text-popover-foreground shadow-3xl",
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
         "data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
         position === "popper" &&
@@ -73,7 +72,7 @@ const SelectItem = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none transition-colors",
-      "focus:bg-secondary focus:text-foreground",
+      "focus:bg-background-gray-primary focus:text-text-primary",
       "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className,
     )}
