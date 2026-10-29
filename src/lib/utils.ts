@@ -108,6 +108,23 @@ export const COUNTRIES = [
   "Other",
 ]
 
+/**
+ * Flag per COUNTRIES entry, for compact displays (student cards).
+ * ponytail: emoji flags render on macOS/iOS/Android but Windows shows letters
+ * ("SA"); swap for flag SVGs if the portal is used on Windows.
+ */
+export const COUNTRY_FLAGS: Record<string, string> = {
+  Pakistan: "🇵🇰",
+  "United Kingdom": "🇬🇧",
+  "United States": "🇺🇸",
+  "Saudi Arabia": "🇸🇦",
+  Bahrain: "🇧🇭",
+  UAE: "🇦🇪",
+  Canada: "🇨🇦",
+  Australia: "🇦🇺",
+  Other: "🌍",
+}
+
 export type StudentStatus = "Reading" | "Completed" | "Left Uncompleted"
 
 export const STATUS_CONFIG: Record<

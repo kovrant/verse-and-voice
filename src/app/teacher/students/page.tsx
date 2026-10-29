@@ -38,7 +38,7 @@ import { classTimeToMinutes } from "@/lib/class-time"
 import { useExchangeRates } from "@/lib/exchange-rates"
 import { fetchAllRows } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
-import { parseLocalDate, STATUS_CONFIG, type Student } from "@/lib/utils"
+import { COUNTRY_FLAGS, parseLocalDate, STATUS_CONFIG, type Student } from "@/lib/utils"
 
 type ColumnKey = "country" | "started_at" | "fee" | "class_time" | "quran_progress" | "status"
 
@@ -445,14 +445,25 @@ export default function StudentsPage() {
                       )}
                     </div>
 
-                    <div className="relative z-10 flex w-full items-center justify-between gap-2 rounded-lg bg-card/80 px-4 py-2.5 shadow-xs backdrop-blur-sm">
+                    <div className="relative z-10 flex w-full items-center justify-between gap-2 rounded-lg bg-card/80 px-4 py-2.5 shadow-[0_10px_24px_-6px_rgba(16,24,40,0.28)] backdrop-blur-sm">
                       <div className="min-w-0">
                         <p className="truncate text-base font-medium tracking-[-0.2px] text-text-primary">
                           {student.name}
                         </p>
-                        <p className="truncate text-sm text-text-secondary">
-                          {[student.class_time, student.country].filter(Boolean).join(" · ") ||
-                            student.guardian_name}
+                        <p className="flex items-center gap-1.5 truncate text-sm text-text-secondary">
+                          <span className="truncate">
+                            {student.class_time || student.guardian_name}
+                          </span>
+                          {student.country && (
+                            <span
+                              role="img"
+                              aria-label={student.country}
+                              title={student.country}
+                              className="flex-shrink-0 text-base leading-none"
+                            >
+                              {COUNTRY_FLAGS[student.country] ?? student.country}
+                            </span>
+                          )}
                         </p>
                       </div>
                       <ArrowUpRight className="h-5 w-5 flex-shrink-0 text-icon-tertiary transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
