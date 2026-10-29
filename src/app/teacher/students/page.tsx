@@ -1,7 +1,19 @@
 "use client"
 
 import { format } from "date-fns"
-import { ArrowRight, Eye, EyeOff, MapPin, Plus, Search, Settings2, Users } from "lucide-react"
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Eye,
+  EyeOff,
+  LayoutGrid,
+  List,
+  MapPin,
+  Plus,
+  Search,
+  Settings2,
+  Users,
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
@@ -10,6 +22,7 @@ import { FeeDisplay } from "@/components/fee-display"
 import { OnlineDot } from "@/components/online-dot"
 import { PageLoading } from "@/components/page-loading"
 import { getActiveRound, QuranProgress, type QuranRound } from "@/components/quran-progress"
+import { StudentAvatar } from "@/components/student-avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -48,6 +61,18 @@ const ALL_COLUMNS: ColumnConfig[] = [
 const STORAGE_KEY = "quran-academy-students-columns"
 const SORT_STORAGE_KEY = "quran-academy-students-sort"
 const FILTER_STORAGE_KEY = "quran-academy-students-filter"
+const VIEW_STORAGE_KEY = "quran-academy-students-view"
+
+type ViewMode = "grid" | "table"
+const PAGE_SIZES: Record<ViewMode, number[]> = { grid: [12, 24, 48], table: [10, 20, 50] }
+
+function loadView(): ViewMode {
+  if (typeof window === "undefined") return "grid"
+  try {
+    if (localStorage.getItem(VIEW_STORAGE_KEY) === "table") return "table"
+  } catch {}
+  return "grid"
+}
 
 function loadColumns(): Set<ColumnKey> {
   if (typeof window === "undefined")
@@ -86,7 +111,8 @@ export default function StudentsPage() {
   const [sortKey, setSortKey] = useState<string | null>(() => loadSort().key)
   const [sortDir, setSortDir] = useState<SortDirection>(() => loadSort().dir)
   const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
+  const [view, setView] = useState<ViewMode>(loadView)
+  const [pageSize, setPageSize] = useState(() => PAGE_SIZES[loadView()][0])
   const { rates } = useExchangeRates()
   const onlineStudents = useOnlineStudents()
   const [visibleCols, setVisibleCols] = useState<Set<ColumnKey>>(loadColumns)
@@ -206,6 +232,15 @@ export default function StudentsPage() {
     setPage(1)
   }, [search, statusFilter])
 
+  function switchView(next: ViewMode) {
+    setView(next)
+    setPageSize(PAGE_SIZES[next][0])
+    setPage(1)
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, next)
+    } catch {}
+  }
+
   if (loading) return <PageLoading variant="list" />
 
   return (
@@ -259,8 +294,34 @@ export default function StudentsPage() {
             ))}
           </div>
 
-          {/* Column settings */}
-          <div ref={settingsRef} className="relative">
+          {/* Grid / table */}
+          <div className="flex items-center gap-0.5 rounded-lg bg-background-gray-secondary p-0.5">
+            {(
+              [
+                { mode: "grid", icon: LayoutGrid, label: "Card view" },
+                { mode: "table", icon: List, label: "Table view" },
+              ] as const
+            ).map(({ mode, icon: Icon, label }) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => switchView(mode)}
+                aria-label={label}
+                aria-pressed={view === mode}
+                title={label}
+                className={`flex size-[34px] items-center justify-center rounded-md transition-colors ${
+                  view === mode
+                    ? "bg-card-background text-text-primary shadow-xs"
+                    : "text-icon-tertiary hover:text-text-primary"
+                }`}
+              >
+                <Icon className="h-4 w-4" />
+              </button>
+            ))}
+          </div>
+
+          {/* Column settings (table view) */}
+          <div ref={settingsRef} className={view === "table" ? "relative" : "hidden"}>
             <button
               type="button"
               onClick={() => setSettingsOpen(!settingsOpen)}
@@ -346,234 +407,299 @@ export default function StudentsPage() {
         </Card>
       ) : (
         <>
-          {/* Mobile card view */}
-          <div className="space-y-3 lg:hidden">
-            {paginated.map((student) => {
-              const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
-              return (
-                <Link key={student.id} href={`/teacher/students/${student.id}`}>
-                  <Card className="group transition-colors hover:bg-background-gray-primary">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="relative flex-shrink-0">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
-                            {student.name.charAt(0)}
-                          </div>
-                          {onlineStudents.has(student.id) && (
-                            <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium text-sm text-text-primary truncate">
-                              {student.name}
-                            </p>
-                            <Badge variant={statusCfg.variant} className="flex-shrink-0">
-                              {statusCfg.label}
-                            </Badge>
-                          </div>
-                          <p className="text-xs text-text-tertiary mt-0.5">
-                            {student.guardian_name}
-                          </p>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-text-tertiary">
-                            <FeeDisplay
-                              amount={student.fee}
-                              currency={student.fee_currency}
-                              rates={rates}
-                            />
-                            {student.class_time && (
-                              <span className="flex items-center gap-1">
-                                <span className="text-text-tertiary">&middot;</span>
-                                {student.class_time}
-                              </span>
-                            )}
-                            {student.country && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {student.country}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-icon-tertiary group-hover:text-text-primary transition-colors flex-shrink-0 mt-1" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              )
-            })}
-          </div>
-
-          {/* Desktop table view */}
-          <Card className="overflow-hidden hidden lg:block">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border-primary">
-                    <th scope="col" className="px-5 py-4 text-left">
-                      <SortableHeader
-                        label="Student"
-                        sortKey="name"
-                        currentSort={sortKey}
-                        currentDirection={sortDir}
-                        onSort={handleSort}
+          {view === "grid" ? (
+            /* NextAdmin "Teams" style one: portrait avatar, frosted name strip */
+            <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {paginated.map((student) => {
+                const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+                const online = onlineStudents.has(student.id)
+                return (
+                  <Link
+                    key={student.id}
+                    href={`/teacher/students/${student.id}`}
+                    className="group relative flex aspect-[334/364] w-full flex-col justify-end overflow-hidden rounded-xl border border-card-border bg-background-gray-secondary p-2 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+                  >
+                    <div className="absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
+                      <StudentAvatar
+                        id={student.id}
+                        name={student.name}
+                        gender={student.gender}
+                        sizes="(max-width: 480px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                        initialClassName="text-6xl"
                       />
-                    </th>
-                    {isVisible("country") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Country"
-                          sortKey="country"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    {isVisible("started_at") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Admission"
-                          sortKey="started_at"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    {isVisible("fee") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Fee"
-                          sortKey="fee"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    {isVisible("class_time") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Class Time"
-                          sortKey="class_time"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    {isVisible("quran_progress") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Quran"
-                          sortKey="quran_progress"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    {isVisible("status") && (
-                      <th scope="col" className="px-5 py-4 text-left">
-                        <SortableHeader
-                          label="Status"
-                          sortKey="status"
-                          currentSort={sortKey}
-                          currentDirection={sortDir}
-                          onSort={handleSort}
-                        />
-                      </th>
-                    )}
-                    <th scope="col" className="px-5 py-4"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginated.map((student) => {
-                    const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
-                    return (
-                      <tr
-                        key={student.id}
-                        onClick={() => router.push(`/teacher/students/${student.id}`)}
-                        className="border-b border-border-primary last:border-0 hover:bg-background-gray-primary transition-colors group cursor-pointer"
-                      >
-                        <td className="px-5 py-4">
-                          <div className="flex items-center gap-3">
+                    </div>
+
+                    <div className="absolute left-3 right-3 top-3 flex items-start justify-between gap-2">
+                      {online ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-card/90 px-2.5 py-1 text-xs font-medium text-text-primary shadow-xs backdrop-blur-sm">
+                          <span className="size-2 rounded-full bg-green-500" />
+                          Online
+                        </span>
+                      ) : (
+                        <span />
+                      )}
+                      {student.status !== "Reading" && (
+                        <Badge variant={statusCfg.variant} className="bg-card/90 backdrop-blur-sm">
+                          {statusCfg.label}
+                        </Badge>
+                      )}
+                    </div>
+
+                    <div className="relative z-10 flex w-full items-center justify-between gap-2 rounded-lg bg-card/80 px-4 py-2.5 shadow-xs backdrop-blur-sm">
+                      <div className="min-w-0">
+                        <p className="truncate text-base font-medium tracking-[-0.2px] text-text-primary">
+                          {student.name}
+                        </p>
+                        <p className="truncate text-sm text-text-secondary">
+                          {[student.class_time, student.country].filter(Boolean).join(" · ") ||
+                            student.guardian_name}
+                        </p>
+                      </div>
+                      <ArrowUpRight className="h-5 w-5 flex-shrink-0 text-icon-tertiary transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                    </div>
+                  </Link>
+                )
+              })}
+            </div>
+          ) : (
+            <>
+              {/* Mobile card view */}
+              <div className="space-y-3 lg:hidden">
+                {paginated.map((student) => {
+                  const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+                  return (
+                    <Link key={student.id} href={`/teacher/students/${student.id}`}>
+                      <Card className="group transition-colors hover:bg-background-gray-primary">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
                             <div className="relative flex-shrink-0">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                              <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
                                 {student.name.charAt(0)}
                               </div>
                               {onlineStudents.has(student.id) && (
                                 <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
                               )}
                             </div>
-                            <div>
-                              <p className="font-medium text-sm text-text-primary">
-                                {student.name}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="font-medium text-sm text-text-primary truncate">
+                                  {student.name}
+                                </p>
+                                <Badge variant={statusCfg.variant} className="flex-shrink-0">
+                                  {statusCfg.label}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-text-tertiary mt-0.5">
+                                {student.guardian_name}
                               </p>
-                              <p className="text-xs text-text-tertiary">{student.guardian_name}</p>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-text-tertiary">
+                                <FeeDisplay
+                                  amount={student.fee}
+                                  currency={student.fee_currency}
+                                  rates={rates}
+                                />
+                                {student.class_time && (
+                                  <span className="flex items-center gap-1">
+                                    <span className="text-text-tertiary">&middot;</span>
+                                    {student.class_time}
+                                  </span>
+                                )}
+                                {student.country && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="h-3 w-3" />
+                                    {student.country}
+                                  </span>
+                                )}
+                              </div>
                             </div>
+                            <ArrowRight className="h-4 w-4 text-icon-tertiary group-hover:text-text-primary transition-colors flex-shrink-0 mt-1" />
                           </div>
-                        </td>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  )
+                })}
+              </div>
+
+              {/* Desktop table view */}
+              <Card className="overflow-hidden hidden lg:block">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border-primary">
+                        <th scope="col" className="px-5 py-4 text-left">
+                          <SortableHeader
+                            label="Student"
+                            sortKey="name"
+                            currentSort={sortKey}
+                            currentDirection={sortDir}
+                            onSort={handleSort}
+                          />
+                        </th>
                         {isVisible("country") && (
-                          <td className="px-5 py-4 text-sm text-text-secondary">
-                            {student.country ? (
-                              <span className="flex items-center gap-1.5">
-                                <MapPin className="h-3 w-3" />
-                                {student.country}
-                              </span>
-                            ) : (
-                              <span className="text-text-tertiary">--</span>
-                            )}
-                          </td>
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Country"
+                              sortKey="country"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
+                            />
+                          </th>
                         )}
                         {isVisible("started_at") && (
-                          <td className="px-5 py-4 text-sm text-text-secondary">
-                            {format(
-                              parseLocalDate(student.started_at) ?? new Date(),
-                              "MMM d, yyyy",
-                            )}
-                          </td>
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Admission"
+                              sortKey="started_at"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
+                            />
+                          </th>
                         )}
                         {isVisible("fee") && (
-                          <td className="px-5 py-4">
-                            <FeeDisplay
-                              amount={student.fee}
-                              currency={student.fee_currency}
-                              rates={rates}
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Fee"
+                              sortKey="fee"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
                             />
-                          </td>
+                          </th>
                         )}
                         {isVisible("class_time") && (
-                          <td className="px-5 py-4 text-sm text-text-secondary">
-                            {student.class_time || <span className="text-text-tertiary">--</span>}
-                          </td>
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Class Time"
+                              sortKey="class_time"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
+                            />
+                          </th>
                         )}
                         {isVisible("quran_progress") && (
-                          <td className="px-5 py-4">
-                            <QuranProgress rounds={roundsMap[student.id] || []} variant="compact" />
-                          </td>
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Quran"
+                              sortKey="quran_progress"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
+                            />
+                          </th>
                         )}
                         {isVisible("status") && (
-                          <td className="px-5 py-4">
-                            <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
-                          </td>
+                          <th scope="col" className="px-5 py-4 text-left">
+                            <SortableHeader
+                              label="Status"
+                              sortKey="status"
+                              currentSort={sortKey}
+                              currentDirection={sortDir}
+                              onSort={handleSort}
+                            />
+                          </th>
                         )}
-                        <td className="px-5 py-4 text-right">
-                          <Link
-                            href={`/teacher/students/${student.id}`}
-                            aria-label={`View ${student.name}`}
-                          >
-                            <ArrowRight className="h-4 w-4 inline-block text-icon-tertiary group-hover:text-text-primary transition-colors" />
-                          </Link>
-                        </td>
+                        <th scope="col" className="px-5 py-4"></th>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                    </thead>
+                    <tbody>
+                      {paginated.map((student) => {
+                        const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
+                        return (
+                          <tr
+                            key={student.id}
+                            onClick={() => router.push(`/teacher/students/${student.id}`)}
+                            className="border-b border-border-primary last:border-0 hover:bg-background-gray-primary transition-colors group cursor-pointer"
+                          >
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="relative flex-shrink-0">
+                                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
+                                    {student.name.charAt(0)}
+                                  </div>
+                                  {onlineStudents.has(student.id) && (
+                                    <OnlineDot className="absolute -bottom-0.5 -right-0.5" />
+                                  )}
+                                </div>
+                                <div>
+                                  <p className="font-medium text-sm text-text-primary">
+                                    {student.name}
+                                  </p>
+                                  <p className="text-xs text-text-tertiary">
+                                    {student.guardian_name}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            {isVisible("country") && (
+                              <td className="px-5 py-4 text-sm text-text-secondary">
+                                {student.country ? (
+                                  <span className="flex items-center gap-1.5">
+                                    <MapPin className="h-3 w-3" />
+                                    {student.country}
+                                  </span>
+                                ) : (
+                                  <span className="text-text-tertiary">--</span>
+                                )}
+                              </td>
+                            )}
+                            {isVisible("started_at") && (
+                              <td className="px-5 py-4 text-sm text-text-secondary">
+                                {format(
+                                  parseLocalDate(student.started_at) ?? new Date(),
+                                  "MMM d, yyyy",
+                                )}
+                              </td>
+                            )}
+                            {isVisible("fee") && (
+                              <td className="px-5 py-4">
+                                <FeeDisplay
+                                  amount={student.fee}
+                                  currency={student.fee_currency}
+                                  rates={rates}
+                                />
+                              </td>
+                            )}
+                            {isVisible("class_time") && (
+                              <td className="px-5 py-4 text-sm text-text-secondary">
+                                {student.class_time || (
+                                  <span className="text-text-tertiary">--</span>
+                                )}
+                              </td>
+                            )}
+                            {isVisible("quran_progress") && (
+                              <td className="px-5 py-4">
+                                <QuranProgress
+                                  rounds={roundsMap[student.id] || []}
+                                  variant="compact"
+                                />
+                              </td>
+                            )}
+                            {isVisible("status") && (
+                              <td className="px-5 py-4">
+                                <Badge variant={statusCfg.variant}>{statusCfg.label}</Badge>
+                              </td>
+                            )}
+                            <td className="px-5 py-4 text-right">
+                              <Link
+                                href={`/teacher/students/${student.id}`}
+                                aria-label={`View ${student.name}`}
+                              >
+                                <ArrowRight className="h-4 w-4 inline-block text-icon-tertiary group-hover:text-text-primary transition-colors" />
+                              </Link>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </Card>
+            </>
+          )}
 
           {sorted.length > pageSize && (
             <div className="mt-4">
@@ -582,6 +708,7 @@ export default function StudentsPage() {
                 totalPages={totalPages}
                 totalItems={sorted.length}
                 pageSize={pageSize}
+                pageSizeOptions={PAGE_SIZES[view]}
                 onPageChange={setPage}
                 onPageSizeChange={(s) => {
                   setPageSize(s)
