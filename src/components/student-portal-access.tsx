@@ -1,6 +1,6 @@
 "use client"
 
-import { Check, Eye, EyeOff, KeyRound } from "lucide-react"
+import { Check, Eye, EyeOff, KeyRound, Loader2 } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { AccessDialogHeader, AccessTile } from "@/components/student-access-bits"
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { isValidUsername } from "@/lib/student-auth"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to create or reset a student's portal login. Talks to
@@ -77,6 +78,8 @@ function CredentialDialog({
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [saving, setSaving] = useState(false)
+  // Set after a successful save: the button turns green, then the dialog closes.
+  const [saved, setSaved] = useState<"created" | "updated" | null>(null)
 
   // Seed the username field with the existing one when opening a reset.
   useEffect(() => {
@@ -84,10 +87,19 @@ function CredentialDialog({
       setUsername(existingUsername ?? "")
       setPassword("")
       setShowPassword(false)
+      setSaved(null)
     }
-  }, [open, existingUsername])
+    // existingUsername changes on save; reseeding then would wipe the green state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
-  const isReset = !!existingUsername
+  useEffect(() => {
+    if (!saved) return
+    const t = setTimeout(() => onOpenChange(false), 1200)
+    return () => clearTimeout(t)
+  }, [saved, onOpenChange])
+
+  const isReset = !!existingUsername && saved !== "created"
 
   async function save() {
     if (!isValidUsername(username)) {
@@ -111,9 +123,8 @@ function CredentialDialog({
         toast.error(data?.error || "Something went wrong")
         return
       }
-      toast.success(data.created ? "Login created" : "Login updated")
+      setSaved(data.created ? "created" : "updated")
       onSaved(data.username)
-      onOpenChange(false)
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Network error")
     } finally {
@@ -131,12 +142,6 @@ function CredentialDialog({
           description="The student signs in at the login page with this username and password."
         />
         <div className="space-y-4 py-2">
-          {isReset && (
-            <div className="rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">
-              Current username:{" "}
-              <span className="font-mono font-semibold text-text-primary">{existingUsername}</span>
-            </div>
-          )}
           <div className="space-y-2">
             <Label htmlFor="portal-username">Username</Label>
             <Input
@@ -171,12 +176,31 @@ function CredentialDialog({
           </div>
         </div>
         <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving || !!saved}
+          >
             Cancel
           </Button>
-          <Button onClick={save} disabled={saving}>
-            {saving ? (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <Button
+            onClick={save}
+            disabled={saving || !!saved}
+            className={cn(
+              "min-w-[140px] disabled:opacity-100",
+              saved && "bg-green-600 text-white hover:bg-green-600",
+            )}
+          >
+            {saved ? (
+              <>
+                <Check className="mr-1.5 h-4 w-4" />
+                {saved === "created" ? "Created" : "Updated"}
+              </>
+            ) : saving ? (
+              <>
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                {isReset ? "Updating…" : "Creating…"}
+              </>
             ) : (
               <>
                 <Check className="mr-1 h-3.5 w-3.5" />
