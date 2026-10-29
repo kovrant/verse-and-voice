@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { FEED_FILTERS, type FeedFilter, feedTypeMeta, matchesFeedFilter } from "@/lib/teacher-feed"
 import { DASHBOARD_FEED_LIMIT, useNotifications } from "@/lib/use-notifications"
 import { cn } from "@/lib/utils"
@@ -35,11 +35,13 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
   }
 
   return (
-    <Card className="flex flex-col min-h-[420px]">
-      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 pb-3">
+    <Card className="flex min-h-[420px] flex-col p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4">
         <div>
-          <CardTitle>Live activity</CardTitle>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            Live activity
+          </p>
+          <p className="text-sm text-text-tertiary">
             Logins, fees, achievements, and class updates — updates in real time
           </p>
         </div>
@@ -54,8 +56,8 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
             Mark all read
           </Button>
         )}
-      </CardHeader>
-      <CardContent className="flex flex-col flex-1 gap-3 pt-0">
+      </div>
+      <div className="flex flex-1 flex-col gap-3">
         <div className="flex flex-wrap gap-1.5">
           {FEED_FILTERS.map((f) => (
             <button
@@ -63,10 +65,10 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
               type="button"
               onClick={() => setFilter(f.id)}
               className={cn(
-                "rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors",
+                "rounded-full px-3 py-1 text-xs font-medium transition-colors",
                 filter === f.id
                   ? "bg-primary text-primary-foreground"
-                  : "bg-secondary text-muted-foreground hover:text-foreground",
+                  : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
               )}
             >
               {f.label}
@@ -78,7 +80,7 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
           {loading ? (
             <div className="space-y-2">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-14 shimmer rounded-xl" />
+                <div key={i} className="h-14 shimmer rounded-lg" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -89,36 +91,38 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
               </p>
             </div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul>
               {filtered.map((n) => {
                 const meta = feedTypeMeta(n.type)
                 const Icon = meta.icon
                 return (
-                  <li key={n.id}>
+                  <li key={n.id} className="border-b border-border-primary last:border-0">
                     <button
                       type="button"
                       onClick={() => open(n.id, n.link, !!n.read_at)}
                       className={cn(
-                        "flex w-full items-start gap-3 rounded-xl border border-border/50 p-3 text-left transition-colors hover:bg-secondary/50",
-                        !n.read_at && "bg-primary/[0.04] border-primary/20",
+                        "flex w-full items-start gap-3 rounded-lg px-2 py-3 text-left transition-colors hover:bg-background-gray-primary",
+                        !n.read_at && "bg-primary/[0.04]",
                       )}
                     >
                       <span
                         className={cn(
-                          "flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl",
+                          "flex size-8 flex-shrink-0 items-center justify-center rounded-lg",
                           meta.tint,
                         )}
                       >
                         <Icon className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium leading-snug">{n.title}</span>
+                        <span className="block text-sm font-medium leading-5 text-text-primary">
+                          {n.title}
+                        </span>
                         {n.body && (
-                          <span className="block text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                          <span className="mt-0.5 line-clamp-2 block text-xs text-text-tertiary">
                             {n.body}
                           </span>
                         )}
-                        <span className="block text-[10px] text-muted-foreground mt-1">
+                        <span className="mt-1 block text-[11px] text-text-tertiary">
                           {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                         </span>
                       </span>
@@ -135,7 +139,7 @@ export function TeacherActivityFeed({ onFeePaid }: { onFeePaid?: () => void }) {
             View all notifications <ArrowRight className="ml-1 h-3 w-3" />
           </Button>
         </Link>
-      </CardContent>
+      </div>
     </Card>
   )
 }

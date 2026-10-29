@@ -183,21 +183,16 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
     const strokeDashoffset = circumference - (remainingPercent / 100) * circumference
 
     return (
-      <Card
-        className={cn(
-          "border border-border/80 shadow-soft overflow-hidden transition-all bg-gradient-to-br from-amber-500/[0.04] via-card to-teal-500/[0.04] flex flex-col justify-between",
-          className,
-        )}
-      >
-        <CardHeader className="pb-2.5 pt-4 px-4 sm:px-5">
+      <Card className={cn("flex flex-col justify-between overflow-hidden", className)}>
+        <CardHeader className="px-5 pb-2.5 pt-5">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-500 shadow-xs">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
                 <Sparkles className="h-4 w-4" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <CardTitle className="text-sm sm:text-base font-bold tracking-tight text-foreground truncate">
+                  <CardTitle className="truncate text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
                     Gemini AI Quota
                   </CardTitle>
                   <Badge
@@ -205,20 +200,20 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                     className={cn(
                       "text-[9px] font-extrabold uppercase tracking-wider px-2 py-0 rounded-full border shrink-0",
                       data.configured
-                        ? "bg-teal-500/10 text-teal-400 border-teal-500/40"
+                        ? "bg-green-500/10 text-green-400 border-green-500/40"
                         : "bg-amber-500/10 text-amber-400 border-amber-500/40",
                     )}
                   >
                     {data.configured && (
                       <span className="relative flex h-1.5 w-1.5 mr-1">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-teal-500"></span>
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500"></span>
                       </span>
                     )}
                     {data.configured ? "CONNECTED" : "OFFLINE"}
                   </Badge>
                 </div>
-                <p className="text-[11px] font-medium text-muted-foreground truncate">
+                <p className="truncate text-sm text-text-tertiary">
                   Model:{" "}
                   <span className="font-semibold text-foreground/90">
                     {data.model || "gemini-3.5-flash"}
@@ -241,9 +236,9 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
           </div>
         </CardHeader>
 
-        <CardContent className="px-4 sm:px-5 pb-4 pt-1 space-y-3 flex-1 flex flex-col justify-between">
+        <CardContent className="px-5 pb-5 pt-1 space-y-3 flex-1 flex flex-col justify-between">
           {/* Main Circular Gauge & Requests Info */}
-          <div className="flex items-center gap-4 rounded-2xl border border-border/70 bg-card/60 p-3 sm:p-3.5">
+          <div className="flex items-center gap-4 rounded-lg border border-card-border p-3 sm:p-3.5">
             {/* Circular Progress Ring */}
             <div className="relative flex items-center justify-center shrink-0">
               <svg width="70" height="70" className="transform -rotate-90">
@@ -263,7 +258,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                   stroke="currentColor"
                   className={cn(
                     "transition-all duration-700 ease-out",
-                    isCritical ? "text-rose-500" : isWarning ? "text-amber-500" : "text-teal-500",
+                    isCritical ? "text-rose-500" : isWarning ? "text-amber-500" : "text-green-500",
                   )}
                   strokeWidth="5.5"
                   strokeDasharray={circumference}
@@ -273,9 +268,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                 />
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="font-heading text-sm font-black text-foreground">
-                  {remainingPercent}%
-                </span>
+                <span className="text-sm font-semibold text-foreground">{remainingPercent}%</span>
                 <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
                   free
                 </span>
@@ -297,7 +290,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               </div>
 
               <div className="flex items-baseline gap-1.5">
-                <span className="font-heading text-xl sm:text-2xl font-black text-foreground">
+                <span className="text-xl font-semibold sm:text-2xl text-foreground">
                   {data.requests_remaining.toLocaleString()}
                 </span>
                 <span className="text-xs font-semibold text-muted-foreground">
@@ -339,16 +332,16 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
           )}
 
           {/* Bottom Action Buttons */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50">
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border-primary">
             <div className="flex items-center gap-1.5">
               <Button
                 asChild
                 size="sm"
                 variant="outline"
-                className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-teal-500/40 hover:bg-teal-500/10"
+                className="h-7 text-xs font-semibold gap-1 px-2.5 hover:border-green-500/40 hover:bg-green-500/10"
               >
                 <Link href="/teacher/history">
-                  <BookOpen className="h-3 w-3 text-teal-500" />
+                  <BookOpen className="h-3 w-3 text-green-500" />
                   <span>Stories</span>
                 </Link>
               </Button>

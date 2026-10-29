@@ -26,7 +26,7 @@ import { TeacherActivityFeed } from "@/components/teacher-activity-feed"
 import { TeacherOnlinePanel } from "@/components/teacher-online-panel"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { feeCurrencyBreakdown, sumFeesPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { supabase } from "@/lib/supabase"
 import { useOnlineStudents } from "@/lib/use-online-students"
@@ -92,318 +92,261 @@ export default function Dashboard() {
 
   const statCards = [
     {
-      label: "Active Students",
-      value: activeStudents,
+      label: "Active students",
+      value: activeStudents.toLocaleString(),
       icon: Users,
+      tint: "bg-[rgba(59,130,246,0.10)] text-[#3B82F6]",
     },
     {
-      label: "Online Now",
-      value: onlineIds.size,
+      label: "Online now",
+      value: onlineIds.size.toLocaleString(),
       icon: Wifi,
+      tint: "bg-[rgba(168,85,247,0.10)] text-[#A855F7]",
     },
     {
-      label: "Collected This Month",
-      value: `${feesCollected.toLocaleString()}`,
+      label: "Collected this month",
+      value: feesCollected.toLocaleString(),
       prefix: "Rs",
       icon: TrendingUp,
+      tint: "bg-[rgba(34,197,94,0.10)] text-[#22C55E]",
       breakdown: collectedByCurrency,
     },
     {
-      label: "Pending This Month",
-      value: `${feesPending.toLocaleString()}`,
+      label: "Pending this month",
+      value: feesPending.toLocaleString(),
       prefix: "Rs",
       icon: AlertCircle,
+      tint: "bg-[rgba(249,115,22,0.10)] text-[#F97316]",
       breakdown: pendingByCurrency,
     },
   ]
 
+  const quickActions = [
+    {
+      href: "/teacher/class",
+      label: "Start a class",
+      hint: "Live 1-on-1 session",
+      icon: GraduationCap,
+      tint: "bg-[rgba(87,80,241,0.10)] text-[#5750F1]",
+    },
+    {
+      href: "/teacher/students/new",
+      label: "Add student",
+      hint: "Register a new learner",
+      icon: UserPlus,
+      tint: "bg-[rgba(59,130,246,0.10)] text-[#3B82F6]",
+    },
+    {
+      href: "/teacher/students",
+      label: "All students",
+      hint: `Manage ${totalStudents} enrolled`,
+      icon: Users,
+      tint: "bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]",
+    },
+    {
+      href: "/teacher/history",
+      label: "Story studio",
+      hint: "Islamic stories & AI",
+      icon: BookOpen,
+      tint: "bg-[rgba(34,197,94,0.10)] text-[#22C55E]",
+    },
+    {
+      href: "/teacher/quizzes",
+      label: "Quiz studio",
+      hint: "Review & assign",
+      icon: Sparkles,
+      tint: "bg-[rgba(249,115,22,0.10)] text-[#F97316]",
+    },
+    {
+      href: "/teacher/media",
+      label: "Media library",
+      hint: "Quran paras & assets",
+      icon: Upload,
+      tint: "bg-[rgba(168,85,247,0.10)] text-[#A855F7]",
+    },
+  ]
+
+  const setupSteps = [
+    {
+      href: "/teacher/students/new",
+      label: "Add students",
+      hint: "Register your first student",
+      icon: UserPlus,
+    },
+    { href: "/teacher/media", label: "Upload Quran", hint: "Add Quran para PDFs", icon: Upload },
+    {
+      href: "/teacher/memorization",
+      label: "Set up catalog",
+      hint: "Add surahs & duas",
+      icon: BookMarked,
+    },
+  ]
+
   return (
-    <div className="space-y-8 animate-fade-in-up">
+    <div className="space-y-5">
+      {/* NextAdmin page header */}
       <div>
-        <h1 className="text-3xl font-semibold tracking-tight text-primary">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Dashboard</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
           Welcome to <Brand /> &middot; {currentMonth}
         </p>
       </div>
 
       {totalStudents === 0 && (
-        <Card className="relative overflow-hidden bg-card border border-border">
-          <CardContent className="relative pt-8 pb-6">
-            <div className="text-center mb-6">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-foreground">
-                <Sparkles className="h-7 w-7" />
-              </div>
-              <h2 className="text-xl font-bold">
-                Welcome to <Brand />
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">Get started in 3 simple steps</p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3 max-w-2xl mx-auto">
-              <Link href="/teacher/students/new">
-                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
-                    <UserPlus className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Add Students</p>
-                    <p className="text-[11px] text-muted-foreground">Register your first student</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                </div>
+        <Card className="p-5">
+          <p className="font-semibold leading-6 text-text-primary">Get started in 3 steps</p>
+          <p className="text-sm text-text-tertiary">Set up the academy before your first class.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            {setupSteps.map((step) => (
+              <Link
+                key={step.href}
+                href={step.href}
+                className="group flex items-center gap-3 rounded-lg border border-card-border p-3 transition-colors hover:bg-background-gray-primary"
+              >
+                <span className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg bg-background-gray-secondary text-icon-secondary">
+                  <step.icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-text-primary">{step.label}</span>
+                  <span className="block truncate text-xs text-text-tertiary">{step.hint}</span>
+                </span>
+                <ChevronRight className="h-4 w-4 flex-shrink-0 text-icon-tertiary" />
               </Link>
-              <Link href="/teacher/media">
-                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
-                    <Upload className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Upload Quran</p>
-                    <p className="text-[11px] text-muted-foreground">Add Quran para PDFs</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                </div>
-              </Link>
-              <Link href="/teacher/memorization">
-                <div className="group flex items-center gap-3 rounded-xl border border-border bg-card p-4 hover:bg-muted transition-all cursor-pointer">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-muted-foreground flex-shrink-0">
-                    <BookMarked className="h-5 w-5" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">Set Up Catalog</p>
-                    <p className="text-[11px] text-muted-foreground">Add surahs & duas</p>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                </div>
-              </Link>
-            </div>
-          </CardContent>
+            ))}
+          </div>
         </Card>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat, i) => (
-          <Card
-            key={stat.label}
-            className="group relative overflow-hidden bg-card border border-border animate-fade-in-up"
-            style={{ animationDelay: `${i * 80}ms` }}
-          >
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.label}
-              </CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
-                <stat.icon className="h-4.5 w-4.5 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="stat-number text-3xl tracking-tight tabular-nums text-foreground">
-                {stat.prefix && (
-                  <span className="text-lg font-medium text-muted-foreground mr-2">
-                    {stat.prefix}
-                  </span>
-                )}
-                {stat.value}
-              </div>
+      {/* Overview stats */}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {statCards.map((stat) => (
+          <Card key={stat.label} className="p-5">
+            <span className={`flex size-8 items-center justify-center rounded-lg ${stat.tint}`}>
+              <stat.icon className="h-[18px] w-[18px]" />
+            </span>
+            <div className="mb-1 mt-6 text-xl font-semibold leading-7 tabular-nums text-text-primary md:text-2xl md:leading-8">
+              {stat.prefix && (
+                <span className="mr-1.5 text-base font-medium text-text-tertiary">
+                  {stat.prefix}
+                </span>
+              )}
+              {stat.value}
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <span className="text-sm font-medium leading-5 text-text-tertiary">{stat.label}</span>
               {stat.breakdown && Object.keys(stat.breakdown).length > 0 && (
-                <div className="flex flex-wrap gap-x-2 mt-1">
+                <span className="flex flex-wrap gap-x-2 text-xs text-text-tertiary">
                   {Object.entries(stat.breakdown).map(([c, amt]) => (
-                    <span key={c} className="text-[11px] text-muted-foreground">
+                    <span key={c}>
                       {CURRENCY_SYMBOLS[c]}
                       {amt.toLocaleString()}
                     </span>
                   ))}
-                </div>
+                </span>
               )}
-            </CardContent>
+            </div>
           </Card>
         ))}
       </div>
 
-      {/* AI Quota & Elevated Action Hub */}
-      <div className="grid gap-6 lg:grid-cols-2 items-stretch">
+      <div className="grid items-stretch gap-5 lg:grid-cols-2">
         <GeminiQuotaCard variant="dashboard" className="h-full" />
 
-        <Card className="flex flex-col justify-between border border-border/80 shadow-soft">
-          <CardHeader className="pb-2.5 pt-4 px-4 sm:px-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-sm sm:text-base font-bold tracking-tight">
-                  Quick Actions
-                </CardTitle>
-                <p className="text-[11px] font-medium text-muted-foreground">
-                  Common classroom shortcuts &amp; academy tools
-                </p>
-              </div>
-              <Badge variant="secondary" className="text-[10px] font-semibold">
-                Shortcuts
-              </Badge>
-            </div>
-          </CardHeader>
+        <Card className="flex flex-col p-5">
+          <p className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            Quick actions
+          </p>
+          <p className="text-sm text-text-tertiary">Classroom shortcuts and academy tools</p>
 
-          <CardContent className="px-4 sm:px-5 pb-4 pt-1 flex-1 flex flex-col justify-between">
-            <div className="grid grid-cols-2 gap-2 sm:gap-2.5">
+          <div className="mt-5 grid flex-1 grid-cols-2 gap-3">
+            {quickActions.map((a) => (
               <Link
-                href="/teacher/class"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
+                key={a.href}
+                href={a.href}
+                className="group flex items-center gap-3 rounded-lg border border-card-border p-3 transition-colors hover:bg-background-gray-primary"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:scale-105 transition-transform shrink-0">
-                  <GraduationCap className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    Start a Class
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Live 1-on-1 session</p>
-                </div>
+                <span
+                  className={`flex size-8 flex-shrink-0 items-center justify-center rounded-lg ${a.tint}`}
+                >
+                  <a.icon className="h-4 w-4" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-text-primary">
+                    {a.label}
+                  </span>
+                  <span className="block truncate text-xs text-text-tertiary">{a.hint}</span>
+                </span>
               </Link>
+            ))}
+          </div>
 
-              <Link
-                href="/teacher/students/new"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
-                  <UserPlus className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    Add Student
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Register new learner</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/teacher/students"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
-                  <Users className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    All Students
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    Manage {totalStudents} enrolled
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/teacher/history"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-teal-500/10 hover:border-teal-500/30 transition-all"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-500/15 text-teal-500 group-hover:scale-105 transition-transform shrink-0">
-                  <BookOpen className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-teal-500 transition-colors truncate">
-                    Story Studio
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    Islamic stories &amp; AI
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                href="/teacher/quizzes"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-amber-500/10 hover:border-amber-500/30 transition-all"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/15 text-amber-500 group-hover:scale-105 transition-transform shrink-0">
-                  <Sparkles className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-amber-500 transition-colors truncate">
-                    Quiz Studio
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">Review &amp; assign</p>
-                </div>
-              </Link>
-
-              <Link
-                href="/teacher/media"
-                className="group flex items-center gap-2.5 p-2.5 rounded-xl border border-border/70 bg-card/60 hover:bg-primary/5 hover:border-primary/30 transition-all"
-              >
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground group-hover:scale-105 transition-transform shrink-0">
-                  <Upload className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                    Media Library
-                  </p>
-                  <p className="text-[10px] text-muted-foreground truncate">
-                    Quran paras &amp; assets
-                  </p>
-                </div>
-              </Link>
-            </div>
-
-            <div className="pt-2 border-t border-border/50 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span>Looking for AI logs and token limits?</span>
-              <Link
-                href="/teacher/ai-usage"
-                className="inline-flex items-center text-primary font-semibold hover:underline"
-              >
-                AI Quota Details &rarr;
-              </Link>
-            </div>
-          </CardContent>
+          <div className="mt-4 flex items-center justify-between border-t border-border-primary pt-4 text-xs text-text-tertiary">
+            <span>Looking for AI logs and token limits?</span>
+            <Link
+              href="/teacher/ai-usage"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              AI usage <ArrowRight className="h-3 w-3" />
+            </Link>
+          </div>
         </Card>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TeacherActivityFeed onFeePaid={() => void loadDashboard()} />
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-5">
           <TeacherOnlinePanel />
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base">Fees due</CardTitle>
-              <Link href="/teacher/fees">
-                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground h-8">
-                  Manage <ArrowRight className="ml-1 h-3 w-3" />
+          <Card className="p-5">
+            <div className="flex items-center justify-between">
+              <p className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                Fees due
+              </p>
+              <Link
+                href="/teacher/fees"
+                className="inline-flex items-center gap-1 text-sm font-medium text-text-secondary hover:text-text-primary"
+              >
+                Manage <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+            {unpaidFees.length === 0 ? (
+              <p className="py-6 text-center text-sm text-text-tertiary">
+                All fees collected for {currentMonth}
+              </p>
+            ) : (
+              <ul className="mt-4">
+                {unpaidFees.slice(0, 5).map((f) => (
+                  <li
+                    key={f.id}
+                    className="flex items-center justify-between gap-2 border-b border-border-primary py-3 first:pt-0 last:border-0 last:pb-0"
+                  >
+                    <p className="truncate text-sm font-medium text-text-primary">
+                      {f.students?.name}
+                    </p>
+                    <div className="flex flex-shrink-0 items-center gap-2">
+                      <FeeDisplay
+                        amount={f.students?.fee || 0}
+                        currency={f.students?.fee_currency || "PKR"}
+                        rates={rates}
+                      />
+                      <Badge variant="warning" className="text-[10px]">
+                        Unpaid
+                      </Badge>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {unpaidFees.length > 5 && (
+              <Link href="/teacher/fees" className="mt-4 block">
+                <Button variant="outline" size="sm" className="w-full">
+                  View all {unpaidFees.length} unpaid
                 </Button>
               </Link>
-            </CardHeader>
-            <CardContent>
-              {unpaidFees.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">
-                  All fees collected for {currentMonth}
-                </p>
-              ) : (
-                <div className="space-y-1.5">
-                  {unpaidFees.slice(0, 5).map((f) => (
-                    <div
-                      key={f.id}
-                      className="flex items-center justify-between rounded-xl border border-border/50 px-3 py-2.5"
-                    >
-                      <p className="text-sm font-medium truncate pr-2">{f.students?.name}</p>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <FeeDisplay
-                          amount={f.students?.fee || 0}
-                          currency={f.students?.fee_currency || "PKR"}
-                          rates={rates}
-                        />
-                        <Badge variant="warning" className="text-[10px]">
-                          Unpaid
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                  {unpaidFees.length > 5 && (
-                    <Link href="/teacher/fees" className="block pt-1">
-                      <Button variant="outline" size="sm" className="w-full text-xs">
-                        View all {unpaidFees.length} unpaid
-                      </Button>
-                    </Link>
-                  )}
-                </div>
-              )}
-            </CardContent>
+            )}
           </Card>
         </div>
       </div>

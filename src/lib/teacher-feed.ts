@@ -24,15 +24,18 @@ export const FEED_FILTERS: { id: FeedFilter; label: string }[] = [
 
 const TYPE_META: Record<string, { icon: LucideIcon; tint: string }> = {
   presence: { icon: LogIn, tint: "text-sky-600 bg-sky-500/10" },
-  fee_paid: { icon: CreditCard, tint: "text-emerald-600 bg-emerald-500/10" },
+  // green-*, not emerald-*: the teacher palette makes emerald the indigo accent.
+  fee_paid: { icon: CreditCard, tint: "text-green-600 bg-green-500/10" },
   achievement: { icon: Award, tint: "text-amber-600 bg-amber-500/10" },
   live_class: { icon: Video, tint: "text-violet-600 bg-violet-500/10" },
   session: { icon: GraduationCap, tint: "text-indigo-600 bg-indigo-500/10" },
-  announcement: { icon: Bell, tint: "text-muted-foreground bg-secondary" },
+  announcement: { icon: Bell, tint: "text-icon-secondary bg-background-gray-secondary" },
 }
 
 export function feedTypeMeta(type: string): { icon: LucideIcon; tint: string } {
-  return TYPE_META[type] ?? { icon: Radio, tint: "text-muted-foreground bg-secondary" }
+  return (
+    TYPE_META[type] ?? { icon: Radio, tint: "text-icon-secondary bg-background-gray-secondary" }
+  )
 }
 
 export function matchesFeedFilter(type: string, filter: FeedFilter): boolean {
