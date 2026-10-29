@@ -48,7 +48,7 @@ function PortalTopBar({
         </button>
         <Link href="/teacher" className="flex min-w-0 items-center gap-2">
           <BrandLogo className="h-8 w-8 flex-shrink-0" />
-          <span className="hidden whitespace-nowrap text-text-primary min-[400px]:block">
+          <span className="hidden whitespace-nowrap text-text-primary xs:block">
             <Brand />
           </span>
         </Link>

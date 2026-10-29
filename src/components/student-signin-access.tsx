@@ -5,19 +5,23 @@ import { useEffect, useState } from "react"
 
 import { toast } from "@/lib/toast"
 import { forceSignOutStudent } from "@/lib/use-online-students"
+import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to allow/deny a student's portal sign-in. Flips
  * app_metadata.login_disabled via /api/students/:id/access (teacher-guarded,
  * service role). Turning access OFF also kicks any live session.
  */
-/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+/**
+ * `tile`: no card chrome, for the shared access card — a divided row, or on
+ * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
+ */
 export function StudentSignInAccess({
   studentId,
-  bare = false,
+  tile = false,
 }: {
   studentId: string
-  bare?: boolean
+  tile?: boolean
 }) {
   const [hasLogin, setHasLogin] = useState(false)
   const [enabled, setEnabled] = useState(true) // access on = login NOT disabled
@@ -76,16 +80,23 @@ export function StudentSignInAccess({
   return (
     <div
       className={
-        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
       }
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4 min-w-0">
+      <div
+        className={cn(
+          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
+          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
+        )}
+      >
+        <div
+          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
+        >
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
             <LogIn className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <p className="text-sm font-semibold text-text-primary">Sign-in Access</p>
               {!loading && hasLogin && (
                 <span
@@ -127,7 +138,7 @@ export function StudentSignInAccess({
           aria-label="Allow portal sign-in"
           disabled={loading || saving || !hasLogin}
           onClick={toggle}
-          className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`${tile ? "wide:mt-auto " : ""}relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
             enabled ? "bg-primary" : "bg-background-gray-tertiary"
           }`}
         >

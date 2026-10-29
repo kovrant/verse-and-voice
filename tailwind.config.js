@@ -13,6 +13,10 @@ const config = {
            that spread out to fill the height key off this, so laptops and
            phones (which are never this tall) keep their compact arrangement. */
         tall: { raw: "(min-height: 1100px)" },
+        /* Named because the raw `tall` screen switches off Tailwind's
+           arbitrary min-[…] breakpoints. */
+        xs: "400px",
+        wide: "1360px",
       },
       colors: {
         border: "hsl(var(--border))",

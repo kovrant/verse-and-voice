@@ -1043,15 +1043,24 @@ export default function StudentDetailPage() {
   )
 }
 
-/** Portal access, sign-in and active session as divided rows in one card (NextAdmin's action rows). */
+/**
+ * Portal access, sign-in and active session in one card: divided rows, or three
+ * tiles across on wide screens (1360px+, where the content column has room).
+ */
 function StudentAccessCard({ studentId }: { studentId: string }) {
   return (
-    <Card className="p-5">
-      <StudentPortalAccess studentId={studentId} bare />
-      <hr className="my-4 border-border-secondary-alt" />
-      <StudentSignInAccess studentId={studentId} bare />
-      <hr className="my-4 border-border-secondary-alt" />
-      <StudentForceSignOut studentId={studentId} bare />
+    <Card className="overflow-hidden">
+      <div className="grid divide-y divide-border-secondary-alt wide:grid-cols-3 wide:divide-x wide:divide-y-0">
+        <div className="p-5">
+          <StudentPortalAccess studentId={studentId} tile />
+        </div>
+        <div className="p-5">
+          <StudentSignInAccess studentId={studentId} tile />
+        </div>
+        <div className="p-5">
+          <StudentForceSignOut studentId={studentId} tile />
+        </div>
+      </div>
     </Card>
   )
 }

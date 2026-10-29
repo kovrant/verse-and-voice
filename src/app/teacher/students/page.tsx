@@ -409,7 +409,7 @@ export default function StudentsPage() {
         <>
           {view === "grid" ? (
             /* NextAdmin "Teams" style one: portrait avatar, frosted name strip */
-            <div className="grid grid-cols-1 gap-5 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {paginated.map((student) => {
                 const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
                 const online = onlineStudents.has(student.id)

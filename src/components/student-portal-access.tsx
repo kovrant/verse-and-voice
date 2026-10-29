@@ -15,18 +15,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { isValidUsername } from "@/lib/student-auth"
 import { toast } from "@/lib/toast"
+import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to create or reset a student's portal login. Talks to
  * /api/students/:id/credentials (service-role, teacher-guarded).
  */
-/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+/**
+ * `tile`: no card chrome, for the shared access card — a divided row, or on
+ * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
+ */
 export function StudentPortalAccess({
   studentId,
-  bare = false,
+  tile = false,
 }: {
   studentId: string
-  bare?: boolean
+  tile?: boolean
 }) {
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,16 +57,23 @@ export function StudentPortalAccess({
   return (
     <div
       className={
-        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
       }
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4 min-w-0">
+      <div
+        className={cn(
+          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
+          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
+        )}
+      >
+        <div
+          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
+        >
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
             <KeyRound className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <p className="text-sm font-semibold text-text-primary">Portal Access</p>
               {!loading && (
                 <span
@@ -95,7 +106,12 @@ export function StudentPortalAccess({
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="flex-shrink-0">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setOpen(true)}
+          className={cn("flex-shrink-0", tile && "wide:mt-auto wide:self-start")}
+        >
           {hasLogin ? "Reset password" : "Create login"}
         </Button>
       </div>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { toast } from "@/lib/toast"
 import { forceSignOutStudent, useOnlineStudents } from "@/lib/use-online-students"
+import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to forcibly end an ONLINE student's session. Broadcasts a
@@ -20,13 +21,16 @@ import { forceSignOutStudent, useOnlineStudents } from "@/lib/use-online-student
  * revoking their refresh tokens server-side). Only works while the student has
  * the portal open — there's no offline/admin revoke.
  */
-/** `bare`: no card chrome, for stacking as divided rows inside one card. */
+/**
+ * `tile`: no card chrome, for the shared access card — a divided row, or on
+ * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
+ */
 export function StudentForceSignOut({
   studentId,
-  bare = false,
+  tile = false,
 }: {
   studentId: string
-  bare?: boolean
+  tile?: boolean
 }) {
   const online = useOnlineStudents()
   const isOnline = online.has(studentId)
@@ -49,16 +53,23 @@ export function StudentForceSignOut({
   return (
     <div
       className={
-        bare ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
+        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
       }
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-4 min-w-0">
+      <div
+        className={cn(
+          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
+          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
+        )}
+      >
+        <div
+          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
+        >
           <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
             <LogOut className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
               <p className="text-sm font-semibold text-text-primary">Active Session</p>
               <span
                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
@@ -87,7 +98,10 @@ export function StudentForceSignOut({
           size="sm"
           onClick={() => setOpen(true)}
           disabled={!isOnline}
-          className="flex-shrink-0 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+          className={cn(
+            "flex-shrink-0 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive",
+            tile && "wide:mt-auto wide:self-start",
+          )}
         >
           <LogOut className="h-3.5 w-3.5 mr-1.5" />
           Force sign out
