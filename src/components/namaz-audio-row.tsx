@@ -185,18 +185,18 @@ export function NamazAudioRow({
   const previewTimings = draft ?? (timed ? part.word_timings : null)
 
   return (
-    <Card className="border-border/50 shadow-soft">
+    <Card>
       <CardContent className="space-y-3 p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {step.title}
+            <p className="text-xs font-medium uppercase text-text-tertiary">{step.title}</p>
+            <p className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+              {part.title}
             </p>
-            <p className="font-semibold">{part.title}</p>
           </div>
           {part.needs_review && (
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+              <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-medium text-amber-700 dark:text-amber-400">
                 Needs review
               </span>
               <Button
@@ -213,7 +213,7 @@ export function NamazAudioRow({
         </div>
 
         {part.needs_review && part.review_note && (
-          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-foreground/80">
+          <p className="rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-text-secondary">
             {part.review_note}
           </p>
         )}
@@ -225,11 +225,11 @@ export function NamazAudioRow({
                 key={i}
                 className={cn(
                   "flex flex-col items-center rounded-lg px-1",
-                  taps && i === taps.length && "bg-accent/15 text-accent",
+                  taps && i === taps.length && "bg-primary/10 text-primary",
                 )}
               >
                 <span className="font-hadith text-xl leading-loose">{c.ar}</span>
-                <span dir="ltr" lang="en" className="text-[11px] text-muted-foreground">
+                <span dir="ltr" lang="en" className="text-[11px] text-text-tertiary">
                   {c.tr}
                 </span>
               </span>
@@ -242,7 +242,7 @@ export function NamazAudioRow({
                 {part.arabic_text}
               </p>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-text-tertiary">
               {part.word_tr?.length
                 ? "The transliteration no longer matches the Arabic word count, so word timing is off for this part."
                 : "No transliteration yet, so word timing is off for this part."}
@@ -251,12 +251,12 @@ export function NamazAudioRow({
         )}
 
         {part.action_text && (
-          <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">What to do:</span> {part.action_text}
+          <p className="text-sm text-text-secondary">
+            <span className="font-medium text-text-primary">What to do:</span> {part.action_text}
           </p>
         )}
 
-        <div className="space-y-2 border-t border-border/50 pt-3">
+        <div className="space-y-2 border-t border-border-primary pt-3">
           {part.audio_url && (
             <audio
               ref={audioRef}
@@ -346,7 +346,7 @@ export function NamazAudioRow({
             }}
           />
           {part.audio_url && wordCount > 0 && !taps && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-text-tertiary">
               {draft
                 ? "Check the highlight below, then save."
                 : timed
@@ -381,10 +381,12 @@ export function NamazAudioRow({
 
         {part.audio_url && previewTimings && !taps && (
           <details
-            className="rounded-xl border border-border/50 bg-secondary/20 p-3"
+            className="rounded-xl border border-card-border bg-background-gray-primary p-3"
             open={!!draft}
           >
-            <summary className="cursor-pointer text-sm font-semibold">Student preview</summary>
+            <summary className="cursor-pointer text-sm font-medium text-text-primary">
+              Student preview
+            </summary>
             <div className="pt-3">
               <NamazPartPanel
                 // Remount so the preview's player picks up new timings.

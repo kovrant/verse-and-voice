@@ -44,26 +44,26 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
   const hasLogin = !!username
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-emerald-500/15 text-emerald-600">
+          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
             <KeyRound className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-foreground">Portal Access</p>
+              <p className="text-sm font-semibold text-text-primary">Portal Access</p>
               {!loading && (
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                     hasLogin
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : "bg-secondary text-muted-foreground"
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-background-gray-secondary text-text-secondary"
                   }`}
                 >
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
-                      hasLogin ? "bg-emerald-500" : "bg-muted-foreground/50"
+                      hasLogin ? "bg-green-500" : "bg-icon-tertiary"
                     }`}
                   />
                   {hasLogin ? "Active" : "Not set"}
@@ -73,12 +73,12 @@ export function StudentPortalAccess({ studentId }: { studentId: string }) {
             {loading ? (
               <div className="mt-1.5 h-4 w-40 shimmer rounded" />
             ) : hasLogin ? (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 Username:{" "}
-                <span className="font-mono font-semibold text-foreground">{username}</span>
+                <span className="font-mono font-semibold text-text-primary">{username}</span>
               </p>
             ) : (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 No login created yet — create one so the student can sign in.
               </p>
             )}
@@ -197,7 +197,7 @@ function CredentialDialog({
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-icon-tertiary hover:text-text-primary"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>

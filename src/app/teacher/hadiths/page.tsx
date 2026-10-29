@@ -429,32 +429,25 @@ export default function TeacherHadithsPage() {
       {/* 1. Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300 mb-2">
+          <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
             <Sparkles className="h-3.5 w-3.5" />
             <span>Curriculum & Sunnah Studio</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
             Hadiths Studio
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-sm leading-5 text-text-tertiary">
             Browse {hadiths.length} authentic Hadiths, assign weekly learning goals to your
             students, and monitor their memorization milestones.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            onClick={() => openCustomModal()}
-            variant="outline"
-            className="gap-2 border-border/80 hover:bg-secondary"
-          >
+          <Button onClick={() => openCustomModal()} variant="outline" className="gap-2">
             <Plus className="h-4 w-4" />
             <span>Add Custom Hadith</span>
           </Button>
-          <Button
-            onClick={() => openAssignModal()}
-            className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-          >
+          <Button onClick={() => openAssignModal()} className="gap-2">
             <Send className="h-4 w-4" />
             <span>Assign Hadith</span>
           </Button>
@@ -462,73 +455,73 @@ export default function TeacherHadithsPage() {
       </div>
 
       {/* 2. Stats Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
               <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">
+              <p className="mb-1 mt-6 text-2xl font-semibold leading-8 tabular-nums text-text-primary">
                 {stats.totalHadiths}
               </p>
-              <p className="text-xs text-muted-foreground">Hadiths in Library</p>
+              <p className="text-sm font-medium text-text-tertiary">Hadiths in Library</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.10)] text-[#3B82F6]">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">
+              <p className="mb-1 mt-6 text-2xl font-semibold leading-8 tabular-nums text-text-primary">
                 {stats.totalStudents}
               </p>
-              <p className="text-xs text-muted-foreground">Active Students</p>
+              <p className="text-sm font-medium text-text-tertiary">Active Students</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(34,197,94,0.10)] text-[#22C55E]">
               <Award className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">
+              <p className="mb-1 mt-6 text-2xl font-semibold leading-8 tabular-nums text-text-primary">
                 {stats.totalMemorizations}
               </p>
-              <p className="text-xs text-muted-foreground">Total Memorized</p>
+              <p className="text-sm font-medium text-text-tertiary">Total Memorized</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-border/80 bg-card/80">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/10 text-teal-600 dark:text-teal-400">
+        <Card>
+          <CardContent className="p-5">
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
               <Clock className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-foreground tabular-nums">
+              <p className="mb-1 mt-6 text-2xl font-semibold leading-8 tabular-nums text-text-primary">
                 {stats.activeAssignments}
               </p>
-              <p className="text-xs text-muted-foreground">Active Assignments</p>
+              <p className="text-sm font-medium text-text-tertiary">Active Assignments</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* 3. Navigation Tabs */}
-      <div className="flex items-center gap-2 border-b border-border/80 pb-2">
+      <div className="inline-flex items-center gap-1 rounded-lg bg-background-gray-secondary p-1">
         <button
           onClick={() => setActiveTab("library")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors",
+            "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             activeTab === "library"
-              ? "bg-emerald-600 text-white shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+              ? "bg-card-background text-text-primary shadow-xs"
+              : "text-text-secondary hover:text-text-primary",
           )}
         >
           <BookOpen className="h-4 w-4" />
@@ -538,10 +531,10 @@ export default function TeacherHadithsPage() {
         <button
           onClick={() => setActiveTab("students")}
           className={cn(
-            "flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-colors",
+            "flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             activeTab === "students"
-              ? "bg-emerald-600 text-white shadow-sm"
-              : "text-muted-foreground hover:text-foreground hover:bg-secondary/60",
+              ? "bg-card-background text-text-primary shadow-xs"
+              : "text-text-secondary hover:text-text-primary",
           )}
         >
           <GraduationCap className="h-4 w-4" />
@@ -555,12 +548,12 @@ export default function TeacherHadithsPage() {
           {/* Search & Topic Filters */}
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by topic, Arabic words, English, Urdu, or moral lesson..."
-                className="pl-9 bg-card"
+                className="pl-9"
               />
             </div>
 
@@ -569,7 +562,7 @@ export default function TeacherHadithsPage() {
                 value={selectedTopic}
                 onChange={(e) => setSelectedTopic(e.target.value)}
                 aria-label="Filter by Topic"
-                className="h-10 rounded-md border border-input bg-card px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                className="h-10 rounded-lg border border-card-border bg-card-background px-3 text-xs font-medium text-text-primary shadow-xs focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="all">All Topics ({hadiths.length})</option>
                 {Object.entries(HADITH_TOPICS).map(([key, topic]) => (
@@ -593,14 +586,11 @@ export default function TeacherHadithsPage() {
               ).length
 
               return (
-                <Card
-                  key={hadith.id}
-                  className="flex flex-col justify-between border-border/80 bg-card hover:border-emerald-500/30 transition-all shadow-sm"
-                >
+                <Card key={hadith.id} className="flex flex-col justify-between">
                   <div>
-                    <CardHeader className="py-3 px-4 border-b border-border/50 flex flex-row items-center justify-between gap-2">
+                    <CardHeader className="flex flex-row items-center justify-between gap-2 border-b border-border-primary px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-foreground">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background-gray-secondary text-xs font-semibold text-text-primary">
                           {hadith.hadith_number}
                         </span>
                         <Badge
@@ -612,15 +602,15 @@ export default function TeacherHadithsPage() {
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-2 text-xs text-text-tertiary">
                         <span title="Completed by students">✅ {completedCount}</span>
                         <span title="Currently assigned">🎯 {assignedCount}</span>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="p-4 space-y-3">
+                    <CardContent className="space-y-3 p-4">
                       {/* Arabic Text in Calligraphic Hadith Font */}
-                      <div className="rounded-xl bg-secondary/30 p-4 border border-border/40 text-center">
+                      <div className="rounded-lg bg-background-gray-primary p-4 text-center">
                         <p
                           className="font-hadith text-2xl sm:text-3xl text-foreground font-medium select-text"
                           dir="rtl"
@@ -631,10 +621,8 @@ export default function TeacherHadithsPage() {
 
                       {/* English Translation */}
                       <div>
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase">
-                          Meaning
-                        </p>
-                        <p className="text-sm font-medium text-foreground italic">
+                        <p className="text-xs font-medium uppercase text-text-tertiary">Meaning</p>
+                        <p className="text-sm italic text-text-primary">
                           &ldquo;{hadith.english_text}&rdquo;
                         </p>
                       </div>
@@ -646,16 +634,16 @@ export default function TeacherHadithsPage() {
                       </div>
 
                       {/* Kid Lesson */}
-                      <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2.5 flex items-start gap-2">
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground">
-                          <span className="font-bold text-foreground">Kid&apos;s Lesson: </span>
+                      <div className="flex items-start gap-2 rounded-lg bg-primary/10 p-2.5">
+                        <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
+                        <p className="text-xs text-text-secondary">
+                          <span className="font-medium text-text-primary">Kid&apos;s Lesson: </span>
                           {hadith.kids_lesson}
                         </p>
                       </div>
 
                       {/* Reference */}
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground/80 pt-1">
+                      <div className="flex items-center justify-between pt-1 text-xs text-text-tertiary">
                         <span>Narrator: {hadith.narrator}</span>
                         <span>{hadith.reference}</span>
                       </div>
@@ -663,12 +651,12 @@ export default function TeacherHadithsPage() {
                   </div>
 
                   {/* Actions */}
-                  <div className="p-3 bg-secondary/20 border-t border-border/50 flex items-center justify-between gap-2">
+                  <div className="flex items-center justify-between gap-2 border-t border-border-primary p-3">
                     <div className="flex items-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                        className="h-8 text-xs text-text-secondary hover:text-text-primary"
                         onClick={() => openCustomModal(hadith)}
                       >
                         <Edit2 className="h-3.5 w-3.5 mr-1" /> Edit
@@ -685,7 +673,7 @@ export default function TeacherHadithsPage() {
 
                     <Button
                       size="sm"
-                      className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-semibold gap-1.5"
+                      className="h-8 gap-1.5 text-xs"
                       onClick={() => openAssignModal(hadith)}
                     >
                       <Send className="h-3.5 w-3.5" />
@@ -701,34 +689,34 @@ export default function TeacherHadithsPage() {
 
       {/* 5. Tab 2: Students Progress Tracker */}
       {activeTab === "students" && (
-        <Card className="border-border/80">
-          <CardHeader className="py-4 border-b border-border/60">
-            <CardTitle className="text-base font-bold text-foreground">
+        <Card>
+          <CardHeader className="border-b border-border-primary py-4">
+            <CardTitle className="text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
               Student Hadith Progress & Milestones
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-border/60">
+            <div className="divide-y divide-border-primary">
               {studentRows.map(
                 ({ student, memorizedCount, milestone, activeAssignments, memorizedList }) => {
                   const isExpanded = expandedStudentId === student.id
 
                   return (
                     <div key={student.id} className="transition-colors">
-                      <div className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-secondary/20">
+                      <div className="flex flex-col justify-between gap-4 p-4 hover:bg-background-gray-primary sm:flex-row sm:items-center">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <p className="font-bold text-sm text-foreground">{student.name}</p>
+                            <p className="text-sm font-medium text-text-primary">{student.name}</p>
                             <Badge
                               variant="outline"
-                              className="text-[10px] bg-secondary border-border"
+                              className="border-0 bg-background-gray-secondary text-[11px] text-text-secondary"
                             >
                               {student.status || "Reading"}
                             </Badge>
                             {activeAssignments.length > 0 && (
                               <Badge
                                 variant="secondary"
-                                className="text-[10px] bg-amber-500/15 text-amber-600 dark:text-amber-400 font-semibold"
+                                className="bg-amber-500/15 text-[11px] font-medium text-amber-600 dark:text-amber-400"
                               >
                                 {activeAssignments.length} active assignment
                                 {activeAssignments.length === 1 ? "" : "s"}
@@ -736,29 +724,27 @@ export default function TeacherHadithsPage() {
                             )}
                           </div>
 
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-text-tertiary">
                             Target:{" "}
-                            <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                              {milestone.badgeTitle}
-                            </span>{" "}
+                            <span className="font-medium text-primary">{milestone.badgeTitle}</span>{" "}
                             ({memorizedCount} / {milestone.target} Hadiths)
                           </p>
 
                           {/* Progress Bar */}
-                          <div className="w-48 h-2 rounded-full bg-secondary overflow-hidden border border-border/60 mt-1">
+                          <div className="mt-1 h-2 w-48 overflow-hidden rounded-full bg-background-gray-secondary">
                             <div
-                              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full"
+                              className="h-full rounded-full bg-primary"
                               style={{ width: `${milestone.percentage}%` }}
                             />
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 sm:gap-3">
-                          <div className="text-right text-xs mr-1">
-                            <p className="font-bold text-foreground tabular-nums">
+                          <div className="mr-1 text-right text-xs">
+                            <p className="font-semibold tabular-nums text-text-primary">
                               ✅ {memorizedCount} Memorized
                             </p>
-                            <p className="text-muted-foreground tabular-nums">
+                            <p className="tabular-nums text-text-tertiary">
                               🎯 {activeAssignments.length} Assigned
                             </p>
                           </div>
@@ -766,7 +752,7 @@ export default function TeacherHadithsPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-xs gap-1.5 border-emerald-500/30 hover:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 h-8"
+                            className="h-8 gap-1.5 text-xs"
                             onClick={() => openAssignModal(undefined, student.id)}
                           >
                             <Send className="h-3.5 w-3.5" />
@@ -776,7 +762,7 @@ export default function TeacherHadithsPage() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-xs gap-1 text-muted-foreground hover:text-foreground h-8"
+                            className="h-8 gap-1 text-xs text-text-secondary hover:text-text-primary"
                             onClick={() => setExpandedStudentId(isExpanded ? null : student.id)}
                           >
                             <span>{isExpanded ? "Hide Details" : "Manage"}</span>
@@ -792,18 +778,18 @@ export default function TeacherHadithsPage() {
 
                       {/* Expandable Details Section for Teacher */}
                       {isExpanded && (
-                        <div className="p-4 bg-secondary/10 border-t border-border/40 space-y-4 animate-in fade-in-50 duration-150">
+                        <div className="space-y-4 border-t border-border-primary bg-background-gray-primary p-4 animate-in fade-in-50 duration-150">
                           {/* 1. Active Assignments */}
                           <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                              <p className="flex items-center gap-1.5 text-xs font-medium uppercase text-text-tertiary">
                                 <Sparkles className="h-3.5 w-3.5 text-amber-500" /> Active
                                 Assignments ({activeAssignments.length})
                               </p>
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                className="h-7 text-[11px] text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 gap-1 font-semibold"
+                                className="h-7 gap-1 text-xs font-medium text-primary hover:bg-primary/10 hover:text-primary"
                                 onClick={() => openAssignModal(undefined, student.id)}
                               >
                                 <Plus className="h-3 w-3" /> Assign Another
@@ -811,7 +797,7 @@ export default function TeacherHadithsPage() {
                             </div>
 
                             {activeAssignments.length === 0 ? (
-                              <p className="text-xs text-muted-foreground italic bg-secondary/20 rounded-lg p-3 border border-border/40">
+                              <p className="rounded-lg border border-card-border bg-card-background p-3 text-xs italic text-text-tertiary">
                                 No active Hadith assignments for {student.name}. Click
                                 &ldquo;Assign&rdquo; above to assign one.
                               </p>
@@ -825,15 +811,15 @@ export default function TeacherHadithsPage() {
                                   return (
                                     <div
                                       key={a.id}
-                                      className="rounded-xl border border-amber-500/30 bg-card p-3.5 space-y-2.5 shadow-sm"
+                                      className="space-y-2.5 rounded-lg border border-card-border bg-card-background p-3.5"
                                     >
                                       <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                                        <span className="text-xs font-semibold text-text-primary">
                                           Hadith #{h.hadith_number}
                                         </span>
                                         <Badge
                                           variant="outline"
-                                          className="text-[10px] bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-300"
+                                          className="border-amber-500/30 bg-amber-500/10 text-[11px] text-amber-700 dark:text-amber-300"
                                         >
                                           Pending Memorization
                                         </Badge>
@@ -843,12 +829,12 @@ export default function TeacherHadithsPage() {
                                         {h.arabic_text}
                                       </p>
 
-                                      <p className="text-xs text-muted-foreground italic line-clamp-2">
+                                      <p className="line-clamp-2 text-xs italic text-text-tertiary">
                                         &ldquo;{h.english_text}&rdquo;
                                       </p>
 
-                                      <div className="pt-2 border-t border-border/40 flex items-center justify-between">
-                                        <span className="text-[10px] text-muted-foreground">
+                                      <div className="flex items-center justify-between border-t border-border-primary pt-2">
+                                        <span className="text-[11px] text-text-tertiary">
                                           {h.reference}
                                         </span>
                                         <Button
@@ -861,7 +847,7 @@ export default function TeacherHadithsPage() {
                                               student.name,
                                             )
                                           }
-                                          className="h-7 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-1 shadow-sm"
+                                          className="h-7 gap-1 text-xs bg-green-600 text-white hover:bg-green-700"
                                         >
                                           {isMarking ? (
                                             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -880,22 +866,22 @@ export default function TeacherHadithsPage() {
 
                           {/* 2. Memorized Hadiths */}
                           {memorizedList.length > 0 && (
-                            <div className="space-y-2 pt-2 border-t border-border/40">
-                              <p className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
-                                <Award className="h-3.5 w-3.5 text-emerald-500" /> Memorized Hadiths
-                                ({memorizedList.length})
+                            <div className="space-y-2 border-t border-border-primary pt-2">
+                              <p className="flex items-center gap-1.5 text-xs font-medium uppercase text-text-tertiary">
+                                <Award className="h-3.5 w-3.5 text-green-600" /> Memorized Hadiths (
+                                {memorizedList.length})
                               </p>
                               <div className="flex flex-wrap gap-2">
                                 {memorizedList.map((m) => (
                                   <div
                                     key={m.id}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 py-1.5 text-xs text-foreground"
+                                    className="inline-flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-1.5 text-xs text-text-primary"
                                   >
-                                    <Check className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                                    <span className="font-bold text-emerald-800 dark:text-emerald-300">
+                                    <Check className="h-3.5 w-3.5 shrink-0 text-green-600" />
+                                    <span className="font-medium text-green-700 dark:text-green-400">
                                       Hadith #{m.hadith?.hadith_number}
                                     </span>
-                                    <span className="text-muted-foreground text-[11px] truncate max-w-[12rem]">
+                                    <span className="max-w-[12rem] truncate text-[11px] text-text-tertiary">
                                       {m.hadith?.english_text?.slice(0, 35)}...
                                     </span>
                                   </div>
@@ -918,26 +904,26 @@ export default function TeacherHadithsPage() {
       <Dialog open={assignModalOpen} onOpenChange={setAssignModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">Assign Hadith to Students</DialogTitle>
+            <DialogTitle className="text-lg font-semibold">Assign Hadith to Students</DialogTitle>
             <DialogDescription>
               Select which students should learn and memorize this Hadith.
             </DialogDescription>
           </DialogHeader>
 
           {selectedHadithForAssign && (
-            <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-3.5 space-y-1">
+            <div className="space-y-1 rounded-lg bg-primary/10 p-3.5">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300">
+                <span className="text-xs font-semibold text-primary">
                   Hadith #{selectedHadithForAssign.hadith_number}
                 </span>
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] text-text-tertiary">
                   {selectedHadithForAssign.reference}
                 </span>
               </div>
               <p className="font-hadith text-base text-foreground" dir="rtl">
                 {selectedHadithForAssign.arabic_text}
               </p>
-              <p className="text-xs text-muted-foreground italic">
+              <p className="text-xs italic text-text-tertiary">
                 &ldquo;{selectedHadithForAssign.english_text}&rdquo;
               </p>
             </div>
@@ -947,26 +933,26 @@ export default function TeacherHadithsPage() {
             {/* Search & Bulk Select Controls */}
             <div className="flex items-center justify-between gap-2">
               <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-icon-tertiary" />
                 <Input
                   value={studentSearch}
                   onChange={(e) => setStudentSearch(e.target.value)}
                   placeholder="Search students..."
-                  className="pl-8 h-8 text-xs bg-secondary/30"
+                  className="h-8 pl-8 text-xs"
                 />
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setTargetStudentIds(students.map((s) => s.id))}
-                  className="px-2 py-1 rounded bg-secondary text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-secondary/80 transition-colors"
+                  className="rounded-md bg-primary/10 px-2 py-1 text-[11px] font-medium text-primary transition-colors hover:bg-primary/15"
                 >
                   Select All
                 </button>
                 <button
                   type="button"
                   onClick={() => setTargetStudentIds([])}
-                  className="px-2 py-1 rounded bg-secondary text-[11px] font-semibold text-muted-foreground hover:bg-secondary/80 transition-colors"
+                  className="rounded-md bg-background-gray-secondary px-2 py-1 text-[11px] font-medium text-text-secondary transition-colors hover:text-text-primary"
                 >
                   Clear
                 </button>
@@ -974,11 +960,9 @@ export default function TeacherHadithsPage() {
             </div>
 
             {/* Students List */}
-            <div className="max-h-60 overflow-y-auto rounded-xl border border-border divide-y divide-border/60 bg-card">
+            <div className="max-h-60 divide-y divide-border-primary overflow-y-auto rounded-lg border border-card-border bg-card-background">
               {filteredModalStudents.length === 0 ? (
-                <div className="p-4 text-center text-xs text-muted-foreground">
-                  No students found.
-                </div>
+                <div className="p-4 text-center text-xs text-text-tertiary">No students found.</div>
               ) : (
                 filteredModalStudents.map((student) => {
                   const isSelected = targetStudentIds.includes(student.id)
@@ -995,25 +979,25 @@ export default function TeacherHadithsPage() {
                       className={cn(
                         "flex items-center justify-between p-3 cursor-pointer transition-colors select-none",
                         isSelected
-                          ? "bg-emerald-500/10 text-foreground"
-                          : "hover:bg-secondary/40 text-muted-foreground",
+                          ? "bg-primary/10 text-text-primary"
+                          : "text-text-secondary hover:bg-background-gray-primary",
                       )}
                     >
                       <div className="flex items-center gap-3">
                         <div
                           className={cn(
-                            "flex h-5 w-5 items-center justify-center rounded-md border transition-all",
+                            "flex h-5 w-5 items-center justify-center rounded-md border transition-colors",
                             isSelected
-                              ? "bg-emerald-600 border-emerald-600 text-white"
-                              : "border-input bg-card",
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-card-border bg-card-background",
                           )}
                         >
                           {isSelected && <Check className="h-3.5 w-3.5" />}
                         </div>
 
                         <div>
-                          <p className="text-xs font-bold text-foreground">{student.name}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs font-medium text-text-primary">{student.name}</p>
+                          <p className="text-[11px] text-text-tertiary">
                             {student.status || "Reading"}
                           </p>
                         </div>
@@ -1022,7 +1006,7 @@ export default function TeacherHadithsPage() {
                       {isMemorized && (
                         <Badge
                           variant="secondary"
-                          className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-semibold"
+                          className="bg-green-500/10 text-[11px] font-medium text-green-700 dark:text-green-400"
                         >
                           Already Memorized
                         </Badge>
@@ -1046,9 +1030,10 @@ export default function TeacherHadithsPage() {
               )}
             </div>
 
-            <p className="text-[11px] text-muted-foreground text-center">
-              Selected: <span className="font-bold text-foreground">{targetStudentIds.length}</span>{" "}
-              of {students.length} students
+            <p className="text-center text-[11px] text-text-tertiary">
+              Selected:{" "}
+              <span className="font-semibold text-text-primary">{targetStudentIds.length}</span> of{" "}
+              {students.length} students
             </p>
           </div>
 
@@ -1059,7 +1044,6 @@ export default function TeacherHadithsPage() {
             <Button
               onClick={handleAssignSubmit}
               disabled={submittingAssign || targetStudentIds.length === 0}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
             >
               {submittingAssign ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -1075,7 +1059,7 @@ export default function TeacherHadithsPage() {
       <Dialog open={customModalOpen} onOpenChange={setCustomModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-lg font-bold">
+            <DialogTitle className="text-lg font-semibold">
               {editingHadithId ? "Edit Hadith" : "Add Custom Hadith"}
             </DialogTitle>
             <DialogDescription>
@@ -1085,7 +1069,7 @@ export default function TeacherHadithsPage() {
 
           <div className="space-y-3 py-2 max-h-[70vh] overflow-y-auto pr-1">
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Arabic Text (with Tashkeel) *</Label>
+              <Label className="text-xs font-medium">Arabic Text (with Tashkeel) *</Label>
               <Input
                 value={customArabic}
                 onChange={(e) => setCustomArabic(e.target.value)}
@@ -1096,7 +1080,7 @@ export default function TeacherHadithsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold">English Translation *</Label>
+              <Label className="text-xs font-medium">English Translation *</Label>
               <Input
                 value={customEnglish}
                 onChange={(e) => setCustomEnglish(e.target.value)}
@@ -1106,7 +1090,7 @@ export default function TeacherHadithsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Urdu Translation</Label>
+              <Label className="text-xs font-medium">Urdu Translation</Label>
               <Input
                 value={customUrdu}
                 onChange={(e) => setCustomUrdu(e.target.value)}
@@ -1117,7 +1101,9 @@ export default function TeacherHadithsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Kid&apos;s Daily Moral Lesson Takeaway *</Label>
+              <Label className="text-xs font-medium">
+                Kid&apos;s Daily Moral Lesson Takeaway *
+              </Label>
               <Textarea
                 value={customLesson}
                 onChange={(e) => setCustomLesson(e.target.value)}
@@ -1128,7 +1114,7 @@ export default function TeacherHadithsPage() {
 
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <Label className="text-xs font-bold">Topic Category</Label>
+                <Label className="text-xs font-medium">Topic Category</Label>
                 <Select
                   value={customTopic}
                   onValueChange={(val) => setCustomTopic(val as HadithTopic)}
@@ -1147,7 +1133,7 @@ export default function TeacherHadithsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs font-bold">Reference</Label>
+                <Label className="text-xs font-medium">Reference</Label>
                 <Input
                   value={customReference}
                   onChange={(e) => setCustomReference(e.target.value)}
@@ -1158,7 +1144,7 @@ export default function TeacherHadithsPage() {
             </div>
 
             <div className="space-y-1">
-              <Label className="text-xs font-bold">Narrator</Label>
+              <Label className="text-xs font-medium">Narrator</Label>
               <Input
                 value={customNarrator}
                 onChange={(e) => setCustomNarrator(e.target.value)}
@@ -1172,11 +1158,7 @@ export default function TeacherHadithsPage() {
             <Button variant="outline" onClick={() => setCustomModalOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSaveCustomHadith}
-              disabled={savingCustom}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
+            <Button onClick={handleSaveCustomHadith} disabled={savingCustom}>
               {savingCustom ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Hadith"}
             </Button>
           </DialogFooter>

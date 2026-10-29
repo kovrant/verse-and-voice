@@ -40,31 +40,31 @@ export function StudentForceSignOut({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-destructive/10 text-destructive">
+          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
             <LogOut className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-foreground">Active Session</p>
+              <p className="text-sm font-semibold text-text-primary">Active Session</p>
               <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                   isOnline
-                    ? "bg-emerald-500/15 text-emerald-600"
-                    : "bg-secondary text-muted-foreground"
+                    ? "bg-green-500/10 text-green-600"
+                    : "bg-background-gray-secondary text-text-secondary"
                 }`}
               >
                 <span
                   className={`h-1.5 w-1.5 rounded-full ${
-                    isOnline ? "bg-emerald-500" : "bg-muted-foreground/50"
+                    isOnline ? "bg-green-500" : "bg-icon-tertiary"
                   }`}
                 />
                 {isOnline ? "Online" : "Offline"}
               </span>
             </div>
-            <p className="mt-0.5 text-sm text-muted-foreground">
+            <p className="mt-0.5 text-sm text-text-tertiary">
               {isOnline
                 ? "Force this student's open portal to sign out immediately."
                 : "No active session — the student isn't online right now."}

@@ -61,12 +61,12 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
 
   if (rounds.length === 0) {
     return (
-      <div className="rounded-2xl border border-border bg-card py-14 text-center">
-        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-          <BookOpen className="h-6 w-6 text-muted-foreground" />
+      <div className="rounded-xl border border-card-border bg-card-background py-14 text-center">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+          <BookOpen className="h-6 w-6 text-icon-secondary" />
         </div>
-        <p className="mb-1 font-semibold">No rounds yet</p>
-        <p className="text-sm text-muted-foreground">
+        <p className="mb-1 font-medium text-text-primary">No rounds yet</p>
+        <p className="text-sm text-text-tertiary">
           Click &ldquo;Add Round&rdquo; to start tracking the journey
         </p>
       </div>
@@ -76,26 +76,12 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
   return (
     <div className="space-y-5">
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card">
-        {/* Decorative wash */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-[0.65]"
-          style={{
-            background:
-              "radial-gradient(120% 120% at 100% 0%, hsl(var(--c-p-500) / 0.10) 0%, transparent 55%)",
-          }}
-        />
-        <div
-          className="islamic-pattern pointer-events-none absolute inset-0 opacity-40"
-          aria-hidden
-        />
-
-        <div className="relative p-5 sm:p-6">
+      <div className="rounded-xl border border-card-border bg-card-background">
+        <div className="p-5 sm:p-6">
           {/* Header row */}
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/12 text-emerald-600">
+              <span className="flex size-10 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
                 {activeIsQaida ? (
                   <BookMarked className="h-5 w-5" />
                 ) : (
@@ -103,10 +89,10 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                 )}
               </span>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                <p className="text-xs font-medium uppercase text-text-tertiary">
                   {allQuranDone ? "Quran Journey" : "Current Round"}
                 </p>
-                <h3 className="font-heading text-lg font-bold leading-tight text-foreground">
+                <h3 className="text-lg font-semibold leading-tight text-text-primary">
                   {activeIsQaida
                     ? "Norani Qaida"
                     : allQuranDone
@@ -118,16 +104,16 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
 
             <div className="text-right">
               {activeIsQaida ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-sm font-semibold text-amber-600">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/10 px-3 py-1 text-sm font-medium text-amber-600">
                   <BookMarked className="h-4 w-4" />
                   Learning the basics
                 </span>
               ) : (
                 <div className="leading-none">
-                  <span className="font-heading text-3xl font-extrabold tabular-nums text-emerald-600">
+                  <span className="text-2xl font-semibold tabular-nums text-text-primary">
                     {allQuranDone ? "30" : currentPara ? `Para ${currentPara}` : `${heroTotal}`}
                   </span>
-                  <span className="ml-1 text-sm font-semibold text-muted-foreground">/ 30</span>
+                  <span className="ml-1 text-sm font-medium text-text-tertiary">/ 30</span>
                 </div>
               )}
             </div>
@@ -148,12 +134,10 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                       title={`Para ${n}`}
                       className={cn(
                         "flex aspect-square items-center justify-center rounded-md border text-[11px] font-semibold tabular-nums transition-colors",
-                        state === "done" &&
-                          "border-emerald-500/30 bg-emerald-500/15 text-emerald-600",
-                        state === "current" &&
-                          "border-emerald-500 bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-500/40",
+                        state === "done" && "border-green-500/30 bg-green-500/10 text-green-600",
+                        state === "current" && "border-primary bg-primary text-primary-foreground",
                         state === "remaining" &&
-                          "border-border bg-secondary/50 text-muted-foreground/50",
+                          "border-card-border bg-background-gray-primary text-text-tertiary",
                       )}
                     >
                       {n}
@@ -163,16 +147,16 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
               </div>
 
               {/* Legend + percent */}
-              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-[11px] text-muted-foreground">
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-xs text-text-tertiary">
                 <div className="flex items-center gap-3">
+                  <LegendDot className="bg-green-500/10 border-green-500/30" label="Completed" />
+                  <LegendDot className="bg-primary border-primary" label="Current" />
                   <LegendDot
-                    className="bg-emerald-500/20 border-emerald-500/40"
-                    label="Completed"
+                    className="bg-background-gray-primary border-card-border"
+                    label="Remaining"
                   />
-                  <LegendDot className="bg-emerald-500 border-emerald-500" label="Current" />
-                  <LegendDot className="bg-secondary/60 border-border" label="Remaining" />
                 </div>
-                <span className="font-semibold text-emerald-600">
+                <span className="font-semibold text-text-primary">
                   {heroTotal}/30 · {heroPct}%
                 </span>
               </div>
@@ -180,7 +164,7 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
           )}
 
           {activeIsQaida && (
-            <p className="mt-4 text-sm text-muted-foreground">
+            <p className="mt-4 text-sm text-text-tertiary">
               Learning the fundamentals through Norani Qaida before beginning Quran reading.
             </p>
           )}
@@ -189,12 +173,13 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
 
       {/* ── Timeline ─────────────────────────────────────────────────────── */}
       <div>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-          The Journey
-        </p>
+        <p className="mb-3 text-xs font-medium uppercase text-text-tertiary">The Journey</p>
         <ol className="relative">
           {/* Vertical rail */}
-          <span aria-hidden className="absolute left-[18px] top-2 bottom-2 w-px bg-border" />
+          <span
+            aria-hidden
+            className="absolute left-[18px] top-2 bottom-2 w-px bg-border-primary"
+          />
           {(() => {
             // Newest first: active on top, Qaida (the beginning) at the bottom.
             const sorted = [...rounds].sort((a, b) => {
@@ -224,16 +209,16 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                   {/* Node */}
                   <span
                     className={cn(
-                      "absolute left-0 top-0 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card",
+                      "absolute left-0 top-0 flex h-9 w-9 items-center justify-center rounded-full border-2 bg-card-background",
                       isQaida
                         ? "border-amber-500/40 text-amber-600"
                         : r.completed_at
-                          ? "border-emerald-500/40 text-emerald-600"
-                          : "border-emerald-500 text-emerald-600",
+                          ? "border-green-500/40 text-green-600"
+                          : "border-primary text-primary",
                     )}
                   >
                     {isActive && (
-                      <span className="absolute inset-0 rounded-full ring-2 ring-emerald-500/30 animate-pulse" />
+                      <span className="absolute inset-0 rounded-full ring-2 ring-primary/30 animate-pulse" />
                     )}
                     <Icon className="h-4 w-4" strokeWidth={2.25} />
                   </span>
@@ -241,21 +226,21 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                   {/* Card */}
                   <div
                     className={cn(
-                      "rounded-xl border bg-card px-4 py-3 transition-all hover:-translate-y-px hover:shadow-soft",
-                      isActive ? "border-emerald-500/40" : "border-border",
+                      "rounded-lg border bg-card-background px-4 py-3 transition-colors hover:bg-background-gray-primary",
+                      isActive ? "border-primary/30" : "border-card-border",
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-foreground">
+                      <span className="text-sm font-semibold text-text-primary">
                         {isQaida ? "Norani Qaida" : `Quran R${num}`}
                       </span>
                       {isActive ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[11px] font-medium uppercase text-green-600">
+                          <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse" />
                           Active
                         </span>
                       ) : r.completed_at && !isQaida ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium uppercase text-amber-600">
                           <Trophy className="h-3 w-3" />
                           Khatm
                         </span>
@@ -264,7 +249,7 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                         <span
                           className={cn(
                             "ml-auto flex items-center gap-1 text-[11px] font-semibold tabular-nums",
-                            r.completed_at ? "text-emerald-600" : "text-muted-foreground",
+                            r.completed_at ? "text-green-600" : "text-text-tertiary",
                           )}
                         >
                           {r.completed_at && <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -282,7 +267,7 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                           type="button"
                           onClick={() => onEditRound(r)}
                           aria-label="Edit round"
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground"
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-icon-tertiary hover:bg-background-gray-secondary hover:text-text-primary"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -290,26 +275,29 @@ export function QuranJourney({ rounds, onEditRound, onDeleteRound }: QuranJourne
                           type="button"
                           onClick={() => onDeleteRound(r.id)}
                           aria-label="Delete round"
-                          className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-destructive"
+                          className="flex h-7 w-7 items-center justify-center rounded-md text-icon-tertiary hover:bg-destructive/10 hover:text-destructive"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+                    <div className="mt-1 flex items-center gap-2 text-xs text-text-tertiary">
                       <span>
                         {format(start, "MMM yyyy")} →{" "}
                         {r.completed_at ? format(end, "MMM yyyy") : "Now"}
                       </span>
-                      <span className="text-muted-foreground/40">·</span>
+                      <span className="text-text-tertiary">·</span>
                       <span>{durationLabel(start, end)}</span>
                     </div>
 
                     {!isQaida && (
-                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-secondary">
+                      <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-background-gray-secondary">
                         <div
-                          className="h-full rounded-full bg-emerald-500 transition-all"
+                          className={cn(
+                            "h-full rounded-full transition-all",
+                            r.completed_at ? "bg-green-500" : "bg-primary",
+                          )}
                           style={{ width: `${pct}%` }}
                         />
                       </div>

@@ -212,10 +212,8 @@ export default function StudentsPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-foreground">Students</span>
-          </h1>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Students</h1>
+          <p className="text-sm leading-5 text-text-tertiary">
             {filtered.length} of {students.length} students
           </p>
         </div>
@@ -230,7 +228,7 @@ export default function StudentsPage() {
       {/* Toolbar: Search + Status Filter + Column Settings */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search by name, guardian, country..."
             value={search}
@@ -241,7 +239,7 @@ export default function StudentsPage() {
 
         <div className="flex items-center gap-2">
           {/* Status tabs */}
-          <div className="flex items-center rounded-xl border border-border/50 bg-card p-1 gap-1">
+          <div className="flex items-center gap-1.5">
             {["Reading", "Completed", "Left Uncompleted", "All"].map((s) => (
               <button
                 key={s}
@@ -250,10 +248,10 @@ export default function StudentsPage() {
                   setStatusFilter(s)
                   localStorage.setItem(FILTER_STORAGE_KEY, s)
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                   statusFilter === s
-                    ? "bg-secondary text-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-background-gray-secondary text-text-secondary hover:text-text-primary"
                 }`}
               >
                 {s}
@@ -266,10 +264,10 @@ export default function StudentsPage() {
             <button
               type="button"
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`flex items-center justify-center h-[38px] w-[38px] rounded-xl border border-border/50 transition-all ${
+              className={`flex items-center justify-center h-[38px] w-[38px] rounded-lg border border-card-border shadow-xs transition-colors ${
                 settingsOpen
-                  ? "bg-secondary text-foreground border-border"
-                  : "bg-card text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-background-gray-primary text-text-primary"
+                  : "bg-card-background text-icon-secondary hover:text-text-primary hover:bg-background-gray-primary"
               }`}
               title="Column settings"
             >
@@ -277,18 +275,16 @@ export default function StudentsPage() {
             </button>
 
             {settingsOpen && (
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-2xl border border-border/50 bg-card shadow-xl shadow-black/20 overflow-hidden z-50 animate-fade-in-up">
-                <div className="px-4 py-3 border-b border-border/50">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Show Columns
-                  </p>
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-card-border bg-card-background shadow-3xl overflow-hidden z-50 animate-fade-in-up">
+                <div className="px-4 py-3 border-b border-border-primary">
+                  <p className="text-xs font-medium uppercase text-text-tertiary">Show Columns</p>
                 </div>
                 <div className="p-2">
                   {/* Student column is always visible */}
                   <div className="flex items-center gap-3 px-3 py-2 rounded-lg opacity-50">
-                    <Eye className="h-3.5 w-3.5 text-foreground" />
-                    <span className="text-sm font-medium">Student</span>
-                    <span className="ml-auto text-[10px] text-muted-foreground">Always on</span>
+                    <Eye className="h-3.5 w-3.5 text-icon-primary" />
+                    <span className="text-sm font-medium text-text-primary">Student</span>
+                    <span className="ml-auto text-[11px] text-text-tertiary">Always on</span>
                   </div>
 
                   {ALL_COLUMNS.map((col) => (
@@ -296,23 +292,23 @@ export default function StudentsPage() {
                       key={col.key}
                       type="button"
                       onClick={() => toggleColumn(col.key)}
-                      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left transition-colors hover:bg-secondary"
+                      className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-left transition-colors hover:bg-background-gray-primary"
                     >
                       {isVisible(col.key) ? (
-                        <Eye className="h-3.5 w-3.5 text-foreground" />
+                        <Eye className="h-3.5 w-3.5 text-icon-primary" />
                       ) : (
-                        <EyeOff className="h-3.5 w-3.5 text-muted-foreground/40" />
+                        <EyeOff className="h-3.5 w-3.5 text-icon-tertiary" />
                       )}
                       <span
-                        className={`text-sm font-medium ${isVisible(col.key) ? "text-foreground" : "text-muted-foreground/60"}`}
+                        className={`text-sm font-medium ${isVisible(col.key) ? "text-text-primary" : "text-text-tertiary"}`}
                       >
                         {col.label}
                       </span>
                       <div
-                        className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-primary" : "bg-secondary"}`}
+                        className={`ml-auto h-4 w-7 rounded-full transition-colors ${isVisible(col.key) ? "bg-primary" : "bg-background-gray-tertiary"}`}
                       >
                         <div
-                          className={`h-3 w-3 rounded-full bg-background shadow-sm transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`}
+                          className={`h-3 w-3 rounded-full bg-card-background shadow-xs transition-transform mt-0.5 ${isVisible(col.key) ? "translate-x-3.5" : "translate-x-0.5"}`}
                         />
                       </div>
                     </button>
@@ -327,13 +323,13 @@ export default function StudentsPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <Users className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+              <Users className="h-6 w-6 text-icon-secondary" />
             </div>
             {students.length === 0 ? (
               <>
-                <p className="text-lg font-medium mb-1">No students yet</p>
-                <p className="text-sm text-muted-foreground mb-5">
+                <p className="font-medium text-text-primary mb-1">No students yet</p>
+                <p className="text-sm text-text-tertiary mb-5">
                   Add your first student to get started
                 </p>
                 <Link href="/teacher/students/new">
@@ -344,7 +340,7 @@ export default function StudentsPage() {
                 </Link>
               </>
             ) : (
-              <p className="text-muted-foreground">No students match your filters</p>
+              <p className="text-sm text-text-tertiary">No students match your filters</p>
             )}
           </CardContent>
         </Card>
@@ -356,11 +352,11 @@ export default function StudentsPage() {
               const statusCfg = STATUS_CONFIG[student.status] || STATUS_CONFIG.Reading
               return (
                 <Link key={student.id} href={`/teacher/students/${student.id}`}>
-                  <Card className="group hover:border-border transition-all">
+                  <Card className="group transition-colors hover:bg-background-gray-primary">
                     <CardContent className="p-4">
                       <div className="flex items-start gap-3">
                         <div className="relative flex-shrink-0">
-                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold">
+                          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
                             {student.name.charAt(0)}
                           </div>
                           {onlineStudents.has(student.id) && (
@@ -369,15 +365,17 @@ export default function StudentsPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-semibold text-sm truncate">{student.name}</p>
+                            <p className="font-medium text-sm text-text-primary truncate">
+                              {student.name}
+                            </p>
                             <Badge variant={statusCfg.variant} className="flex-shrink-0">
                               {statusCfg.label}
                             </Badge>
                           </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
+                          <p className="text-xs text-text-tertiary mt-0.5">
                             {student.guardian_name}
                           </p>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-text-tertiary">
                             <FeeDisplay
                               amount={student.fee}
                               currency={student.fee_currency}
@@ -385,7 +383,7 @@ export default function StudentsPage() {
                             />
                             {student.class_time && (
                               <span className="flex items-center gap-1">
-                                <span className="text-muted-foreground/40">&middot;</span>
+                                <span className="text-text-tertiary">&middot;</span>
                                 {student.class_time}
                               </span>
                             )}
@@ -397,7 +395,7 @@ export default function StudentsPage() {
                             )}
                           </div>
                         </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground/30 group-hover:text-foreground transition-colors flex-shrink-0 mt-1" />
+                        <ArrowRight className="h-4 w-4 text-icon-tertiary group-hover:text-text-primary transition-colors flex-shrink-0 mt-1" />
                       </div>
                     </CardContent>
                   </Card>
@@ -411,7 +409,7 @@ export default function StudentsPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border/50">
+                  <tr className="border-b border-border-primary">
                     <th scope="col" className="px-5 py-4 text-left">
                       <SortableHeader
                         label="Student"
@@ -497,12 +495,12 @@ export default function StudentsPage() {
                       <tr
                         key={student.id}
                         onClick={() => router.push(`/teacher/students/${student.id}`)}
-                        className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors group cursor-pointer"
+                        className="border-b border-border-primary last:border-0 hover:bg-background-gray-primary transition-colors group cursor-pointer"
                       >
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-3">
                             <div className="relative flex-shrink-0">
-                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-sm font-bold">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-semibold">
                                 {student.name.charAt(0)}
                               </div>
                               {onlineStudents.has(student.id) && (
@@ -510,27 +508,27 @@ export default function StudentsPage() {
                               )}
                             </div>
                             <div>
-                              <p className="font-medium text-sm">{student.name}</p>
-                              <p className="text-xs text-muted-foreground">
-                                {student.guardian_name}
+                              <p className="font-medium text-sm text-text-primary">
+                                {student.name}
                               </p>
+                              <p className="text-xs text-text-tertiary">{student.guardian_name}</p>
                             </div>
                           </div>
                         </td>
                         {isVisible("country") && (
-                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                          <td className="px-5 py-4 text-sm text-text-secondary">
                             {student.country ? (
                               <span className="flex items-center gap-1.5">
                                 <MapPin className="h-3 w-3" />
                                 {student.country}
                               </span>
                             ) : (
-                              <span className="text-muted-foreground/40">--</span>
+                              <span className="text-text-tertiary">--</span>
                             )}
                           </td>
                         )}
                         {isVisible("started_at") && (
-                          <td className="px-5 py-4 text-sm text-muted-foreground">
+                          <td className="px-5 py-4 text-sm text-text-secondary">
                             {format(
                               parseLocalDate(student.started_at) ?? new Date(),
                               "MMM d, yyyy",
@@ -547,10 +545,8 @@ export default function StudentsPage() {
                           </td>
                         )}
                         {isVisible("class_time") && (
-                          <td className="px-5 py-4 text-sm text-muted-foreground">
-                            {student.class_time || (
-                              <span className="text-muted-foreground/40">--</span>
-                            )}
+                          <td className="px-5 py-4 text-sm text-text-secondary">
+                            {student.class_time || <span className="text-text-tertiary">--</span>}
                           </td>
                         )}
                         {isVisible("quran_progress") && (
@@ -568,7 +564,7 @@ export default function StudentsPage() {
                             href={`/teacher/students/${student.id}`}
                             aria-label={`View ${student.name}`}
                           >
-                            <ArrowRight className="h-4 w-4 inline-block text-muted-foreground/30 group-hover:text-foreground transition-colors" />
+                            <ArrowRight className="h-4 w-4 inline-block text-icon-tertiary group-hover:text-text-primary transition-colors" />
                           </Link>
                         </td>
                       </tr>

@@ -101,7 +101,7 @@ export function UpdateProgressDialog({
           </div>
         ) : (
           <div className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-text-tertiary">
               Qaida has no para progress. Use &ldquo;Complete&rdquo; to finish this round.
             </p>
             <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -136,18 +136,18 @@ export function AddRoundDialog({
           <DialogDescription>Add a new or past completed round</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-2">
-          <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
+          <div className="flex items-center rounded-lg bg-background-gray-secondary p-1 gap-1">
             <button
               type="button"
               onClick={() => onFormChange({ ...form, type: "qaida" })}
-              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${form.type === "qaida" ? "bg-amber-500/15 text-amber-400" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${form.type === "qaida" ? "bg-card-background text-text-primary shadow-xs" : "text-text-secondary hover:text-text-primary"}`}
             >
               Norani Qaida
             </button>
             <button
               type="button"
               onClick={() => onFormChange({ ...form, type: "quran" })}
-              className={`flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all ${form.type === "quran" ? "bg-emerald-500/15 text-emerald-400" : "text-muted-foreground hover:text-foreground"}`}
+              className={`flex-1 px-3 py-2 rounded-md text-xs font-medium transition-colors ${form.type === "quran" ? "bg-card-background text-text-primary shadow-xs" : "text-text-secondary hover:text-text-primary"}`}
             >
               Quran Reading
             </button>
@@ -156,13 +156,13 @@ export function AddRoundDialog({
           <button
             type="button"
             onClick={() => onFormChange({ ...form, is_completed: !form.is_completed })}
-            className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
+            className="flex items-center gap-3 w-full rounded-lg border border-card-border px-4 py-3 text-left hover:bg-background-gray-primary transition-colors"
           >
             <div
-              className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${form.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
+              className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${form.is_completed ? "bg-primary" : "bg-background-gray-tertiary"}`}
             >
               <div
-                className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
+                className="h-4 w-4 rounded-full bg-card-background shadow-xs mt-0.5"
                 style={{
                   transform: form.is_completed ? "translateX(16px)" : "translateX(2px)",
                   transition: "transform 0.2s",
@@ -170,8 +170,8 @@ export function AddRoundDialog({
               />
             </div>
             <div>
-              <p className="text-sm font-medium">Already completed</p>
-              <p className="text-xs text-muted-foreground">Toggle on for a past round</p>
+              <p className="text-sm font-medium text-text-primary">Already completed</p>
+              <p className="text-xs text-text-tertiary">Toggle on for a past round</p>
             </div>
           </button>
 
@@ -222,8 +222,8 @@ export function AddRoundDialog({
           )}
 
           {form.is_completed && (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <p className="text-xs text-emerald-400">
+            <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-3">
+              <p className="text-xs text-green-600">
                 {form.type === "quran"
                   ? "Saved as fully completed (30/30)."
                   : "Saved as completed Qaida round."}
@@ -291,13 +291,13 @@ export function EditRoundDialog({
           <button
             type="button"
             onClick={() => onFormChange({ ...form, is_completed: !form.is_completed })}
-            className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/20 px-4 py-3 text-left hover:bg-secondary/40 transition-all"
+            className="flex items-center gap-3 w-full rounded-lg border border-card-border px-4 py-3 text-left hover:bg-background-gray-primary transition-colors"
           >
             <div
-              className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${form.is_completed ? "bg-emerald-500" : "bg-secondary"}`}
+              className={`h-5 w-9 rounded-full transition-colors flex-shrink-0 ${form.is_completed ? "bg-primary" : "bg-background-gray-tertiary"}`}
             >
               <div
-                className="h-4 w-4 rounded-full bg-card shadow-sm mt-0.5"
+                className="h-4 w-4 rounded-full bg-card-background shadow-xs mt-0.5"
                 style={{
                   transform: form.is_completed ? "translateX(16px)" : "translateX(2px)",
                   transition: "transform 0.2s",
@@ -305,8 +305,8 @@ export function EditRoundDialog({
               />
             </div>
             <div>
-              <p className="text-sm font-medium">Completed</p>
-              <p className="text-xs text-muted-foreground">Mark as completed round</p>
+              <p className="text-sm font-medium text-text-primary">Completed</p>
+              <p className="text-xs text-text-tertiary">Mark as completed round</p>
             </div>
           </button>
 
@@ -357,8 +357,8 @@ export function EditRoundDialog({
           )}
 
           {form.is_completed && (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <p className="text-xs text-emerald-400">
+            <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-3">
+              <p className="text-xs text-green-600">
                 {round?.type === "quran"
                   ? "Saved as fully completed (30/30)."
                   : "Saved as completed Qaida round."}

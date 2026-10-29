@@ -114,9 +114,11 @@ function SessionTimer({ startedAt }: { startedAt: Date }) {
   }, [startedAt])
 
   return (
-    <div className="flex items-center gap-1.5 px-[14px] py-2 rounded-full bg-card border border-border">
+    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card-background border border-card-border">
       <Clock className="h-3.5 w-3.5 text-primary" />
-      <span className="text-sm font-bold text-foreground tabular-nums">{formatTimer(elapsed)}</span>
+      <span className="text-sm font-semibold text-text-primary tabular-nums">
+        {formatTimer(elapsed)}
+      </span>
     </div>
   )
 }
@@ -528,26 +530,26 @@ export default function LiveSession({
   return (
     <div ref={containerRef} className="fixed inset-0 z-50 flex flex-col bg-background">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-border-primary bg-card-background">
         <div className="flex items-center gap-4">
           {/* Student name */}
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-sm font-bold">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-medium">
               {(student.name || "?").charAt(0)}
             </div>
-            <span className="font-semibold text-sm text-foreground">{student.name}</span>
+            <span className="font-medium text-sm text-text-primary">{student.name}</span>
           </div>
 
           <div className="h-5 w-px bg-border" />
 
           {/* Para switcher — explicit buttons (the ← → arrows page the PDF). */}
           {isQaida ? (
-            <span className="text-sm font-bold text-primary">Norani Qaida</span>
+            <span className="text-sm font-semibold text-primary">Norani Qaida</span>
           ) : (
             <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-foreground">
-                Para <span className="text-primary font-bold">{currentParaNumber}</span>
-                <span className="text-muted-foreground text-xs ml-1">/ 30</span>
+              <span className="text-sm font-medium text-text-primary">
+                Para <span className="text-primary font-semibold">{currentParaNumber}</span>
+                <span className="text-text-tertiary text-xs ml-1">/ 30</span>
               </span>
               <Button
                 variant="ghost"
@@ -576,22 +578,22 @@ export default function LiveSession({
 
           {/* Live presence & student device */}
           <span
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium ${
               studentJoined
-                ? "bg-emerald-500/15 text-emerald-600"
-                : "bg-secondary text-muted-foreground"
+                ? "bg-green-500/10 text-green-600"
+                : "bg-background-gray-secondary text-text-tertiary"
             }`}
           >
             <span
               className={`h-1.5 w-1.5 rounded-full ${
-                studentJoined ? "bg-emerald-500 animate-pulse" : "bg-muted-foreground/50"
+                studentJoined ? "bg-green-500 animate-pulse" : "bg-muted-foreground/50"
               }`}
             />
             {studentJoined ? (
               <span>
                 Student joined
                 {peerDevice ? (
-                  <span className="ml-1.5 font-medium text-emerald-700/90 dark:text-emerald-300/90">
+                  <span className="ml-1.5 font-normal text-green-700/90 dark:text-green-300/90">
                     · {peerDevice.label}
                   </span>
                 ) : null}
@@ -603,7 +605,7 @@ export default function LiveSession({
 
           {/* Bookmark Badge Indicator */}
           {currentPointer?.line ? (
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-xs font-semibold animate-fade-in">
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30 text-primary text-xs font-medium animate-fade-in">
               <span>📍</span>
               <span>Bookmark: Line {currentPointer.line}</span>
               <button
@@ -611,7 +613,7 @@ export default function LiveSession({
                 onClick={handleClearPointer}
                 aria-label="Remove bookmark"
                 title="Remove bookmark"
-                className="ml-0.5 rounded-full p-0.5 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 transition-colors"
+                className="ml-0.5 rounded-full p-0.5 hover:bg-primary/20 text-primary transition-colors"
               >
                 <X className="h-3 w-3" />
               </button>
@@ -626,10 +628,10 @@ export default function LiveSession({
             size="sm"
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className={cn(
-              "gap-1.5 h-8 font-semibold text-xs rounded-full transition-all",
+              "gap-1.5 h-8 font-medium text-xs rounded-full transition-colors",
               sidebarOpen
-                ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent shadow-xs"
-                : "border-border hover:bg-muted text-foreground",
+                ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
+                : "border-card-border hover:bg-background-gray-primary text-text-primary",
             )}
             title={sidebarOpen ? "Hide Tajweed Cards Deck" : "Show Tajweed Cards Deck"}
           >
@@ -639,10 +641,8 @@ export default function LiveSession({
             {sessionRules.length > 0 && (
               <span
                 className={cn(
-                  "flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full text-[10px] font-bold",
-                  sidebarOpen
-                    ? "bg-white/25 text-white"
-                    : "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+                  "flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full text-[11px] font-semibold",
+                  sidebarOpen ? "bg-white/25 text-white" : "bg-primary/10 text-primary",
                 )}
               >
                 {sessionRules.length}
@@ -674,7 +674,7 @@ export default function LiveSession({
                   <button
                     type="button"
                     onClick={advancePara}
-                    className="w-full flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 bg-primary/10 border border-primary/30 text-primary text-xs font-semibold hover:bg-primary hover:text-primary-foreground transition-colors"
+                    className="w-full flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-1.5 bg-primary/10 border border-primary/30 text-primary text-xs font-medium hover:bg-primary hover:text-primary-foreground transition-colors"
                   >
                     <ArrowUpRight className="h-3.5 w-3.5" />
                     Advance to Para {currentParaNumber + 1}
@@ -682,8 +682,8 @@ export default function LiveSession({
                 )}
                 {activeRound && (
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Current Round</span>
-                    <span className="font-bold text-foreground">
+                    <span className="text-text-tertiary">Current Round</span>
+                    <span className="font-semibold text-text-primary">
                       {activeRound.type === "qaida"
                         ? "Norani Qaida"
                         : `Para ${activeRound.asc_completed || 1}`}
@@ -691,11 +691,11 @@ export default function LiveSession({
                   </div>
                 )}
                 {memorizing.length > 0 && (
-                  <div className="text-xs pt-1 border-t border-border/50">
-                    <span className="text-muted-foreground block text-[10px] font-semibold uppercase">
+                  <div className="text-xs pt-1 border-t border-border-primary">
+                    <span className="text-text-tertiary block text-[11px] font-medium uppercase">
                       Currently Memorizing:
                     </span>
-                    <span className="font-medium text-foreground">
+                    <span className="font-medium text-text-primary">
                       {memorizing
                         .map((m) => m.memorization_catalog?.title)
                         .filter(Boolean)
@@ -704,25 +704,25 @@ export default function LiveSession({
                   </div>
                 )}
                 {memorized.length > 0 && (
-                  <div className="space-y-1.5 pt-1 border-t border-border/50">
+                  <div className="space-y-1.5 pt-1 border-t border-border-primary">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Revision ({memorized.length})</span>
+                      <span className="text-text-tertiary">Revision ({memorized.length})</span>
                       <button
                         type="button"
                         onClick={pickRevision}
-                        className="text-primary font-bold hover:underline"
+                        className="text-primary font-medium hover:underline"
                       >
                         🎲 Pick Random
                       </button>
                     </div>
                     {revisionPick && (
-                      <div className="rounded-lg border border-border/70 bg-card p-2 text-xs flex items-center justify-between gap-1">
-                        <span className="font-semibold truncate">
+                      <div className="rounded-lg border border-card-border bg-card-background p-2 text-xs flex items-center justify-between gap-1">
+                        <span className="font-medium truncate text-text-primary">
                           {revisionPick.memorization_catalog?.title}
                         </span>
                         <Button
                           size="sm"
-                          className="h-6 px-2 text-[10px]"
+                          className="h-6 px-2 text-[11px]"
                           onClick={() => markRevised(revisionPick.id)}
                         >
                           <Check className="h-3 w-3 mr-0.5" />
@@ -732,13 +732,13 @@ export default function LiveSession({
                     )}
                   </div>
                 )}
-                <div className="text-[10px] text-muted-foreground pt-1 border-t border-border/40 flex justify-between">
+                <div className="text-[11px] text-text-tertiary pt-1 border-t border-border-primary flex justify-between">
                   <span>
-                    Paras viewed: <strong className="text-foreground">{parasViewed.size}</strong>
+                    Paras viewed: <strong className="text-text-primary">{parasViewed.size}</strong>
                   </span>
                   <span>
                     Revisions:{" "}
-                    <strong className="text-foreground">{revisionsThisSession.length}</strong>
+                    <strong className="text-text-primary">{revisionsThisSession.length}</strong>
                   </span>
                 </div>
               </div>
@@ -770,11 +770,13 @@ export default function LiveSession({
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center space-y-3">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-                  <BookOpen className="h-7 w-7 text-muted-foreground" />
+                <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary text-icon-secondary">
+                  <BookOpen className="h-6 w-6" />
                 </div>
-                <p className="text-lg font-medium">{paraLabel(currentParaNumber)} not uploaded</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium text-text-primary">
+                  {paraLabel(currentParaNumber)} not uploaded
+                </p>
+                <p className="text-sm text-text-tertiary">
                   Upload this para from the Media Library
                 </p>
               </div>
@@ -785,30 +787,25 @@ export default function LiveSession({
 
       {/* End Class Dialog */}
       <Dialog open={showEndDialog} onOpenChange={setShowEndDialog}>
-        <DialogContent className="max-w-md bg-card border border-border rounded-[20px] p-8">
+        <DialogContent className="max-w-md p-6 sm:p-8">
           <DialogHeader className="space-y-1.5">
-            <DialogTitle className="text-[22px] font-bold text-foreground">
+            <DialogTitle className="text-xl font-semibold text-text-primary">
               End Class Session
             </DialogTitle>
-            <DialogDescription className="text-sm font-medium text-muted-foreground">
+            <DialogDescription className="text-sm text-text-tertiary">
               Review the session summary and add any notes.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-5">
             {/* Stats — clean two-column, no fills */}
-            <div className="grid grid-cols-2 gap-6 py-5 border-y border-border">
+            <div className="grid grid-cols-2 gap-6 py-5 border-y border-border-primary">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <span
-                    className="text-[11px] font-semibold uppercase text-muted-foreground"
-                    style={{ letterSpacing: "0.08em" }}
-                  >
-                    Duration
-                  </span>
+                  <Clock className="h-4 w-4 text-icon-tertiary" />
+                  <span className="text-xs font-medium uppercase text-text-tertiary">Duration</span>
                 </div>
-                <div className="text-2xl font-bold text-foreground tabular-nums">
+                <div className="text-2xl font-semibold text-text-primary tabular-nums">
                   {formatSessionDuration(
                     Math.max(0, Math.floor((Date.now() - startedAt.getTime()) / 1000)),
                   )}
@@ -816,15 +813,12 @@ export default function LiveSession({
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span
-                    className="text-[11px] font-semibold uppercase text-muted-foreground"
-                    style={{ letterSpacing: "0.08em" }}
-                  >
+                  <BookOpen className="h-4 w-4 text-icon-tertiary" />
+                  <span className="text-xs font-medium uppercase text-text-tertiary">
                     Paras Covered
                   </span>
                 </div>
-                <div className="text-2xl font-bold text-primary tabular-nums">
+                <div className="text-2xl font-semibold text-primary tabular-nums">
                   {Array.from(parasViewed)
                     .sort((a, b) => a - b)
                     .map((n) => (n === QAIDA_PARA ? "Norani Qaida" : n))
@@ -836,17 +830,14 @@ export default function LiveSession({
             {/* Revisions */}
             {revisionsThisSession.length > 0 && (
               <div className="space-y-2">
-                <span
-                  className="text-[11px] font-semibold uppercase text-muted-foreground"
-                  style={{ letterSpacing: "0.08em" }}
-                >
+                <span className="text-xs font-medium uppercase text-text-tertiary">
                   Memorization Revised
                 </span>
                 <div className="flex flex-wrap gap-1.5">
                   {revisionsThisSession.map((title, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground"
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-background-gray-secondary text-text-secondary"
                     >
                       {title}
                     </span>
@@ -859,10 +850,7 @@ export default function LiveSession({
             {sessionRules.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span
-                    className="text-[11px] font-semibold uppercase text-muted-foreground"
-                    style={{ letterSpacing: "0.08em" }}
-                  >
+                  <span className="text-xs font-medium uppercase text-text-tertiary">
                     Tajweed Rules Practiced
                   </span>
                   {!notes.includes("Practiced Tajweed rules") && (
@@ -872,7 +860,7 @@ export default function LiveSession({
                         const ruleText = `Practiced Tajweed rules: ${sessionRules.join(", ")}`
                         setNotes((prev) => (prev ? `${prev}\n${ruleText}` : ruleText))
                       }}
-                      className="text-[11px] font-bold text-primary hover:underline"
+                      className="text-xs font-medium text-primary hover:underline"
                     >
                       + Insert into notes
                     </button>
@@ -882,7 +870,7 @@ export default function LiveSession({
                   {sessionRules.map((ruleTitle, i) => (
                     <span
                       key={i}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/30"
                     >
                       {ruleTitle}
                     </span>
@@ -893,12 +881,12 @@ export default function LiveSession({
 
             {/* Notes */}
             <div className="space-y-2">
-              <label className="text-[13px] font-semibold text-foreground">Notes (optional)</label>
+              <label className="text-sm font-medium text-text-primary">Notes (optional)</label>
               <Textarea
                 placeholder="How did the session go? Any observations..."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[110px] px-4 py-3.5 text-[15px] font-medium leading-relaxed resize-y"
+                className="min-h-[110px] px-4 py-3 text-sm leading-relaxed resize-y"
               />
             </div>
           </div>
@@ -907,7 +895,7 @@ export default function LiveSession({
             <button
               type="button"
               onClick={() => setShowEndDialog(false)}
-              className="px-5 py-3 rounded-[10px] text-[15px] font-semibold transition-colors hover:bg-muted text-muted-foreground"
+              className="px-5 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-background-gray-primary text-text-secondary"
             >
               Continue Class
             </button>
@@ -915,7 +903,7 @@ export default function LiveSession({
               type="button"
               onClick={handleEndClass}
               disabled={saving}
-              className="px-6 py-3 rounded-[10px] bg-primary hover:bg-primary-hover text-primary-foreground text-[15px] font-bold transition-colors disabled:opacity-60"
+              className="px-6 py-2.5 rounded-lg bg-primary hover:bg-[hsl(var(--primary-hover))] text-primary-foreground text-sm font-medium transition-colors disabled:opacity-60"
             >
               {saving ? "Saving..." : "Save & End"}
             </button>

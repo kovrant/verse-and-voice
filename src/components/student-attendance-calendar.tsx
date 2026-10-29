@@ -128,10 +128,12 @@ export function StudentAttendanceCalendar({
 
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-primary px-5 py-4">
         <div>
-          <h2 className="text-base font-semibold">Attendance</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            Attendance
+          </h2>
+          <p className="mt-0.5 text-sm text-text-tertiary">
             Tap a day to mark it. A saved class counts as present.
           </p>
         </div>
@@ -139,7 +141,7 @@ export function StudentAttendanceCalendar({
           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => step(-1)}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <span className="min-w-[8.5rem] text-center text-sm font-medium">
+          <span className="min-w-[8.5rem] text-center text-sm font-medium text-text-primary">
             {monthLabel(month.year, month.month - 1)}
           </span>
           <Button
@@ -158,21 +160,21 @@ export function StudentAttendanceCalendar({
           {([...ATTENDANCE_STATUSES, "unmarked"] as const).map((status) => (
             <span
               key={status}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1"
+              className="inline-flex items-center gap-1.5 rounded-full bg-background-gray-secondary px-2.5 py-1 font-medium text-text-secondary"
             >
               <span className={cn("h-2 w-2 rounded-full", ATTENDANCE_TONE[status].dot)} />
               {status === "unmarked" ? "Unmarked" : ATTENDANCE_LABELS[status]}
-              <span className="font-semibold">{summary[status]}</span>
+              <span className="font-semibold text-text-primary">{summary[status]}</span>
             </span>
           ))}
-          <span className="inline-flex items-center px-1 py-1 text-muted-foreground">
+          <span className="inline-flex items-center px-1 py-1 text-text-tertiary">
             {summary.scheduled} scheduled so far
           </span>
         </div>
 
         <div className="grid grid-cols-7 gap-1 text-center">
           {DAY_LABELS.map((label, i) => (
-            <span key={i} className="py-1 text-[11px] font-medium text-muted-foreground">
+            <span key={i} className="py-1 text-xs font-medium uppercase text-text-tertiary">
               {label}
             </span>
           ))}
@@ -206,8 +208,8 @@ export function StudentAttendanceCalendar({
                       tone && entry?.status !== "unmarked"
                         ? tone.active
                         : scheduled
-                          ? "border-border bg-muted/60 font-semibold text-foreground hover:bg-secondary/60"
-                          : "border-transparent text-muted-foreground hover:bg-secondary/40",
+                          ? "border-card-border bg-background-gray-primary font-semibold text-text-primary hover:bg-background-gray-secondary"
+                          : "border-transparent text-text-tertiary hover:bg-background-gray-primary",
                       date === today && "ring-2 ring-primary/30",
                     )}
                   >
@@ -223,7 +225,7 @@ export function StudentAttendanceCalendar({
                   <Popover.Content
                     side="bottom"
                     sideOffset={6}
-                    className="z-50 w-48 rounded-xl border border-border bg-card p-2 shadow-lg"
+                    className="z-50 w-48 rounded-xl border border-card-border bg-card-background p-2 shadow-3xl"
                   >
                     <div className="space-y-1">
                       {ATTENDANCE_STATUSES.map((status) => {
@@ -237,7 +239,7 @@ export function StudentAttendanceCalendar({
                               "flex w-full items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs font-medium transition-colors",
                               marks[date] === status
                                 ? ATTENDANCE_TONE[status].active
-                                : "border-transparent hover:bg-secondary/60",
+                                : "border-transparent text-text-secondary hover:bg-background-gray-primary",
                             )}
                           >
                             <StatusIcon className="h-3.5 w-3.5" />
@@ -249,13 +251,13 @@ export function StudentAttendanceCalendar({
                         <button
                           type="button"
                           onClick={() => void setStatus(date, null)}
-                          className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs text-muted-foreground hover:bg-secondary/60"
+                          className="w-full rounded-lg px-2.5 py-1.5 text-left text-xs text-text-tertiary hover:bg-background-gray-primary"
                         >
                           Clear
                         </button>
                       )}
                     </div>
-                    <Popover.Arrow className="fill-border" />
+                    <Popover.Arrow className="fill-card-border" />
                   </Popover.Content>
                 </Popover.Portal>
               </Popover.Root>

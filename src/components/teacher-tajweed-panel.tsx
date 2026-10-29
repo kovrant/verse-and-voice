@@ -52,49 +52,45 @@ export function TeacherTajweedPanel({
     <aside
       aria-label="Teacher Tajweed Rules Deck"
       className={cn(
-        "flex w-80 sm:w-84 flex-shrink-0 flex-col border-r border-border bg-card overflow-hidden h-full",
+        "flex w-80 sm:w-84 flex-shrink-0 flex-col border-r border-border-primary bg-card-background overflow-hidden h-full",
         className,
       )}
     >
       {/* Sidebar Header */}
-      <div className="flex items-center justify-between border-b border-border/80 px-4 py-3 bg-muted/20">
+      <div className="flex items-center justify-between border-b border-border-primary px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/15 text-amber-600">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
             <Sparkles className="h-4 w-4" />
           </span>
           <div>
-            <h2 className="font-heading text-sm font-bold text-foreground leading-none">
-              Tajweed Rules
-            </h2>
-            <p className="text-[10px] text-muted-foreground mt-0.5">
-              Tap card to pop up on student screen
-            </p>
+            <h2 className="text-sm font-semibold text-text-primary leading-5">Tajweed Rules</h2>
+            <p className="text-[11px] text-text-tertiary">Tap card to pop up on student screen</p>
           </div>
         </div>
 
         {sessionRulesCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:text-emerald-300">
+          <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[11px] font-medium text-green-600">
             <span>{sessionRulesCount} sent</span>
           </span>
         )}
       </div>
 
       {/* Sticky Search & Category Filter */}
-      <div className="border-b border-border/70 p-3 space-y-2 bg-card">
+      <div className="border-b border-border-primary p-3 space-y-2">
         {/* Search input */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-icon-tertiary" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search rule (zabar, qalqalah, noon...)"
-            className="h-8.5 pl-8 pr-7 text-xs rounded-xl"
+            className="h-8.5 pl-8 pr-7 text-xs rounded-lg"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch("")}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-icon-tertiary hover:text-text-primary p-0.5"
             >
               <X className="h-3 w-3" />
             </button>
@@ -107,10 +103,10 @@ export function TeacherTajweedPanel({
             type="button"
             onClick={() => setSelectedCategory("all")}
             className={cn(
-              "rounded-full px-2.5 py-1 font-semibold transition-colors shrink-0",
+              "rounded-full px-2.5 py-1 font-medium transition-colors shrink-0",
               selectedCategory === "all"
-                ? "bg-primary text-primary-foreground shadow-xs"
-                : "bg-secondary/70 text-muted-foreground hover:bg-secondary hover:text-foreground",
+                ? "bg-primary text-primary-foreground"
+                : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
             )}
           >
             All ({filteredRules.length})
@@ -121,10 +117,10 @@ export function TeacherTajweedPanel({
               type="button"
               onClick={() => setSelectedCategory(cat.id)}
               className={cn(
-                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold transition-colors shrink-0",
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition-colors shrink-0",
                 selectedCategory === cat.id
-                  ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-secondary/70 text-muted-foreground hover:bg-secondary hover:text-foreground",
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
               )}
             >
               <span>{cat.icon}</span>
@@ -137,7 +133,7 @@ export function TeacherTajweedPanel({
       {/* Scrollable Rules Card Deck (Vertical Stack matching sketch) */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5 no-scrollbar">
         {filteredRules.length === 0 ? (
-          <div className="py-12 text-center text-xs text-muted-foreground">
+          <div className="py-12 text-center text-xs text-text-tertiary">
             No rules found matching &quot;{search}&quot;.
           </div>
         ) : (
@@ -150,12 +146,11 @@ export function TeacherTajweedPanel({
                 disabled={disabled}
                 onClick={() => handleSend(rule)}
                 className={cn(
-                  "group relative w-full text-left rounded-[16px] border-2 transition-all duration-150 p-3.5 flex flex-col justify-between",
-                  "shadow-xs hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.99]",
+                  "group relative w-full text-left rounded-xl border transition-colors duration-150 p-3.5 flex flex-col justify-between",
                   "disabled:pointer-events-none disabled:opacity-50",
                   isSent
-                    ? "border-emerald-500 bg-emerald-500/10 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/30"
-                    : "border-border/80 bg-card hover:border-primary/60 text-foreground",
+                    ? "border-green-500 bg-green-500/10 text-green-950 dark:text-green-100 ring-2 ring-green-500/30"
+                    : "border-card-border bg-card-background hover:border-primary/60 hover:bg-background-gray-primary text-text-primary",
                 )}
               >
                 {/* Card Top: Arabic Symbol Badge + Tap to send indicator */}
@@ -172,12 +167,12 @@ export function TeacherTajweedPanel({
                   </span>
 
                   {isSent ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-xs font-extrabold text-emerald-700 dark:text-emerald-300 animate-fade-in">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-xs font-semibold text-green-600 animate-fade-in">
                       <Check className="h-3.5 w-3.5 stroke-[3]" />
                       <span>Sent ✓</span>
                     </span>
                   ) : (
-                    <span className="rounded-full bg-secondary/80 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-colors">
+                    <span className="rounded-full bg-background-gray-secondary px-2 py-0.5 text-[11px] font-medium uppercase text-text-tertiary group-hover:text-primary group-hover:bg-primary/10 transition-colors">
                       Tap to send
                     </span>
                   )}
@@ -189,11 +184,11 @@ export function TeacherTajweedPanel({
                     <span className="font-arabic text-[17px] font-bold leading-tight text-foreground">
                       {rule.nameUrdu}
                     </span>
-                    <span className="font-heading text-xs font-bold text-muted-foreground group-hover:text-foreground transition-colors truncate">
+                    <span className="text-xs font-medium text-text-secondary group-hover:text-text-primary transition-colors truncate">
                       {rule.shortTitle || rule.title}
                     </span>
                   </div>
-                  <p className="mt-1 text-[11px] font-semibold text-muted-foreground truncate">
+                  <p className="mt-1 text-[11px] font-medium text-text-tertiary truncate">
                     {rule.rhythmBadge || `💡 ${rule.shortCue}`}
                   </p>
                 </div>
@@ -205,11 +200,11 @@ export function TeacherTajweedPanel({
 
       {/* Optional Collapsible Session Details Footer */}
       {sessionFooter && (
-        <div className="border-t border-border/80 bg-muted/20">
+        <div className="border-t border-border-primary">
           <button
             type="button"
             onClick={() => setFooterOpen(!footerOpen)}
-            className="w-full flex items-center justify-between px-4 py-2 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-text-secondary hover:text-text-primary transition-colors"
           >
             <span>Session Details & Progress</span>
             {footerOpen ? (
@@ -219,7 +214,7 @@ export function TeacherTajweedPanel({
             )}
           </button>
           {footerOpen && (
-            <div className="p-3 border-t border-border/60 max-h-48 overflow-y-auto text-xs space-y-2 bg-card">
+            <div className="p-3 border-t border-border-primary max-h-48 overflow-y-auto text-xs space-y-2">
               {sessionFooter}
             </div>
           )}

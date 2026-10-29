@@ -499,29 +499,22 @@ export default function TeacherQuizzesPage() {
       {/* Top Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground flex items-center gap-2.5">
-            <Sparkles className="h-6 w-6 text-amber-500" />
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary flex items-center gap-2.5">
+            <Sparkles className="h-7 w-7 text-icon-secondary" />
             Islamic Quiz Studio
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-sm leading-5 text-text-tertiary">
             Create gamified Islamic knowledge quests with AI, assign to students, and reward
             achievement badges.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          <Button
-            onClick={() => setAiModalOpen(true)}
-            className="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-sm font-semibold gap-2"
-          >
+          <Button onClick={() => setAiModalOpen(true)} className="gap-2">
             <Sparkles className="h-4 w-4" />
             Generate with AI
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => handleOpenManualBuilder()}
-            className="gap-2 border-border/80"
-          >
+          <Button variant="outline" onClick={() => handleOpenManualBuilder()} className="gap-2">
             <Plus className="h-4 w-4" />
             Create Manually
           </Button>
@@ -530,50 +523,50 @@ export default function TeacherQuizzesPage() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="bg-card/70 border-border/60">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600 dark:text-amber-400">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Total Quizzes</p>
-              <p className="text-xl font-bold">{stats.totalQuizzes}</p>
+              <p className="text-sm font-medium text-text-tertiary">Total Quizzes</p>
+              <p className="text-2xl font-semibold text-text-primary">{stats.totalQuizzes}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/70 border-border/60">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-500/15 text-teal-600 dark:text-teal-400">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
               <Users className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Assigned Quests</p>
-              <p className="text-xl font-bold">{stats.totalAssigned}</p>
+              <p className="text-sm font-medium text-text-tertiary">Assigned Quests</p>
+              <p className="text-2xl font-semibold text-text-primary">{stats.totalAssigned}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/70 border-border/60">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-600 dark:text-purple-400">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(168,85,247,0.10)] text-[#A855F7]">
               <GraduationCap className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Total Attempts</p>
-              <p className="text-xl font-bold">{stats.totalAttempts}</p>
+              <p className="text-sm font-medium text-text-tertiary">Total Attempts</p>
+              <p className="text-2xl font-semibold text-text-primary">{stats.totalAttempts}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-card/70 border-border/60">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-5">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[rgba(34,197,94,0.10)] text-[#22C55E]">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Pass Rate</p>
-              <p className="text-xl font-bold">{stats.passRate}%</p>
+              <p className="text-sm font-medium text-text-tertiary">Pass Rate</p>
+              <p className="text-2xl font-semibold text-text-primary">{stats.passRate}%</p>
             </div>
           </CardContent>
         </Card>
@@ -582,7 +575,7 @@ export default function TeacherQuizzesPage() {
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-icon-tertiary" />
           <Input
             placeholder="Search quizzes by title, description, or badge..."
             value={searchQuery}
@@ -624,21 +617,18 @@ export default function TeacherQuizzesPage() {
 
       {/* Quizzes Grid */}
       {filteredQuizzes.length === 0 ? (
-        <Card className="border-dashed py-12 text-center">
+        <Card className="py-12 text-center">
           <CardContent className="space-y-3">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-lg bg-background-gray-secondary text-icon-secondary">
               <HelpCircle className="h-6 w-6" />
             </div>
             <div>
-              <p className="font-semibold text-foreground">No quizzes found</p>
-              <p className="text-sm text-muted-foreground">
+              <p className="font-medium text-text-primary">No quizzes found</p>
+              <p className="text-sm text-text-tertiary">
                 Try adjusting your search or generate a brand new quiz with AI!
               </p>
             </div>
-            <Button
-              onClick={() => setAiModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-medium gap-2"
-            >
+            <Button onClick={() => setAiModalOpen(true)} className="gap-2">
               <Sparkles className="h-4 w-4" />
               Generate Quiz with AI
             </Button>
@@ -653,59 +643,66 @@ export default function TeacherQuizzesPage() {
             const ageLabel = AGE_GROUP_LABELS[quiz.age_group] || "All Ages"
 
             return (
-              <Card
-                key={quiz.id}
-                className="flex flex-col justify-between border-border/70 hover:border-amber-500/40 transition-all shadow-sm hover:shadow-soft"
-              >
+              <Card key={quiz.id} className="flex flex-col justify-between">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-[11px] font-semibold text-foreground">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-background-gray-secondary px-2.5 py-0.5 text-xs font-medium text-text-secondary">
                       {cat.label}
                     </span>
-                    <Badge variant="outline" className="text-[10px] font-medium">
+                    <Badge variant="outline" className="text-[11px] font-medium">
                       {ageLabel}
                     </Badge>
                   </div>
-                  <CardTitle className="text-base font-bold line-clamp-1">
+                  <CardTitle className="line-clamp-1 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
                     <Link
                       href={`/teacher/quizzes/${quiz.id}`}
-                      className="hover:text-primary transition-colors hover:underline"
+                      className="transition-colors hover:text-primary"
                     >
                       {quiz.title}
                     </Link>
                   </CardTitle>
-                  <p className="text-xs text-muted-foreground line-clamp-2 min-h-[32px]">
+                  <p className="line-clamp-2 min-h-[40px] text-sm text-text-tertiary">
                     {quiz.description || "No description provided."}
                   </p>
                 </CardHeader>
 
                 <CardContent className="space-y-4 pb-4">
                   {/* Badge Reward Pill */}
-                  <div className="flex items-center gap-2 rounded-xl bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-xs">
-                    <Award className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                  <div className="flex items-center gap-2 rounded-lg bg-[rgba(249,115,22,0.10)] px-3 py-2 text-xs">
+                    <Award className="h-4 w-4 shrink-0 text-[#F97316]" />
                     <div className="min-w-0">
-                      <p className="font-bold text-amber-700 dark:text-amber-300 truncate">
-                        {quiz.badge_title}
-                      </p>
-                      <p className="text-[10px] text-muted-foreground">
+                      <p className="truncate font-medium text-text-primary">{quiz.badge_title}</p>
+                      <p className="text-[11px] text-text-tertiary">
                         Passing score: {quiz.passing_score}%
                       </p>
                     </div>
                   </div>
 
                   {/* Metrics */}
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs py-1 border-y border-border/40">
+                  <div className="grid grid-cols-3 gap-2 border-y border-border-primary py-2 text-center text-xs">
                     <div>
-                      <p className="text-muted-foreground text-[10px]">Questions</p>
-                      <p className="font-bold">{quiz.questions?.length || 0}</p>
+                      <p className="text-[11px] font-medium uppercase text-text-tertiary">
+                        Questions
+                      </p>
+                      <p className="text-sm font-semibold text-text-primary">
+                        {quiz.questions?.length || 0}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-[10px]">Assigned</p>
-                      <p className="font-bold">{quizAssignments.length}</p>
+                      <p className="text-[11px] font-medium uppercase text-text-tertiary">
+                        Assigned
+                      </p>
+                      <p className="text-sm font-semibold text-text-primary">
+                        {quizAssignments.length}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-muted-foreground text-[10px]">Attempts</p>
-                      <p className="font-bold">{quizAttempts.length}</p>
+                      <p className="text-[11px] font-medium uppercase text-text-tertiary">
+                        Attempts
+                      </p>
+                      <p className="text-sm font-semibold text-text-primary">
+                        {quizAttempts.length}
+                      </p>
                     </div>
                   </div>
 
@@ -715,17 +712,17 @@ export default function TeacherQuizzesPage() {
                       asChild
                       size="sm"
                       variant="outline"
-                      className="flex-1 text-xs gap-1 h-8 font-semibold hover:border-amber-500/50 hover:bg-amber-500/10"
+                      className="h-8 flex-1 gap-1 text-xs font-medium"
                     >
                       <Link href={`/teacher/quizzes/${quiz.id}`}>
-                        <Eye className="h-3.5 w-3.5 text-amber-600" />
+                        <Eye className="h-3.5 w-3.5" />
                         View
                       </Link>
                     </Button>
                     <Button
                       size="sm"
                       onClick={() => handleOpenAssign(quiz)}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs gap-1 h-8"
+                      className="h-8 flex-1 gap-1 text-xs font-medium"
                     >
                       <Users className="h-3.5 w-3.5" />
                       Assign
@@ -734,7 +731,7 @@ export default function TeacherQuizzesPage() {
                       size="sm"
                       variant="ghost"
                       onClick={() => handleOpenResults(quiz)}
-                      className="h-8 px-2 text-xs gap-1 text-muted-foreground hover:text-foreground"
+                      className="h-8 gap-1 px-2 text-xs text-text-secondary hover:text-text-primary"
                       title={`Results (${quizAttempts.length})`}
                     >
                       <GraduationCap className="h-3.5 w-3.5" />
@@ -755,7 +752,7 @@ export default function TeacherQuizzesPage() {
                       onClick={() => handleDeleteQuiz(quiz)}
                       className={`h-8 w-8 p-0 ${
                         quiz.is_published
-                          ? "text-muted-foreground/40 hover:bg-muted/30"
+                          ? "text-text-tertiary/50 hover:bg-background-gray-primary"
                           : "text-destructive hover:text-destructive hover:bg-destructive/10"
                       }`}
                       title={
@@ -779,7 +776,7 @@ export default function TeacherQuizzesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-lg">
-              <Sparkles className="h-5 w-5 text-amber-500" />
+              <Sparkles className="h-5 w-5 text-primary" />
               Generate Islamic Quiz with AI
             </DialogTitle>
             <DialogDescription>
@@ -842,7 +839,7 @@ export default function TeacherQuizzesPage() {
                 step="1"
                 value={aiCount}
                 onChange={(e) => setAiCount(Number(e.target.value))}
-                className="w-full accent-amber-500"
+                className="w-full accent-primary"
               />
             </div>
           </div>
@@ -854,7 +851,7 @@ export default function TeacherQuizzesPage() {
             <Button
               onClick={handleGenerateAi}
               disabled={generatingAi || !aiTopic.trim()}
-              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold gap-2"
+              className="gap-2"
             >
               {generatingAi ? (
                 <>
@@ -971,8 +968,8 @@ export default function TeacherQuizzesPage() {
 
             {/* Questions Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-t border-border/80 pt-4">
-                <h3 className="font-bold text-base flex items-center gap-2">
+              <div className="flex items-center justify-between border-t border-border-primary pt-4">
+                <h3 className="flex items-center gap-2 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
                   Questions ({builderQuiz.questions.length})
                 </h3>
                 <Button
@@ -1005,12 +1002,9 @@ export default function TeacherQuizzesPage() {
               </div>
 
               {builderQuiz.questions.map((q, qIndex) => (
-                <div
-                  key={qIndex}
-                  className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-3"
-                >
+                <div key={qIndex} className="space-y-3 rounded-lg border border-card-border p-4">
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-bold text-xs text-muted-foreground">
+                    <span className="text-xs font-medium uppercase text-text-tertiary">
                       Question {qIndex + 1}
                     </span>
                     <Button
@@ -1041,7 +1035,7 @@ export default function TeacherQuizzesPage() {
 
                   {/* Options */}
                   <div className="space-y-2 pt-1">
-                    <Label className="text-xs text-muted-foreground">
+                    <Label className="text-xs text-text-tertiary">
                       Answer Options (Select the correct one)
                     </Label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1050,8 +1044,8 @@ export default function TeacherQuizzesPage() {
                           key={opt.id || optIndex}
                           className={`flex items-center gap-2 rounded-lg border p-2 ${
                             opt.is_correct
-                              ? "border-emerald-500/60 bg-emerald-500/10"
-                              : "border-border/60 bg-card"
+                              ? "border-green-500/50 bg-green-500/10"
+                              : "border-card-border bg-card-background"
                           }`}
                         >
                           <input
@@ -1067,7 +1061,7 @@ export default function TeacherQuizzesPage() {
                               updated[qIndex]!.options = opts
                               setBuilderQuiz({ ...builderQuiz, questions: updated })
                             }}
-                            className="accent-emerald-600 h-4 w-4"
+                            className="h-4 w-4 accent-green-600"
                           />
                           <input
                             type="text"
@@ -1107,11 +1101,7 @@ export default function TeacherQuizzesPage() {
             <Button variant="outline" onClick={() => setBuilderOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleSaveQuiz}
-              disabled={savingQuiz}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-            >
+            <Button onClick={handleSaveQuiz} disabled={savingQuiz} className="font-medium">
               {savingQuiz ? "Saving..." : "Save Quiz"}
             </Button>
           </DialogFooter>
@@ -1123,7 +1113,7 @@ export default function TeacherQuizzesPage() {
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-emerald-600" />
+              <Users className="h-5 w-5 text-primary" />
               Assign Quiz Quest
             </DialogTitle>
             <DialogDescription>
@@ -1133,7 +1123,7 @@ export default function TeacherQuizzesPage() {
 
           <div className="space-y-4 py-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-icon-tertiary" />
               <Input
                 placeholder="Search students by name or guardian..."
                 value={assignStudentSearch}
@@ -1142,8 +1132,8 @@ export default function TeacherQuizzesPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between pb-1 border-b border-border/60">
-              <span className="text-xs font-semibold text-muted-foreground">
+            <div className="flex items-center justify-between border-b border-border-primary pb-1">
+              <span className="text-xs font-medium text-text-tertiary">
                 {selectedStudentIds.length} of {students.length} students selected
               </span>
               <Button
@@ -1162,9 +1152,9 @@ export default function TeacherQuizzesPage() {
               </Button>
             </div>
 
-            <div className="max-h-60 overflow-y-auto space-y-1.5 pr-1">
+            <div className="max-h-60 space-y-1 overflow-y-auto pr-1">
               {students.length === 0 ? (
-                <div className="py-6 text-center text-xs text-muted-foreground">
+                <div className="py-6 text-center text-xs text-text-tertiary">
                   No active students found in the database.
                 </div>
               ) : (
@@ -1180,10 +1170,10 @@ export default function TeacherQuizzesPage() {
                     return (
                       <label
                         key={student.id}
-                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition-colors ${
+                        className={`flex cursor-pointer items-center justify-between rounded-lg border p-2.5 transition-colors ${
                           isSelected
-                            ? "border-emerald-500/50 bg-emerald-500/10"
-                            : "border-border/60 hover:bg-secondary/60"
+                            ? "border-primary/30 bg-primary/10"
+                            : "border-card-border hover:bg-background-gray-primary"
                         }`}
                       >
                         <div className="flex items-center gap-2.5">
@@ -1199,12 +1189,14 @@ export default function TeacherQuizzesPage() {
                                 setSelectedStudentIds([...selectedStudentIds, student.id])
                               }
                             }}
-                            className="accent-emerald-600 h-4 w-4 rounded"
+                            className="h-4 w-4 rounded accent-primary"
                           />
                           <div>
-                            <p className="text-sm font-medium leading-none">{student.name}</p>
+                            <p className="text-sm font-medium leading-none text-text-primary">
+                              {student.name}
+                            </p>
                             {student.guardian_name && (
-                              <p className="text-[11px] text-muted-foreground mt-0.5">
+                              <p className="mt-0.5 text-[11px] text-text-tertiary">
                                 Guardian: {student.guardian_name}
                               </p>
                             )}
@@ -1226,8 +1218,8 @@ export default function TeacherQuizzesPage() {
                               <Badge
                                 className={
                                   attemptRow.passed
-                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[10px] font-semibold"
-                                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[10px] font-semibold"
+                                    ? "bg-[hsl(var(--success)/0.12)] text-[11px] font-medium text-[hsl(var(--success))]"
+                                    : "bg-amber-500/15 text-[11px] font-medium text-amber-700 dark:text-amber-300"
                                 }
                               >
                                 {attemptRow.passed
@@ -1241,7 +1233,7 @@ export default function TeacherQuizzesPage() {
                             return (
                               <Badge
                                 variant="outline"
-                                className="text-[10px] font-normal shrink-0 text-amber-600 border-amber-500/30"
+                                className="shrink-0 border-amber-500/30 text-[11px] font-normal text-amber-600"
                               >
                                 Assigned
                               </Badge>
@@ -1273,7 +1265,7 @@ export default function TeacherQuizzesPage() {
             <Button
               onClick={handleSaveAssignments}
               disabled={savingAssignments}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              className="font-medium"
             >
               {savingAssignments ? "Saving..." : "Save Assignments"}
             </Button>
@@ -1286,7 +1278,7 @@ export default function TeacherQuizzesPage() {
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5 text-purple-600" />
+              <GraduationCap className="h-5 w-5 text-[#A855F7]" />
               Submissions & Scores: {selectedQuizForResults?.title}
             </DialogTitle>
             <DialogDescription>
@@ -1299,14 +1291,14 @@ export default function TeacherQuizzesPage() {
               const quizAttempts = attempts.filter((a) => a.quiz_id === selectedQuizForResults?.id)
               if (quizAttempts.length === 0) {
                 return (
-                  <div className="py-8 text-center text-sm text-muted-foreground">
+                  <div className="py-8 text-center text-sm text-text-tertiary">
                     No attempts submitted for this quiz yet.
                   </div>
                 )
               }
 
               return (
-                <div className="space-y-2">
+                <div>
                   {quizAttempts.map((attempt) => {
                     const joinedStudent = Array.isArray(attempt.students)
                       ? attempt.students[0]
@@ -1322,14 +1314,14 @@ export default function TeacherQuizzesPage() {
                     return (
                       <div
                         key={attempt.id}
-                        className="flex items-center justify-between p-3 rounded-xl border border-border/60 bg-card/60"
+                        className="flex items-center justify-between border-b border-border-primary py-3 last:border-0"
                       >
                         <div className="flex items-center gap-3">
                           <div
-                            className={`flex h-9 w-9 items-center justify-center rounded-xl ${
+                            className={`flex size-8 items-center justify-center rounded-lg ${
                               attempt.passed
-                                ? "bg-emerald-500/15 text-emerald-600"
-                                : "bg-amber-500/15 text-amber-600"
+                                ? "bg-[rgba(34,197,94,0.10)] text-[#22C55E]"
+                                : "bg-[rgba(249,115,22,0.10)] text-[#F97316]"
                             }`}
                           >
                             {attempt.passed ? (
@@ -1339,8 +1331,8 @@ export default function TeacherQuizzesPage() {
                             )}
                           </div>
                           <div>
-                            <p className="font-semibold text-sm text-foreground">{studentName}</p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-sm font-medium text-text-primary">{studentName}</p>
+                            <p className="text-[11px] text-text-tertiary">
                               {studentGuardian ? `${studentGuardian} • ` : ""}
                               {new Date(attempt.completed_at).toLocaleDateString()} at{" "}
                               {new Date(attempt.completed_at).toLocaleTimeString([], {
@@ -1354,18 +1346,20 @@ export default function TeacherQuizzesPage() {
                         <div className="flex items-center gap-3">
                           <div className="text-right">
                             <div className="flex items-center gap-1.5 justify-end">
-                              <span className="font-bold text-sm">{attempt.percentage}%</span>
+                              <span className="text-sm font-semibold text-text-primary">
+                                {attempt.percentage}%
+                              </span>
                               <Badge
                                 className={
                                   attempt.passed
-                                    ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 text-[10px]"
-                                    : "bg-amber-500/15 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 text-[10px]"
+                                    ? "bg-[hsl(var(--success)/0.12)] text-[11px] text-[hsl(var(--success))] hover:bg-[hsl(var(--success)/0.18)]"
+                                    : "bg-amber-500/15 text-[11px] text-amber-700 hover:bg-amber-500/20 dark:text-amber-300"
                                 }
                               >
                                 {attempt.passed ? "Passed" : "Needs Review"}
                               </Badge>
                             </div>
-                            <p className="text-[10px] text-muted-foreground mt-0.5">
+                            <p className="mt-0.5 text-[11px] text-text-tertiary">
                               {attempt.score} / {attempt.total_questions} correct
                             </p>
                           </div>
@@ -1382,7 +1376,7 @@ export default function TeacherQuizzesPage() {
                               return (
                                 <Badge
                                   variant="outline"
-                                  className="text-[10px] font-semibold text-amber-700 dark:text-amber-300 border-amber-500/30 bg-amber-500/10 shrink-0"
+                                  className="shrink-0 border-amber-500/30 bg-amber-500/10 text-[11px] font-medium text-amber-700 dark:text-amber-300"
                                 >
                                   Retake Active
                                 </Badge>
@@ -1400,7 +1394,7 @@ export default function TeacherQuizzesPage() {
                                     attempt.student_id,
                                   )
                                 }
-                                className="h-7 text-xs font-semibold gap-1 border-primary/30 text-primary hover:bg-primary/10 shrink-0"
+                                className="h-7 shrink-0 gap-1 border-primary/30 text-xs font-medium text-primary hover:bg-primary/10"
                               >
                                 <RotateCcw className="h-3 w-3" />
                                 {reassigningStudentId === attempt.student_id

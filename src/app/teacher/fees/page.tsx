@@ -164,10 +164,10 @@ export default function FeesPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-foreground">Fee Management</span>
-        </h1>
-        <p className="text-muted-foreground mt-1">Track and manage monthly fee payments</p>
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Fee Management</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
+          Track and manage monthly fee payments
+        </p>
       </div>
 
       <div className="flex flex-wrap gap-3">
@@ -229,45 +229,45 @@ export default function FeesPage() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="group relative overflow-hidden hover:border-border">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <CardTitle className="text-sm font-medium text-text-tertiary">
                 Payment Status
               </CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
-                <CheckCircle2 className="h-4.5 w-4.5 text-muted-foreground" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(59,130,246,0.10)] text-[#3B82F6]">
+                <CheckCircle2 className="h-4 w-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">
+            <p className="text-2xl font-semibold text-text-primary">
               {paidCount}{" "}
-              <span className="text-base font-normal text-muted-foreground">
+              <span className="text-base font-normal text-text-tertiary">
                 of {fees.length} paid
               </span>
             </p>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden hover:border-border">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <CardTitle className="text-sm font-medium text-text-tertiary">
                 Total Collected
               </CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
-                <TrendingUp className="h-4.5 w-4.5 text-emerald-500" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(34,197,94,0.10)] text-[#22C55E]">
+                <TrendingUp className="h-4 w-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-emerald-500">
+            <p className="text-2xl font-semibold text-green-600 dark:text-green-500">
               Rs{totalCollectedPKR.toLocaleString()}
             </p>
             <div className="flex flex-wrap gap-x-2 mt-1">
               {Object.entries(collectedByCurrency).map(([c, amt]) => (
-                <span key={c} className="text-[11px] text-muted-foreground">
+                <span key={c} className="text-xs text-text-tertiary">
                   {CURRENCY_SYMBOLS[c]}
                   {amt.toLocaleString()}
                 </span>
@@ -276,24 +276,24 @@ export default function FeesPage() {
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden hover:border-border">
+        <Card className="overflow-hidden">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <CardTitle className="text-sm font-medium text-text-tertiary">
                 Total Pending
               </CardTitle>
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary">
-                <AlertCircle className="h-4.5 w-4.5 text-muted-foreground" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
+                <AlertCircle className="h-4 w-4" />
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-foreground">
+            <p className="text-2xl font-semibold text-text-primary">
               Rs{totalPendingPKR.toLocaleString()}
             </p>
             <div className="flex flex-wrap gap-x-2 mt-1">
               {Object.entries(pendingByCurrency).map(([c, amt]) => (
-                <span key={c} className="text-[11px] text-muted-foreground">
+                <span key={c} className="text-xs text-text-tertiary">
                   {CURRENCY_SYMBOLS[c]}
                   {amt.toLocaleString()}
                 </span>
@@ -309,11 +309,11 @@ export default function FeesPage() {
       ) : fees.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <CreditCard className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary text-icon-secondary">
+              <CreditCard className="h-6 w-6" />
             </div>
-            <p className="text-lg font-medium mb-1">No fee records</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="mb-1 font-medium text-text-primary">No fee records</p>
+            <p className="text-sm text-text-tertiary">
               No active students found for {format(new Date(year, month - 1, 1), "MMMM yyyy")}
             </p>
           </CardContent>
@@ -327,11 +327,13 @@ export default function FeesPage() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 bg-secondary text-muted-foreground">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium flex-shrink-0 bg-background-gray-secondary text-text-secondary">
                         {fee.students?.name?.charAt(0)}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-medium text-sm truncate">{fee.students?.name}</p>
+                        <p className="font-medium text-sm truncate text-text-primary">
+                          {fee.students?.name}
+                        </p>
                         <div className="flex items-center gap-2 mt-1">
                           <FeeDisplay
                             amount={fee.students?.fee || 0}
@@ -373,7 +375,7 @@ export default function FeesPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border/50">
+                  <tr className="border-b border-border-primary">
                     <th scope="col" className="px-5 py-4 text-left">
                       <SortableHeader
                         label="Student"
@@ -412,7 +414,7 @@ export default function FeesPage() {
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                      className="px-5 py-4 text-right text-xs font-medium uppercase text-text-tertiary"
                     >
                       Action
                     </th>
@@ -422,14 +424,16 @@ export default function FeesPage() {
                   {paginated.map((fee) => (
                     <tr
                       key={fee.id}
-                      className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
+                      className="border-b border-border-primary last:border-0 hover:bg-background-gray-primary transition-colors"
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold flex-shrink-0 bg-secondary text-muted-foreground">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-medium flex-shrink-0 bg-background-gray-secondary text-text-secondary">
                             {fee.students?.name?.charAt(0)}
                           </div>
-                          <span className="font-medium text-sm">{fee.students?.name}</span>
+                          <span className="font-medium text-sm text-text-primary">
+                            {fee.students?.name}
+                          </span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -444,7 +448,7 @@ export default function FeesPage() {
                           {fee.is_paid ? "Paid" : "Unpaid"}
                         </Badge>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted-foreground">
+                      <td className="px-5 py-4 text-sm text-text-tertiary">
                         {fee.paid_at ? format(new Date(fee.paid_at), "MMM d, yyyy h:mm a") : "--"}
                       </td>
                       <td className="px-5 py-4 text-right">

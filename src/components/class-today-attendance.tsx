@@ -33,8 +33,8 @@ export const ATTENDANCE_TONE: Record<
 > = {
   present: {
     icon: Check,
-    active: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600",
-    dot: "bg-emerald-500",
+    active: "border-green-500/30 bg-green-500/10 text-green-600",
+    dot: "bg-green-500",
   },
   student_absent: {
     icon: UserX,
@@ -53,7 +53,7 @@ export const ATTENDANCE_TONE: Record<
   },
   unmarked: {
     icon: null,
-    active: "border-border bg-muted text-muted-foreground",
+    active: "border-card-border bg-background-gray-secondary text-text-tertiary",
     dot: "bg-muted-foreground/30",
   },
 }
@@ -103,7 +103,7 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
   }, [idsKey, today])
 
   if (scheduled.length === 0) {
-    return <p className="text-sm text-muted-foreground">No classes scheduled today.</p>
+    return <p className="text-sm text-text-tertiary">No classes scheduled today.</p>
   }
 
   const statusOf = (id: string): AttendanceStatus | "unmarked" =>
@@ -183,13 +183,13 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
 
   return (
     <Card>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-primary px-6 py-4">
         <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold">
+          <h2 className="flex items-center gap-2 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
             <CalendarCheck className="h-4 w-4 text-primary" />
             Today&apos;s attendance
           </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-sm text-text-tertiary">
             {scheduled.length} scheduled today · a saved class counts as present
           </p>
         </div>
@@ -210,16 +210,14 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
           )}
         </div>
       </div>
-      <CardContent className="divide-y divide-border/50 py-1">
+      <CardContent className="divide-y divide-border-primary px-6 py-1">
         {scheduled.map((s) => {
           const current = statusOf(s.id)
           return (
             <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold">{s.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {s.class_time || "No class time set"}
-                </p>
+                <p className="truncate text-sm font-medium text-text-primary">{s.name}</p>
+                <p className="text-xs text-text-tertiary">{s.class_time || "No class time set"}</p>
               </div>
               <div className="flex flex-wrap gap-1">
                 {ATTENDANCE_STATUSES.map((status) => {
@@ -235,8 +233,8 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
                       className={cn(
                         "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
                         isActive
-                          ? cn(tone.active, "font-semibold")
-                          : "border-border bg-card text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                          ? tone.active
+                          : "border-card-border bg-card-background text-text-secondary hover:bg-background-gray-primary hover:text-text-primary",
                       )}
                     >
                       <Icon className="h-3.5 w-3.5" />

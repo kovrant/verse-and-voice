@@ -67,26 +67,26 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-sky-500/15 text-sky-600">
+          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
             <LogIn className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <p className="text-sm font-semibold text-foreground">Sign-in Access</p>
+              <p className="text-sm font-semibold text-text-primary">Sign-in Access</p>
               {!loading && hasLogin && (
                 <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
                     enabled
-                      ? "bg-emerald-500/15 text-emerald-600"
-                      : "bg-secondary text-muted-foreground"
+                      ? "bg-green-500/10 text-green-600"
+                      : "bg-background-gray-secondary text-text-secondary"
                   }`}
                 >
                   <span
                     className={`h-1.5 w-1.5 rounded-full ${
-                      enabled ? "bg-emerald-500" : "bg-muted-foreground/50"
+                      enabled ? "bg-green-500" : "bg-icon-tertiary"
                     }`}
                   />
                   {enabled ? "Allowed" : "Off"}
@@ -96,11 +96,11 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
             {loading ? (
               <div className="mt-1.5 h-4 w-48 shimmer rounded" />
             ) : !hasLogin ? (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 Create a login first (see Portal Access) so you can control sign-in.
               </p>
             ) : (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 {enabled
                   ? "The student can sign in to the portal."
                   : "The student can't sign in — they'll be asked to contact you."}
@@ -117,11 +117,11 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
           disabled={loading || saving || !hasLogin}
           onClick={toggle}
           className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
-            enabled ? "bg-emerald-500" : "bg-secondary"
+            enabled ? "bg-primary" : "bg-background-gray-tertiary"
           }`}
         >
           <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-card shadow-sm transition-transform ${
+            className={`inline-block h-5 w-5 transform rounded-full bg-card-background shadow-xs transition-transform ${
               enabled ? "translate-x-[22px]" : "translate-x-0.5"
             }`}
           />

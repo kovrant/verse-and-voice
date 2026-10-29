@@ -90,10 +90,10 @@ export default function AiUsagePage() {
         <div className="h-8 w-48 rounded-lg bg-muted" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 rounded-2xl bg-muted/60" />
+            <div key={i} className="h-28 rounded-xl bg-muted/60" />
           ))}
         </div>
-        <div className="h-64 rounded-2xl bg-muted/60" />
+        <div className="h-64 rounded-xl bg-muted/60" />
       </div>
     )
   }
@@ -120,7 +120,7 @@ export default function AiUsagePage() {
           asChild
           variant="ghost"
           size="sm"
-          className="gap-1.5 text-muted-foreground hover:text-foreground"
+          className="gap-1.5 text-text-secondary hover:text-text-primary"
         >
           <Link href="/teacher">
             <ArrowLeft className="h-4 w-4" /> Back to Dashboard
@@ -128,14 +128,14 @@ export default function AiUsagePage() {
         </Button>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-semibold">
+          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-medium">
             <Link href="/teacher/history">
-              <BookOpen className="h-3.5 w-3.5 text-teal-500" />
+              <BookOpen className="h-3.5 w-3.5 text-[#0EA5E9]" />
               <span>Story Studio</span>
             </Link>
           </Button>
 
-          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-semibold">
+          <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-medium">
             <Link href="/teacher/quizzes">
               <Trophy className="h-3.5 w-3.5 text-amber-500" />
               <span>Quiz Studio</span>
@@ -147,7 +147,7 @@ export default function AiUsagePage() {
             size="sm"
             onClick={() => fetchUsage(true)}
             disabled={refreshing}
-            className="h-8 gap-1.5 text-xs font-semibold"
+            className="h-8 gap-1.5 text-xs font-medium"
           >
             <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
             <span>Refresh</span>
@@ -157,72 +157,70 @@ export default function AiUsagePage() {
             href="https://aistudio.google.com/app/usage"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-semibold border border-border/80 rounded-lg hover:bg-muted transition-colors text-foreground"
+            className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium border border-card-border rounded-lg shadow-xs hover:bg-background-gray-primary transition-colors text-text-primary"
           >
             <span>Google AI Studio</span>
-            <ExternalLink className="h-3 w-3 text-muted-foreground" />
+            <ExternalLink className="h-3 w-3 text-icon-tertiary" />
           </a>
         </div>
       </div>
 
       {/* Main Title Banner */}
-      <div className="rounded-3xl border border-border/80 bg-gradient-to-r from-amber-500/10 via-card to-teal-500/10 p-6 sm:p-8 space-y-3 shadow-soft">
+      <div className="rounded-xl border border-card-border bg-card-background p-6 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 shadow-xs">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
               <Sparkles className="h-6 w-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+                <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
                   Google Gemini AI Quota & Tokens
                 </h1>
                 <Badge
                   variant="outline"
                   className={cn(
-                    "text-[10px] font-extrabold uppercase tracking-wider px-2.5 py-0.5 rounded-full border",
+                    "text-[11px] font-medium uppercase px-2.5 py-0.5 rounded-full border",
                     data?.configured
-                      ? "bg-teal-500/10 text-teal-400 border-teal-500/40"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/40",
+                      ? "bg-green-500/10 text-green-600 border-green-500/30"
+                      : "bg-amber-500/10 text-amber-600 border-amber-500/30",
                   )}
                 >
                   {data?.configured && (
                     <span className="relative flex h-2 w-2 mr-1.5">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500"></span>
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                     </span>
                   )}
                   {data?.configured ? "CONNECTED" : "OFFLINE"}
                 </Badge>
               </div>
-              <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-0.5">
+              <p className="text-sm leading-5 text-text-tertiary">
                 Model:{" "}
-                <strong className="text-foreground">{data?.model || "gemini-3.5-flash"}</strong> ·{" "}
-                {data?.tier || "Free Tier (1,500 RPD / 15 RPM)"}
+                <strong className="font-medium text-text-primary">
+                  {data?.model || "gemini-3.5-flash"}
+                </strong>{" "}
+                · {data?.tier || "Free Tier (1,500 RPD / 15 RPM)"}
               </p>
             </div>
           </div>
 
           <div className="text-right">
-            <span className="text-xs font-semibold text-muted-foreground">
-              Daily quota resets in:
-            </span>
-            <p className="font-heading text-xl font-bold text-foreground">
+            <span className="text-xs font-medium text-text-tertiary">Daily quota resets in:</span>
+            <p className="text-xl font-semibold text-text-primary">
               {formatCountdown(data?.reset_in_seconds ?? 0)}
             </p>
-            <p className="text-[10px] text-muted-foreground/80">
-              (Midnight Pacific Time / 12:00 PM PKT)
-            </p>
+            <p className="text-[11px] text-text-tertiary">(Midnight Pacific Time / 12:00 PM PKT)</p>
           </div>
         </div>
 
         {/* Warning Banner if quota is running low */}
         {isCritical && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-rose-500/40 bg-rose-500/10 p-3.5 text-xs text-rose-300">
-            <AlertCircle className="h-5 w-5 text-rose-400 shrink-0" />
+          <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-destructive/30 bg-destructive/10 p-3.5 text-xs text-destructive">
+            <AlertCircle className="h-5 w-5 shrink-0" />
             <div>
-              <p className="font-bold">Daily Gemini Quota Almost Exhausted!</p>
-              <p className="text-[11px] text-rose-300/80">
+              <p className="font-semibold">Daily Gemini Quota Almost Exhausted!</p>
+              <p className="text-xs opacity-80">
                 You have {data?.requests_remaining} calls left today. Offline backup templates will
                 automatically activate if quota is fully reached.
               </p>
@@ -231,11 +229,11 @@ export default function AiUsagePage() {
         )}
 
         {isWarning && !isCritical && (
-          <div className="mt-4 flex items-center gap-2.5 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3.5 text-xs text-amber-300">
-            <AlertTriangle className="h-5 w-5 text-amber-400 shrink-0" />
+          <div className="mt-4 flex items-center gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3.5 text-xs text-amber-700 dark:text-amber-300">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
             <div>
-              <p className="font-bold">High AI Usage Today</p>
-              <p className="text-[11px] text-amber-300/80">
+              <p className="font-semibold">High AI Usage Today</p>
+              <p className="text-xs opacity-80">
                 You have used {usagePercent}% of your daily free requests (
                 {data?.requests_remaining} remaining). Quota resets at midnight Pacific Time.
               </p>
@@ -247,101 +245,91 @@ export default function AiUsagePage() {
       {/* 4 Stat Cards Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Card 1: Daily Requests */}
-        <Card className="border-border/80 shadow-2xs">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Daily Requests
-            </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-teal-500/15 text-teal-400">
+            <CardTitle className="text-sm font-medium text-text-tertiary">Daily Requests</CardTitle>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
               <Zap className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-heading text-2xl sm:text-3xl font-black text-foreground">
+              <span className="text-2xl font-semibold text-text-primary">
                 {data?.requests_remaining.toLocaleString()}
               </span>
-              <span className="text-xs text-muted-foreground font-semibold">
+              <span className="text-xs font-medium text-text-tertiary">
                 / {data?.daily_limit.toLocaleString()} RPD
               </span>
             </div>
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background-gray-secondary">
               <div
-                className="h-full rounded-full bg-teal-500 transition-all duration-500"
+                className="h-full rounded-full bg-green-500 transition-all duration-500"
                 style={{ width: `${Math.max(2, remainingPercent)}%` }}
               />
             </div>
-            <p className="text-[11px] text-muted-foreground mt-1.5">
+            <p className="text-xs text-text-tertiary mt-1.5">
               {data?.requests_today ?? 0} calls used today ({usagePercent}%)
             </p>
           </CardContent>
         </Card>
 
         {/* Card 2: Tokens Today */}
-        <Card className="border-border/80 shadow-2xs">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Tokens Today
-            </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+            <CardTitle className="text-sm font-medium text-text-tertiary">Tokens Today</CardTitle>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
               <Activity className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="font-heading text-2xl sm:text-3xl font-black text-foreground">
+            <div className="text-2xl font-semibold text-text-primary">
               {(data?.tokens_today ?? 0).toLocaleString()}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">
-              Generated across stories & quests
-            </p>
+            <p className="text-xs text-text-tertiary mt-2">Generated across stories & quests</p>
           </CardContent>
         </Card>
 
         {/* Card 3: Month Tokens */}
-        <Card className="border-border/80 shadow-2xs">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Month Tokens
-            </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-purple-500/15 text-purple-400">
+            <CardTitle className="text-sm font-medium text-text-tertiary">Month Tokens</CardTitle>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(168,85,247,0.10)] text-[#A855F7]">
               <Flame className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="font-heading text-2xl sm:text-3xl font-black text-foreground">
+            <div className="text-2xl font-semibold text-text-primary">
               {(data?.tokens_this_month ?? 0).toLocaleString()}
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">Monthly cumulative consumption</p>
+            <p className="text-xs text-text-tertiary mt-2">Monthly cumulative consumption</p>
           </CardContent>
         </Card>
 
         {/* Card 4: Rate Limit */}
-        <Card className="border-border/80 shadow-2xs">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Rate Limit
-            </CardTitle>
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-500/15 text-emerald-400">
+            <CardTitle className="text-sm font-medium text-text-tertiary">Rate Limit</CardTitle>
+            <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
               <Cpu className="h-4 w-4" />
             </div>
           </CardHeader>
           <CardContent>
             <div className="flex items-baseline gap-1.5">
-              <span className="font-heading text-2xl sm:text-3xl font-black text-foreground">
+              <span className="text-2xl font-semibold text-text-primary">
                 {data?.rpm_limit || 15}
               </span>
-              <span className="text-xs text-muted-foreground font-semibold">RPM</span>
+              <span className="text-xs font-medium text-text-tertiary">RPM</span>
             </div>
-            <p className="text-[11px] text-muted-foreground mt-2">Max 15 requests per minute</p>
+            <p className="text-xs text-text-tertiary mt-2">Max 15 requests per minute</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Deep-Dive Overview & Gauge */}
-      <Card className="border-border/80 shadow-soft overflow-hidden">
+      <Card className="overflow-hidden">
         <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-bold flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-amber-500" />
+          <CardTitle className="flex items-center gap-2 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            <Sparkles className="h-4 w-4 text-[#F97316]" />
             Daily Allowance Gauge & Limits
           </CardTitle>
         </CardHeader>
@@ -356,7 +344,7 @@ export default function AiUsagePage() {
                     cy="60"
                     r={radius}
                     stroke="currentColor"
-                    className="text-muted/30"
+                    className="text-background-gray-secondary"
                     strokeWidth="8"
                     fill="none"
                   />
@@ -367,7 +355,11 @@ export default function AiUsagePage() {
                     stroke="currentColor"
                     className={cn(
                       "transition-all duration-700 ease-out",
-                      isCritical ? "text-rose-500" : isWarning ? "text-amber-500" : "text-teal-500",
+                      isCritical
+                        ? "text-rose-500"
+                        : isWarning
+                          ? "text-amber-500"
+                          : "text-green-500",
                     )}
                     strokeWidth="8"
                     strokeDasharray={circumference}
@@ -377,15 +369,15 @@ export default function AiUsagePage() {
                   />
                 </svg>
                 <div className="absolute flex flex-col items-center justify-center text-center">
-                  <span className="font-heading text-xl font-black text-foreground">
+                  <span className="text-xl font-semibold text-text-primary">
                     {remainingPercent}%
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="text-[11px] font-medium uppercase text-text-tertiary">
                     Remaining
                   </span>
                 </div>
               </div>
-              <p className="text-xs font-semibold text-muted-foreground mt-3 text-center">
+              <p className="text-xs font-medium text-text-tertiary mt-3 text-center">
                 {data?.requests_remaining.toLocaleString()} of {data?.daily_limit.toLocaleString()}{" "}
                 calls free
               </p>
@@ -394,8 +386,10 @@ export default function AiUsagePage() {
             {/* Explanation Column */}
             <div className="md:col-span-2 space-y-3.5">
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-foreground">How Google Gemini Quota Works</h3>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <h3 className="text-sm font-semibold text-text-primary">
+                  How Google Gemini Quota Works
+                </h3>
+                <p className="text-sm text-text-tertiary leading-relaxed">
                   Google Gemini 2.0 / 3.5 provides a free allowance of{" "}
                   <strong>1,500 daily requests (RPD)</strong> and{" "}
                   <strong>15 requests per minute (RPM)</strong>. Every time you generate an Islamic
@@ -405,23 +399,23 @@ export default function AiUsagePage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                <div className="rounded-xl border border-border/70 bg-card/60 p-3 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <div className="rounded-lg border border-card-border p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                     <span>Automatic Midnight Reset</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-text-tertiary">
                     The 1,500 counter resets automatically every day at 00:00 Pacific Time (12:00 PM
                     PKT).
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-border/70 bg-card/60 p-3 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-foreground">
-                    <CheckCircle2 className="h-4 w-4 text-teal-500" />
+                <div className="rounded-lg border border-card-border p-3 space-y-1">
+                  <div className="flex items-center gap-1.5 text-sm font-medium text-text-primary">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
                     <span>Zero-Downtime Offline Fallback</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-xs text-text-tertiary">
                     If internet drops or the daily limit is ever reached, built-in offline templates
                     seamlessly craft authentic stories so teaching never stops.
                   </p>
@@ -433,33 +427,33 @@ export default function AiUsagePage() {
       </Card>
 
       {/* Recent Activity Log Table */}
-      <Card className="border-border/80 shadow-soft">
+      <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base font-bold flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
+          <CardTitle className="flex items-center gap-2 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            <Clock className="h-4 w-4 text-icon-secondary" />
             Recent AI Generation Activity Logs
           </CardTitle>
-          <span className="text-xs text-muted-foreground font-medium">
+          <span className="text-sm text-text-tertiary">
             {data?.recent_logs?.length || 0} recent record(s)
           </span>
         </CardHeader>
         <CardContent>
           {!data?.recent_logs || data.recent_logs.length === 0 ? (
             <div className="text-center py-8 space-y-2">
-              <Sparkles className="h-8 w-8 mx-auto text-muted-foreground/40" />
-              <p className="text-sm font-semibold text-foreground">
-                No recent AI generations logged yet
-              </p>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+              <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary text-icon-secondary">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <p className="font-medium text-text-primary">No recent AI generations logged yet</p>
+              <p className="text-sm text-text-tertiary max-w-sm mx-auto">
                 Whenever you generate a new Islamic story or story quest quiz, the detailed tokens
                 and execution metrics will appear here.
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-border/70 text-muted-foreground font-semibold">
+                  <tr className="border-b border-border-primary text-xs font-medium uppercase text-text-tertiary">
                     <th className="pb-2.5 pl-2">Time</th>
                     <th className="pb-2.5">Topic / Activity</th>
                     <th className="pb-2.5">Model</th>
@@ -467,28 +461,28 @@ export default function AiUsagePage() {
                     <th className="pb-2.5 pr-2">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border/40">
+                <tbody className="divide-y divide-border-primary">
                   {data.recent_logs.map((log) => (
-                    <tr key={log.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="py-2.5 pl-2 font-mono text-muted-foreground">
+                    <tr key={log.id} className="hover:bg-background-gray-primary transition-colors">
+                      <td className="py-2.5 pl-2 font-mono text-text-tertiary">
                         {new Date(log.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
                           minute: "2-digit",
                         })}
                       </td>
-                      <td className="py-2.5 font-medium text-foreground max-w-xs truncate">
+                      <td className="py-2.5 font-medium text-text-primary max-w-xs truncate">
                         {log.topic || "Story & Quest Generation"}
                       </td>
-                      <td className="py-2.5 text-muted-foreground">
+                      <td className="py-2.5 text-text-tertiary">
                         {log.model || "gemini-3.5-flash"}
                       </td>
-                      <td className="py-2.5 font-mono font-semibold text-foreground">
+                      <td className="py-2.5 font-mono font-medium text-text-primary">
                         {(log.total_tokens || log.tokens || 0).toLocaleString()}
                       </td>
                       <td className="py-2.5 pr-2">
                         <Badge
-                          variant={log.status === "success" ? "default" : "warning"}
-                          className="text-[10px] py-0 font-bold"
+                          variant={log.status === "success" ? "success" : "warning"}
+                          className="text-[11px] py-0 font-medium"
                         >
                           {log.status === "success" ? "Success" : log.status}
                         </Badge>
@@ -501,13 +495,13 @@ export default function AiUsagePage() {
           )}
 
           {data?.table_ready === false && (
-            <div className="mt-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-300 flex items-start gap-2.5">
-              <HelpCircle className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
+            <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300 flex items-start gap-2.5">
+              <HelpCircle className="h-4 w-4 shrink-0 text-amber-500 mt-0.5" />
               <div>
-                <span className="font-bold">Permanent Log Storage:</span>
-                <p className="text-[11px] text-amber-300/80 mt-0.5">
+                <span className="font-semibold">Permanent Log Storage:</span>
+                <p className="text-xs opacity-80 mt-0.5">
                   To persist every API call log across server restarts, execute{" "}
-                  <code className="font-mono bg-black/30 px-1 py-0.5 rounded text-[10px]">
+                  <code className="font-mono bg-background-gray-secondary px-1 py-0.5 rounded text-[11px]">
                     supabase/migration_ai_usage_logs.sql
                   </code>{" "}
                   in your Supabase SQL Editor.

@@ -300,8 +300,8 @@ export function StudentHadithQuizCard({
       <div className="py-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Hadith</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm font-semibold text-text-primary">Hadith</p>
+            <p className="text-xs text-text-tertiary">
               {memorizedHadiths.length}/50 memorized
               {!milestone.isComplete &&
                 ` · Next: ${milestone.badgeTitle} (${milestone.target - milestone.current} left)`}
@@ -324,7 +324,7 @@ export function StudentHadithQuizCard({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  className="h-8 px-2 text-xs text-text-secondary hover:text-text-primary"
                   onClick={() => setAssignHadithOpen((v) => !v)}
                   title="Choose another Hadith"
                 >
@@ -352,15 +352,12 @@ export function StudentHadithQuizCard({
 
         {/* Inline Hadith Picker */}
         {assignHadithOpen && (
-          <div className="rounded-xl border border-border/60 bg-secondary/20 p-3 space-y-2">
+          <div className="rounded-lg border border-card-border bg-background-gray-primary p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-medium uppercase text-text-tertiary">
                 Select Hadith for {studentName}
               </p>
-              <Link
-                href="/hadiths"
-                className="text-[11px] font-medium text-emerald-600 hover:underline"
-              >
+              <Link href="/hadiths" className="text-xs font-medium text-primary hover:underline">
                 Full library →
               </Link>
             </div>
@@ -371,19 +368,19 @@ export function StudentHadithQuizCard({
                   type="button"
                   disabled={!!busyId}
                   onClick={() => void handleAssignHadith(h)}
-                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-secondary/60 disabled:opacity-50"
+                  className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-background-gray-secondary disabled:opacity-50"
                 >
-                  <span className="min-w-0 flex-1 truncate text-muted-foreground">
-                    <strong className="text-foreground">#{h.hadith_number}</strong> ·{" "}
+                  <span className="min-w-0 flex-1 truncate text-text-tertiary">
+                    <strong className="text-text-primary">#{h.hadith_number}</strong> ·{" "}
                     {h.english_text}
                   </span>
-                  <span className="text-[11px] font-semibold text-emerald-600 flex-shrink-0">
+                  <span className="text-[11px] font-semibold text-primary flex-shrink-0">
                     + Assign
                   </span>
                 </button>
               ))}
               {availableHadithsToAssign.length === 0 && (
-                <p className="text-xs text-muted-foreground py-1">
+                <p className="text-xs text-text-tertiary py-1">
                   All published Hadiths are already assigned or memorized.
                 </p>
               )}
@@ -399,21 +396,21 @@ export function StudentHadithQuizCard({
               return (
                 <div
                   key={hadith.id}
-                  className="flex items-center justify-between gap-3 rounded-xl bg-secondary/25 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-card-border px-3 py-2"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-xs font-bold text-emerald-600">
+                      <span className="text-xs font-semibold text-primary">
                         #{hadith.hadith_number}
                       </span>
-                      <span className="text-xs font-medium text-foreground truncate">
+                      <span className="text-xs font-medium text-text-primary truncate">
                         {hadith.english_text}
                       </span>
                     </div>
                     {hadith.arabic_text && (
                       <p
                         dir="rtl"
-                        className="mt-0.5 font-arabic text-xs text-muted-foreground truncate"
+                        className="mt-0.5 font-arabic text-xs text-text-tertiary truncate"
                       >
                         {hadith.arabic_text}
                       </p>
@@ -425,7 +422,7 @@ export function StudentHadithQuizCard({
                       size="sm"
                       disabled={!!busyId}
                       onClick={() => void handleMarkHadithMemorized(hadith)}
-                      className="h-7 text-xs text-emerald-600 hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                      className="h-7 text-xs text-green-600 hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-600"
                     >
                       {isMarking ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -441,7 +438,7 @@ export function StudentHadithQuizCard({
                       disabled={!!busyId}
                       onClick={() => void handleUnassignHadith(hadith.id, assignmentId)}
                       title="Unassign Hadith"
-                      className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-icon-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -458,10 +455,10 @@ export function StudentHadithQuizCard({
             <button
               type="button"
               onClick={() => setMemorizedDrawerOpen((o) => !o)}
-              className="flex w-full items-center justify-between py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex w-full items-center justify-between py-1 text-xs text-text-tertiary hover:text-text-primary transition-colors"
             >
               <span>
-                <strong className="font-medium text-foreground">Memorized Hadiths</strong> (
+                <strong className="font-medium text-text-primary">Memorized Hadiths</strong> (
                 {memorizedHadiths.length} completed)
               </span>
               <ChevronDown
@@ -472,18 +469,18 @@ export function StudentHadithQuizCard({
               />
             </button>
             {memorizedDrawerOpen && (
-              <div className="mt-1.5 space-y-1 border-l-2 border-border/60 pl-3 max-h-40 overflow-y-auto main-scroll">
+              <div className="mt-1.5 space-y-1 border-l-2 border-border-primary pl-3 max-h-40 overflow-y-auto main-scroll">
                 {memorizedHadiths.map(({ hadith, progress }) => (
                   <div
                     key={hadith.id}
                     className="flex items-center justify-between gap-2 text-xs py-0.5"
                   >
-                    <span className="truncate text-muted-foreground">
-                      <strong className="text-foreground">#{hadith.hadith_number}</strong> ·{" "}
+                    <span className="truncate text-text-tertiary">
+                      <strong className="text-text-primary">#{hadith.hadith_number}</strong> ·{" "}
                       {hadith.english_text}
                     </span>
                     {progress.memorized_at && (
-                      <span className="text-[10px] text-muted-foreground flex-shrink-0">
+                      <span className="text-[11px] text-text-tertiary flex-shrink-0">
                         {safeFormatDate(progress.memorized_at, "MMM d")}
                       </span>
                     )}
@@ -499,8 +496,8 @@ export function StudentHadithQuizCard({
       <div className="pt-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Quizzes</p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-sm font-semibold text-text-primary">Quizzes</p>
+            <p className="text-xs text-text-tertiary">
               {pendingQuizzes.length} pending
               {completedQuizzes.length > 0 && ` · ${completedQuizzes.length} completed`}
             </p>
@@ -518,15 +515,12 @@ export function StudentHadithQuizCard({
 
         {/* Inline Quiz Picker */}
         {assignQuizOpen && (
-          <div className="rounded-xl border border-border/60 bg-secondary/20 p-3 space-y-2">
+          <div className="rounded-lg border border-card-border bg-background-gray-primary p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-medium uppercase text-text-tertiary">
                 Select Quiz for {studentName}
               </p>
-              <Link
-                href="/quizzes"
-                className="text-[11px] font-medium text-emerald-600 hover:underline"
-              >
+              <Link href="/quizzes" className="text-xs font-medium text-primary hover:underline">
                 Quiz builder →
               </Link>
             </div>
@@ -539,20 +533,20 @@ export function StudentHadithQuizCard({
                     type="button"
                     disabled={!!busyId}
                     onClick={() => void handleAssignQuiz(q, !!existing)}
-                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-secondary/60 disabled:opacity-50"
+                    className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs transition-colors hover:bg-background-gray-secondary disabled:opacity-50"
                   >
                     <div className="min-w-0 flex-1 truncate">
-                      <span className="font-semibold text-foreground">{q.title}</span>
-                      <span className="text-muted-foreground"> · {q.category}</span>
+                      <span className="font-semibold text-text-primary">{q.title}</span>
+                      <span className="text-text-tertiary"> · {q.category}</span>
                     </div>
-                    <span className="text-[11px] font-semibold text-emerald-600 flex-shrink-0">
+                    <span className="text-[11px] font-semibold text-primary flex-shrink-0">
                       {existing ? "Reassign" : "+ Assign"}
                     </span>
                   </button>
                 )
               })}
               {quizzes.length === 0 && (
-                <p className="text-xs text-muted-foreground py-1">No quizzes created yet.</p>
+                <p className="text-xs text-text-tertiary py-1">No quizzes created yet.</p>
               )}
             </div>
           </div>
@@ -567,13 +561,13 @@ export function StudentHadithQuizCard({
               return (
                 <div
                   key={assignment.id}
-                  className="flex items-center justify-between gap-2 rounded-xl bg-amber-500/10 px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-lg bg-amber-500/10 px-3 py-2"
                 >
                   <div className="min-w-0 flex-1 flex items-center gap-2">
-                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-semibold text-amber-500">
+                    <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-600">
                       Pending
                     </span>
-                    <span className="text-xs font-medium text-foreground truncate">
+                    <span className="text-xs font-medium text-text-primary truncate">
                       {quiz.title}
                     </span>
                   </div>
@@ -582,7 +576,7 @@ export function StudentHadithQuizCard({
                     disabled={!!busyId}
                     onClick={() => void handleUnassignQuiz(assignment.id)}
                     title="Remove quiz assignment"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg text-icon-tertiary transition-colors hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -629,21 +623,21 @@ function PastQuizzesDrawer({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between py-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="flex w-full items-center justify-between py-1 text-xs text-text-tertiary hover:text-text-primary transition-colors"
       >
         <span>
-          <strong className="font-medium text-foreground">
+          <strong className="font-medium text-text-primary">
             Past {completedQuizzes.length} quiz{completedQuizzes.length === 1 ? "" : "zes"}
           </strong>
         </span>
-        <span className="inline-flex items-center gap-1 text-muted-foreground">
+        <span className="inline-flex items-center gap-1 text-text-tertiary">
           Past {completedQuizzes.length} quiz{completedQuizzes.length === 1 ? "" : "zes"}
           <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
         </span>
       </button>
 
       {open && (
-        <div className="mt-1.5 space-y-1.5 border-l-2 border-border/60 pl-3 max-h-48 overflow-y-auto main-scroll">
+        <div className="mt-1.5 space-y-1.5 border-l-2 border-border-primary pl-3 max-h-48 overflow-y-auto main-scroll">
           {completedQuizzes.map((assignment) => {
             const quiz = quizById.get(assignment.quiz_id)
             if (!quiz) return null
@@ -654,9 +648,9 @@ function PastQuizzesDrawer({
                 className="flex items-center justify-between gap-2 py-1 text-xs"
               >
                 <div className="min-w-0 flex-1 truncate">
-                  <span className="font-medium text-foreground">{quiz.title}</span>
+                  <span className="font-medium text-text-primary">{quiz.title}</span>
                   {latestAttempt && (
-                    <span className="ml-2 text-[11px] text-muted-foreground">
+                    <span className="ml-2 text-[11px] text-text-tertiary">
                       {latestAttempt.score}% · {latestAttempt.passed ? "Passed" : "Done"}
                       {latestAttempt.completed_at &&
                         ` · ${safeFormatDate(latestAttempt.completed_at, "MMM d")}`}
@@ -668,7 +662,7 @@ function PastQuizzesDrawer({
                     type="button"
                     disabled={!!busyId}
                     onClick={() => onReassign(quiz)}
-                    className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
+                    className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium text-text-secondary hover:bg-background-gray-secondary hover:text-text-primary transition-colors"
                   >
                     <RotateCcw className="h-3 w-3" />
                     Reassign
@@ -678,7 +672,7 @@ function PastQuizzesDrawer({
                     disabled={!!busyId}
                     onClick={() => onRemove(assignment.id)}
                     title="Remove quiz"
-                    className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                    className="text-icon-tertiary hover:text-destructive transition-colors p-1"
                   >
                     <Trash2 className="h-3 w-3" />
                   </button>

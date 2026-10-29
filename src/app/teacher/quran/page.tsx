@@ -72,17 +72,17 @@ export default function QuranPage() {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
         {/* Header bar */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card">
+        <div className="flex items-center justify-between border-b border-border-primary bg-card-background px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setViewingPara(null)}>
               <X className="h-4 w-4 mr-1" />
               Close
             </Button>
-            <div className="h-5 w-px bg-border" />
+            <div className="h-5 w-px bg-border-primary" />
             <div>
-              <p className="text-sm font-semibold">{viewingPara.title}</p>
+              <p className="text-sm font-semibold text-text-primary">{viewingPara.title}</p>
               {viewingPara.meta?.para_number && (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-tertiary">
                   Para {viewingPara.meta.para_number} of 30
                 </p>
               )}
@@ -98,7 +98,7 @@ export default function QuranPage() {
               <ChevronLeft className="h-4 w-4 mr-1" />
               Previous
             </Button>
-            <span className="text-xs text-muted-foreground px-2">
+            <span className="px-2 text-xs text-text-tertiary">
               {currentIdx + 1} / {paras.length}
             </span>
             <Button
@@ -138,10 +138,8 @@ export default function QuranPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-foreground">Quran Paras</span>
-        </h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Quran Paras</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
           {paras.length > 0
             ? `${paras.length} of 30 paras uploaded`
             : "Upload Quran paras from the Media Library"}
@@ -151,7 +149,7 @@ export default function QuranPage() {
       {/* Search */}
       {paras.length > 0 && (
         <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search paras..."
             value={search}
@@ -165,13 +163,13 @@ export default function QuranPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <BookOpen className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+              <BookOpen className="h-6 w-6 text-icon-secondary" />
             </div>
             {paras.length === 0 ? (
               <>
-                <p className="text-lg font-medium mb-1">No Quran paras uploaded yet</p>
-                <p className="text-sm text-muted-foreground mb-5">
+                <p className="mb-1 font-medium text-text-primary">No Quran paras uploaded yet</p>
+                <p className="mb-5 text-sm text-text-tertiary">
                   Go to Media Library to upload Quran PDFs
                 </p>
                 <Button variant="outline" onClick={() => (window.location.href = "/teacher/media")}>
@@ -179,7 +177,7 @@ export default function QuranPage() {
                 </Button>
               </>
             ) : (
-              <p className="text-muted-foreground">No paras match your search</p>
+              <p className="text-sm text-text-tertiary">No paras match your search</p>
             )}
           </CardContent>
         </Card>
@@ -190,21 +188,21 @@ export default function QuranPage() {
               key={para.id}
               type="button"
               onClick={() => setViewingPara(para)}
-              className="group relative flex flex-col items-center rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border hover:bg-secondary transition-all"
+              className="group relative flex flex-col items-center overflow-hidden rounded-xl border border-card-border bg-card-background transition-colors hover:bg-background-gray-primary"
             >
               {/* Para number display */}
               <div className="w-full aspect-square flex flex-col items-center justify-center gap-1 p-2">
                 {para.meta?.para_number ? (
                   <>
-                    <span className="text-2xl font-bold text-foreground">
+                    <span className="text-2xl font-semibold text-text-primary">
                       {para.meta.para_number}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">Para</span>
+                    <span className="text-[11px] text-text-tertiary">Para</span>
                   </>
                 ) : (
                   <>
-                    <FileText className="h-6 w-6 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground text-center truncate w-full px-1">
+                    <FileText className="h-6 w-6 text-icon-tertiary" />
+                    <span className="w-full truncate px-1 text-center text-[11px] text-text-tertiary">
                       {para.title}
                     </span>
                   </>
@@ -213,17 +211,11 @@ export default function QuranPage() {
 
               {/* Title bar */}
               <div className="w-full px-2 pb-2">
-                <p className="text-[10px] text-center text-muted-foreground truncate">
-                  {para.title}
-                </p>
+                <p className="truncate text-center text-[11px] text-text-tertiary">{para.title}</p>
               </div>
 
-              {/* Hover glow ring — keeps content visible */}
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-border" />
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[8px] font-semibold text-muted-foreground uppercase tracking-wider">
-                  Open
-                </span>
+                <span className="text-[11px] font-medium uppercase text-primary">Open</span>
               </div>
             </button>
           ))}
@@ -234,12 +226,12 @@ export default function QuranPage() {
       {paras.length > 0 && paras.length < 30 && (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Upload progress</span>
-            <span className="text-emerald-500 font-medium">{paras.length}/30 paras</span>
+            <span className="text-text-tertiary">Upload progress</span>
+            <span className="font-medium text-text-primary">{paras.length}/30 paras</span>
           </div>
-          <div className="h-2 rounded-full bg-secondary overflow-hidden">
+          <div className="h-2 overflow-hidden rounded-full bg-background-gray-secondary">
             <div
-              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+              className="h-full rounded-full bg-primary transition-all duration-500"
               style={{ width: `${(paras.length / 30) * 100}%` }}
             />
           </div>

@@ -92,43 +92,36 @@ export function ClassStudentCard({
   return (
     <div className="max-w-[640px] mx-auto animate-fade-in-up">
       {/* Main Class Card — single clean white surface */}
-      <div className="bg-card rounded-[20px] border border-border p-8">
+      <div className="bg-card-background rounded-xl border border-card-border p-6 sm:p-8">
         {/* SECTION 1 — HEADER */}
         <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-[28px] font-bold flex-shrink-0">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-[28px] font-semibold flex-shrink-0">
             {(student.name || "?").charAt(0)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="font-heading font-semibold text-[28px] leading-tight text-foreground">
-                {student.name}
-              </h2>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+              <h2 className="text-2xl font-semibold leading-8 text-text-primary">{student.name}</h2>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
                 Active
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-sm font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5 mt-1 text-sm text-text-tertiary">
               <User className="h-3.5 w-3.5" />
               <span>{student.guardian_name}</span>
             </div>
           </div>
         </div>
 
-        <div className="my-6 h-px bg-border" />
+        <div className="my-6 h-px bg-border-primary" />
 
         {/* SECTION 2 — TODAY'S SESSION */}
         <div className="flex flex-wrap gap-x-12 gap-y-5">
           <div className="flex items-start gap-2.5">
             <Clock className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
             <div>
-              <p
-                className="text-[11px] font-semibold uppercase text-muted-foreground"
-                style={{ letterSpacing: "0.08em" }}
-              >
-                Class Time
-              </p>
-              <p className="text-xl font-bold text-foreground mt-0.5">
+              <p className="text-xs font-medium uppercase text-text-tertiary">Class Time</p>
+              <p className="text-xl font-semibold text-text-primary mt-0.5">
                 {student.class_time || "Not set"}
               </p>
             </div>
@@ -136,13 +129,8 @@ export function ClassStudentCard({
           <div className="flex items-start gap-2.5">
             <BookOpen className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
             <div>
-              <p
-                className="text-[11px] font-semibold uppercase text-muted-foreground"
-                style={{ letterSpacing: "0.08em" }}
-              >
-                Currently On
-              </p>
-              <p className="text-xl font-bold text-primary mt-0.5">
+              <p className="text-xs font-medium uppercase text-text-tertiary">Currently On</p>
+              <p className="text-xl font-semibold text-primary mt-0.5">
                 {activeRound
                   ? `${paraLabel(latestPara)}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
                   : "Not started"}
@@ -159,9 +147,11 @@ export function ClassStudentCard({
           if (latestPara === QAIDA_PARA) {
             return (
               <div className="flex items-center gap-2">
-                <BookMarked className="h-4 w-4 text-foreground" />
-                <span className="text-base font-semibold text-foreground">Qaida</span>
-                <span className="text-sm text-muted-foreground">
+                <BookMarked className="h-4 w-4 text-icon-secondary" />
+                <span className="text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                  Qaida
+                </span>
+                <span className="text-sm text-text-tertiary">
                   Learning Norani Qaida before the Quran paras
                 </span>
               </div>
@@ -177,26 +167,28 @@ export function ClassStudentCard({
             <div>
               <div className="flex items-center justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-foreground" />
-                  <span className="text-base font-semibold text-foreground">Quran Progress</span>
+                  <BookOpen className="h-4 w-4 text-icon-secondary" />
+                  <span className="text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                    Quran Progress
+                  </span>
                   {activeRound && roundNum > 0 && (
-                    <span className="text-sm text-muted-foreground">(Round {roundNum})</span>
+                    <span className="text-sm text-text-tertiary">(Round {roundNum})</span>
                   )}
                 </div>
-                <div className="text-base font-bold tabular-nums">
+                <div className="text-base font-semibold tabular-nums">
                   <span className="text-primary">{currentPara || total}</span>
-                  <span className="text-muted-foreground"> / 30</span>
+                  <span className="text-text-tertiary"> / 30</span>
                 </div>
               </div>
-              <div className="h-2 rounded-full overflow-hidden bg-border">
+              <div className="h-2 rounded-full overflow-hidden bg-background-gray-secondary">
                 <div
                   className="h-full rounded-full bg-primary transition-all"
                   style={{ width: `${percent}%` }}
                 />
               </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center justify-between mt-2 text-xs text-text-tertiary">
                 <span>From start: {asc > 0 ? asc : total} paras</span>
-                <span className="text-primary font-semibold">{percent}% complete</span>
+                <span className="text-primary font-medium">{percent}% complete</span>
               </div>
             </div>
           )
@@ -263,19 +255,14 @@ export function ClassStudentCard({
           return (
             <div>
               <div className="flex items-end justify-between mb-4">
-                <p
-                  className="text-[11px] font-semibold uppercase text-muted-foreground"
-                  style={{ letterSpacing: "0.08em" }}
-                >
-                  History
-                </p>
-                <p className="text-[11px] font-semibold text-muted-foreground">
-                  <span className="font-bold text-primary">{journey}</span> of journey
+                <p className="text-xs font-medium uppercase text-text-tertiary">History</p>
+                <p className="text-xs font-medium text-text-tertiary">
+                  <span className="font-semibold text-primary">{journey}</span> of journey
                 </p>
               </div>
               <div className="relative pl-1">
                 {/* Connecting line */}
-                <div className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full bg-border" />
+                <div className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full bg-border-primary" />
                 <div className="space-y-2">
                   {entries.map((e) => {
                     const Icon = e.type === "qaida" ? BookMarked : BookOpen
@@ -286,13 +273,13 @@ export function ClassStudentCard({
                     return (
                       <div
                         key={e.key}
-                        className={`relative flex items-center gap-3 rounded-[12px] py-2 pl-10 pr-3 transition-all hover:-translate-y-px ${
-                          e.isCurrent ? "bg-secondary" : "bg-muted"
+                        className={`relative flex items-center gap-3 rounded-lg py-2 pl-10 pr-3 ${
+                          e.isCurrent ? "bg-primary/10" : "bg-background-gray-primary"
                         }`}
                       >
                         {/* Dot with icon — pulses on the active round */}
                         <span
-                          className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-card ${
+                          className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-card-background ${
                             e.isCurrent ? "bg-primary" : "bg-card border border-primary/40"
                           }`}
                         >
@@ -307,31 +294,34 @@ export function ClassStudentCard({
                         </span>
 
                         <span
-                          className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-secondary text-secondary-foreground shrink-0"
+                          className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-background-gray-secondary text-text-secondary shrink-0"
                           style={{ width: 78 }}
                         >
                           {e.stage}
                         </span>
 
                         <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium truncate text-foreground">
+                          <span className="text-[13px] font-medium truncate text-text-primary">
                             {range}
                           </span>
-                          <span className="text-[11px] font-semibold tabular-nums shrink-0 text-muted-foreground">
+                          <span className="text-xs font-medium tabular-nums shrink-0 text-text-tertiary">
                             {duration}
                           </span>
                         </div>
 
                         {!e.isCurrent && (
                           <span
-                            className="shrink-0 h-4 w-4 rounded-full bg-primary/15 flex items-center justify-center"
+                            className="shrink-0 h-4 w-4 rounded-full bg-[hsl(var(--success)/0.12)] flex items-center justify-center"
                             title="Completed"
                           >
-                            <Check className="h-2.5 w-2.5 text-primary" strokeWidth={3} />
+                            <Check
+                              className="h-2.5 w-2.5 text-[hsl(var(--success))]"
+                              strokeWidth={3}
+                            />
                           </span>
                         )}
                         {e.isCurrent && (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                          <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium uppercase text-primary">
                             <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                             Now
                           </span>
@@ -353,12 +343,12 @@ export function ClassStudentCard({
           onClick={onStart}
           disabled={starting || qaidaMissing}
           aria-live="polite"
-          className={`relative w-full h-14 flex items-center justify-center gap-3 rounded-[14px] bg-primary text-primary-foreground text-[17px] font-bold overflow-hidden transition-all ${
+          className={`relative w-full h-12 flex items-center justify-center gap-3 rounded-lg bg-primary text-primary-foreground text-base font-medium overflow-hidden transition-colors ${
             starting
               ? "cursor-default"
               : qaidaMissing
                 ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-primary-hover hover:-translate-y-px"
+                : "hover:bg-[hsl(var(--primary-hover))]"
           }`}
         >
           {/* Default content — fades out when starting */}
@@ -384,7 +374,7 @@ export function ClassStudentCard({
         </button>
 
         {qaidaMissing && (
-          <p className="mt-3 text-center text-[13px] font-medium text-muted-foreground">
+          <p className="mt-3 text-center text-[13px] font-medium text-text-tertiary">
             No Qaida book assigned.{" "}
             <Link href={`/teacher/students/${student.id}`} className="text-primary hover:underline">
               Assign one on the student page
@@ -397,17 +387,17 @@ export function ClassStudentCard({
         <div className="mt-4 mb-2 flex justify-center">
           <Link
             href={`/teacher/students/${student.id}`}
-            className="text-[13px] font-medium transition-colors text-muted-foreground hover:text-primary"
+            className="text-[13px] font-medium transition-colors text-text-tertiary hover:text-primary"
           >
             View full student profile →
           </Link>
         </div>
 
         {/* SECTION 6 — FOOTER META */}
-        <div className="pt-4 border-t border-border flex items-center justify-center gap-2">
-          <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[13px] font-medium text-muted-foreground">
-            <span className="font-bold text-foreground">
+        <div className="pt-4 border-t border-border-primary flex items-center justify-center gap-2">
+          <CalendarDays className="h-3.5 w-3.5 text-icon-tertiary" />
+          <p className="text-[13px] font-medium text-text-tertiary">
+            <span className="font-semibold text-text-primary">
               {differenceInDays(
                 new Date(),
                 parseLocalDate(student.started_at) ?? new Date(),

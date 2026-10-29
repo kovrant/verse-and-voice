@@ -677,42 +677,42 @@ export default function StudentDetailPage() {
 
   return (
     <div className="animate-fade-in-up">
-      <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3 print:hidden">
-        <Link href="/" className="hover:text-foreground transition-colors">
+      <nav className="flex items-center gap-1.5 text-sm text-text-tertiary mb-3 print:hidden">
+        <Link href="/" className="hover:text-text-primary transition-colors">
           Dashboard
         </Link>
-        <span className="text-muted-foreground/40">/</span>
-        <Link href="/teacher/students" className="hover:text-foreground transition-colors">
+        <span className="text-text-tertiary">/</span>
+        <Link href="/teacher/students" className="hover:text-text-primary transition-colors">
           Students
         </Link>
-        <span className="text-muted-foreground/40">/</span>
-        <span className="text-foreground font-medium truncate max-w-[150px]">{student.name}</span>
+        <span className="text-text-tertiary">/</span>
+        <span className="text-text-primary font-medium truncate max-w-[150px]">{student.name}</span>
       </nav>
 
       {/* Clean Command Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 print:hidden">
         <div className="flex items-center gap-3 min-w-0">
           <Link href="/teacher/students">
-            <Button variant="outline" size="icon" className="rounded-full h-9 w-9 flex-shrink-0">
+            <Button variant="outline" size="icon" className="rounded-lg h-9 w-9 flex-shrink-0">
               <ArrowLeft className="h-4 w-4" />
             </Button>
           </Link>
           <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight truncate leading-none">
+            <h1 className="text-2xl font-semibold leading-8 text-text-primary truncate">
               {student.name}
             </h1>
             <Badge variant={statusCfg.variant} className="flex-shrink-0">
               {statusCfg.label}
             </Badge>
             {isOnline && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-600">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-green-500/10 px-2.5 py-0.5 text-xs font-medium text-green-600">
                 <OnlineDot />
                 Online
               </span>
             )}
             {student.last_device && (
               <span
-                className="inline-flex items-center gap-1 rounded-full bg-secondary/80 px-2.5 py-0.5 text-xs font-medium text-muted-foreground"
+                className="inline-flex items-center gap-1 rounded-full bg-background-gray-secondary px-2.5 py-0.5 text-xs font-medium text-text-secondary"
                 title={
                   student.last_device_at
                     ? `Last active on this device: ${safeFormatDate(student.last_device_at, "PPp")}`
@@ -832,10 +832,10 @@ export default function StudentDetailPage() {
                     type="button"
                     onClick={() => setHistorySection(pill.id)}
                     className={cn(
-                      "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-medium transition-colors",
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
                       isSelected
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 font-semibold"
-                        : "border-border bg-card text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background-gray-secondary text-text-secondary hover:text-text-primary",
                     )}
                   >
                     <PillIcon className="h-3.5 w-3.5" />
@@ -868,8 +868,10 @@ export default function StudentDetailPage() {
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="text-lg font-semibold">Quran & Qaida Journey</h2>
-                    <p className="text-sm text-muted-foreground">
+                    <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                      Quran & Qaida Journey
+                    </h2>
+                    <p className="text-sm text-text-tertiary">
                       Completed rounds, active para map, and historical milestones
                     </p>
                   </div>
@@ -894,7 +896,7 @@ export default function StudentDetailPage() {
                           variant="outline"
                           size="sm"
                           onClick={completeActiveRound}
-                          className="text-emerald-600 hover:text-emerald-500"
+                          className="text-green-600 hover:text-green-700"
                         >
                           <Check className="h-3.5 w-3.5 mr-1" />
                           Complete
@@ -919,9 +921,11 @@ export default function StudentDetailPage() {
             {/* 3. PORTAL ACTIVITY SECTION */}
             {(historySection === "all" || historySection === "activity") && (
               <Card>
-                <div className="px-5 py-4 border-b border-border/50">
-                  <h2 className="text-base font-semibold">Portal Activity</h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+                <div className="px-5 py-4 border-b border-border-primary">
+                  <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+                    Portal Activity
+                  </h2>
+                  <p className="text-sm text-text-tertiary mt-0.5">
                     {activity.length > 0
                       ? `${activity.length} events logged from the student app`
                       : "Clicks and page views from the student app"}
@@ -951,29 +955,29 @@ export default function StudentDetailPage() {
             {/* Left Column: Billing & Fee Ledger */}
             <div className="lg:col-span-7 space-y-4">
               <div>
-                <h2 className="text-lg font-semibold mb-1">Billing & Fee Ledger</h2>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Monthly fees and payment history
-                </p>
+                <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
+                  Billing & Fee Ledger
+                </h2>
+                <p className="text-sm text-text-tertiary mb-4">Monthly fees and payment history</p>
                 <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
                   <span className="flex items-center gap-1.5">
-                    <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                    <span className="text-muted-foreground">Paid</span>
-                    <span className="font-semibold">{paidCount}</span>
+                    <span className="h-2 w-2 rounded-full bg-green-500" />
+                    <span className="text-text-tertiary">Paid</span>
+                    <span className="font-semibold text-text-primary">{paidCount}</span>
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-amber-400" />
-                    <span className="text-muted-foreground">Unpaid</span>
-                    <span className="font-semibold">{unpaidCount}</span>
+                    <span className="text-text-tertiary">Unpaid</span>
+                    <span className="font-semibold text-text-primary">{unpaidCount}</span>
                   </span>
-                  <span className="text-muted-foreground/40">|</span>
+                  <span className="text-text-tertiary">|</span>
                   <FeeDisplay
                     amount={student.fee}
                     currency={student.fee_currency}
                     rates={rates}
                     size="sm"
                   />
-                  <span className="text-muted-foreground text-xs">/ month</span>
+                  <span className="text-text-tertiary text-xs">/ month</span>
                 </div>
                 <FeeHistoryTable
                   fees={fees}
@@ -996,8 +1000,10 @@ export default function StudentDetailPage() {
             {/* Right Column: Portal Access & Security */}
             <div className="lg:col-span-5 space-y-4">
               <div>
-                <h2 className="text-lg font-semibold mb-1">Portal Access & Security</h2>
-                <p className="text-sm text-muted-foreground mb-4">
+                <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
+                  Portal Access & Security
+                </h2>
+                <p className="text-sm text-text-tertiary mb-4">
                   Student login credentials, sign-in permissions, and active sessions
                 </p>
                 <div className="space-y-4">

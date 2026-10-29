@@ -94,28 +94,30 @@ export default function NewStudentPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
       <div>
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
-          <Link href="/" className="hover:text-foreground transition-colors">
+        <nav className="flex items-center gap-1.5 text-sm text-text-tertiary mb-3">
+          <Link href="/" className="hover:text-text-primary transition-colors">
             Dashboard
           </Link>
-          <span className="text-muted-foreground/40">/</span>
-          <Link href="/teacher/students" className="hover:text-foreground transition-colors">
+          <span className="text-text-tertiary">/</span>
+          <Link href="/teacher/students" className="hover:text-text-primary transition-colors">
             Students
           </Link>
-          <span className="text-muted-foreground/40">/</span>
-          <span className="text-foreground font-medium">New</span>
+          <span className="text-text-tertiary">/</span>
+          <span className="text-text-primary font-medium">New</span>
         </nav>
         <div className="flex items-center gap-4">
           <Link href="/teacher/students">
-            <Button variant="outline" size="icon" className="rounded-xl">
+            <Button variant="outline" size="icon" className="rounded-lg">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              <span className="text-foreground">Add Student</span>
+            <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
+              Add Student
             </h1>
-            <p className="text-muted-foreground mt-1">Register a new student to the academy</p>
+            <p className="text-sm leading-5 text-text-tertiary">
+              Register a new student to the academy
+            </p>
           </div>
         </div>
       </div>
@@ -123,14 +125,12 @@ export default function NewStudentPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/10">
-              <UserPlus className="h-5 w-5 text-emerald-500" />
+            <div className="flex size-10 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
+              <UserPlus className="h-5 w-5" />
             </div>
             <div>
               <CardTitle>Student Information</CardTitle>
-              <p className="text-xs text-muted-foreground mt-1">
-                Fields marked with * are required
-              </p>
+              <p className="text-sm text-text-tertiary mt-1">Fields marked with * are required</p>
             </div>
           </div>
         </CardHeader>
@@ -139,7 +139,7 @@ export default function NewStudentPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Details */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-text-tertiary">
                 <Sparkles className="h-3 w-3" />
                 Personal Details
               </div>
@@ -189,7 +189,7 @@ export default function NewStudentPage() {
 
             {/* Schedule & Fees */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-text-tertiary">
                 <Sparkles className="h-3 w-3" />
                 Schedule & Fees
               </div>
@@ -226,7 +226,7 @@ export default function NewStudentPage() {
                   value={form.class_days}
                   onChange={(class_days) => setForm({ ...form, class_days })}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-text-tertiary">
                   Pick the days this student has class. Needed for their daily streak.
                 </p>
               </div>
@@ -268,12 +268,12 @@ export default function NewStudentPage() {
 
             {/* Starting Round */}
             <div className="space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              <div className="flex items-center gap-2 text-xs font-medium uppercase text-text-tertiary">
                 <Sparkles className="h-3 w-3" />
                 Starting Stage
               </div>
 
-              <div className="flex items-center rounded-xl border border-border/50 bg-secondary/30 p-1 gap-1">
+              <div className="flex items-center rounded-lg bg-background-gray-secondary p-1 gap-1">
                 <button
                   type="button"
                   onClick={() =>
@@ -284,10 +284,10 @@ export default function NewStudentPage() {
                       asc_completed: "0",
                     })
                   }
-                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     form.round_type === "qaida"
-                      ? "bg-secondary text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-card-background text-text-primary shadow-xs"
+                      : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   Norani Qaida
@@ -295,10 +295,10 @@ export default function NewStudentPage() {
                 <button
                   type="button"
                   onClick={() => setForm({ ...form, round_type: "quran" })}
-                  className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                     form.round_type === "quran"
-                      ? "bg-secondary text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "bg-card-background text-text-primary shadow-xs"
+                      : "text-text-secondary hover:text-text-primary"
                   }`}
                 >
                   Reading Quran
@@ -306,11 +306,11 @@ export default function NewStudentPage() {
               </div>
 
               {form.round_type === "qaida" ? (
-                <div className="rounded-xl border border-border bg-muted p-4">
-                  <p className="text-sm text-foreground font-medium">
+                <div className="rounded-lg border border-card-border bg-background-gray-primary p-4">
+                  <p className="text-sm text-text-primary font-medium">
                     Student is learning the basics
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-text-tertiary mt-1">
                     Norani Qaida must be completed before starting Quran reading.
                   </p>
                 </div>
@@ -345,7 +345,7 @@ export default function NewStudentPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-border/50">
+            <div className="flex gap-3 pt-4 border-t border-border-primary">
               <Button type="submit" disabled={saving} className="min-w-[140px]">
                 {saving ? (
                   <span className="flex items-center gap-2">

@@ -132,7 +132,7 @@ export function StudentAchievementsPanel({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16 text-muted-foreground">
+      <div className="flex items-center justify-center py-16 text-text-tertiary">
         <Loader2 className="h-5 w-5 animate-spin mr-2" />
         Loading trophies…
       </div>
@@ -145,8 +145,10 @@ export function StudentAchievementsPanel({
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">Trophies & Certificates</h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+            Trophies & Certificates
+          </h2>
+          <p className="text-sm text-text-tertiary mt-1">
             {isEmpty
               ? "Awards are created when you save progress — use sync to backfill older work."
               : `${headline}. Use sync to backfill older progress.`}
@@ -164,9 +166,9 @@ export function StudentAchievementsPanel({
 
       {isEmpty ? (
         <Card className="border-dashed">
-          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+          <CardContent className="py-10 text-center text-sm text-text-tertiary">
             No trophies yet. Save Quran, Qaida or memorization progress — or run{" "}
-            <strong className="font-medium text-foreground">Sync achievements</strong> if work was
+            <strong className="font-medium text-text-primary">Sync achievements</strong> if work was
             done before this module.
           </CardContent>
         </Card>

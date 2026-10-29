@@ -105,38 +105,36 @@ export function StudentProfileCard({
     <Card className="lg:col-span-7">
       <CardContent className="pt-6 space-y-6">
         {/* Profile Summary Strip (Avatar + Schedule + Current Month Fee Status) */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-border-primary">
           <div className="flex items-center gap-3.5 min-w-0">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 text-xl font-bold flex-shrink-0">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-semibold flex-shrink-0">
               {(student.name || "?").charAt(0)}
             </div>
             <div className="min-w-0">
-              <p className="font-heading text-lg font-bold text-foreground truncate">
-                {student.name}
-              </p>
-              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
+              <p className="text-lg font-semibold text-text-primary truncate">{student.name}</p>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-text-tertiary mt-0.5">
                 <span>Guardian: {student.guardian_name}</span>
                 {student.country && (
                   <>
-                    <span className="text-muted-foreground/40">&middot;</span>
+                    <span className="text-text-tertiary">&middot;</span>
                     <span className="inline-flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
                       {student.country}
                     </span>
                   </>
                 )}
-                <span className="text-muted-foreground/40">&middot;</span>
+                <span className="text-text-tertiary">&middot;</span>
                 <span>{daysSinceStart}d enrolled</span>
                 {student.ended_at && (
                   <>
-                    <span className="text-muted-foreground/40">&middot;</span>
+                    <span className="text-text-tertiary">&middot;</span>
                     <span>Ended {safeFormatDate(student.ended_at, "MMM yyyy")}</span>
                   </>
                 )}
               </div>
               {(student.class_time || scheduleDaysLabel) && (
-                <div className="flex items-center gap-1.5 text-xs font-medium text-foreground/85 mt-1">
-                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                <div className="flex items-center gap-1.5 text-xs font-medium text-text-secondary mt-1">
+                  <Clock className="h-3.5 w-3.5 text-icon-tertiary" />
                   <span>
                     {student.class_time || "No time"}
                     {scheduleDaysLabel ? ` (${scheduleDaysLabel})` : ""}
@@ -153,7 +151,7 @@ export function StudentProfileCard({
                   type="button"
                   onClick={onOpenBilling}
                   title="View billing history"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 transition-colors hover:bg-emerald-500/15"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-green-500/25 bg-green-500/10 px-3 py-1.5 text-xs font-medium text-green-600 transition-colors hover:bg-green-500/15"
                 >
                   <Check className="h-3.5 w-3.5" />
                   {safeFormatDate(now, "MMM")} Fee Paid
@@ -163,7 +161,7 @@ export function StudentProfileCard({
                   type="button"
                   onClick={() => onToggleFee(currentFee)}
                   title="Click to mark this month's fee as paid"
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 transition-colors hover:bg-amber-500/20"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-600 transition-colors hover:bg-amber-500/20"
                 >
                   <CreditCard className="h-3.5 w-3.5" />
                   {safeFormatDate(now, "MMM")} Fee Unpaid &middot; Mark Paid
@@ -225,7 +223,7 @@ export function StudentProfileCard({
               value={editForm.class_days}
               onChange={(class_days) => setEditForm({ ...editForm, class_days })}
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-text-tertiary">
               Days this student has class — drives their daily streak.
             </p>
           </div>

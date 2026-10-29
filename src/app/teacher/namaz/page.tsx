@@ -158,11 +158,11 @@ export default function NamazAdminPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-            <Moon className="h-8 w-8 text-teal-600" />
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary flex items-center gap-2">
+            <Moon className="h-7 w-7 text-icon-secondary" />
             Namaz Steps
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm leading-5 text-text-tertiary">
             Manage step cards and duas inside each step. All students can view and practice these
             steps in their portal.
           </p>
@@ -177,11 +177,9 @@ export default function NamazAdminPage() {
         </Button>
       </div>
 
-      <Card className="border-border/50 shadow-soft">
-        <CardContent className="p-4 space-y-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Add step
-          </p>
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          <p className="text-xs font-medium uppercase text-text-tertiary">Add step</p>
           <div className="flex flex-wrap gap-2">
             <Input
               placeholder="Step name e.g. Takbir"
@@ -197,8 +195,8 @@ export default function NamazAdminPage() {
                   aria-label={`Color ${c}`}
                   onClick={() => setNewColor(c)}
                   className={cn(
-                    "h-8 w-8 rounded-lg border-2 transition-transform",
-                    newColor === c ? "border-foreground scale-110" : "border-transparent",
+                    "h-8 w-8 rounded-lg border-2 transition-colors",
+                    newColor === c ? "border-text-primary" : "border-transparent",
                   )}
                   style={{ backgroundColor: c }}
                 />
@@ -295,14 +293,14 @@ export default function NamazAdminPage() {
                 </Button>
               </div>
               {open && (
-                <div className="rounded-xl border border-border/50 bg-secondary/20 p-3 space-y-2">
+                <div className="space-y-2 rounded-xl border border-card-border bg-background-gray-primary p-3">
                   {stepParts.map((p) => (
                     <div
                       key={p.id}
-                      className="space-y-1.5 border-b border-border/40 pb-2 last:border-0"
+                      className="space-y-1.5 border-b border-border-primary pb-2 last:border-0"
                     >
                       <div className="flex items-center justify-between text-sm">
-                        <span>{p.title}</span>
+                        <span className="font-medium text-text-primary">{p.title}</span>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -323,7 +321,7 @@ export default function NamazAdminPage() {
                         }}
                         placeholder="Arabic the student recites (optional)"
                         rows={2}
-                        className="w-full rounded-lg border border-border bg-card px-3 py-2 font-hadith text-lg leading-loose text-foreground outline-none placeholder:font-sans placeholder:text-xs placeholder:text-muted-foreground focus-visible:border-primary"
+                        className="w-full rounded-lg border border-card-border bg-card-background px-3 py-2 font-hadith text-lg leading-loose text-text-primary shadow-xs outline-none placeholder:font-sans placeholder:text-xs placeholder:text-text-tertiary focus-visible:border-primary"
                       />
                       <textarea
                         defaultValue={p.translation ?? ""}
@@ -334,7 +332,7 @@ export default function NamazAdminPage() {
                         }}
                         placeholder="English meaning (optional)"
                         rows={2}
-                        className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground outline-none placeholder:text-xs placeholder:text-muted-foreground focus-visible:border-primary"
+                        className="w-full rounded-lg border border-card-border bg-card-background px-3 py-2 text-sm text-text-primary shadow-xs outline-none placeholder:text-xs placeholder:text-text-tertiary focus-visible:border-primary"
                       />
                     </div>
                   ))}

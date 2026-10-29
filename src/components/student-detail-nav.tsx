@@ -19,7 +19,7 @@ interface StudentDetailNavProps {
 
 export function StudentDetailNav({ active, onChange, items }: StudentDetailNavProps) {
   return (
-    <div className="mb-6 border-b border-border/70 overflow-x-auto">
+    <div className="mb-6 border-b border-border-primary overflow-x-auto">
       <nav className="-mb-px flex items-center gap-6" aria-label="Student sections">
         {items.map((item) => {
           const isActive = active === item.id
@@ -31,17 +31,14 @@ export function StudentDetailNav({ active, onChange, items }: StudentDetailNavPr
               className={cn(
                 "relative inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 py-3 text-sm transition-colors",
                 isActive
-                  ? "border-emerald-500 font-semibold text-emerald-500"
-                  : "border-transparent font-medium text-muted-foreground hover:border-border hover:text-foreground",
+                  ? "border-primary font-medium text-primary"
+                  : "border-transparent font-medium text-text-secondary hover:border-border-primary hover:text-text-primary",
               )}
             >
               <span>{item.label}</span>
               {typeof item.count === "number" && (
                 <span
-                  className={cn(
-                    "tabular-nums",
-                    isActive ? "text-emerald-500" : "text-muted-foreground",
-                  )}
+                  className={cn("tabular-nums", isActive ? "text-primary" : "text-text-tertiary")}
                 >
                   ({item.count})
                 </span>

@@ -82,10 +82,10 @@ const DEFAULT_CATEGORIES: Record<string, string[]> = {
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
-  quran: { bg: "bg-secondary", text: "text-muted-foreground" },
-  memorization: { bg: "bg-secondary", text: "text-muted-foreground" },
-  qaida: { bg: "bg-secondary", text: "text-muted-foreground" },
-  general: { bg: "bg-secondary", text: "text-muted-foreground" },
+  quran: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  memorization: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  qaida: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  general: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
 }
 
 export default function MediaPage() {
@@ -382,10 +382,10 @@ export default function MediaPage() {
     <div className="space-y-6 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            <span className="text-foreground">Media Library</span>
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
+            Media Library
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm leading-5 text-text-tertiary">
             Central hub for all uploads — Quran, memorization, and resources
           </p>
         </div>
@@ -414,36 +414,36 @@ export default function MediaPage() {
 
       {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
-        <Card className="group relative overflow-hidden hover:border-border">
-          <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
-              <BookOpen className="h-5 w-5 text-muted-foreground" />
+        <Card className="overflow-hidden">
+          <CardContent className="pt-6 flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
+              <BookOpen className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalQuran}</p>
-              <p className="text-xs text-muted-foreground">Quran Paras</p>
+              <p className="text-2xl font-semibold text-text-primary">{totalQuran}</p>
+              <p className="text-sm font-medium text-text-tertiary">Quran Paras</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="group relative overflow-hidden hover:border-border">
-          <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
-              <Sparkles className="h-5 w-5 text-muted-foreground" />
+        <Card className="overflow-hidden">
+          <CardContent className="pt-6 flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-[rgba(168,85,247,0.10)] text-[#A855F7]">
+              <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalMem}</p>
-              <p className="text-xs text-muted-foreground">Memorization</p>
+              <p className="text-2xl font-semibold text-text-primary">{totalMem}</p>
+              <p className="text-sm font-medium text-text-tertiary">Memorization</p>
             </div>
           </CardContent>
         </Card>
-        <Card className="group relative overflow-hidden hover:border-border">
-          <CardContent className="pt-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary">
-              <HardDrive className="h-5 w-5 text-muted-foreground" />
+        <Card className="overflow-hidden">
+          <CardContent className="pt-6 flex items-center gap-3">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
+              <HardDrive className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalFiles}</p>
-              <p className="text-xs text-muted-foreground">Total Files</p>
+              <p className="text-2xl font-semibold text-text-primary">{totalFiles}</p>
+              <p className="text-sm font-medium text-text-tertiary">Total Files</p>
             </div>
           </CardContent>
         </Card>
@@ -454,15 +454,15 @@ export default function MediaPage() {
         <Card>
           <CardContent className="pt-5 space-y-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">
+              <span className="text-text-tertiary">
                 Uploading{" "}
-                <span className="text-foreground font-medium">{bulkProgress.current}</span>
+                <span className="text-text-primary font-medium">{bulkProgress.current}</span>
               </span>
-              <span className="text-foreground font-medium">
+              <span className="text-text-primary font-medium">
                 {bulkProgress.done}/{bulkProgress.total}
               </span>
             </div>
-            <div className="h-2 rounded-full bg-secondary overflow-hidden">
+            <div className="h-2 rounded-full bg-background-gray-secondary overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all duration-300"
                 style={{ width: `${(bulkProgress.done / bulkProgress.total) * 100}%` }}
@@ -475,7 +475,7 @@ export default function MediaPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search by title or category..."
             value={search}
@@ -483,16 +483,16 @@ export default function MediaPage() {
             className="pl-11"
           />
         </div>
-        <div className="flex items-center rounded-xl border border-border/50 bg-card p-1 gap-1">
+        <div className="flex items-center rounded-lg bg-background-gray-secondary p-1 gap-1">
           {["All", ...MEDIA_TYPES.map((t) => t.value)].map((t) => (
             <button
               key={t}
               type="button"
               onClick={() => setFilterType(t)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-all ${
+              className={`px-3 py-1.5 rounded-md text-xs font-medium capitalize transition-colors ${
                 filterType === t
-                  ? "bg-emerald-500/10 text-emerald-500"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-card-background text-text-primary shadow-xs"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               {t === "All" ? "All" : MEDIA_TYPES.find((mt) => mt.value === t)?.label || t}
@@ -502,12 +502,12 @@ export default function MediaPage() {
       </div>
 
       {selected.size > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/50 bg-card px-3 py-2">
-          <span className="text-sm text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-card-border bg-card-background px-3 py-2">
+          <span className="text-sm text-text-tertiary">
             {selected.size} selected
             {selected.size !== filtered.length ? ` of ${filtered.length}` : ""}
           </span>
-          <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
             <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm border border-foreground/35 bg-transparent">
               <input
                 type="checkbox"
@@ -529,7 +529,7 @@ export default function MediaPage() {
           <button
             type="button"
             onClick={() => setSelected(new Set())}
-            className="text-xs text-muted-foreground hover:text-foreground"
+            className="text-xs text-text-secondary hover:text-text-primary"
           >
             Clear
           </button>
@@ -750,17 +750,17 @@ export default function MediaPage() {
                 onChange={(e) => setFile(e.target.files?.[0] || null)}
               />
               {file ? (
-                <div className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 p-3">
+                <div className="flex items-center gap-3 rounded-lg border border-card-border bg-background-gray-primary p-3">
                   {file.type.startsWith("image/") && filePreview ? (
                     <img src={filePreview} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-secondary">
-                      <FileText className="h-6 w-6 text-muted-foreground" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background-gray-secondary">
+                      <FileText className="h-6 w-6 text-icon-secondary" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{file.name}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm font-medium truncate text-text-primary">{file.name}</p>
+                    <p className="text-xs text-text-tertiary">
                       {(file.size / 1024 / 1024).toFixed(2)} MB
                     </p>
                   </div>
@@ -772,11 +772,11 @@ export default function MediaPage() {
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
-                  className="w-full rounded-xl border-2 border-dashed border-border/50 bg-secondary/20 py-8 text-center hover:border-border hover:bg-secondary transition-all"
+                  className="w-full rounded-lg border-2 border-dashed border-card-border py-8 text-center hover:border-primary/40 hover:bg-background-gray-primary transition-colors"
                 >
-                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground">Click to select a file</p>
-                  <p className="text-xs text-muted-foreground/60 mt-1">PDF or Image</p>
+                  <Upload className="h-8 w-8 mx-auto text-icon-tertiary mb-2" />
+                  <p className="text-sm text-text-secondary">Click to select a file</p>
+                  <p className="text-xs text-text-tertiary mt-1">PDF or Image</p>
                 </button>
               )}
             </div>
@@ -823,11 +823,11 @@ export default function MediaPage() {
             className="relative max-w-4xl w-full max-h-[90vh] m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-2xl">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+            <div className="bg-card-background rounded-xl border border-card-border overflow-hidden shadow-3xl">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border-primary">
                 <div>
-                  <p className="font-semibold">{previewItem.title}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="font-semibold text-text-primary">{previewItem.title}</p>
+                  <p className="text-xs text-text-tertiary">
                     {previewItem.type} &middot; {previewItem.category}
                   </p>
                 </div>
@@ -853,14 +853,14 @@ export default function MediaPage() {
                 {previewItem.file_type === "pdf" ? (
                   <iframe
                     src={previewItem.file_url}
-                    className="w-full rounded-xl"
+                    className="w-full rounded-lg"
                     style={{ height: "75vh" }}
                   />
                 ) : (
                   <img
                     src={previewItem.file_url}
                     alt={previewItem.title}
-                    className="w-full rounded-xl object-contain max-h-[75vh]"
+                    className="w-full rounded-lg object-contain max-h-[75vh]"
                   />
                 )}
               </div>
@@ -910,13 +910,13 @@ export default function MediaPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <FolderOpen className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary text-icon-secondary">
+              <FolderOpen className="h-6 w-6" />
             </div>
             {items.length === 0 ? (
               <>
-                <p className="text-lg font-medium mb-1">No files yet</p>
-                <p className="text-sm text-muted-foreground mb-5">
+                <p className="mb-1 font-medium text-text-primary">No files yet</p>
+                <p className="mb-5 text-sm text-text-tertiary">
                   Upload your first file to get started
                 </p>
                 <Button onClick={() => setUploadOpen(true)}>
@@ -925,7 +925,7 @@ export default function MediaPage() {
                 </Button>
               </>
             ) : (
-              <p className="text-muted-foreground">No files match your search</p>
+              <p className="text-sm text-text-tertiary">No files match your search</p>
             )}
           </CardContent>
         </Card>
@@ -955,7 +955,7 @@ export default function MediaPage() {
                   </label>
                 )}
                 <Badge className={`${colors.bg} ${colors.text} border-0`}>{typeLabel}</Badge>
-                <span className="text-sm text-muted-foreground">{groupItems.length} files</span>
+                <span className="text-sm text-text-tertiary">{groupItems.length} files</span>
               </div>
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {groupItems.map((item) => (
@@ -970,10 +970,10 @@ export default function MediaPage() {
                         setPreviewItem(item)
                       }
                     }}
-                    className={`relative rounded-2xl border bg-card overflow-hidden hover:border-border transition-all text-left group cursor-pointer ${
+                    className={`relative rounded-xl border bg-card-background overflow-hidden transition-colors text-left group cursor-pointer ${
                       selected.has(item.id)
                         ? "border-primary ring-2 ring-primary/20"
-                        : "border-border/50"
+                        : "border-card-border hover:border-primary/40"
                     }`}
                   >
                     <label
@@ -997,31 +997,31 @@ export default function MediaPage() {
                     </label>
                     {/* Preview area */}
                     {item.file_type === "image" ? (
-                      <div className="aspect-[4/3] overflow-hidden bg-secondary">
+                      <div className="aspect-[4/3] overflow-hidden bg-background-gray-secondary">
                         <img
                           src={item.file_url}
                           alt={item.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover"
                         />
                       </div>
                     ) : (
-                      <div className="aspect-[4/3] overflow-hidden bg-secondary/80 relative flex items-center justify-center">
+                      <div className="aspect-[4/3] overflow-hidden bg-background-gray-secondary relative flex items-center justify-center">
                         <PdfThumbnail
                           fileUrl={item.file_url}
                           width={320}
                           fallback={
-                            <div className="absolute inset-0 flex items-center justify-center bg-secondary/80">
+                            <div className="absolute inset-0 flex items-center justify-center bg-background-gray-secondary">
                               {item.meta?.para_number ? (
                                 <div className="relative flex flex-col items-center gap-1">
-                                  <span className="text-3xl font-bold text-primary/30">
+                                  <span className="text-3xl font-semibold text-primary/30">
                                     {item.meta.para_number}
                                   </span>
-                                  <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+                                  <span className="text-[11px] text-text-tertiary uppercase">
                                     Para
                                   </span>
                                 </div>
                               ) : (
-                                <FileText className="h-10 w-10 text-muted-foreground/20 relative" />
+                                <FileText className="h-10 w-10 text-icon-tertiary/40 relative" />
                               )}
                             </div>
                           }
@@ -1029,14 +1029,14 @@ export default function MediaPage() {
                         {/* Para badge (top-left, overlays the rendered PDF) */}
                         {item.meta?.para_number && (
                           <div className="absolute top-1.5 left-1.5 z-10">
-                            <span className="px-1.5 py-0.5 rounded bg-primary/85 text-[9px] font-semibold text-primary-foreground backdrop-blur-sm uppercase tracking-wider">
+                            <span className="px-1.5 py-0.5 rounded bg-primary text-[11px] font-medium leading-4 text-primary-foreground uppercase">
                               Para {item.meta.para_number}
                             </span>
                           </div>
                         )}
                         {/* PDF tag (bottom-right) */}
                         <div className="absolute bottom-1 right-1 z-10">
-                          <span className="px-1.5 py-0.5 rounded bg-black/50 text-[9px] font-medium text-white backdrop-blur-sm uppercase">
+                          <span className="px-1.5 py-0.5 rounded bg-black/50 text-[11px] font-medium leading-4 text-white uppercase">
                             PDF
                           </span>
                         </div>
@@ -1045,13 +1045,13 @@ export default function MediaPage() {
 
                     {/* Info */}
                     <div className="p-3">
-                      <p className="text-sm font-medium truncate">{item.title}</p>
+                      <p className="text-sm font-medium truncate text-text-primary">{item.title}</p>
                       <div className="flex items-center gap-1.5 mt-1">
-                        <Badge className={`${colors.bg} ${colors.text} border-0 text-[10px] py-0`}>
+                        <Badge className={`${colors.bg} ${colors.text} border-0 text-[11px] py-0`}>
                           {item.category}
                         </Badge>
                         {item.meta?.para_number && (
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[11px] text-text-tertiary">
                             Para {item.meta.para_number}
                           </span>
                         )}

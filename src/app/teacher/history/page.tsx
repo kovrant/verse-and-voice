@@ -630,10 +630,10 @@ export default function HistoryAdminPage() {
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
             Islamic History & Stories
           </h1>
-          <p className="text-muted-foreground mt-1">
+          <p className="text-sm leading-5 text-text-tertiary">
             Authentic storybooks and derived quizzes for kids. {stories.length}{" "}
             {stories.length === 1 ? "story" : "stories"} on shelf.
           </p>
@@ -645,9 +645,9 @@ export default function HistoryAdminPage() {
               setAiDuplicateAlert(null)
               setAiModalOpen(true)
             }}
-            className="gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white hover:from-teal-700 hover:to-emerald-700 shadow-sm"
+            className="gap-2"
           >
-            <Sparkles className="h-4 w-4 text-amber-200" />
+            <Sparkles className="h-4 w-4" />
             Draft Story with AI
           </Button>
 
@@ -661,7 +661,7 @@ export default function HistoryAdminPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search stories, virtues, prophets..."
             value={search}
@@ -669,16 +669,16 @@ export default function HistoryAdminPage() {
             className="pl-11"
           />
         </div>
-        <div className="flex flex-wrap items-center rounded-xl border border-border/50 bg-card p-1 gap-1">
+        <div className="flex flex-wrap items-center gap-1.5">
           {["All", ...CATEGORIES].map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => setFilterCat(c)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
                 filterCat === c
-                  ? "bg-emerald-500/10 text-emerald-500 font-bold"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-background-gray-secondary text-text-secondary hover:text-text-primary"
               }`}
             >
               {c}
@@ -691,18 +691,15 @@ export default function HistoryAdminPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-              <ScrollText className="h-6 w-6 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-background-gray-secondary text-icon-secondary">
+              <ScrollText className="h-6 w-6" />
             </div>
-            <p className="font-medium mb-1">No stories found</p>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="font-medium mb-1 text-text-primary">No stories found</p>
+            <p className="text-sm text-text-tertiary mb-4">
               Draft your first Islamic history storybook with AI or manual input.
             </p>
             <div className="flex justify-center gap-2">
-              <Button
-                onClick={() => setAiModalOpen(true)}
-                className="gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white"
-              >
+              <Button onClick={() => setAiModalOpen(true)} className="gap-2">
                 <Sparkles className="h-4 w-4" />
                 Draft with AI
               </Button>
@@ -720,34 +717,32 @@ export default function HistoryAdminPage() {
             return (
               <div
                 key={story.id}
-                className="group relative flex flex-col rounded-2xl border border-border/60 bg-card overflow-hidden hover:border-border hover:shadow-soft transition-all"
+                className="group relative flex flex-col rounded-xl border border-card-border bg-card-background overflow-hidden transition-colors"
               >
                 {/* Cover Banner */}
                 {story.cover_image_url ? (
                   <button
                     type="button"
                     onClick={() => setReadingStory(story)}
-                    className="w-full aspect-[16/9] overflow-hidden bg-secondary text-left relative group/img cursor-pointer"
+                    className="w-full aspect-[16/9] overflow-hidden bg-background-gray-secondary text-left relative group/img cursor-pointer"
                   >
                     <img
                       src={story.cover_image_url}
                       alt={story.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-bold text-black shadow-md">
-                        <BookOpen className="h-3.5 w-3.5 text-teal-600" /> Read Story
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-card-background px-3 py-1.5 text-xs font-medium text-text-primary">
+                        <BookOpen className="h-3.5 w-3.5 text-primary" /> Read Story
                       </span>
                     </div>
                   </button>
                 ) : (
                   <div
                     onClick={() => setReadingStory(story)}
-                    className="w-full aspect-[16/9] flex flex-col items-center justify-center bg-secondary/60 gap-1.5 p-3 cursor-pointer group/icon"
+                    className="w-full aspect-[16/9] flex flex-col items-center justify-center bg-background-gray-secondary gap-1.5 p-3 cursor-pointer group/icon"
                   >
-                    <span className="text-3xl group-hover/icon:scale-110 transition-transform">
-                      {CATEGORY_ICON[story.category] ?? "📜"}
-                    </span>
+                    <span className="text-3xl">{CATEGORY_ICON[story.category] ?? "📜"}</span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -761,12 +756,12 @@ export default function HistoryAdminPage() {
                         toast.success("Copied Canva Dream Lab prompt! Generate in Canva & upload.")
                         setTimeout(() => setCopiedPromptId(null), 3000)
                       }}
-                      className="inline-flex items-center gap-1 rounded-full border border-purple-500/40 bg-card/95 px-2.5 py-1 text-[10.5px] font-bold text-purple-700 dark:text-purple-300 shadow-sm hover:bg-purple-500/15 transition-all"
+                      className="inline-flex items-center gap-1 rounded-full border border-card-border bg-card-background px-2.5 py-1 text-[11px] font-medium text-[#A855F7] shadow-xs hover:bg-[rgba(168,85,247,0.10)] transition-colors"
                       title="Copy AI image prompt for Canva Dream Lab"
                     >
                       {copiedPromptId === story.id ? (
                         <>
-                          <Check className="h-3 w-3 text-emerald-500" />
+                          <Check className="h-3 w-3 text-green-600" />
                           <span>Copied Prompt!</span>
                         </>
                       ) : (
@@ -783,7 +778,9 @@ export default function HistoryAdminPage() {
                 <div className="absolute top-2.5 left-2.5 flex flex-wrap items-center gap-1.5">
                   <Badge
                     variant={story.is_published ? "default" : "warning"}
-                    className="text-[10px] py-0 font-bold"
+                    className={`text-[11px] py-0 ${
+                      story.is_published ? "bg-green-500/10 text-green-600 dark:text-green-400" : ""
+                    }`}
                   >
                     {story.is_published ? "Published" : "Draft"}
                   </Badge>
@@ -796,7 +793,7 @@ export default function HistoryAdminPage() {
                     >
                       <Badge
                         variant="outline"
-                        className="text-[10px] py-0 bg-card/90 text-amber-600 hover:border-amber-500/60 cursor-pointer"
+                        className="text-[11px] py-0 bg-card-background text-amber-600 hover:border-amber-500/60 cursor-pointer"
                       >
                         <Trophy className="h-3 w-3 mr-1" /> Quiz
                       </Badge>
@@ -809,7 +806,7 @@ export default function HistoryAdminPage() {
                         handleRegenerateQuiz(story)
                       }}
                       disabled={regeneratingQuizStoryId === story.id}
-                      className="inline-flex items-center text-[10px] py-0.5 px-2 rounded-md font-bold bg-amber-500/95 hover:bg-amber-600 text-white shadow-sm transition-all hover:scale-105 active:scale-95 disabled:opacity-70"
+                      className="inline-flex items-center text-[11px] py-0.5 px-2 rounded-md font-medium bg-amber-500 hover:bg-amber-600 text-white transition-colors disabled:opacity-70"
                       title="Quiz was missed or deleted. Click to generate a new quiz from this story!"
                     >
                       {regeneratingQuizStoryId === story.id ? (
@@ -830,10 +827,10 @@ export default function HistoryAdminPage() {
                   <button
                     type="button"
                     onClick={() => togglePublish(story)}
-                    className={`flex h-7 px-2 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm backdrop-blur-sm ${
+                    className={`flex h-7 px-2 items-center justify-center rounded-lg text-xs font-medium text-white ${
                       story.is_published
-                        ? "bg-amber-600/90 hover:bg-amber-700"
-                        : "bg-emerald-600/90 hover:bg-emerald-700"
+                        ? "bg-amber-600 hover:bg-amber-700"
+                        : "bg-green-600 hover:bg-green-700"
                     }`}
                     title={story.is_published ? "Unpublish" : "Publish"}
                   >
@@ -843,7 +840,7 @@ export default function HistoryAdminPage() {
                   <button
                     type="button"
                     onClick={() => openEdit(story)}
-                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
+                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80"
                     title="Edit"
                   >
                     <Pencil className="h-3.5 w-3.5" />
@@ -856,7 +853,7 @@ export default function HistoryAdminPage() {
                     <Popover.Trigger asChild>
                       <button
                         type="button"
-                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80 backdrop-blur-sm"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80"
                         title="Delete"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -867,9 +864,9 @@ export default function HistoryAdminPage() {
                         side="top"
                         align="end"
                         sideOffset={8}
-                        className="z-50 rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl p-3 shadow-2xl shadow-black/50 w-56 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+                        className="z-50 rounded-xl border border-card-border bg-card-background p-3 shadow-3xl w-56 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
                       >
-                        <p className="text-xs text-foreground font-medium mb-2">
+                        <p className="text-xs text-text-primary font-medium mb-2">
                           Delete &quot;{story.title}&quot;?
                         </p>
                         <div className="flex gap-2">
@@ -905,39 +902,39 @@ export default function HistoryAdminPage() {
                       onClick={() => setReadingStory(story)}
                       className="text-left group/title flex-1"
                     >
-                      <p className="text-[14.5px] font-bold leading-snug text-foreground group-hover/title:text-[hsl(var(--kid-teal))] transition-colors">
+                      <p className="text-[14.5px] font-semibold leading-snug text-text-primary group-hover/title:text-primary transition-colors">
                         {story.title}
                       </p>
                     </button>
                     {story.arabic_title && (
-                      <ArabicText className="text-sm text-muted-foreground shrink-0">
+                      <ArabicText className="text-sm text-text-tertiary shrink-0">
                         {story.arabic_title}
                       </ArabicText>
                     )}
                   </div>
 
                   {story.subtitle && (
-                    <p className="text-xs font-medium text-muted-foreground line-clamp-1">
+                    <p className="text-xs font-medium text-text-secondary line-clamp-1">
                       {story.subtitle}
                     </p>
                   )}
 
                   {story.summary && (
-                    <p className="text-xs text-foreground/80 line-clamp-2 flex-1">
+                    <p className="text-xs text-text-tertiary line-clamp-2 flex-1">
                       {story.summary}
                     </p>
                   )}
 
                   {/* Metadata Chips */}
-                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border/50">
-                    <Badge variant="secondary" className="text-[10px] py-0 font-medium">
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-border-primary">
+                    <Badge variant="secondary" className="text-[11px] py-0 font-medium">
                       {CATEGORY_ICON[story.category]} {story.category}
                     </Badge>
 
                     {story.hero_virtue && (
                       <Badge
                         variant="outline"
-                        className="text-[10px] py-0 border-emerald-500/30 text-emerald-600 dark:text-emerald-400"
+                        className="text-[11px] py-0 border-primary/30 text-primary"
                       >
                         <Sparkles className="h-2.5 w-2.5 mr-1" />
                         {story.hero_virtue}
@@ -945,25 +942,25 @@ export default function HistoryAdminPage() {
                     )}
 
                     {story.reading_time_mins && (
-                      <span className="inline-flex items-center text-[10.5px] text-muted-foreground gap-0.5">
+                      <span className="inline-flex items-center text-[11px] text-text-tertiary gap-0.5">
                         <Clock className="h-3 w-3" />
                         {story.reading_time_mins}m
                       </span>
                     )}
 
                     {monthInfo && (
-                      <Badge variant="default" className="text-[10px] py-0">
+                      <Badge variant="default" className="text-[11px] py-0">
                         {monthInfo.name}
                       </Badge>
                     )}
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2 pt-2 border-t border-border-primary">
                     <Button
                       size="sm"
                       onClick={() => setReadingStory(story)}
-                      className="flex-1 h-8 text-xs font-bold gap-1.5 bg-gradient-to-r from-teal-600 to-emerald-600 text-white hover:from-teal-700 hover:to-emerald-700 shadow-xs"
+                      className="flex-1 h-8 text-xs font-medium gap-1.5"
                     >
                       <BookOpen className="h-3.5 w-3.5" />
                       Read Story
@@ -972,7 +969,7 @@ export default function HistoryAdminPage() {
                       size="sm"
                       variant="outline"
                       onClick={() => openEdit(story)}
-                      className="h-8 px-2.5 text-xs font-semibold gap-1 text-muted-foreground hover:text-foreground"
+                      className="h-8 px-2.5 text-xs font-medium gap-1 text-text-secondary hover:text-text-primary"
                       title="Edit Story"
                     >
                       <Pencil className="h-3 w-3" />
@@ -990,8 +987,8 @@ export default function HistoryAdminPage() {
       <Dialog open={aiModalOpen} onOpenChange={setAiModalOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto no-scrollbar">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-base">
+            <DialogTitle className="flex items-center gap-2 text-xl font-semibold">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1] text-base">
                 ✨
               </span>
               Draft Kid Storybook with AI
@@ -1005,11 +1002,11 @@ export default function HistoryAdminPage() {
           <div className="space-y-4 pt-2">
             {/* Duplicate Topic Warning Alert */}
             {aiDuplicateAlert && (
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-2 text-foreground">
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 space-y-2 text-text-primary">
                 <div className="flex items-start gap-2.5">
                   <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-400">
+                    <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
                       Topic Already on the Shelf
                     </p>
                     <p className="text-xs font-medium leading-relaxed mt-0.5">
@@ -1020,7 +1017,7 @@ export default function HistoryAdminPage() {
 
                 {aiDuplicateAlert.suggestions.length > 0 && (
                   <div className="pt-1">
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">
+                    <p className="text-xs font-medium text-text-tertiary uppercase mb-1.5">
                       Try one of these fresh unwritten topics:
                     </p>
                     <div className="flex flex-wrap gap-1.5">
@@ -1033,7 +1030,7 @@ export default function HistoryAdminPage() {
                             setAiCategory(sug.category)
                             setAiDuplicateAlert(null)
                           }}
-                          className="rounded-full border border-teal-500/40 bg-card px-2.5 py-1 text-xs font-semibold text-foreground hover:bg-teal-500/15 transition-colors"
+                          className="rounded-full border border-card-border bg-card-background px-2.5 py-1 text-xs font-medium text-text-primary hover:bg-background-gray-primary transition-colors"
                         >
                           + {sug.title.split(":")[0]}
                         </button>
@@ -1063,7 +1060,7 @@ export default function HistoryAdminPage() {
             {/* Quick Unwritten Topics Curated Pills */}
             {unwrittenCuratedTopics.length > 0 && (
               <div className="space-y-1">
-                <p className="text-[11.5px] font-semibold text-muted-foreground">
+                <p className="text-xs font-medium text-text-tertiary">
                   Quick picks from authentic history:
                 </p>
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
@@ -1077,7 +1074,7 @@ export default function HistoryAdminPage() {
                         if (cur.hijri_month) setAiHijriMonth(String(cur.hijri_month))
                         if (aiDuplicateAlert) setAiDuplicateAlert(null)
                       }}
-                      className="rounded-full border border-border/80 bg-secondary/40 px-2.5 py-1 text-[11px] font-medium text-foreground hover:border-teal-500/50 hover:bg-teal-500/10 transition-all text-left"
+                      className="rounded-full bg-background-gray-secondary px-2.5 py-1 text-[11px] font-medium text-text-secondary hover:text-text-primary transition-colors text-left"
                     >
                       {cur.title.split(":")[0]}
                     </button>
@@ -1161,23 +1158,23 @@ export default function HistoryAdminPage() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+          <div className="flex justify-end gap-2 pt-3 border-t border-border-primary">
             <Button variant="outline" onClick={() => setAiModalOpen(false)} disabled={generatingAi}>
               Cancel
             </Button>
             <Button
               onClick={handleGenerateAi}
               disabled={generatingAi || !aiTopic.trim()}
-              className="gap-2 bg-gradient-to-r from-teal-600 to-emerald-600 text-white"
+              className="gap-2"
             >
               {generatingAi ? (
                 <>
-                  <Sparkles className="h-4 w-4 animate-spin text-amber-200" />
+                  <Sparkles className="h-4 w-4 animate-spin" />
                   Drafting Story & Quiz...
                 </>
               ) : (
                 <>
-                  <Sparkles className="h-4 w-4 text-amber-200" />
+                  <Sparkles className="h-4 w-4" />
                   Generate Draft
                 </>
               )}
@@ -1191,7 +1188,7 @@ export default function HistoryAdminPage() {
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto no-scrollbar">
           <DialogHeader className="flex flex-row items-start justify-between gap-4">
             <div className="space-y-1">
-              <DialogTitle className="text-xl font-bold">
+              <DialogTitle className="text-xl font-semibold">
                 {editing ? "Edit Storybook" : "New Story"}
               </DialogTitle>
               <DialogDescription>
@@ -1230,7 +1227,7 @@ export default function HistoryAdminPage() {
                     updated_at: new Date().toISOString(),
                   })
                 }}
-                className="gap-1.5 text-xs font-bold text-teal-600 dark:text-teal-400 border-teal-500/40 bg-teal-500/10 hover:bg-teal-500/20 shrink-0"
+                className="gap-1.5 text-xs font-medium text-primary border-primary/30 bg-primary/10 hover:bg-primary/15 shrink-0"
               >
                 <Eye className="h-3.5 w-3.5" />
                 Preview Reading View
@@ -1369,16 +1366,16 @@ export default function HistoryAdminPage() {
             {form.quran_gem && (
               <div className="space-y-1.5">
                 <Label>💎 Linked Quranic Gem Card</Label>
-                <div className="rounded-2xl border border-border/80 bg-secondary/30 p-3 text-xs space-y-1.5">
-                  <p className="font-bold text-foreground">
+                <div className="rounded-lg border border-card-border p-3 text-xs space-y-1.5">
+                  <p className="font-semibold text-text-primary">
                     {form.quran_gem.surah_name} · {form.quran_gem.ayah_number}
                   </p>
-                  <ArabicText className="text-base block text-foreground">
+                  <ArabicText className="text-base block text-text-primary">
                     {form.quran_gem.arabic}
                   </ArabicText>
-                  <p className="italic text-foreground/80">“{form.quran_gem.translation}”</p>
+                  <p className="italic text-text-secondary">“{form.quran_gem.translation}”</p>
                   {form.quran_gem.child_takeaway && (
-                    <p className="font-semibold text-emerald-600 dark:text-emerald-400">
+                    <p className="font-medium text-primary">
                       Takeaway: {form.quran_gem.child_takeaway}
                     </p>
                   )}
@@ -1392,14 +1389,11 @@ export default function HistoryAdminPage() {
                 <Label>🧭 Moral Compass Lessons</Label>
                 <div className="grid gap-2 sm:grid-cols-3">
                   {form.life_lessons.map((l, i) => (
-                    <div
-                      key={i}
-                      className="rounded-xl border border-border/70 bg-secondary/20 p-2.5 text-xs"
-                    >
-                      <span className="font-bold block text-foreground">
+                    <div key={i} className="rounded-lg border border-card-border p-2.5 text-xs">
+                      <span className="font-medium block text-text-primary">
                         {l.emoji} {l.context}
                       </span>
-                      <p className="text-muted-foreground mt-1 line-clamp-3">{l.lesson}</p>
+                      <p className="text-text-tertiary mt-1 line-clamp-3">{l.lesson}</p>
                     </div>
                   ))}
                 </div>
@@ -1424,8 +1418,10 @@ export default function HistoryAdminPage() {
                   <div className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-amber-500 shrink-0" />
                     <div>
-                      <p className="text-xs font-bold text-foreground">Linked Story Quest Quiz</p>
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="text-xs font-semibold text-text-primary">
+                        Linked Story Quest Quiz
+                      </p>
+                      <p className="text-[11px] text-text-tertiary">
                         {form.quiz_id && existingQuizMap.has(form.quiz_id)
                           ? `Status: ${existingQuizMap.get(form.quiz_id)?.is_published ? "Published" : "Draft"}`
                           : "No active quiz linked (missed or deleted)"}
@@ -1439,7 +1435,7 @@ export default function HistoryAdminPage() {
                         asChild
                         size="sm"
                         variant="outline"
-                        className="h-7 text-xs font-bold border-amber-500/40 text-amber-700 dark:text-amber-300"
+                        className="h-7 text-xs font-medium border-amber-500/40 text-amber-700 dark:text-amber-300"
                       >
                         <Link href={`/teacher/quizzes/${form.quiz_id}`} target="_blank">
                           <span>View Quiz</span>
@@ -1478,7 +1474,7 @@ export default function HistoryAdminPage() {
                         const currentStory = stories.find((s) => s.id === editing.id)
                         if (currentStory) handleRegenerateQuiz(currentStory)
                       }}
-                      className="h-7 text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm"
+                      className="h-7 text-xs gap-1.5 bg-amber-600 hover:bg-amber-700 text-white font-medium"
                     >
                       {regeneratingQuizStoryId === editing.id ? (
                         <>
@@ -1504,16 +1500,16 @@ export default function HistoryAdminPage() {
             )}
 
             {/* Canva AI / Dream Lab Cover Prompt Card */}
-            <div className="rounded-2xl border border-purple-500/35 bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-pink-500/10 p-4 space-y-2.5">
+            <div className="rounded-xl border border-card-border p-4 space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 text-white shadow-sm text-sm">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-[rgba(168,85,247,0.10)] text-[#A855F7] text-sm">
                     🎨
                   </span>
                   <div>
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <p className="text-xs font-semibold text-text-primary flex items-center gap-1.5">
                       Canva AI Dream Lab Cover Prompt
-                      <span className="text-[10px] font-normal text-muted-foreground">
+                      <span className="text-[11px] font-normal text-text-tertiary">
                         (16:9 Landscape)
                       </span>
                     </p>
@@ -1534,12 +1530,12 @@ export default function HistoryAdminPage() {
                     toast.success("Copied Canva Dream Lab prompt to clipboard!")
                     setTimeout(() => setCopiedEditorPrompt(false), 3000)
                   }}
-                  className="h-7 text-xs gap-1.5 border-purple-500/40 bg-card hover:bg-purple-500/15"
+                  className="h-7 text-xs gap-1.5"
                 >
                   {copiedEditorPrompt ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    <Check className="h-3.5 w-3.5 text-green-600" />
                   ) : (
-                    <Copy className="h-3.5 w-3.5 text-purple-500" />
+                    <Copy className="h-3.5 w-3.5 text-[#A855F7]" />
                   )}
                   {copiedEditorPrompt ? "Copied Prompt!" : "Copy Prompt"}
                 </Button>
@@ -1549,10 +1545,10 @@ export default function HistoryAdminPage() {
                 value={form.cover_prompt || getCanvaDreamLabPrompt(form)}
                 onChange={(e) => setForm((f) => ({ ...f, cover_prompt: e.target.value }))}
                 placeholder="Canva Dream Lab image prompt..."
-                className="min-h-[75px] font-mono text-xs leading-relaxed bg-card/90 border-purple-500/25 resize-y"
+                className="min-h-[75px] font-mono text-xs leading-relaxed resize-y"
               />
 
-              <p className="text-[11px] font-medium text-muted-foreground leading-relaxed flex items-start gap-1.5">
+              <p className="text-[11px] font-medium text-text-tertiary leading-relaxed flex items-start gap-1.5">
                 <span className="text-sm leading-none">💡</span>
                 <span>
                   <strong>Tip for Teachers:</strong> Click <strong>Copy Prompt</strong> ➜ Open{" "}
@@ -1568,7 +1564,7 @@ export default function HistoryAdminPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label>Cover Image (optional)</Label>
-                  <span className="text-[10px] text-muted-foreground">
+                  <span className="text-[11px] text-text-tertiary">
                     Auto-optimized to 16:9 WebP
                   </span>
                 </div>
@@ -1584,15 +1580,15 @@ export default function HistoryAdminPage() {
                   }}
                 />
                 {coverPreview || existingCover ? (
-                  <div className="rounded-xl border border-border/60 bg-secondary/30 p-2.5 space-y-2">
+                  <div className="rounded-lg border border-card-border p-2.5 space-y-2">
                     <div className="flex items-center gap-2.5">
                       <img
                         src={coverPreview ?? existingCover ?? ""}
                         alt="Cover"
-                        className="h-14 w-20 rounded-lg object-cover border border-border/50 shadow-xs shrink-0"
+                        className="h-14 w-20 rounded-lg object-cover border border-card-border shrink-0"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-foreground truncate">
+                        <p className="text-xs font-medium text-text-primary truncate">
                           {coverFile ? coverFile.name : "Cover Image"}
                         </p>
                         {optimizingImage ? (
@@ -1601,24 +1597,24 @@ export default function HistoryAdminPage() {
                           </p>
                         ) : coverOptimization && coverOptimization.savingsPercent > 0 ? (
                           <div className="space-y-0.5 mt-0.5">
-                            <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <p className="text-[11px] font-medium text-green-600 dark:text-green-400 flex items-center gap-1.5">
                               <span>
                                 ⚡ {coverOptimization.width}×{coverOptimization.height} WebP
                               </span>
                               <span>·</span>
                               <span>{formatFileSize(coverOptimization.optimizedSize)}</span>
                             </p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-[11px] text-text-tertiary">
                               Saved {coverOptimization.savingsPercent}% (down from{" "}
                               {formatFileSize(coverOptimization.originalSize)})
                             </p>
                           </div>
                         ) : coverFile ? (
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-[11px] text-text-tertiary">
                             {formatFileSize(coverFile.size)}
                           </p>
                         ) : (
-                          <p className="text-[11px] text-muted-foreground">Current cover image</p>
+                          <p className="text-[11px] text-text-tertiary">Current cover image</p>
                         )}
                       </div>
                       <div className="flex items-center gap-1">
@@ -1635,7 +1631,7 @@ export default function HistoryAdminPage() {
                           variant="ghost"
                           size="sm"
                           disabled={optimizingImage}
-                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          className="h-7 w-7 p-0 text-icon-tertiary hover:text-destructive"
                           onClick={() => {
                             setCoverFile(null)
                             setExistingCover(null)
@@ -1677,9 +1673,9 @@ export default function HistoryAdminPage() {
                   }}
                 />
                 {attachFile || existingAttach ? (
-                  <div className="flex items-center gap-2 rounded-xl border border-border/50 bg-secondary/30 p-2">
-                    <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
-                    <span className="text-xs text-muted-foreground flex-1 truncate">
+                  <div className="flex items-center gap-2 rounded-lg border border-card-border p-2">
+                    <FileText className="h-5 w-5 text-icon-tertiary shrink-0" />
+                    <span className="text-xs text-text-secondary flex-1 truncate">
                       {attachFile
                         ? attachFile.name
                         : (existingAttach?.type ?? "file").toUpperCase()}
@@ -1718,23 +1714,23 @@ export default function HistoryAdminPage() {
             </div>
 
             {/* Publish toggle */}
-            <label className="flex items-center gap-2.5 cursor-pointer select-none rounded-xl border border-border/50 bg-secondary/20 p-3">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none rounded-lg border border-card-border p-3">
               <input
                 type="checkbox"
                 checked={form.is_published}
                 onChange={(e) => setForm((f) => ({ ...f, is_published: e.target.checked }))}
-                className="h-4 w-4 rounded border-border accent-emerald-500"
+                className="h-4 w-4 rounded border-border accent-[hsl(var(--primary))]"
               />
-              <span className="text-sm font-semibold text-foreground">
+              <span className="text-sm font-medium text-text-primary">
                 Publish Story to Student Shelf{" "}
-                <span className="text-xs font-normal text-muted-foreground block">
+                <span className="text-xs font-normal text-text-tertiary block">
                   (Uncheck to keep as a draft while editing or reviewing)
                 </span>
               </span>
             </label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+          <div className="flex justify-end gap-2 pt-3 border-t border-border-primary">
             <Button variant="outline" onClick={() => setEditorOpen(false)} disabled={saving}>
               Cancel
             </Button>
@@ -1751,9 +1747,9 @@ export default function HistoryAdminPage() {
           {readingStory && (
             <div>
               {/* Teacher Mode Alert Banner */}
-              <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border/70 bg-card/95 backdrop-blur-md px-5 py-3">
-                <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-teal-500/20 text-teal-600 text-sm">
+              <div className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-border-primary bg-card-background px-5 py-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-text-primary">
+                  <span className="flex size-8 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9] text-sm">
                     👩‍🏫
                   </span>
                   <span>Teacher Storybook &amp; Classroom Presentation View</span>
@@ -1761,14 +1757,18 @@ export default function HistoryAdminPage() {
                 <div className="flex items-center gap-2">
                   <Badge
                     variant={readingStory.is_published ? "default" : "warning"}
-                    className="text-[10px] py-0.5 font-bold"
+                    className={`text-[11px] py-0.5 ${
+                      readingStory.is_published
+                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                        : ""
+                    }`}
                   >
                     {readingStory.is_published ? "Published" : "Draft"}
                   </Badge>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="h-7 text-xs gap-1 font-semibold"
+                    className="h-7 text-xs gap-1 font-medium"
                     onClick={() => {
                       const s = readingStory
                       setReadingStory(null)
@@ -1784,7 +1784,7 @@ export default function HistoryAdminPage() {
               <div className="p-5 sm:p-8 space-y-6">
                 {/* Cover Banner */}
                 {readingStory.cover_image_url ? (
-                  <div className="aspect-[16/9] w-full overflow-hidden rounded-[24px] border border-border/70 shadow-soft">
+                  <div className="aspect-[16/9] w-full overflow-hidden rounded-xl border border-card-border">
                     <img
                       src={readingStory.cover_image_url}
                       alt={readingStory.title}
@@ -1792,14 +1792,14 @@ export default function HistoryAdminPage() {
                     />
                   </div>
                 ) : (
-                  <div className="flex aspect-[21/9] w-full items-center justify-center rounded-[24px] border border-border/70 bg-secondary/30 text-5xl shadow-soft">
+                  <div className="flex aspect-[21/9] w-full items-center justify-center rounded-xl border border-card-border bg-background-gray-secondary text-5xl">
                     {CATEGORY_ICON[readingStory.category] ?? "📜"}
                   </div>
                 )}
 
                 {/* Metadata Pills */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary" className="text-xs font-bold gap-1">
+                  <Badge variant="secondary" className="text-xs font-medium gap-1">
                     <span>{CATEGORY_ICON[readingStory.category] ?? "📜"}</span>
                     <span>{readingStory.category}</span>
                   </Badge>
@@ -1809,7 +1809,7 @@ export default function HistoryAdminPage() {
                     </Badge>
                   )}
                   {readingStory.reading_time_mins && (
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <span className="inline-flex items-center gap-1 text-xs text-text-tertiary">
                       <Clock className="h-3.5 w-3.5" />
                       {readingStory.reading_time_mins} min read
                     </span>
@@ -1817,14 +1817,14 @@ export default function HistoryAdminPage() {
                   {readingStory.hero_virtue && (
                     <Badge
                       variant="outline"
-                      className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold"
+                      className="border-primary/30 bg-primary/10 text-primary text-xs font-medium"
                     >
                       <Sparkles className="h-3 w-3 mr-1" />
                       {readingStory.hero_virtue}
                     </Badge>
                   )}
                   {readingStory.hijri_month && (
-                    <Badge variant="default" className="text-xs font-bold">
+                    <Badge variant="default" className="text-xs font-medium">
                       🌙 {getHijriMonthInfo(readingStory.hijri_month)?.name}
                     </Badge>
                   )}
@@ -1833,17 +1833,17 @@ export default function HistoryAdminPage() {
                 {/* Title & Arabic Title */}
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <h1 className="font-heading text-2xl sm:text-3xl font-bold tracking-tight text-primary">
+                    <h1 className="text-2xl font-semibold leading-8 text-text-primary">
                       {removeEmDashes(readingStory.title)}
                     </h1>
                     {readingStory.arabic_title && (
-                      <ArabicText className="text-2xl text-foreground/80">
+                      <ArabicText className="text-2xl text-text-secondary">
                         {readingStory.arabic_title}
                       </ArabicText>
                     )}
                   </div>
                   {readingStory.subtitle && (
-                    <p className="text-base font-medium text-muted-foreground">
+                    <p className="text-sm text-text-tertiary">
                       {removeEmDashes(readingStory.subtitle)}
                     </p>
                   )}
@@ -1851,15 +1851,15 @@ export default function HistoryAdminPage() {
 
                 {/* 1. 🌟 The Wonder Opening */}
                 {readingStory.summary && (
-                  <div className="flex items-start gap-3.5 rounded-[22px] border-[1.5px] border-[hsl(var(--kid-teal)/0.45)] bg-[hsl(var(--kid-teal)/0.18)] p-4 sm:p-5 shadow-soft">
+                  <div className="flex items-start gap-3.5 rounded-xl border border-[rgba(14,165,233,0.30)] bg-[rgba(14,165,233,0.08)] p-4 sm:p-5">
                     <span aria-hidden className="text-2xl leading-none">
                       🌟
                     </span>
                     <div className="space-y-0.5">
-                      <span className="block text-[11px] font-black uppercase tracking-wider text-[hsl(var(--kid-teal))]">
+                      <span className="block text-xs font-medium uppercase text-[#0EA5E9]">
                         The Wonder Opening
                       </span>
-                      <p className="text-[15px] sm:text-[16px] font-semibold leading-relaxed text-foreground/90">
+                      <p className="text-[15px] sm:text-[16px] font-medium leading-relaxed text-text-primary">
                         {removeEmDashes(readingStory.summary)}
                       </p>
                     </div>
@@ -1906,16 +1906,16 @@ export default function HistoryAdminPage() {
 
                 {/* Attachment / Extra reading file if any */}
                 {readingStory.file_url && (
-                  <div className="rounded-2xl border border-border/70 bg-card p-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm font-semibold">
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                  <div className="rounded-xl border border-card-border bg-card-background p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm font-medium text-text-primary">
+                      <FileText className="h-4 w-4 text-icon-tertiary" />
                       <span>Attached Reading Resource</span>
                     </div>
                     <a
                       href={readingStory.file_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-600 hover:underline"
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline"
                     >
                       <span>Open Document</span>
                       <ExternalLink className="h-3 w-3" />
@@ -1924,7 +1924,7 @@ export default function HistoryAdminPage() {
                 )}
 
                 {/* Bottom Footer Actions */}
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-primary pt-4">
                   <Button variant="outline" onClick={() => setReadingStory(null)}>
                     Close Reading View
                   </Button>
@@ -1942,7 +1942,7 @@ export default function HistoryAdminPage() {
                       {readingStory.is_published ? "Unpublish Story" : "Publish Story"}
                     </Button>
                     <Button
-                      className="gap-1.5 bg-primary text-primary-foreground"
+                      className="gap-1.5"
                       onClick={() => {
                         const s = readingStory
                         setReadingStory(null)
@@ -1969,7 +1969,7 @@ export default function HistoryAdminPage() {
           <img
             src={previewUrl}
             alt="Preview"
-            className="max-w-full max-h-[85vh] rounded-2xl object-contain"
+            className="max-w-full max-h-[85vh] rounded-xl object-contain"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

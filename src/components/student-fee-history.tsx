@@ -58,25 +58,27 @@ export function FeeHistoryTable({
   return (
     <Card className="overflow-hidden">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <CreditCard className="h-4 w-4 text-emerald-400" />
+        <div className="flex items-center gap-3">
+          <div className="flex size-8 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
+            <CreditCard className="h-4 w-4" />
+          </div>
           <CardTitle>Fee Payment History</CardTitle>
         </div>
       </CardHeader>
       <CardContent>
         {fees.length === 0 ? (
           <div className="text-center py-10">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-              <CreditCard className="h-6 w-6 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+              <CreditCard className="h-6 w-6 text-icon-secondary" />
             </div>
-            <p className="text-muted-foreground">No fee records yet</p>
+            <p className="font-medium text-text-primary">No fee records yet</p>
           </div>
         ) : (
           <>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border/50">
+                  <tr className="border-b border-border-primary">
                     <th scope="col" className="px-5 py-3 text-left">
                       <SortableHeader
                         label="Month"
@@ -106,7 +108,7 @@ export function FeeHistoryTable({
                     </th>
                     <th
                       scope="col"
-                      className="px-5 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider"
+                      className="px-5 py-3 text-right text-xs font-medium uppercase text-text-tertiary"
                     >
                       Action
                     </th>
@@ -116,9 +118,9 @@ export function FeeHistoryTable({
                   {paginated.map((fee) => (
                     <tr
                       key={fee.id}
-                      className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors"
+                      className="border-b border-border-primary last:border-0 hover:bg-background-gray-primary transition-colors"
                     >
-                      <td className="px-5 py-3.5 font-medium text-sm">
+                      <td className="px-5 py-3.5 font-medium text-sm text-text-primary">
                         {format(new Date(fee.year, fee.month - 1, 1), "MMMM yyyy")}
                       </td>
                       <td className="px-5 py-3.5">
@@ -126,7 +128,7 @@ export function FeeHistoryTable({
                           {fee.is_paid ? "Paid" : "Unpaid"}
                         </Badge>
                       </td>
-                      <td className="px-5 py-3.5 text-sm text-muted-foreground">
+                      <td className="px-5 py-3.5 text-sm text-text-secondary">
                         {fee.paid_at ? format(new Date(fee.paid_at), "MMM d, yyyy h:mm a") : "--"}
                       </td>
                       <td className="px-5 py-3.5 text-right">
@@ -154,7 +156,7 @@ export function FeeHistoryTable({
               </table>
             </div>
             {sorted.length > pageSize && (
-              <div className="pt-4 border-t border-border/50">
+              <div className="pt-4 border-t border-border-primary">
                 <Pagination
                   currentPage={page}
                   totalPages={totalPages}

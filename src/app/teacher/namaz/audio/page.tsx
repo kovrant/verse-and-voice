@@ -6,7 +6,6 @@ import { useEffect, useState } from "react"
 
 import { NamazAudioRow } from "@/components/namaz-audio-row"
 import { PageLoading } from "@/components/page-loading"
-import { Button } from "@/components/ui/button"
 import {
   flattenNamaz,
   NAMAZ_PART_SELECT,
@@ -15,6 +14,11 @@ import {
   type NamazStepPart,
 } from "@/lib/namaz"
 import { supabase } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
+
+const PILL = "rounded-full px-3 py-1 text-xs font-medium transition-colors"
+const PILL_ON = "bg-primary text-primary-foreground"
+const PILL_OFF = "bg-background-gray-secondary text-text-secondary hover:text-text-primary"
 
 /** Teacher tools for the student Namaz journey: recordings, word timings and the review list. */
 export default function NamazAudioPage() {
@@ -48,40 +52,40 @@ export default function NamazAudioPage() {
       <div className="space-y-2">
         <Link
           href="/teacher/namaz"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-text-tertiary hover:text-text-primary"
         >
           <ArrowLeft className="h-4 w-4" />
           Namaz steps
         </Link>
-        <h1 className="flex items-center gap-2 text-3xl font-bold tracking-tight">
-          <Mic className="h-8 w-8 text-teal-600" />
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary flex items-center gap-2">
+          <Mic className="h-7 w-7 text-icon-secondary" />
           Namaz audio
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm leading-5 text-text-tertiary">
           Record each part, then tap the start of every word so the words light up as students
           listen. {recorded} of {parts.length} parts recorded.
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button
-          variant={reviewOnly ? "outline" : "default"}
-          size="sm"
+        <button
+          type="button"
           onClick={() => setReviewOnly(false)}
+          className={cn(PILL, reviewOnly ? PILL_OFF : PILL_ON)}
         >
           All parts ({parts.length})
-        </Button>
-        <Button
-          variant={reviewOnly ? "default" : "outline"}
-          size="sm"
+        </button>
+        <button
+          type="button"
           onClick={() => setReviewOnly(true)}
+          className={cn(PILL, reviewOnly ? PILL_ON : PILL_OFF)}
         >
           Needs review ({reviewCount})
-        </Button>
+        </button>
       </div>
 
       {stops.length === 0 ? (
-        <p className="py-10 text-center text-muted-foreground">
+        <p className="py-10 text-center text-sm text-text-tertiary">
           {reviewOnly
             ? "Everything is approved. ✨"
             : "No parts yet. Add them on the Namaz steps page."}

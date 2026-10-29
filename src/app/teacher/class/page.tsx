@@ -310,8 +310,8 @@ function ClassPageContent() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div className="mb-2">
-        <h1 className="text-3xl font-semibold tracking-tight text-primary">Class Session</h1>
-        <p className="text-sm mt-1.5 text-muted-foreground">
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Class Session</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
           Select a student and start a live class
         </p>
       </div>
@@ -319,11 +319,11 @@ function ClassPageContent() {
       {students.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary/60">
-              <Users className="h-9 w-9 text-primary" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary text-icon-secondary">
+              <Users className="h-6 w-6" />
             </div>
-            <p className="text-lg font-semibold mb-1">No students yet</p>
-            <p className="text-sm text-muted-foreground mb-5">
+            <p className="mb-1 font-medium text-text-primary">No students yet</p>
+            <p className="mb-5 text-sm text-text-tertiary">
               Add your first student to start a class session
             </p>
             <Link href="/teacher/students/new">
@@ -341,7 +341,7 @@ function ClassPageContent() {
             <button
               type="button"
               onClick={() => handleSelect("")}
-              className="inline-flex items-center gap-1 rounded-[10px] px-3.5 py-2 text-sm font-medium text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+              className="inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-background-gray-primary transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
               Change student

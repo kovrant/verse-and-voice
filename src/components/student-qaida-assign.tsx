@@ -71,14 +71,14 @@ export function StudentQaidaAssign({
 
   if (embedded) {
     return (
-      <div className="flex flex-col gap-2.5 border-t border-border/50 pt-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-2.5 border-t border-border-primary pt-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-600">
+          <span className="flex size-8 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
             <BookMarked className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-foreground">Qaida Book</p>
-            <p className="text-[11px] text-muted-foreground truncate">
+            <p className="text-xs font-semibold text-text-primary">Qaida Book</p>
+            <p className="text-[11px] text-text-tertiary truncate">
               {loading
                 ? "Loading Qaida library…"
                 : items.length === 0
@@ -108,22 +108,22 @@ export function StudentQaidaAssign({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6">
+    <div className="rounded-xl border border-card-border bg-card-background p-5 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4 min-w-0">
-          <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600">
+          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(249,115,22,0.10)] text-[#F97316]">
             <BookMarked className="h-5 w-5" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">Qaida</p>
+            <p className="text-sm font-semibold text-text-primary">Qaida</p>
             {loading ? (
               <div className="mt-1.5 h-4 w-44 shimmer rounded" />
             ) : items.length === 0 ? (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 Upload a Qaida in the Media Library first.
               </p>
             ) : (
-              <p className="mt-0.5 text-sm text-muted-foreground">
+              <p className="mt-0.5 text-sm text-text-tertiary">
                 Pick the Qaida this student reads from in their portal.
               </p>
             )}

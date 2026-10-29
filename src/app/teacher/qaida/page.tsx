@@ -53,18 +53,16 @@ export default function QaidaPage() {
   if (viewing) {
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/50 bg-card">
+        <div className="flex items-center justify-between border-b border-border-primary bg-card-background px-4 py-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setViewing(null)}>
               <X className="h-4 w-4 mr-1" />
               Close
             </Button>
-            <div className="h-5 w-px bg-border" />
+            <div className="h-5 w-px bg-border-primary" />
             <div>
-              <p className="text-sm font-semibold">{viewing.title}</p>
-              {viewing.category && (
-                <p className="text-xs text-muted-foreground">{viewing.category}</p>
-              )}
+              <p className="text-sm font-semibold text-text-primary">{viewing.title}</p>
+              {viewing.category && <p className="text-xs text-text-tertiary">{viewing.category}</p>}
             </div>
           </div>
           {items.length > 1 && (
@@ -78,7 +76,7 @@ export default function QaidaPage() {
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Previous
               </Button>
-              <span className="text-xs text-muted-foreground px-2">
+              <span className="px-2 text-xs text-text-tertiary">
                 {currentIdx + 1} / {items.length}
               </span>
               <Button
@@ -103,10 +101,8 @@ export default function QaidaPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-foreground">Qaida</span>
-        </h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Qaida</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
           {items.length > 0
             ? `${items.length} Qaida ${items.length === 1 ? "book" : "books"} uploaded`
             : "Upload Qaida PDFs from the Media Library"}
@@ -115,7 +111,7 @@ export default function QaidaPage() {
 
       {items.length > 0 && (
         <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search by title or type..."
             value={search}
@@ -128,13 +124,13 @@ export default function QaidaPage() {
       {filtered.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary">
-              <SpellCheck className="h-7 w-7 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+              <SpellCheck className="h-6 w-6 text-icon-secondary" />
             </div>
             {items.length === 0 ? (
               <>
-                <p className="text-lg font-medium mb-1">No Qaida uploaded yet</p>
-                <p className="text-sm text-muted-foreground mb-5">
+                <p className="mb-1 font-medium text-text-primary">No Qaida uploaded yet</p>
+                <p className="mb-5 text-sm text-text-tertiary">
                   Go to Media Library and upload a Qaida PDF (Noorani, Baghdadi, Madani, etc.)
                 </p>
                 <Button variant="outline" onClick={() => (window.location.href = "/teacher/media")}>
@@ -142,7 +138,7 @@ export default function QaidaPage() {
                 </Button>
               </>
             ) : (
-              <p className="text-muted-foreground">No Qaida matches your search</p>
+              <p className="text-sm text-text-tertiary">No Qaida matches your search</p>
             )}
           </CardContent>
         </Card>
@@ -153,23 +149,22 @@ export default function QaidaPage() {
               key={item.id}
               type="button"
               onClick={() => setViewing(item)}
-              className="group relative flex flex-col rounded-2xl border border-border/50 bg-card overflow-hidden text-left hover:border-border hover:bg-secondary transition-all"
+              className="group flex flex-col overflow-hidden rounded-xl border border-card-border bg-card-background text-left transition-colors hover:bg-background-gray-primary"
             >
-              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-secondary/50 p-6">
-                <FileText className="h-10 w-10 text-muted-foreground/40" />
+              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-background-gray-primary p-6">
+                <FileText className="h-10 w-10 text-icon-tertiary" />
                 {item.category && (
-                  <Badge className="bg-secondary text-muted-foreground border-0 text-[10px]">
+                  <Badge className="border-0 bg-background-gray-secondary text-[11px] text-text-secondary">
                     {item.category}
                   </Badge>
                 )}
               </div>
               <div className="p-4">
-                <p className="text-sm font-semibold truncate">{item.title}</p>
-                <p className="mt-1 text-[11px] text-muted-foreground group-hover:text-foreground transition-colors">
+                <p className="truncate text-sm font-medium text-text-primary">{item.title}</p>
+                <p className="mt-1 text-xs text-text-tertiary transition-colors group-hover:text-primary">
                   Open PDF ↗
                 </p>
               </div>
-              <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none ring-1 ring-inset ring-border" />
             </button>
           ))}
         </div>

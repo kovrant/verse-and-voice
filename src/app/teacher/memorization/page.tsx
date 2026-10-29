@@ -59,10 +59,10 @@ interface CatalogRow extends CatalogItem {
 const CATEGORIES = ["Surah", "Dua", "Namaz", "General"]
 
 const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Surah: { bg: "bg-secondary", text: "text-muted-foreground" },
-  Dua: { bg: "bg-secondary", text: "text-muted-foreground" },
-  Namaz: { bg: "bg-secondary", text: "text-muted-foreground" },
-  General: { bg: "bg-secondary", text: "text-muted-foreground" },
+  Surah: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  Dua: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  Namaz: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+  General: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
 }
 
 /** Upload ordered part images for a catalog item. Returns how many rows landed. */
@@ -374,10 +374,8 @@ export default function MemorizationPage() {
   return (
     <div className="space-y-6 animate-fade-in-up">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          <span className="text-foreground">Memorization</span>
-        </h1>
-        <p className="text-muted-foreground mt-1">
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Memorization</h1>
+        <p className="text-sm leading-5 text-text-tertiary">
           Manage the catalog of items students can memorize. {items.length} items total.
         </p>
       </div>
@@ -451,7 +449,7 @@ export default function MemorizationPage() {
               Add
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-text-tertiary">
             Cover is the full dua. Parts are the pieces kids memorize one at a time, in the order
             you pick them.
           </p>
@@ -459,18 +457,16 @@ export default function MemorizationPage() {
             <div className="flex flex-wrap items-end gap-3">
               {newImage && newImagePreview && (
                 <div className="relative">
-                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Cover
-                  </p>
+                  <p className="mb-1 text-[11px] font-medium uppercase text-text-tertiary">Cover</p>
                   <img
                     src={newImagePreview}
                     alt="Cover"
-                    className="h-16 w-16 rounded-lg object-cover border border-border/50"
+                    className="h-16 w-16 rounded-lg border border-card-border object-cover"
                   />
                   <button
                     type="button"
                     onClick={() => setNewImage(null)}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground"
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-card-border bg-card-background text-icon-secondary shadow-xs hover:text-text-primary"
                     aria-label="Remove cover"
                   >
                     <X className="h-3 w-3" />
@@ -479,18 +475,18 @@ export default function MemorizationPage() {
               )}
               {newParts.map((file, i) => (
                 <div key={`${file.name}-${i}`} className="relative">
-                  <p className="mb-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                  <p className="mb-1 text-[11px] font-medium uppercase text-text-tertiary">
                     Part {i + 1}
                   </p>
                   <img
                     src={newPartPreviews[i]}
                     alt={`Part ${i + 1}`}
-                    className="h-16 w-16 rounded-lg object-cover border border-border/50"
+                    className="h-16 w-16 rounded-lg border border-card-border object-cover"
                   />
                   <button
                     type="button"
                     onClick={() => setNewParts((prev) => prev.filter((_, j) => j !== i))}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-card border border-border text-muted-foreground hover:text-foreground"
+                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-card-border bg-card-background text-icon-secondary shadow-xs hover:text-text-primary"
                     aria-label={`Remove part ${i + 1}`}
                   >
                     <X className="h-3 w-3" />
@@ -505,7 +501,7 @@ export default function MemorizationPage() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
           <Input
             placeholder="Search items..."
             value={search}
@@ -513,16 +509,16 @@ export default function MemorizationPage() {
             className="pl-11"
           />
         </div>
-        <div className="flex items-center rounded-xl border border-border/50 bg-card p-1 gap-1">
+        <div className="flex items-center gap-1 rounded-lg bg-background-gray-secondary p-1">
           {["All", ...CATEGORIES].map((c) => (
             <button
               key={c}
               type="button"
               onClick={() => setFilterCat(c)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+              className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
                 filterCat === c
-                  ? "bg-emerald-500/10 text-emerald-500"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-card-background text-text-primary shadow-xs"
+                  : "text-text-secondary hover:text-text-primary"
               }`}
             >
               {c}
@@ -557,19 +553,19 @@ export default function MemorizationPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {previewUrl.toLowerCase().endsWith(".pdf") || previewUrl.includes("/pdf") ? (
-              <div className="bg-card rounded-2xl border border-border/50 overflow-hidden shadow-2xl">
-                <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
-                  <span className="text-sm font-medium">PDF Preview</span>
+              <div className="overflow-hidden rounded-xl border border-card-border bg-card-background shadow-3xl">
+                <div className="flex items-center justify-between border-b border-border-primary px-5 py-3">
+                  <span className="text-sm font-medium text-text-primary">PDF Preview</span>
                   <button
                     onClick={() => setPreviewUrl(null)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-secondary"
+                    className="flex h-8 w-8 items-center justify-center rounded-lg text-icon-secondary hover:bg-background-gray-primary"
                   >
                     <X className="h-4 w-4" />
                   </button>
                 </div>
                 <iframe
                   src={previewUrl}
-                  className="w-full rounded-b-2xl"
+                  className="w-full rounded-b-xl"
                   style={{ height: "75vh" }}
                 />
               </div>
@@ -578,11 +574,11 @@ export default function MemorizationPage() {
                 <img
                   src={previewUrl}
                   alt="Preview"
-                  className="max-w-full max-h-[80vh] rounded-2xl object-contain mx-auto"
+                  className="max-w-full max-h-[80vh] rounded-xl object-contain mx-auto"
                 />
                 <button
                   onClick={() => setPreviewUrl(null)}
-                  className="absolute top-0 right-0 flex h-8 w-8 items-center justify-center rounded-full bg-card border border-border text-foreground hover:bg-secondary"
+                  className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-card-border bg-card-background text-text-primary hover:bg-background-gray-primary"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -596,11 +592,11 @@ export default function MemorizationPage() {
       {Object.keys(grouped).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary">
-              <BookMarked className="h-6 w-6 text-muted-foreground" />
+            <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
+              <BookMarked className="h-6 w-6 text-icon-secondary" />
             </div>
-            <p className="font-medium mb-1">No items found</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="mb-1 font-medium text-text-primary">No items found</p>
+            <p className="text-sm text-text-tertiary">
               Add memorization items above or adjust your filters.
             </p>
           </CardContent>
@@ -612,7 +608,7 @@ export default function MemorizationPage() {
             <div key={category} className="space-y-3">
               <div className="flex items-center gap-2">
                 <Badge className={`${colors.bg} ${colors.text} border-0`}>{category}</Badge>
-                <span className="text-sm text-muted-foreground">{catItems.length} items</span>
+                <span className="text-sm text-text-tertiary">{catItems.length} items</span>
               </div>
               <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {catItems.map((item) => {
@@ -620,30 +616,30 @@ export default function MemorizationPage() {
                   return (
                     <div
                       key={item.id}
-                      className="relative rounded-2xl border border-border/50 bg-card overflow-hidden hover:border-border transition-all group"
+                      className="group relative overflow-hidden rounded-xl border border-card-border bg-card-background"
                     >
                       {/* Image/Preview area */}
                       {item.image_url ? (
                         <button
                           type="button"
                           onClick={() => setPreviewUrl(item.image_url)}
-                          className="w-full aspect-[3/2] overflow-hidden bg-secondary"
+                          className="aspect-[3/2] w-full overflow-hidden bg-background-gray-primary"
                         >
                           <img
                             src={item.image_url}
                             alt={item.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            className="h-full w-full object-cover"
                           />
                         </button>
                       ) : isMedia && item.file_type === "pdf" ? (
                         <button
                           type="button"
                           onClick={() => setPreviewUrl(item.file_url || null)}
-                          className="w-full aspect-[3/2] overflow-hidden bg-secondary/80 relative flex items-center justify-center"
+                          className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-background-gray-primary"
                         >
                           <div className="relative flex flex-col items-center gap-1">
                             <BookMarked className={`h-8 w-8 ${colors.text} opacity-40`} />
-                            <span className="text-[10px] text-muted-foreground/50 uppercase tracking-widest">
+                            <span className="text-[11px] font-medium uppercase text-text-tertiary">
                               PDF
                             </span>
                           </div>
@@ -659,7 +655,7 @@ export default function MemorizationPage() {
                       {/* Media library badge */}
                       {isMedia && (
                         <div className="absolute top-2 left-2">
-                          <span className="px-1.5 py-0.5 rounded bg-secondary text-[9px] font-medium text-muted-foreground backdrop-blur-sm">
+                          <span className="rounded-md bg-background-gray-secondary px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
                             Media Library
                           </span>
                         </div>
@@ -667,23 +663,25 @@ export default function MemorizationPage() {
 
                       {/* Content */}
                       <div className="p-3.5 space-y-2">
-                        <p className="text-sm font-semibold truncate">{item.title}</p>
+                        <p className="truncate text-sm font-medium text-text-primary">
+                          {item.title}
+                        </p>
                         <div className="flex items-center justify-between">
                           {(item.assignment_count || 0) > 0 ? (
-                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 text-xs text-text-tertiary">
                               <Users className="h-3 w-3" />
                               {item.assignment_count} student
                               {(item.assignment_count || 0) > 1 ? "s" : ""}
                             </span>
                           ) : (
-                            <span className="text-xs text-muted-foreground/40">No assignments</span>
+                            <span className="text-xs text-text-tertiary">No assignments</span>
                           )}
                           <Select
                             value={item.category}
                             onValueChange={(v) => changeCategory(item, v)}
                           >
                             <SelectTrigger
-                              className="h-6 w-auto gap-1 border-0 bg-secondary px-2 text-[10px] font-medium text-muted-foreground shadow-none"
+                              className="h-6 w-auto gap-1 border-0 bg-background-gray-secondary px-2 text-[11px] font-medium text-text-secondary shadow-none"
                               aria-label={`Category for ${item.title}`}
                             >
                               <SelectValue />
@@ -701,7 +699,7 @@ export default function MemorizationPage() {
                           <button
                             type="button"
                             onClick={() => setManageItem(item)}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-secondary/40 px-2 py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:border-emerald-500/40 hover:bg-emerald-500/10 hover:text-emerald-600"
+                            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-card-border px-2 py-1.5 text-xs font-medium text-text-secondary shadow-xs transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
                           >
                             <Layers className="h-3.5 w-3.5" />
                             {chunkCounts[item.id]
@@ -785,13 +783,13 @@ export default function MemorizationPage() {
                                   side="top"
                                   align="end"
                                   sideOffset={8}
-                                  className="z-50 rounded-xl border border-white/[0.08] bg-card/95 backdrop-blur-xl p-3 shadow-2xl shadow-black/50 w-56 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+                                  className="z-50 w-56 rounded-lg border border-card-border bg-card-background p-3 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
                                 >
-                                  <p className="text-xs text-foreground font-medium mb-1">
+                                  <p className="mb-1 text-xs font-medium text-text-primary">
                                     Delete &quot;{item.title}&quot;?
                                   </p>
                                   {(item.assignment_count ?? 0) > 0 && (
-                                    <p className="text-[10px] text-muted-foreground mb-2">
+                                    <p className="mb-2 text-[11px] text-text-tertiary">
                                       Assigned to {item.assignment_count} student
                                       {item.assignment_count !== 1 ? "s" : ""}
                                     </p>
@@ -815,7 +813,7 @@ export default function MemorizationPage() {
                                       {deleting ? "..." : "Yes"}
                                     </Button>
                                   </div>
-                                  <Popover.Arrow className="fill-card" />
+                                  <Popover.Arrow className="fill-card-background" />
                                 </Popover.Content>
                               </Popover.Portal>
                             </Popover.Root>
@@ -965,19 +963,19 @@ function ChunkManager({
         onDragLeave={onDragLeave}
         onDragOver={onDragOver}
         onDrop={onDrop}
-        className={`relative w-full overflow-hidden rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40 ${
+        className={`relative w-full overflow-hidden rounded-xl border border-dashed px-4 py-8 text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
           dragging
-            ? "border-emerald-500 bg-emerald-500/10 scale-[1.01]"
+            ? "border-primary bg-primary/10"
             : uploading
-              ? "cursor-wait border-border bg-secondary/30"
-              : "border-border/80 bg-gradient-to-b from-secondary/40 to-secondary/10 hover:border-emerald-500/50 hover:from-emerald-500/5 hover:to-emerald-500/[0.02]"
+              ? "cursor-wait border-card-border bg-background-gray-primary"
+              : "border-card-border bg-background-gray-primary hover:border-primary/30 hover:bg-primary/5"
         }`}
       >
         <div
-          className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
+          className={`mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl transition-colors ${
             dragging
-              ? "bg-emerald-500 text-white shadow-md shadow-emerald-500/30"
-              : "bg-card text-emerald-600 ring-1 ring-border shadow-soft"
+              ? "bg-primary text-primary-foreground"
+              : "bg-[rgba(87,80,241,0.10)] text-[#5750F1]"
           }`}
         >
           {uploading ? (
@@ -990,24 +988,24 @@ function ChunkManager({
         </div>
         {uploading ? (
           <>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-medium text-text-primary">
               Uploading {uploadProgress.done} of {uploadProgress.total}…
             </p>
-            <div className="mx-auto mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-secondary">
+            <div className="mx-auto mt-3 h-1.5 w-48 overflow-hidden rounded-full bg-background-gray-secondary">
               <div
-                className="h-full rounded-full bg-emerald-500 transition-all duration-300"
+                className="h-full rounded-full bg-primary transition-all duration-300"
                 style={{ width: `${pct}%` }}
               />
             </div>
           </>
         ) : dragging ? (
-          <p className="text-sm font-semibold text-emerald-600">Drop images to add as parts</p>
+          <p className="text-sm font-medium text-primary">Drop images to add as parts</p>
         ) : (
           <>
-            <p className="text-sm font-semibold text-foreground">
+            <p className="text-sm font-medium text-text-primary">
               Drag &amp; drop part images here
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-xs text-text-tertiary">
               or click to browse · PNG, JPG, WebP · order matters
             </p>
           </>
@@ -1022,27 +1020,27 @@ function ChunkManager({
           ))}
         </div>
       ) : chunks.length === 0 ? (
-        <div className="rounded-xl border border-border/50 bg-secondary/10 px-4 py-6 text-center">
-          <Layers className="mx-auto mb-2 h-6 w-6 text-muted-foreground/40" />
-          <p className="text-xs text-muted-foreground">
+        <div className="rounded-lg border border-card-border px-4 py-6 text-center">
+          <Layers className="mx-auto mb-2 h-6 w-6 text-icon-tertiary" />
+          <p className="text-xs text-text-tertiary">
             No parts yet — upload the first chunk above (e.g. the first two words).
           </p>
         </div>
       ) : (
         <div className="space-y-2">
           <div className="flex items-center justify-between px-0.5">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-medium uppercase text-text-tertiary">
               {chunks.length} part{chunks.length === 1 ? "" : "s"}
             </p>
-            <p className="text-[11px] text-muted-foreground/70">Learned in this order →</p>
+            <p className="text-xs text-text-tertiary">Learned in this order →</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {chunks.map((c, i) => (
               <div
                 key={c.id}
-                className="group relative overflow-hidden rounded-xl border border-border bg-white shadow-soft transition-all hover:border-emerald-500/40 hover:shadow-md"
+                className="group relative overflow-hidden rounded-lg border border-card-border bg-white transition-colors hover:border-primary/30"
               >
-                <span className="absolute left-2 top-2 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white shadow-sm">
+                <span className="absolute left-2 top-2 z-10 flex h-6 min-w-6 items-center justify-center rounded-full bg-primary px-1.5 text-[11px] font-semibold text-primary-foreground">
                   {i + 1}
                 </span>
                 <img
@@ -1050,7 +1048,7 @@ function ChunkManager({
                   alt={labelFor(c, i)}
                   className="aspect-[3/2] w-full object-contain p-2 pt-8"
                 />
-                <div className="border-t border-border/60 bg-secondary/20 px-2.5 py-1.5 text-[11px] font-medium text-foreground">
+                <div className="border-t border-card-border bg-card-background px-2.5 py-1.5 text-xs font-medium text-text-primary">
                   {labelFor(c, i)}
                 </div>
                 <button
