@@ -33,60 +33,61 @@
    * whole UI. Base :root == admin light, so first paint is always sane.
    * ────────────────────────────────────────────────────────────────────── */
 
-  /* ── ADMIN — Graphite Minimal (light) ── default ── */
+  /* ── ADMIN — NextAdmin (light) ── default ──
+   * Zinc neutrals + NextAdmin indigo (#5750f1), from NextAdmin Pro v2's
+   * src/app/css/default.css. Logo colours (--brand / --brand-soft) stay ours. */
   :root,
   [data-portal="admin"] {
-    --background: 220 16% 98%;
-    --foreground: 220 18% 12%;
+    --background: 240 5% 96%; /* #f4f4f5 page */
+    --foreground: 240 6% 10%; /* #18181b */
     --card: 0 0% 100%;
-    --card-foreground: 220 18% 12%;
-    --surface-alt: 220 14% 96%;
+    --card-foreground: 240 6% 10%;
+    --surface-alt: 0 0% 98%; /* #fafafa */
     --popover: 0 0% 100%;
-    --popover-foreground: 220 18% 12%;
-    --secondary: 220 14% 94%;
-    --secondary-foreground: 220 16% 22%;
-    --muted: 220 14% 96%;
-    --muted-foreground: 220 8% 46%;
+    --popover-foreground: 240 6% 10%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 4% 16%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%; /* #71717a */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 13% 91%;
-    --border-strong: 220 13% 82%;
-    --input: 220 13% 91%;
+    --border: 240 6% 90%; /* #e4e4e7 */
+    --border-strong: 240 5% 84%; /* #d4d4d8 */
+    --input: 240 5% 84%;
     --radius: 0.75rem;
 
-    /* Primary = graphite (near-black buttons) */
-    --primary: 220 16% 16%;
-    --primary-hover: 220 12% 26%;
+    /* Primary = NextAdmin indigo */
+    --primary: 243 85% 63%; /* #5750f1 */
+    --primary-hover: 243 68% 53%; /* #3c35d8 */
     --primary-foreground: 0 0% 100%;
-    --ring: 187 62% 40%;
+    --ring: 243 85% 63%;
 
-    /* Accent = single restrained teal */
-    --accent: 187 62% 40%;
-    --accent-soft: 187 45% 88%;
+    --accent: 243 85% 63%;
+    --accent-soft: 226 100% 94%; /* #e0e7ff */
     --accent-foreground: 0 0% 100%;
-    --gold: 187 62% 40%;
+    --gold: 243 85% 63%;
     --gold-foreground: 0 0% 100%;
 
     /* Brand — deep teal primary + warm honey soft accent (shared) */
     --brand: 184 72% 20%;
     --brand-soft: 40 83% 71%;
 
-    --success: 150 55% 40%;
+    --success: 142 76% 36%; /* #16a34a */
     --warning: 36 80% 48%;
     --error: 0 72% 51%;
 
-    /* Primary scale = teal accent (drives text-emerald-* icon accents) */
-    --c-p-300: 187 45% 58%;
-    --c-p-400: 187 55% 47%;
-    --c-p-500: 187 62% 40%;
-    --c-p-600: 188 66% 31%;
-    --c-p-900: 190 60% 16%;
-    /* Secondary scale = cool grays */
-    --c-s-300: 210 16% 90%;
-    --c-s-400: 210 13% 82%;
-    --c-s-500: 210 11% 72%;
-    --c-s-600: 210 9% 54%;
-    --c-s-900: 214 16% 26%;
+    /* Primary scale = indigo accent (drives text-emerald-* icon accents) */
+    --c-p-300: 230 94% 82%;
+    --c-p-400: 234 89% 74%;
+    --c-p-500: 243 85% 63%;
+    --c-p-600: 243 68% 53%;
+    --c-p-900: 237 67% 33%;
+    /* Secondary scale = zinc */
+    --c-s-300: 240 5% 84%;
+    --c-s-400: 240 5% 65%;
+    --c-s-500: 240 4% 46%;
+    --c-s-600: 240 5% 34%;
+    --c-s-900: 240 6% 10%;
     /* Accent scale = muted amber (status: warning/unpaid) */
     --c-a-300: 40 62% 74%;
     --c-a-400: 38 66% 58%;
@@ -94,17 +95,76 @@
     --c-a-600: 34 72% 40%;
     --c-y-300: 44 70% 74%;
     --c-y-400: 42 72% 60%;
-    --c-g-600: 150 55% 40%;
+    --c-g-600: 142 76% 36%;
     --c-o-600: 14 72% 52%;
-    --c-p-rgb: 37 137 155;
-    --c-p-light-rgb: 150 200 210;
+    --c-p-rgb: 87 80 241;
+    --c-p-light-rgb: 165 180 252;
     --c-a-rgb: 196 150 70;
-    --c-p-bg-glow: 210 16% 92%;
+    --c-p-bg-glow: 226 100% 97%;
     --c-a-bg-glow: 40 40% 90%;
 
-    --shadow-soft: 0 1px 2px rgba(20, 24, 33, 0.06), 0 1px 3px rgba(20, 24, 33, 0.05);
-    --shadow-soft-md: 0 2px 6px rgba(20, 24, 33, 0.07);
-    --shadow-soft-lg: 0 8px 24px rgba(20, 24, 33, 0.1);
+    --shadow-soft: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-soft-md: 0 4px 8px -2px rgba(16, 24, 40, 0.1), 0 2px 4px -2px rgba(16, 24, 40, 0.06);
+    --shadow-soft-lg: 0 12px 16px -4px rgba(16, 24, 40, 0.08), 0 4px 6px -2px rgba(16, 24, 40, 0.03);
+
+    /* NextAdmin semantic tokens, same names as the template so its markup ports
+     * as-is (text-text-primary, border-card-border, bg-card-background…).
+     * ponytail: plain hex, so `/<opacity>` modifiers don't work on these; convert
+     * a token to an HSL triplet if a ported class needs one. */
+    --text-primary: #18181b;
+    --text-secondary: #52525b;
+    --text-tertiary: #71717a;
+    --text-disable: #a1a1aa;
+    --text-50: #374151;
+    --text-100: #6b7280;
+    --text-200: #9ca3af;
+    --title-50: #1f2937;
+    --icon-primary: #27272a;
+    --icon-secondary: #52525b;
+    --icon-tertiary: #71717a;
+    --brand-100: #e0e7ff;
+    --brand-200: #c7d2fe;
+    --brand-300: #a5b4fc;
+    --brand-400: #818cf8;
+    --brand-500: #5750f1;
+    --brand-600: #3c35d8;
+    --background-gray-primary: #fafafa;
+    --background-gray-secondary: #f4f4f5;
+    --background-gray-secondary_alt: #f4f4f5;
+    --background-gray-secondary_alt_2: #f4f4f5;
+    --background-gray-tertiary: #e4e4e7;
+    --background-gray-quaternary: #d4d4d8;
+    --background-white-primary: #ffffff;
+    --background-white-secondary: #ffffff;
+    --card-background: #ffffff;
+    --card-surface-area: #fcfcfd;
+    --card-border: #e8e8e8;
+    --card-surface-border: #e5e5e5;
+    --border-primary: #f4f4f5;
+    --border-secondary: #e4e4e7;
+    --border-secondary-alt: #e4e4e7;
+    --border-base-50: #f3f4f6;
+    --border-base-100: #e5e7eb;
+    --border-base-200: #e5e7eb;
+    --border-base-300: #d1d5db;
+    --input-background: #ffffff;
+    --input-border: #d4d4d8;
+    --input-placeholder-text-color: #a1a1aa;
+    --input-label-text-color: #52525b;
+    --sidebar-navigation-nav-item-nav-hover-background: rgba(0, 0, 0, 0.05);
+    --button-primary-outline-background: #ffffff;
+    --button-primary-outline-hover-background: #f4f4f5;
+    --button-primary-outline-text: #27272a;
+    --button-primary-outline-stroke: #d4d4d8;
+    --dropdowns-background: #ffffff;
+    --tooltip-background: #ffffff;
+    --tooltip-text-color: #52525b;
+    --error-500: #ef4444;
+    --success-500: #22c55e;
+    --warning-500: #eab308;
+    --info-500: #0ea5e9;
+    --shadow-xs: 0 1px 2px 0 rgba(16, 24, 40, 0.05);
+    --shadow-3xl: 0 32px 64px -12px rgba(16, 24, 40, 0.14);
 
     /* Shared Tajweed / Kid color accents so teacher & student see identical cards */
     --kid-sage: 93 21% 57%;
@@ -121,36 +181,36 @@
     --radius-input: 0.5rem; /* 8px */
   }
 
-  /* ── ADMIN — Graphite Minimal (dark) ── */
+  /* ── ADMIN — NextAdmin (dark) ── from the template's src/app/css/dark.css ── */
   [data-portal="admin"].dark {
-    --background: 220 18% 8%;
-    --foreground: 210 16% 92%;
-    --card: 220 16% 11%;
-    --card-foreground: 210 16% 92%;
-    --surface-alt: 220 14% 14%;
-    --popover: 220 16% 11%;
-    --popover-foreground: 210 16% 92%;
-    --secondary: 220 12% 18%;
-    --secondary-foreground: 210 16% 88%;
-    --muted: 220 12% 16%;
-    --muted-foreground: 220 8% 60%;
+    --background: 240 10% 4%; /* #09090b */
+    --foreground: 0 0% 90%;
+    --card: 240 2% 9%; /* #171718 */
+    --card-foreground: 0 0% 90%;
+    --surface-alt: 240 6% 10%; /* #18181b */
+    --popover: 240 4% 16%; /* #27272a */
+    --popover-foreground: 0 0% 90%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 6% 90%;
+    --muted: 240 6% 10%;
+    --muted-foreground: 240 5% 65%; /* #a1a1aa */
     --destructive: 0 66% 56%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 12% 20%;
-    --border-strong: 220 12% 30%;
-    --input: 220 12% 22%;
+    --border: 220 3% 17%; /* #2b2c2e */
+    --border-strong: 240 5% 26%; /* #3f3f46 */
+    --input: 240 4% 16%;
 
-    /* In dark, primary flips to near-white with dark text (minimal convention) */
-    --primary: 210 16% 92%;
-    --primary-hover: 210 16% 84%;
-    --primary-foreground: 220 18% 12%;
-    --ring: 187 66% 50%;
+    /* Indigo stays indigo in dark, with white text (as in the template) */
+    --primary: 243 85% 63%;
+    --primary-hover: 243 68% 53%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 243 85% 63%;
 
-    --accent: 187 66% 50%;
-    --accent-soft: 190 40% 22%;
-    --accent-foreground: 220 18% 10%;
-    --gold: 187 66% 50%;
-    --gold-foreground: 220 18% 10%;
+    --accent: 243 85% 63%;
+    --accent-soft: 243 40% 20%;
+    --accent-foreground: 0 0% 100%;
+    --gold: 243 85% 63%;
+    --gold-foreground: 0 0% 100%;
 
     /* Brand — teal + honey, tuned brighter for dark surfaces */
     --brand: 184 52% 46%;
@@ -160,33 +220,76 @@
     --warning: 38 82% 56%;
     --error: 0 66% 56%;
 
-    --c-p-300: 187 50% 70%;
-    --c-p-400: 187 58% 58%;
-    --c-p-500: 187 66% 50%;
-    --c-p-600: 188 66% 42%;
-    --c-p-900: 190 55% 24%;
-    --c-s-300: 214 12% 60%;
-    --c-s-400: 214 12% 46%;
-    --c-s-500: 214 12% 36%;
-    --c-s-600: 214 12% 28%;
-    --c-s-900: 214 16% 82%;
+    --c-p-300: 230 94% 82%;
+    --c-p-400: 234 89% 74%;
+    --c-p-500: 243 85% 68%;
+    --c-p-600: 243 85% 63%;
+    --c-p-900: 243 45% 25%;
+    --c-s-300: 240 5% 65%;
+    --c-s-400: 240 4% 46%;
+    --c-s-500: 240 5% 34%;
+    --c-s-600: 240 5% 26%;
+    --c-s-900: 240 6% 90%;
     --c-a-300: 40 70% 70%;
     --c-a-400: 38 74% 60%;
     --c-a-500: 36 78% 52%;
     --c-a-600: 34 78% 44%;
     --c-y-300: 44 78% 70%;
     --c-y-400: 42 80% 60%;
-    --c-g-600: 150 52% 48%;
+    --c-g-600: 142 71% 45%;
     --c-o-600: 14 76% 58%;
-    --c-p-rgb: 60 175 195;
-    --c-p-light-rgb: 120 200 215;
+    --c-p-rgb: 129 140 248;
+    --c-p-light-rgb: 165 180 252;
     --c-a-rgb: 220 170 80;
-    --c-p-bg-glow: 200 20% 16%;
+    --c-p-bg-glow: 243 30% 14%;
     --c-a-bg-glow: 40 30% 16%;
 
     --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4);
     --shadow-soft-md: 0 2px 8px rgba(0, 0, 0, 0.45);
     --shadow-soft-lg: 0 10px 30px rgba(0, 0, 0, 0.55);
+
+    --text-primary: rgba(255, 255, 255, 0.9);
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #a1a1aa;
+    --text-disable: #71717a;
+    --text-50: #d1d5db;
+    --text-100: #9ca3af;
+    --text-200: #6b7280;
+    --title-50: #f3f4f6;
+    --icon-primary: #ffffff;
+    --icon-secondary: #a1a1aa;
+    --icon-tertiary: #a1a1aa;
+    --background-gray-primary: #18181b;
+    --background-gray-secondary: #18181b;
+    --background-gray-secondary_alt: #27272a;
+    --background-gray-secondary_alt_2: #09090b;
+    --background-gray-tertiary: #27272a;
+    --background-gray-quaternary: #3f3f46;
+    --background-white-primary: #09090b;
+    --background-white-secondary: #18181b;
+    --card-background: #171718;
+    --card-surface-area: #0f0f0f;
+    --card-border: #2b2c2e;
+    --card-surface-border: #1d1d1f;
+    --border-primary: #27272a;
+    --border-secondary: #18181b;
+    --border-secondary-alt: #3f3f46;
+    --border-base-50: #1f2937;
+    --border-base-100: #27272a;
+    --border-base-200: #3f3f46;
+    --border-base-300: #52525b;
+    --input-background: rgba(255, 255, 255, 0.05);
+    --input-border: rgba(255, 255, 255, 0.05);
+    --input-placeholder-text-color: #71717a;
+    --input-label-text-color: #a1a1aa;
+    --sidebar-navigation-nav-item-nav-hover-background: rgba(255, 255, 255, 0.05);
+    --button-primary-outline-background: rgba(255, 255, 255, 0.05);
+    --button-primary-outline-hover-background: #18181b;
+    --button-primary-outline-text: #e4e4e7;
+    --button-primary-outline-stroke: #27272a;
+    --dropdowns-background: #27272a;
+    --tooltip-background: #27272a;
+    --tooltip-text-color: #ffffff;
   }
 
   /* ── STUDENT — Forest & Terracotta — light ──
@@ -401,6 +504,13 @@
   html {
     font-size: 16px;
   }
+  /* Teacher portal reads in Inter (NextAdmin's face). --font-ui is set here on
+   * <body>, where next/font defines --font-inter, and every UI font stack
+   * (body, headings, Tailwind font-sans/heading) tries it first. */
+  [data-portal="admin"] body {
+    --font-ui: var(--font-inter);
+    font-family: var(--font-ui), system-ui, sans-serif;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-body), "Nunito Sans", system-ui, sans-serif;
@@ -421,7 +531,7 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-heading), "Baloo 2", system-ui, sans-serif;
+    font-family: var(--font-ui, var(--font-heading)), "Baloo 2", system-ui, sans-serif;
     font-weight: 600;
     line-height: 1.25;
     letter-spacing: 0;
@@ -462,7 +572,7 @@
   /* Stat-card numbers — Inter for emphasis */
   .font-stat,
   .stat-number {
-    font-family: var(--font-body), "Nunito Sans", system-ui, sans-serif;
+    font-family: var(--font-ui, var(--font-body)), "Nunito Sans", system-ui, sans-serif;
     font-weight: 800;
     letter-spacing: -0.01em;
   }

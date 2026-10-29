@@ -29,6 +29,14 @@ const body = localFont({
   display: "swap",
 })
 
+// Inter — teacher portal UI (NextAdmin's face). Variable weight, Latin subset.
+const inter = localFont({
+  src: "./fonts/inter.woff2",
+  variable: "--font-inter",
+  weight: "100 900",
+  display: "swap",
+})
+
 // Scheherazade New — the primary Quranic/Arabic face (first in every Arabic
 // stack). Arabic subset only: Latin falls through to the next family.
 const scheherazade = localFont({
@@ -101,7 +109,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body
-        className={`${heading.variable} ${body.variable} ${scheherazade.variable} ${naskh.variable} ${arabic.variable} ${body.className}`}
+        className={`${heading.variable} ${body.variable} ${inter.variable} ${scheherazade.variable} ${naskh.variable} ${arabic.variable} ${body.className}`}
       >
         {/* Set the portal palette (and admin dark mode) before first paint to avoid a flash. */}
         <script
