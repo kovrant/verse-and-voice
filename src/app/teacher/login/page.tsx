@@ -72,7 +72,7 @@ function AdminLoginForm() {
           <p className="text-xs text-muted-foreground mt-0.5">Admin sign in</p>
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-soft">
+        <div className="rounded-xl border border-card-border bg-card p-6 shadow-xs">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="space-y-1.5">
               <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">

@@ -332,7 +332,7 @@ export default function Dashboard() {
                         currency={f.students?.fee_currency || "PKR"}
                         rates={rates}
                       />
-                      <Badge variant="warning" className="text-[10px]">
+                      <Badge variant="warning" className="text-[11px]">
                         Unpaid
                       </Badge>
                     </div>

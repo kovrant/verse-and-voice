@@ -195,7 +195,7 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
                   <Badge
                     variant="outline"
                     className={cn(
-                      "text-[9px] font-extrabold uppercase tracking-wider px-2 py-0 rounded-full border shrink-0",
+                      "text-[11px] font-medium uppercase px-2 py-0 rounded-full border shrink-0",
                       data.configured
                         ? "bg-green-500/10 text-green-400 border-green-500/40"
                         : "bg-amber-500/10 text-amber-400 border-amber-500/40",
@@ -266,19 +266,17 @@ export function GeminiQuotaCard({ className, variant = "full" }: GeminiQuotaCard
               </svg>
               <div className="absolute flex flex-col items-center justify-center text-center">
                 <span className="text-sm font-semibold text-foreground">{remainingPercent}%</span>
-                <span className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground">
-                  free
-                </span>
+                <span className="text-[11px] font-medium uppercase text-text-tertiary">free</span>
               </div>
             </div>
 
             {/* Info Block */}
             <div className="min-w-0 flex-1 space-y-0.5">
               <div className="flex items-center justify-between gap-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                <span className="text-xs font-medium uppercase text-text-tertiary">
                   Daily Requests
                 </span>
-                <span className="text-[10px] font-medium text-muted-foreground">
+                <span className="text-[11px] text-text-tertiary">
                   Resets in{" "}
                   <strong className="text-foreground">
                     {formatCountdown(data.reset_in_seconds)}
