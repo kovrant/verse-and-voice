@@ -3,26 +3,20 @@
 import { LogIn } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { AccessDialogHeader, AccessTile } from "@/components/student-access-bits"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { toast } from "@/lib/toast"
 import { forceSignOutStudent } from "@/lib/use-online-students"
-import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to allow/deny a student's portal sign-in. Flips
  * app_metadata.login_disabled via /api/students/:id/access (teacher-guarded,
  * service role). Turning access OFF also kicks any live session.
  */
-/**
- * `tile`: no card chrome, for the shared access card — a divided row, or on
- * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
- */
-export function StudentSignInAccess({
-  studentId,
-  tile = false,
-}: {
-  studentId: string
-  tile?: boolean
-}) {
+/** Sign-in access tile: allowed / off; the switch lives in its dialog. */
+export function StudentSignInAccess({ studentId }: { studentId: string }) {
+  const [open, setOpen] = useState(false)
   const [hasLogin, setHasLogin] = useState(false)
   const [enabled, setEnabled] = useState(true) // access on = login NOT disabled
   const [loading, setLoading] = useState(true)
@@ -78,77 +72,71 @@ export function StudentSignInAccess({
   }
 
   return (
-    <div
-      className={
-        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
-      }
-    >
-      <div
-        className={cn(
-          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
-          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
-        )}
-      >
-        <div
-          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
-        >
-          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
-            <LogIn className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <p className="text-sm font-semibold text-text-primary">Sign-in Access</p>
-              {!loading && hasLogin && (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                    enabled
-                      ? "bg-green-500/10 text-green-600"
-                      : "bg-background-gray-secondary text-text-secondary"
+    <>
+      <AccessTile
+        icon={LogIn}
+        tint="sky"
+        title="Sign-in access"
+        loading={loading}
+        status={
+          hasLogin
+            ? { on: enabled, label: enabled ? "Allowed" : "Off" }
+            : { on: false, label: "No login" }
+        }
+        onClick={() => setOpen(true)}
+      />
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <AccessDialogHeader
+            icon={LogIn}
+            tint="sky"
+            title="Sign-in access"
+            description="Turning sign-in off also signs the student out of any open session."
+          />
+          <div className="py-2">
+            {hasLogin ? (
+              <div className="flex items-center justify-between gap-4 rounded-lg bg-background-gray-primary p-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-text-primary">Allow portal sign-in</p>
+                  <p className="mt-0.5 text-xs text-text-tertiary">
+                    {enabled
+                      ? "The student can sign in to the portal."
+                      : "The student can't sign in — they'll be asked to contact you."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={enabled}
+                  aria-label="Allow portal sign-in"
+                  disabled={saving}
+                  onClick={toggle}
+                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
+                    enabled ? "bg-primary" : "bg-background-gray-tertiary"
                   }`}
                 >
                   <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      enabled ? "bg-green-500" : "bg-icon-tertiary"
+                    className={`inline-block h-5 w-5 transform rounded-full bg-card-background shadow-xs transition-transform ${
+                      enabled ? "translate-x-[22px]" : "translate-x-0.5"
                     }`}
                   />
-                  {enabled ? "Allowed" : "Off"}
-                </span>
-              )}
-            </div>
-            {loading ? (
-              <div className="mt-1.5 h-4 w-48 shimmer rounded" />
-            ) : !hasLogin ? (
-              <p className="mt-0.5 text-sm text-text-tertiary">
-                Create a login first (see Portal Access) so you can control sign-in.
-              </p>
+                </button>
+              </div>
             ) : (
-              <p className="mt-0.5 text-sm text-text-tertiary">
-                {enabled
-                  ? "The student can sign in to the portal."
-                  : "The student can't sign in — they'll be asked to contact you."}
-              </p>
+              <div className="rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">
+                This student has no portal login yet. Create one from Portal access first, then you
+                can turn sign-in on or off here.
+              </div>
             )}
           </div>
-        </div>
-
-        <button
-          type="button"
-          role="switch"
-          aria-checked={enabled}
-          aria-label="Allow portal sign-in"
-          disabled={loading || saving || !hasLogin}
-          onClick={toggle}
-          className={`${tile ? "wide:mt-auto " : ""}relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
-            enabled ? "bg-primary" : "bg-background-gray-tertiary"
-          }`}
-        >
-          <span
-            className={`inline-block h-5 w-5 transform rounded-full bg-card-background shadow-xs transition-transform ${
-              enabled ? "translate-x-[22px]" : "translate-x-0.5"
-            }`}
-          />
-        </button>
-      </div>
-    </div>
+          <div className="flex justify-end pt-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Done
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

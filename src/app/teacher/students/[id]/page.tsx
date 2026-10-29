@@ -1043,24 +1043,13 @@ export default function StudentDetailPage() {
   )
 }
 
-/**
- * Portal access, sign-in and active session in one card: divided rows, or three
- * tiles across on wide screens (1360px+, where the content column has room).
- */
+/** Portal access, sign-in and active session as three clickable tiles; each opens its dialog. */
 function StudentAccessCard({ studentId }: { studentId: string }) {
   return (
-    <Card className="overflow-hidden">
-      <div className="grid divide-y divide-border-secondary-alt wide:grid-cols-3 wide:divide-x wide:divide-y-0">
-        <div className="p-5">
-          <StudentPortalAccess studentId={studentId} tile />
-        </div>
-        <div className="p-5">
-          <StudentSignInAccess studentId={studentId} tile />
-        </div>
-        <div className="p-5">
-          <StudentForceSignOut studentId={studentId} tile />
-        </div>
-      </div>
-    </Card>
+    <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+      <StudentPortalAccess studentId={studentId} />
+      <StudentSignInAccess studentId={studentId} />
+      <StudentForceSignOut studentId={studentId} />
+    </div>
   )
 }

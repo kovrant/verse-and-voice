@@ -16,7 +16,6 @@ const config = {
         /* Named because the raw `tall` screen switches off Tailwind's
            arbitrary min-[…] breakpoints. */
         xs: "400px",
-        wide: "1360px",
       },
       colors: {
         border: "hsl(var(--border))",

@@ -3,17 +3,11 @@
 import { LogOut } from "lucide-react"
 import { useState } from "react"
 
+import { AccessDialogHeader, AccessTile } from "@/components/student-access-bits"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { toast } from "@/lib/toast"
 import { forceSignOutStudent, useOnlineStudents } from "@/lib/use-online-students"
-import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to forcibly end an ONLINE student's session. Broadcasts a
@@ -21,17 +15,8 @@ import { cn } from "@/lib/utils"
  * revoking their refresh tokens server-side). Only works while the student has
  * the portal open — there's no offline/admin revoke.
  */
-/**
- * `tile`: no card chrome, for the shared access card — a divided row, or on
- * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
- */
-export function StudentForceSignOut({
-  studentId,
-  tile = false,
-}: {
-  studentId: string
-  tile?: boolean
-}) {
+/** Active session tile: online / offline; force sign-out lives in its dialog. */
+export function StudentForceSignOut({ studentId }: { studentId: string }) {
   const online = useOnlineStudents()
   const isOnline = online.has(studentId)
   const [open, setOpen] = useState(false)
@@ -51,82 +36,48 @@ export function StudentForceSignOut({
   }
 
   return (
-    <div
-      className={
-        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
-      }
-    >
-      <div
-        className={cn(
-          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
-          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
-        )}
-      >
-        <div
-          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
-        >
-          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-destructive/10 text-destructive">
-            <LogOut className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <p className="text-sm font-semibold text-text-primary">Active Session</p>
-              <span
-                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                  isOnline
-                    ? "bg-green-500/10 text-green-600"
-                    : "bg-background-gray-secondary text-text-secondary"
-                }`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${
-                    isOnline ? "bg-green-500" : "bg-icon-tertiary"
-                  }`}
-                />
-                {isOnline ? "Online" : "Offline"}
-              </span>
-            </div>
-            <p className="mt-0.5 text-sm text-text-tertiary">
-              {isOnline
-                ? "Force this student's open portal to sign out immediately."
-                : "No active session — the student isn't online right now."}
-            </p>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen(true)}
-          disabled={!isOnline}
-          className={cn(
-            "flex-shrink-0 text-destructive hover:border-destructive/40 hover:bg-destructive/10 hover:text-destructive",
-            tile && "wide:mt-auto wide:self-start",
-          )}
-        >
-          <LogOut className="h-3.5 w-3.5 mr-1.5" />
-          Force sign out
-        </Button>
-      </div>
+    <>
+      <AccessTile
+        icon={LogOut}
+        tint="red"
+        title="Active session"
+        status={{ on: isOnline, label: isOnline ? "Online" : "Offline" }}
+        onClick={() => setOpen(true)}
+      />
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Force sign out?</DialogTitle>
-            <DialogDescription>
-              This immediately signs the student out of their open session and revokes it. They can
-              sign back in with their username and password.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 pt-2">
-            <Button onClick={confirmSignOut} disabled={signingOut}>
-              {signingOut ? "Signing out…" : "Sign out student"}
-            </Button>
+        <DialogContent className="max-w-md">
+          <AccessDialogHeader
+            icon={LogOut}
+            tint="red"
+            title="Active session"
+            description="Force sign-out ends the student's open portal session right away."
+          />
+          <div className="py-2">
+            <div className="flex items-start gap-3 rounded-lg bg-background-gray-primary p-4">
+              <span
+                className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${isOnline ? "bg-green-500" : "bg-icon-tertiary"}`}
+              />
+              <p className="text-sm text-text-secondary">
+                {isOnline
+                  ? "The student has the portal open now. Signing them out revokes this session; they can sign back in with their username and password."
+                  : "No active session — the student isn't online right now, so there's nothing to sign out."}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={signingOut}>
-              Cancel
+              {isOnline ? "Cancel" : "Close"}
             </Button>
+            {isOnline && (
+              <Button variant="destructive" onClick={confirmSignOut} disabled={signingOut}>
+                <LogOut className="mr-1.5 h-3.5 w-3.5" />
+                {signingOut ? "Signing out…" : "Force sign out"}
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   )
 }

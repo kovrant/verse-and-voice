@@ -3,35 +3,20 @@
 import { Check, Eye, EyeOff, KeyRound } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { AccessDialogHeader, AccessTile } from "@/components/student-access-bits"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { isValidUsername } from "@/lib/student-auth"
 import { toast } from "@/lib/toast"
-import { cn } from "@/lib/utils"
 
 /**
  * Teacher-facing card to create or reset a student's portal login. Talks to
  * /api/students/:id/credentials (service-role, teacher-guarded).
  */
-/**
- * `tile`: no card chrome, for the shared access card — a divided row, or on
- * wide screens (`wide`, 1360px+) a compact column tile that sits three across.
- */
-export function StudentPortalAccess({
-  studentId,
-  tile = false,
-}: {
-  studentId: string
-  tile?: boolean
-}) {
+/** Portal access tile: shows whether a login exists; opens the create/reset dialog. */
+export function StudentPortalAccess({ studentId }: { studentId: string }) {
   const [username, setUsername] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [open, setOpen] = useState(false)
@@ -55,67 +40,15 @@ export function StudentPortalAccess({
   const hasLogin = !!username
 
   return (
-    <div
-      className={
-        tile ? undefined : "rounded-xl border border-card-border bg-card-background p-5 sm:p-6"
-      }
-    >
-      <div
-        className={cn(
-          "flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between",
-          tile && "wide:h-full wide:flex-col wide:items-stretch wide:justify-start",
-        )}
-      >
-        <div
-          className={cn("flex min-w-0 items-center gap-4", tile && "wide:items-start wide:gap-3")}
-        >
-          <span className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
-            <KeyRound className="h-5 w-5" />
-          </span>
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <p className="text-sm font-semibold text-text-primary">Portal Access</p>
-              {!loading && (
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                    hasLogin
-                      ? "bg-green-500/10 text-green-600"
-                      : "bg-background-gray-secondary text-text-secondary"
-                  }`}
-                >
-                  <span
-                    className={`h-1.5 w-1.5 rounded-full ${
-                      hasLogin ? "bg-green-500" : "bg-icon-tertiary"
-                    }`}
-                  />
-                  {hasLogin ? "Active" : "Not set"}
-                </span>
-              )}
-            </div>
-            {loading ? (
-              <div className="mt-1.5 h-4 w-40 shimmer rounded" />
-            ) : hasLogin ? (
-              <p className="mt-0.5 text-sm text-text-tertiary">
-                Username:{" "}
-                <span className="font-mono font-semibold text-text-primary">{username}</span>
-              </p>
-            ) : (
-              <p className="mt-0.5 text-sm text-text-tertiary">
-                No login created yet — create one so the student can sign in.
-              </p>
-            )}
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setOpen(true)}
-          className={cn("flex-shrink-0", tile && "wide:mt-auto wide:self-start")}
-        >
-          {hasLogin ? "Reset password" : "Create login"}
-        </Button>
-      </div>
-
+    <>
+      <AccessTile
+        icon={KeyRound}
+        tint="indigo"
+        title="Portal access"
+        loading={loading}
+        status={{ on: hasLogin, label: hasLogin ? "Active" : "Not set" }}
+        onClick={() => setOpen(true)}
+      />
       <CredentialDialog
         studentId={studentId}
         open={open}
@@ -123,7 +56,7 @@ export function StudentPortalAccess({
         existingUsername={username}
         onSaved={(u) => setUsername(u)}
       />
-    </div>
+    </>
   )
 }
 
@@ -190,14 +123,20 @@ function CredentialDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
-          <DialogTitle>{isReset ? "Reset student login" : "Create student login"}</DialogTitle>
-          <DialogDescription>
-            The student signs in at the login page with this username and password.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 pt-2">
+      <DialogContent className="max-w-md">
+        <AccessDialogHeader
+          icon={KeyRound}
+          tint="indigo"
+          title={isReset ? "Reset student login" : "Create student login"}
+          description="The student signs in at the login page with this username and password."
+        />
+        <div className="space-y-4 py-2">
+          {isReset && (
+            <div className="rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">
+              Current username:{" "}
+              <span className="font-mono font-semibold text-text-primary">{existingUsername}</span>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="portal-username">Username</Label>
             <Input
@@ -230,21 +169,21 @@ function CredentialDialog({
               </button>
             </div>
           </div>
-          <div className="flex gap-3 pt-1">
-            <Button onClick={save} disabled={saving}>
-              {saving ? (
-                <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Check className="h-3.5 w-3.5 mr-1" />
-                  {isReset ? "Update" : "Create"}
-                </>
-              )}
-            </Button>
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancel
-            </Button>
-          </div>
+        </div>
+        <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? (
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <>
+                <Check className="mr-1 h-3.5 w-3.5" />
+                {isReset ? "Update login" : "Create login"}
+              </>
+            )}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
