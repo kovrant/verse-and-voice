@@ -6,11 +6,12 @@ import {
   BookMarked,
   BookOpen,
   BookOpenCheck,
+  ChevronRight,
   Cpu,
   CreditCard,
   LayoutDashboard,
-  Menu,
   Moon,
+  MoreHorizontal,
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
@@ -22,20 +23,19 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { createContext, memo, useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 
 import { Brand } from "@/components/brand"
+import { BrandLogo } from "@/components/brand-logo"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
 import { getHijriToday, ordinalDay } from "@/lib/hijri"
 import { cn } from "@/lib/utils"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
 
-// Context so layout can read collapsed state
-const SidebarContext = createContext({ collapsed: false })
-
 const navSections = [
   {
+    label: "Main menu",
     items: [
       { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
       { href: "/teacher/notifications", label: "Notifications", icon: Bell },
@@ -65,11 +65,15 @@ const navSections = [
   },
 ]
 
+/**
+ * Teacher sidebar, after NextAdmin Pro's: 270px, folds to a 72px icon rail
+ * (remembered), section labels, neutral active pill. Below lg it is a drawer
+ * opened from the top bar's menu button. Live class hides it entirely.
+ */
 export const Sidebar = memo(function Sidebar() {
   const pathname = usePathname()
-  const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const { visible, setVisible } = useSidebarVisibility()
+  const { visible, setVisible, mobileOpen, setMobileOpen } = useSidebarVisibility()
 
   useEffect(() => {
     try {
@@ -81,30 +85,23 @@ export const Sidebar = memo(function Sidebar() {
   if (pathname === "/login" || pathname === "/teacher/login") return null
 
   const hijri = getHijriToday()
-  const hideOnCollapse = collapsed ? "lg:hidden" : ""
+  const close = () => setMobileOpen(false)
 
   function toggleCollapsed() {
     const next = !collapsed
     setCollapsed(next)
-    localStorage.setItem(COLLAPSED_KEY, String(next))
+    try {
+      localStorage.setItem(COLLAPSED_KEY, String(next))
+    } catch {}
   }
 
   return (
-    <SidebarContext.Provider value={{ collapsed }}>
-      {/* Mobile toggle */}
-      <button
-        aria-label="Open navigation menu"
-        onClick={() => setMobileOpen(true)}
-        className="fixed top-4 left-4 z-50 rounded-lg bg-card border border-border p-2.5 text-foreground shadow-soft lg:hidden"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
-
+    <>
       {/* Mobile overlay */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/30 backdrop-blur-sm lg:hidden"
-          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm lg:hidden"
+          onClick={close}
         />
       )}
 
@@ -114,112 +111,92 @@ export const Sidebar = memo(function Sidebar() {
           type="button"
           onClick={() => setVisible(true)}
           aria-label="Show sidebar"
-          className="fixed top-4 left-4 z-50 hidden lg:flex items-center justify-center p-2.5 bg-card border border-border rounded-lg shadow-soft hover:bg-muted transition-colors"
+          className="fixed left-4 top-4 z-50 hidden size-10 items-center justify-center rounded-lg border border-card-border bg-card-background text-icon-primary shadow-xs transition-colors hover:bg-background-gray-primary lg:flex"
         >
-          <PanelLeftOpen className="h-5 w-5 text-foreground" />
+          <PanelLeftOpen className="h-5 w-5" />
         </button>
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col border-r border-border bg-card overflow-hidden",
+          "fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col overflow-hidden border-r border-card-border bg-card-surface-area",
           "transition-all duration-300 ease-in-out",
-          "lg:static lg:z-auto lg:translate-x-0 lg:flex-shrink-0",
+          "lg:static lg:z-auto lg:flex-shrink-0 lg:translate-x-0",
           !visible
-            ? "lg:w-0 lg:opacity-0 lg:pointer-events-none"
+            ? "lg:pointer-events-none lg:w-0 lg:border-r-0 lg:opacity-0"
             : collapsed
               ? "lg:w-[72px] lg:opacity-100"
-              : "lg:w-64 lg:opacity-100",
-          "w-64",
+              : "lg:w-[270px] lg:opacity-100",
           mobileOpen && visible ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
         style={{ contain: "layout style paint" }}
       >
-        {/* Header */}
-        <div className={cn("py-5 transition-all duration-300", collapsed ? "lg:px-3" : "px-5")}>
-          <div
-            className={cn(
-              "flex items-center transition-all duration-300",
-              collapsed ? "lg:justify-center" : "gap-3",
-            )}
-          >
-            <div
-              className={cn(
-                "flex items-center justify-center rounded-xl text-primary-foreground flex-shrink-0 shadow-soft ring-1 ring-white/10 transition-all duration-300",
-                collapsed ? "lg:h-9 lg:w-9 h-10 w-10" : "h-10 w-10",
-              )}
-              style={{
-                background: "linear-gradient(135deg, hsl(var(--c-p-500)), hsl(var(--c-a-500)))",
-              }}
-            >
-              <BookAudio className="h-5 w-5" />
-            </div>
-            <div
-              className={cn(
-                "min-w-0 transition-all duration-300",
-                collapsed ? "lg:hidden" : "block",
-              )}
-            >
-              <h1 className="text-[15px] font-semibold tracking-tight text-foreground whitespace-nowrap">
-                <Brand />
-              </h1>
-              <p className="text-[11px] text-muted-foreground tracking-wide whitespace-nowrap">
-                Admin
-              </p>
-            </div>
-          </div>
-
-          {/* Mobile close */}
-          <button
-            aria-label="Close navigation menu"
-            onClick={() => setMobileOpen(false)}
-            className="absolute right-4 top-4 rounded-md p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted lg:hidden"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Islamic month card → Islamic History.
-            Don't copy the student --primary/--sage classes: admin has no --sage
-            and inverts --primary in dark mode, which made this white-on-white. */}
-        <Link
-          href="/teacher/history"
-          title={`${ordinalDay(hijri.day)} ${hijri.monthInfo.name} ${hijri.year} AH`}
-          onClick={() => setMobileOpen(false)}
+        {/* Header: logo + collapse toggle (stacked when collapsed) */}
+        <div
           className={cn(
-            "relative mb-2 flex items-center overflow-hidden bg-gradient-to-br from-[hsl(var(--c-p-900))] to-[hsl(var(--c-p-500))] px-5 py-3 text-white shadow-[0_8px_20px_-10px_hsl(var(--c-p-500)/0.55)]",
-            collapsed ? "lg:justify-center lg:px-0" : "justify-start",
+            "flex items-center px-4 pt-6",
+            collapsed
+              ? "justify-between lg:flex-col lg:justify-center lg:gap-4"
+              : "justify-between",
           )}
         >
-          <span
-            aria-hidden
-            className="absolute -right-3.5 -top-5 h-20 w-20 rounded-full"
-            style={{
-              background: "radial-gradient(circle, hsl(var(--c-a-500) / 0.45), transparent 70%)",
-            }}
-          />
-          <Moon
-            className={cn("relative h-[22px] w-[22px]", collapsed ? "hidden lg:block" : "hidden")}
-          />
-          <span className={cn("relative", hideOnCollapse)}>
-            <span className="font-heading text-[22px] font-bold leading-tight">
-              {ordinalDay(hijri.day)} {hijri.monthInfo.name}
-            </span>{" "}
-            <span className="text-sm font-semibold opacity-80">{hijri.year} AH</span>
-          </span>
-        </Link>
+          <Link href="/teacher" onClick={close} className="flex min-w-0 items-center gap-2.5">
+            <BrandLogo className="h-9 w-9 flex-shrink-0" />
+            <span className={cn("min-w-0", collapsed && "lg:hidden")}>
+              <span className="block whitespace-nowrap text-base leading-5 text-text-primary">
+                <Brand />
+              </span>
+              <span className="block text-xs leading-4 text-text-tertiary">Teacher</span>
+            </span>
+          </Link>
+
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="hidden p-1.5 text-icon-tertiary transition-colors hover:text-text-secondary lg:block"
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-5 w-5" />
+            ) : (
+              <PanelLeftClose className="h-5 w-5" />
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close navigation menu"
+            className="rounded-lg p-1.5 text-icon-tertiary transition-colors hover:bg-background-gray-primary hover:text-text-primary lg:hidden"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
 
         {/* Nav */}
         <nav
           className={cn(
-            "flex-1 py-2 space-y-1 overflow-y-auto overflow-x-hidden transition-all duration-300",
-            collapsed ? "lg:px-2" : "px-3",
+            "mt-3 flex-1 overflow-y-auto overflow-x-hidden pb-4",
+            collapsed ? "px-4 lg:px-2" : "px-4",
           )}
         >
-          {navSections.map((section, si) => (
-            <div key={si} className={si > 0 ? "mt-2" : ""}>
-              <div className="space-y-0.5">
+          {navSections.map((section) => (
+            <div key={section.label}>
+              <p
+                className={cn(
+                  "mb-3 mt-6 whitespace-nowrap text-xs uppercase text-text-tertiary",
+                  collapsed && "lg:hidden",
+                )}
+              >
+                {section.label}
+              </p>
+              {collapsed && (
+                <span className="hidden items-center justify-center pb-3 pt-5 text-icon-secondary lg:flex">
+                  <MoreHorizontal className="h-5 w-5" />
+                </span>
+              )}
+
+              <div className="space-y-1">
                 {section.items.map((item) => {
                   const isActive =
                     item.href === "/teacher"
@@ -229,39 +206,25 @@ export const Sidebar = memo(function Sidebar() {
                     <Link
                       key={item.href}
                       href={item.href}
-                      onClick={() => setMobileOpen(false)}
+                      onClick={close}
                       title={collapsed ? item.label : undefined}
                       className={cn(
-                        "group relative flex items-center rounded-xl text-sm font-medium transition-all duration-150",
-                        collapsed
-                          ? "lg:justify-center lg:px-0 lg:py-2.5 gap-3 px-3 py-2"
-                          : "gap-3 px-3 py-2",
+                        "group flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        collapsed && "lg:justify-center lg:py-2.5",
                         isActive
-                          ? "bg-accent/10 text-accent font-semibold"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground hover:translate-x-0.5",
+                          ? "bg-sidebar-navigation-nav-item-nav-hover-background text-text-primary"
+                          : "text-text-secondary hover:bg-sidebar-navigation-nav-item-nav-hover-background hover:text-text-primary",
                       )}
                     >
-                      {/* Active indicator bar */}
-                      <span
-                        className={cn(
-                          "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-accent transition-opacity duration-200",
-                          isActive ? "opacity-100" : "opacity-0",
-                        )}
-                      />
                       <item.icon
                         className={cn(
-                          "h-[18px] w-[18px] transition-colors flex-shrink-0",
+                          "h-5 w-5 flex-shrink-0 transition-colors",
                           isActive
-                            ? "text-accent"
-                            : "text-muted-foreground group-hover:text-foreground",
+                            ? "text-icon-primary"
+                            : "text-icon-tertiary group-hover:text-icon-primary",
                         )}
                       />
-                      <span
-                        className={cn(
-                          "whitespace-nowrap transition-all duration-300",
-                          collapsed ? "lg:hidden" : "block",
-                        )}
-                      >
+                      <span className={cn("whitespace-nowrap", collapsed && "lg:hidden")}>
                         {item.label}
                       </span>
                     </Link>
@@ -272,22 +235,27 @@ export const Sidebar = memo(function Sidebar() {
           ))}
         </nav>
 
-        {/* Collapse toggle — desktop only */}
-        <div className="hidden lg:block border-t border-border">
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            className="flex items-center justify-center w-full py-3 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        {/* Footer: today's Islamic date → Islamic History (NextAdmin's footer card) */}
+        <div className={cn("px-4 pb-4", collapsed && "lg:hidden")}>
+          <Link
+            href="/teacher/history"
+            onClick={close}
+            className="group block rounded-2xl bg-background-gray-primary px-4 py-4 transition-colors hover:bg-background-gray-tertiary"
           >
-            {collapsed ? (
-              <PanelLeftOpen className="h-4 w-4" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4" />
-            )}
-          </button>
+            <span className="flex items-center gap-2 text-xs uppercase text-text-tertiary">
+              <Moon className="h-3.5 w-3.5" />
+              Islamic date
+            </span>
+            <span className="mt-1.5 block whitespace-nowrap font-semibold leading-6 text-text-primary">
+              {ordinalDay(hijri.day)} {hijri.monthInfo.name}
+            </span>
+            <span className="flex items-center justify-between text-sm text-text-tertiary">
+              {hijri.year} AH
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
         </div>
       </aside>
-    </SidebarContext.Provider>
+    </>
   )
 })

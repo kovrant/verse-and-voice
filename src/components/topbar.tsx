@@ -1,9 +1,12 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { ChevronDown, LogOut } from "lucide-react"
+import { ChevronDown, LogOut, Menu } from "lucide-react"
+import Link from "next/link"
 import type { ReactNode } from "react"
 
+import { Brand } from "@/components/brand"
+import { BrandLogo } from "@/components/brand-logo"
 import { NotificationBell } from "@/components/notification-bell"
 import { NotificationCompose } from "@/components/notification-compose"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
@@ -19,6 +22,7 @@ function PortalTopBar({
   role,
   signOutNext,
   actions,
+  onMenuClick,
 }: {
   initial: string
   title: string
@@ -26,10 +30,29 @@ function PortalTopBar({
   role: string
   signOutNext: string
   actions?: ReactNode
+  onMenuClick: () => void
 }) {
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between gap-1.5 border-b border-border/60 bg-background/70 backdrop-blur-md px-4 pl-16 lg:px-8 lg:pl-8">
-      <div className="ml-auto flex items-center gap-1.5">
+    <header className="sticky top-0 z-30 flex h-[72px] shrink-0 items-center justify-between gap-2.5 border-b-[0.5px] border-card-border bg-card-surface-area px-3 lg:px-5">
+      {/* Below lg: menu button + logo (the sidebar is a drawer there) */}
+      <div className="flex min-w-0 items-center gap-2 lg:hidden">
+        <button
+          type="button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          className="rounded-md p-1.5 text-icon-tertiary transition-colors hover:text-text-primary"
+        >
+          <Menu className="h-6 w-6" />
+        </button>
+        <Link href="/teacher" className="flex min-w-0 items-center gap-2">
+          <BrandLogo className="h-8 w-8 flex-shrink-0" />
+          <span className="hidden whitespace-nowrap text-text-primary min-[400px]:block">
+            <Brand />
+          </span>
+        </Link>
+      </div>
+
+      <div className="ml-auto flex items-center gap-2 sm:gap-2.5">
         <ThemeSwitch />
         {actions}
         <NotificationBell />
@@ -38,15 +61,18 @@ function PortalTopBar({
           <Popover.Trigger asChild>
             <button
               type="button"
-              className="group flex items-center gap-2.5 rounded-full py-1 pl-1 pr-2.5 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card"
+              className="group flex items-center gap-2.5 rounded-lg transition-all focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
             >
               <span
-                className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold text-primary-foreground ring-2 ring-white/70 shadow-sm flex-shrink-0"
+                className="flex size-10 flex-shrink-0 items-center justify-center rounded-lg text-sm font-semibold text-primary-foreground"
                 style={avatarStyle}
               >
                 {initial}
               </span>
-              <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+              <span className="hidden text-sm font-medium leading-5 text-text-primary md:block">
+                {role}
+              </span>
+              <ChevronDown className="h-4 w-4 text-icon-tertiary transition-transform duration-200 group-data-[state=open]:rotate-180" />
             </button>
           </Popover.Trigger>
 
@@ -54,32 +80,25 @@ function PortalTopBar({
             <Popover.Content
               align="end"
               sideOffset={10}
-              className="z-50 w-64 rounded-2xl border border-border bg-card p-1.5 shadow-soft-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1"
+              className="z-50 w-[280px] overflow-hidden rounded-xl border border-card-border bg-dropdowns-background p-0 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1"
             >
-              <div className="flex items-center gap-3 px-2.5 py-2.5">
+              <div className="flex items-center gap-2.5 border-b border-border-secondary-alt px-4 py-3">
                 <span
-                  className="flex h-11 w-11 items-center justify-center rounded-2xl text-base font-bold text-primary-foreground ring-2 ring-white/70 shadow-sm flex-shrink-0"
+                  className="flex size-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-semibold text-primary-foreground"
                   style={avatarStyle}
                 >
                   {initial}
                 </span>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{title}</p>
-                  {subtitle ? (
-                    <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
-                  ) : null}
-                  <span className="mt-1 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                    {role}
-                  </span>
+                  <p className="truncate text-sm font-medium text-text-primary">{title}</p>
+                  <p className="truncate text-xs text-text-tertiary">{subtitle || role}</p>
                 </div>
               </div>
 
-              <div className="my-1 h-px bg-border" />
-
-              <form action={`/auth/signout?next=${signOutNext}`} method="post">
+              <form action={`/auth/signout?next=${signOutNext}`} method="post" className="p-1.5">
                 <button
                   type="submit"
-                  className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-text-secondary transition-colors hover:bg-background-gray-primary hover:text-text-primary"
                 >
                   <LogOut className="h-4 w-4" />
                   Sign out
@@ -94,7 +113,7 @@ function PortalTopBar({
 }
 
 export function TeacherTopBar() {
-  const { visible } = useSidebarVisibility()
+  const { visible, setMobileOpen } = useSidebarVisibility()
   const user = useCurrentUser()
   const email = user?.email || "—"
   if (!visible) return null
@@ -105,6 +124,7 @@ export function TeacherTopBar() {
       role="Teacher"
       signOutNext="/teacher/login"
       actions={<NotificationCompose />}
+      onMenuClick={() => setMobileOpen(true)}
     />
   )
 }

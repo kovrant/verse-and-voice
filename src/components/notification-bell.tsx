@@ -6,6 +6,7 @@ import { Bell, CheckCheck, CheckSquare, Info, Receipt, Sparkles, Trophy, Video }
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 
+import { headerIconButton } from "@/components/theme-switch"
 import {
   CATEGORY_THEMES,
   getNotificationCategory,
@@ -62,7 +63,7 @@ export function NotificationBell({ kid = false }: { kid?: boolean }) {
           className={
             kid
               ? "group relative flex h-11 w-11 items-center justify-center rounded-[16px] border-[1.5px] border-[hsl(var(--kid-saffron)/0.5)] bg-[hsl(var(--kid-saffron)/0.3)] text-[22px] shadow-soft transition-transform hover:-translate-y-0.5 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-              : "relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-card hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:bg-card data-[state=open]:text-foreground"
+              : headerIconButton
           }
         >
           {kid ? (
@@ -71,14 +72,14 @@ export function NotificationBell({ kid = false }: { kid?: boolean }) {
               🔔
             </span>
           ) : (
-            <Bell className="h-[18px] w-[18px]" />
+            <Bell className="h-5 w-5" />
           )}
           {unread > 0 && (
             <span
               className={
                 kid
                   ? "absolute -right-1.5 -top-1.5 flex min-w-[20px] items-center justify-center rounded-full bg-accent px-1 text-[11px] font-extrabold leading-[20px] text-accent-foreground ring-2 ring-card"
-                  : "absolute right-1.5 top-1.5 flex min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-[16px] text-primary-foreground ring-2 ring-background"
+                  : "absolute -right-1.5 -top-1.5 flex min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-[18px] text-primary-foreground ring-2 ring-card-surface-area"
               }
             >
               {unread > 9 ? "9+" : unread}

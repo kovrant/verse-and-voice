@@ -3,6 +3,7 @@
 import { Send } from "lucide-react"
 import { useEffect, useState } from "react"
 
+import { headerIconButton } from "@/components/theme-switch"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -91,14 +92,9 @@ export function NotificationCompose() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-10 w-10 rounded-full text-muted-foreground hover:text-foreground"
-          aria-label="Send a notification"
-        >
-          <Send className="h-[18px] w-[18px]" />
-        </Button>
+        <button type="button" className={headerIconButton} aria-label="Send a notification">
+          <Send className="h-5 w-5" />
+        </button>
       </DialogTrigger>
 
       <DialogContent>
