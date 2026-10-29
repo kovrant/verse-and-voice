@@ -39,7 +39,7 @@ erDiagram
 
 ### Table Summary
 * **`profiles`:** Identity records linking Supabase Auth `auth.users(id)` to academy roles (`teacher`).
-* **`students`:** Student identity, guardian information, scheduled class times (`"h:mm AM/PM PKT"`), and status.
+* **`students`:** Student identity, guardian information, scheduled class times (`"h:mm AM/PM PKT"`), status, and an optional `gender` (`'boy'` / `'girl'`, picks the teacher portal's avatar).
 * **`quran_rounds`:** Khatm and reading stages; stores `desc_completed` (countdown from 30) and `asc_completed`.
 * **`student_para_progress`:** Real-time bookmarking for paras `0..30` (page, line, $(X,Y)$ pointer).
 * **`class_sessions`:** Historic records of conducted 1-on-1 classes.

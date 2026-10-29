@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
+import { GenderPicker } from "@/components/gender-picker"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -20,7 +21,7 @@ import {
 import { toInputTime, toPktClassTime } from "@/lib/class-time"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
-import { COUNTRIES, formatLocalDate } from "@/lib/utils"
+import { COUNTRIES, formatLocalDate, type StudentGender } from "@/lib/utils"
 
 export default function NewStudentPage() {
   const router = useRouter()
@@ -28,6 +29,7 @@ export default function NewStudentPage() {
   const [form, setForm] = useState({
     name: "",
     guardian_name: "",
+    gender: null as StudentGender | null,
     country: "",
     started_at: formatLocalDate(),
     fee: "",
@@ -50,6 +52,7 @@ export default function NewStudentPage() {
       .insert({
         name: form.name,
         guardian_name: form.guardian_name,
+        gender: form.gender,
         country: form.country || null,
         started_at: form.started_at,
         fee: parseFloat(form.fee),
@@ -164,6 +167,13 @@ export default function NewStudentPage() {
                     placeholder="e.g. Ayesha"
                   />
                 </div>
+              </div>
+              <div className="space-y-2 sm:max-w-[50%] sm:pr-2.5">
+                <Label>Boy or girl</Label>
+                <GenderPicker
+                  value={form.gender}
+                  onChange={(gender) => setForm({ ...form, gender })}
+                />
               </div>
               <div className="grid gap-5 sm:grid-cols-2">
                 <div className="space-y-2">

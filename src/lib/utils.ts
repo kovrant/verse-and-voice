@@ -119,6 +119,9 @@ export const STATUS_CONFIG: Record<
   "Left Uncompleted": { label: "Left Uncompleted", variant: "warning" },
 }
 
+/** Picks the teacher portal's student avatar. */
+export type StudentGender = "boy" | "girl"
+
 /** Full `students` row. */
 export interface Student {
   id: string
@@ -138,6 +141,8 @@ export interface Student {
   /** Student's detected hardware / device (e.g. iPad 10.9", MacBook). */
   last_device?: string | null
   last_device_at?: string | null
+  /** Null until the teacher sets it (migration_student_gender.sql). */
+  gender?: StudentGender | null
   created_at: string
 }
 

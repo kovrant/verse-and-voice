@@ -5,6 +5,7 @@ import { Check, Clock, CreditCard, MapPin, Pencil } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
+import { GenderPicker } from "@/components/gender-picker"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -35,6 +36,7 @@ function formFromStudent(s: Student) {
     class_time: s.class_time || "",
     class_days: Array.isArray(s.class_days) ? s.class_days : [],
     country: s.country || "",
+    gender: s.gender ?? null,
     status: (s.status || "Reading") as StudentStatus,
     ended_at: s.ended_at || "",
   }
@@ -74,6 +76,7 @@ export function StudentProfileCard({
         class_time: editForm.class_time || null,
         class_days: editForm.class_days.length > 0 ? editForm.class_days : null,
         country: editForm.country || null,
+        gender: editForm.gender,
         status: editForm.status,
         // "Reading" students have no end date — clear any stale value left over
         // from a previous "Completed"/"Left" status.
@@ -180,6 +183,14 @@ export function StudentProfileCard({
         {/* Profile Options (Read-only by default, editable when Edit is clicked) */}
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label>Boy or girl</Label>
+              <GenderPicker
+                disabled={!isEditingProfile}
+                value={editForm.gender}
+                onChange={(gender) => setEditForm({ ...editForm, gender })}
+              />
+            </div>
             <div className="space-y-2">
               <Label>Country</Label>
               <Select
