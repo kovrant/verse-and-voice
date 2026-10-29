@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 
 import { SlideToConfirm } from "@/components/slide-to-confirm"
 import { AccessDialogHeader, AccessStatusPill, AccessTile } from "@/components/student-access-bits"
-import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { toast } from "@/lib/toast"
 import { forceSignOutStudent } from "@/lib/use-online-students"
@@ -95,18 +94,21 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
             title="Sign-in access"
             description="Turning sign-in off also signs the student out of any open session."
           />
-          <div className="py-2">
-            {hasLogin ? (
-              <div className="space-y-4 rounded-lg bg-background-gray-primary p-4">
+          {hasLogin ? (
+            <>
+              <div className="my-2 space-y-1 rounded-lg bg-background-gray-primary p-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-text-primary">Portal sign-in</p>
                   <AccessStatusPill on={enabled} label={enabled ? "Allowed" : "Off"} />
                 </div>
-                <p className="-mt-2 text-xs text-text-tertiary">
+                <p className="text-xs text-text-tertiary">
                   {enabled
                     ? "The student can sign in to the portal."
                     : "The student can't sign in — they'll be asked to contact you."}
                 </p>
+              </div>
+              {/* The dialog's only action, in the footer spot */}
+              <div className="pt-2">
                 <SlideToConfirm
                   key={enabled ? "on" : "off"}
                   tone={enabled ? "red" : "green"}
@@ -114,18 +116,13 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
                   onConfirm={toggle}
                 />
               </div>
-            ) : (
-              <div className="rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">
-                This student has no portal login yet. Create one from Portal access first, then you
-                can turn sign-in on or off here.
-              </div>
-            )}
-          </div>
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Done
-            </Button>
-          </div>
+            </>
+          ) : (
+            <div className="my-2 rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">
+              This student has no portal login yet. Create one from Portal access first, then you
+              can turn sign-in on or off here.
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </>
