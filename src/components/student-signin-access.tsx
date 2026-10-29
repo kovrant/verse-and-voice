@@ -3,7 +3,8 @@
 import { LogIn } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { AccessDialogHeader, AccessTile } from "@/components/student-access-bits"
+import { SlideToConfirm } from "@/components/slide-to-confirm"
+import { AccessDialogHeader, AccessStatusPill, AccessTile } from "@/components/student-access-bits"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { toast } from "@/lib/toast"
@@ -45,8 +46,8 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
     const next = !enabled // next enabled state
     const disabled = !next
 
+    // Not optimistic: the slider keeps its colour and label until the save lands.
     setSaving(true)
-    setEnabled(next) // optimistic
     try {
       const res = await fetch(`/api/students/${studentId}/access`, {
         method: "POST",
@@ -55,6 +56,7 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error || "Something went wrong")
+      setEnabled(next)
 
       if (disabled) {
         // Kick any live session so the student is signed out right away.
@@ -64,7 +66,6 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
         toast.success("Sign-in access turned on")
       }
     } catch (e: unknown) {
-      setEnabled(!next) // revert
       toast.error(e instanceof Error ? e.message : "Couldn't update sign-in access")
     } finally {
       setSaving(false)
@@ -96,32 +97,22 @@ export function StudentSignInAccess({ studentId }: { studentId: string }) {
           />
           <div className="py-2">
             {hasLogin ? (
-              <div className="flex items-center justify-between gap-4 rounded-lg bg-background-gray-primary p-4">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-text-primary">Allow portal sign-in</p>
-                  <p className="mt-0.5 text-xs text-text-tertiary">
-                    {enabled
-                      ? "The student can sign in to the portal."
-                      : "The student can't sign in — they'll be asked to contact you."}
-                  </p>
+              <div className="space-y-4 rounded-lg bg-background-gray-primary p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-medium text-text-primary">Portal sign-in</p>
+                  <AccessStatusPill on={enabled} label={enabled ? "Allowed" : "Off"} />
                 </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={enabled}
-                  aria-label="Allow portal sign-in"
-                  disabled={saving}
-                  onClick={toggle}
-                  className={`relative inline-flex h-6 w-11 flex-shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:cursor-not-allowed disabled:opacity-50 ${
-                    enabled ? "bg-primary" : "bg-background-gray-tertiary"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-card-background shadow-xs transition-transform ${
-                      enabled ? "translate-x-[22px]" : "translate-x-0.5"
-                    }`}
-                  />
-                </button>
+                <p className="-mt-2 text-xs text-text-tertiary">
+                  {enabled
+                    ? "The student can sign in to the portal."
+                    : "The student can't sign in — they'll be asked to contact you."}
+                </p>
+                <SlideToConfirm
+                  key={enabled ? "on" : "off"}
+                  tone={enabled ? "red" : "green"}
+                  label={enabled ? "Slide right to turn off access" : "Slide right to give access"}
+                  onConfirm={toggle}
+                />
               </div>
             ) : (
               <div className="rounded-lg bg-background-gray-primary p-4 text-sm text-text-secondary">

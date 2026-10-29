@@ -189,9 +189,27 @@ const config = {
         display: ["var(--font-ui, var(--font-heading))", "Baloo 2", "system-ui", "sans-serif"],
         brand: ["var(--font-heading)", "Baloo 2", "system-ui", "sans-serif"],
         serif: ["var(--font-ui, var(--font-heading))", "Baloo 2", "system-ui", "sans-serif"],
-        arabic: ["var(--font-scheherazade)", "var(--font-arabic)", "var(--font-naskh)", "'Traditional Arabic'", "serif"],
-        hadith: ["var(--font-scheherazade)", "var(--font-arabic)", "var(--font-naskh)", "'Traditional Arabic'", "serif"],
-        amiri: ["var(--font-scheherazade)", "var(--font-arabic)", "var(--font-naskh)", "'Traditional Arabic'", "serif"],
+        arabic: [
+          "var(--font-scheherazade)",
+          "var(--font-arabic)",
+          "var(--font-naskh)",
+          "'Traditional Arabic'",
+          "serif",
+        ],
+        hadith: [
+          "var(--font-scheherazade)",
+          "var(--font-arabic)",
+          "var(--font-naskh)",
+          "'Traditional Arabic'",
+          "serif",
+        ],
+        amiri: [
+          "var(--font-scheherazade)",
+          "var(--font-arabic)",
+          "var(--font-naskh)",
+          "'Traditional Arabic'",
+          "serif",
+        ],
       },
       borderRadius: {
         lg: "var(--radius-card)" /* 16px — cards */,
@@ -211,6 +229,11 @@ const config = {
         "3xl": "var(--shadow-3xl)",
       },
       keyframes: {
+        /* Shine sweeping across text (slide-to-confirm label) */
+        "text-shine": {
+          from: { backgroundPosition: "100% 0" },
+          to: { backgroundPosition: "-150% 0" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -221,6 +244,7 @@ const config = {
         },
       },
       animation: {
+        "text-shine": "text-shine 2.4s linear infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
