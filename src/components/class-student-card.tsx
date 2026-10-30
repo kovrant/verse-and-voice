@@ -15,7 +15,14 @@ import { parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
 
 export type ClassStudent = Pick<
   Student,
-  "id" | "name" | "guardian_name" | "started_at" | "class_time" | "class_days" | "qaida_media_id"
+  | "id"
+  | "name"
+  | "guardian_name"
+  | "started_at"
+  | "class_time"
+  | "class_days"
+  | "qaida_media_id"
+  | "gender"
 >
 
 export interface ClassSession {

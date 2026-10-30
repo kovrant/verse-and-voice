@@ -1,9 +1,11 @@
 "use client"
 
+import * as Popover from "@radix-ui/react-popover"
 import {
   CalendarCheck,
   CalendarOff,
   Check,
+  ChevronDown,
   type LucideIcon,
   RotateCcw,
   TreePalm,
@@ -12,8 +14,8 @@ import {
 import { useEffect, useState } from "react"
 
 import type { ClassStudent } from "@/components/class-student-card"
+import { StudentAvatar } from "@/components/student-avatar"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import {
   ATTENDANCE_LABELS,
   ATTENDANCE_STATUSES,
@@ -66,8 +68,18 @@ function nextDate(date: string): string {
   return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
 }
 
-/** Class page landing: mark today's (PKT) scheduled students. A saved class reads as present. */
-export function ClassTodayAttendance({ students }: { students: ClassStudent[] }) {
+/**
+ * Class page landing: today's (PKT) scheduled students as small cards — time,
+ * name, an attendance pill (menu of the four marks) and Start. A saved class
+ * reads as present. "I'm absent" / "Holiday" for the whole day sit in a Day off menu.
+ */
+export function ClassTodayAttendance({
+  students,
+  onStart,
+}: {
+  students: ClassStudent[]
+  onStart: (studentId: string) => void
+}) {
   const [today] = useState(() => pktDateKey(new Date()))
   const scheduled = students
     .filter((s) => isScheduledDay(today, s.class_days))
@@ -101,10 +113,6 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
       setTaught(new Set((sessionsRes.data ?? []).map((r) => r.student_id as string)))
     })
   }, [idsKey, today])
-
-  if (scheduled.length === 0) {
-    return <p className="text-sm text-text-tertiary">No classes scheduled today.</p>
-  }
 
   const statusOf = (id: string): AttendanceStatus | "unmarked" =>
     marks[id] ?? (taught.has(id) ? "present" : "unmarked")
@@ -181,72 +189,169 @@ export function ClassTodayAttendance({ students }: { students: ClassStudent[] })
     )
   }
 
+  if (scheduled.length === 0) {
+    return (
+      <p className="rounded-xl border border-card-border bg-card px-5 py-4 text-sm text-text-tertiary">
+        No classes scheduled today.
+      </p>
+    )
+  }
+
+  const presentCount = ids.filter((id) => statusOf(id) === "present").length
+
   return (
-    <Card>
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border-primary px-6 py-4">
-        <div>
-          <h2 className="flex items-center gap-2 text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
-            <CalendarCheck className="h-4 w-4 text-primary" />
-            Today&apos;s attendance
-          </h2>
-          <p className="mt-0.5 text-sm text-text-tertiary">
-            {scheduled.length} scheduled today · a saved class counts as present
-          </p>
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <span className="flex size-9 items-center justify-center rounded-lg bg-[rgba(87,80,241,0.10)] text-[#5750F1]">
+            <CalendarCheck className="h-[18px] w-[18px]" />
+          </span>
+          <div>
+            <p className="font-semibold leading-6 tracking-[-0.2px] text-text-primary">
+              Today&apos;s classes
+            </p>
+            <p className="text-sm text-text-tertiary">
+              {presentCount} of {scheduled.length} present · a saved class counts as present
+            </p>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => markAll("teacher_absent")}>
-            <CalendarOff className="mr-1.5 h-3.5 w-3.5 text-sky-600" />
-            I&apos;m absent today
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => markAll("holiday")}>
-            <TreePalm className="mr-1.5 h-3.5 w-3.5" />
-            Holiday today
-          </Button>
-          {dayOffIds.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearDayOff}>
-              <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-              Clear day off
+
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <Button variant="outline" size="sm">
+              <CalendarOff className="mr-1.5 h-3.5 w-3.5" />
+              Day off
+              <ChevronDown className="ml-1 h-3.5 w-3.5" />
             </Button>
-          )}
-        </div>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              align="end"
+              sideOffset={6}
+              className="z-50 w-56 rounded-xl border border-card-border bg-dropdowns-background p-1.5 shadow-3xl"
+            >
+              <MenuItem icon={CalendarOff} onClick={() => markAll("teacher_absent")}>
+                I&apos;m absent today
+              </MenuItem>
+              <MenuItem icon={TreePalm} onClick={() => markAll("holiday")}>
+                Holiday today
+              </MenuItem>
+              {dayOffIds.length > 0 && (
+                <MenuItem icon={RotateCcw} onClick={clearDayOff}>
+                  Clear day off
+                </MenuItem>
+              )}
+              <p className="px-2.5 pb-1 pt-2 text-[11px] text-text-tertiary">
+                Marks everyone not already present.
+              </p>
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
       </div>
-      <CardContent className="divide-y divide-border-primary px-6 py-1">
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {scheduled.map((s) => {
           const current = statusOf(s.id)
+          const tone = ATTENDANCE_TONE[current]
+          const ToneIcon = tone.icon
           return (
-            <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 py-3">
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-text-primary">{s.name}</p>
-                <p className="text-xs text-text-tertiary">{s.class_time || "No class time set"}</p>
+            <div
+              key={s.id}
+              className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
+            >
+              <div className="relative size-11 flex-shrink-0 overflow-hidden rounded-full border border-card-border">
+                <StudentAvatar
+                  id={s.id}
+                  name={s.name}
+                  gender={s.gender}
+                  sizes="44px"
+                  className="origin-[50%_30%] scale-[1.7] object-[50%_30%]"
+                  initialClassName="text-base"
+                />
               </div>
-              <div className="flex flex-wrap gap-1">
-                {ATTENDANCE_STATUSES.map((status) => {
-                  const tone = ATTENDANCE_TONE[status]
-                  const Icon = tone.icon!
-                  const isActive = current === status
-                  return (
-                    <button
-                      key={status}
-                      type="button"
-                      aria-pressed={isActive}
-                      onClick={() => setStatus(s.id, status)}
-                      className={cn(
-                        "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors",
-                        isActive
-                          ? tone.active
-                          : "border-card-border bg-card-background text-text-secondary hover:bg-background-gray-primary hover:text-text-primary",
-                      )}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {ATTENDANCE_LABELS[status]}
-                    </button>
-                  )
-                })}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-text-primary">{s.name}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-xs tabular-nums text-text-tertiary">
+                    {s.class_time || "No time"}
+                  </span>
+                  <Popover.Root>
+                    <Popover.Trigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors",
+                          tone.active,
+                        )}
+                        title="Change attendance"
+                      >
+                        {ToneIcon ? (
+                          <ToneIcon className="h-3 w-3" />
+                        ) : (
+                          <span className={cn("h-1.5 w-1.5 rounded-full", tone.dot)} />
+                        )}
+                        {current === "unmarked" ? "Not marked" : ATTENDANCE_LABELS[current]}
+                        <ChevronDown className="h-3 w-3 opacity-60" />
+                      </button>
+                    </Popover.Trigger>
+                    <Popover.Portal>
+                      <Popover.Content
+                        align="start"
+                        sideOffset={6}
+                        className="z-50 w-48 rounded-xl border border-card-border bg-dropdowns-background p-1.5 shadow-3xl"
+                      >
+                        {ATTENDANCE_STATUSES.map((status) => (
+                          <MenuItem
+                            key={status}
+                            icon={ATTENDANCE_TONE[status].icon!}
+                            active={current === status}
+                            onClick={() => setStatus(s.id, status)}
+                          >
+                            {ATTENDANCE_LABELS[status]}
+                          </MenuItem>
+                        ))}
+                      </Popover.Content>
+                    </Popover.Portal>
+                  </Popover.Root>
+                </div>
               </div>
+              <Button size="sm" onClick={() => onStart(s.id)} className="flex-shrink-0">
+                Start
+              </Button>
             </div>
           )
         })}
-      </CardContent>
-    </Card>
+      </div>
+    </section>
+  )
+}
+
+/** Popover menu row; closes its popover when picked. */
+function MenuItem({
+  icon: Icon,
+  active,
+  onClick,
+  children,
+}: {
+  icon: LucideIcon
+  active?: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <Popover.Close asChild>
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-background-gray-primary",
+          active ? "font-medium text-text-primary" : "text-text-secondary",
+        )}
+      >
+        <Icon className="h-4 w-4 text-icon-secondary" />
+        <span className="flex-1">{children}</span>
+        {active && <Check className="h-4 w-4 text-primary" />}
+      </button>
+    </Popover.Close>
   )
 }

@@ -124,7 +124,7 @@ function ClassPageContent() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, class_time, class_days, qaida_media_id")
+      .select("id, name, guardian_name, started_at, class_time, class_days, qaida_media_id, gender")
       .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
@@ -360,7 +360,7 @@ function ClassPageContent() {
         </>
       ) : (
         <>
-          <ClassTodayAttendance students={students} />
+          <ClassTodayAttendance students={students} onStart={(id) => void handleSelect(id)} />
           <ClassStudentPicker
             students={students}
             onlineIds={onlineStudents}
