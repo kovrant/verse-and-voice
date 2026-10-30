@@ -737,11 +737,22 @@ export default function StudentDetailPage() {
               {student.name}
             </span>
           </nav>
-          <Link href={`/teacher/class?student=${student.id}`}>
-            <Button size="sm">
-              <Play className="mr-1.5 h-3.5 w-3.5" />
-              Start class
-            </Button>
+          {/* Primary action: stands out from everything else on the page */}
+          <Link
+            href={`/teacher/class?student=${student.id}`}
+            title={isOnline ? `${student.name} is online — start the class` : "Start a live class"}
+            className="group inline-flex h-11 items-center gap-2.5 rounded-xl bg-gradient-to-r from-[#5750F1] to-[#7B6CF9] pl-1.5 pr-5 text-sm font-semibold text-white shadow-[0_10px_24px_-8px_rgba(87,80,241,0.7)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_14px_28px_-8px_rgba(87,80,241,0.8)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 active:translate-y-0"
+          >
+            <span className="relative flex size-8 items-center justify-center rounded-lg bg-white/20">
+              <Play className="h-4 w-4 fill-current transition-transform duration-200 group-hover:translate-x-0.5" />
+              {isOnline && (
+                <span className="absolute -right-1 -top-1 flex size-3">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
+                  <span className="relative inline-flex size-3 rounded-full border-2 border-[#6A5DF5] bg-green-400" />
+                </span>
+              )}
+            </span>
+            Start class
           </Link>
         </div>
       </div>
