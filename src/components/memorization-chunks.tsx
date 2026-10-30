@@ -253,7 +253,11 @@ function MemPartPath({
   if (chunks.length === 0) return null
 
   return (
-    <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 main-scroll">
+    <div
+      className={cn(
+        kid ? "-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 main-scroll" : "flex flex-wrap gap-2",
+      )}
+    >
       {chunks.map((c, i) => {
         const isDone = memorizedIds.has(c.id)
         const state = partState(i, currentIdx, isDone)
@@ -268,7 +272,7 @@ function MemPartPath({
               "flex flex-shrink-0 items-center justify-center gap-1 rounded-full tabular-nums transition-all",
               kid
                 ? "h-11 min-w-11 border-[1.5px] px-3 font-heading text-[15px] font-bold hover:-translate-y-0.5 active:scale-[0.99]"
-                : "h-10 min-w-10 px-3 text-xs font-bold",
+                : "h-9 min-w-9 px-2.5 text-xs font-semibold",
               kid && [
                 state === "done" &&
                   "border-[hsl(var(--kid-sage)/0.6)] bg-[hsl(var(--kid-sage)/0.45)] text-foreground shadow-soft",
@@ -278,12 +282,12 @@ function MemPartPath({
                 selected && state !== "current" && "ring-2 ring-foreground/15",
               ],
               !kid && [
-                state === "done" && "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600",
-                state === "current" &&
-                  "bg-amber-500 text-white shadow-md shadow-amber-500/30 ring-2 ring-amber-300/60",
+                // green-*, not emerald-*: the teacher palette makes emerald the indigo accent
+                state === "done" && "bg-green-500 text-white hover:bg-green-600",
+                state === "current" && "bg-amber-500 text-white ring-2 ring-amber-300/60",
                 state === "upcoming" &&
-                  "bg-secondary text-muted-foreground ring-1 ring-border hover:bg-muted",
-                selected && state !== "current" && "ring-2 ring-foreground/20",
+                  "bg-background-gray-secondary text-text-secondary ring-1 ring-border-secondary-alt hover:bg-background-gray-tertiary",
+                selected && state !== "current" && "ring-2 ring-primary/40",
               ],
               celebratingId === c.id &&
                 (kid
@@ -359,7 +363,7 @@ function MemPartHero({
           "group relative w-full overflow-hidden bg-white transition-all",
           kid
             ? "rounded-[20px] border-[1.5px] border-border shadow-soft hover:-translate-y-0.5 active:scale-[0.99]"
-            : "rounded-2xl border border-border shadow-soft hover:border-amber-500/40",
+            : "rounded-xl border border-card-border hover:border-amber-500/40",
         )}
       >
         <img
@@ -422,36 +426,60 @@ export function MemPartWorkspace({
   const pct = Math.round((done / total) * 100)
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-secondary">
-          <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-300"
-            style={{ width: `${pct}%` }}
-          />
+    <div className="grid gap-5 xl:grid-cols-2 xl:items-start">
+      {/* Progress, parts and the mark button */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-background-gray-tertiary">
+            <div
+              className="h-full rounded-full bg-green-500 transition-all duration-300"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <span className="text-xs font-medium tabular-nums text-text-tertiary">
+            {done} of {total}
+          </span>
         </div>
-        <span className="text-[11px] font-semibold tabular-nums text-muted-foreground">
-          {done}/{total}
-        </span>
+
+        <MemPartPath
+          chunks={chunks}
+          memorizedIds={memorizedIds}
+          selectedIndex={safeIdx}
+          onSelect={setSelected}
+        />
+
+        <button
+          type="button"
+          onClick={() => onToggle(active, isMemorized ? false : !activeDone)}
+          className={cn(
+            "flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors",
+            isMemorized || activeDone
+              ? "border border-card-border bg-card-background text-text-secondary hover:bg-background-gray-primary"
+              : "bg-green-600 text-white hover:bg-green-700",
+          )}
+        >
+          {isMemorized || activeDone ? (
+            `Undo ${labelFor(active, safeIdx)}`
+          ) : (
+            <>
+              <Check className="h-4 w-4" />
+              Mark {labelFor(active, safeIdx)} memorized
+            </>
+          )}
+        </button>
       </div>
 
-      <MemPartPath
-        chunks={chunks}
-        memorizedIds={memorizedIds}
-        selectedIndex={safeIdx}
-        onSelect={setSelected}
-      />
-
+      {/* The selected part */}
       {isMemorized ? (
-        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-6 text-center">
-          <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white">
+        <div className="rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-6 text-center">
+          <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-green-500 text-white">
             <Check className="h-5 w-5" />
           </div>
-          <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+          <p className="text-sm font-semibold text-green-700 dark:text-green-400">
             All parts memorized
           </p>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Tap a number above to review or undo a part.
+          <p className="mt-0.5 text-xs text-text-tertiary">
+            Tap a number to review or undo a part.
           </p>
         </div>
       ) : (
@@ -461,32 +489,6 @@ export function MemPartWorkspace({
           badge={safeIdx === currentIdx ? "Current lesson" : undefined}
           subtitle={labelFor(active, safeIdx)}
         />
-      )}
-
-      {!isMemorized && (
-        <button
-          type="button"
-          onClick={() => onToggle(active, !activeDone)}
-          className={cn(
-            "flex h-11 w-full items-center justify-center gap-2 rounded-xl text-sm font-semibold transition-colors",
-            activeDone
-              ? "border border-border bg-card text-muted-foreground hover:bg-secondary"
-              : "bg-emerald-600 text-white shadow-sm hover:bg-emerald-700",
-          )}
-        >
-          <Check className="h-4 w-4" />
-          {activeDone ? "Undo this part" : `Mark ${labelFor(active, safeIdx)} memorized`}
-        </button>
-      )}
-
-      {isMemorized && (
-        <button
-          type="button"
-          onClick={() => onToggle(active, false)}
-          className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-border bg-card text-sm font-medium text-muted-foreground hover:bg-secondary"
-        >
-          Undo {labelFor(active, safeIdx)}
-        </button>
       )}
     </div>
   )

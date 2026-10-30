@@ -1,10 +1,21 @@
 "use client"
 
-import { Check, ChevronDown, Loader2, Plus, RotateCcw, Trash2 } from "lucide-react"
+import {
+  Check,
+  ChevronDown,
+  Loader2,
+  Plus,
+  RotateCcw,
+  ScrollText,
+  Sparkles,
+  Trash2,
+} from "lucide-react"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 
+import { PanelHeader } from "@/components/panel-header"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { getHadithNextMilestone } from "@/lib/hadiths/hadith-engine"
 import type { Hadith, HadithAssignment, StudentHadithProgress } from "@/lib/hadiths/types"
 import type { Quiz, QuizAssignment, QuizAttempt } from "@/lib/quizzes/types"
@@ -295,18 +306,16 @@ export function StudentHadithQuizCard({
   const nextHadith = availableHadithsToAssign[0]
 
   return (
-    <>
-      {/* SECTION 2: HADITH */}
-      <div className="py-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary">Hadith</p>
-            <p className="text-xs text-text-tertiary">
-              {memorizedHadiths.length}/50 memorized
-              {!milestone.isComplete &&
-                ` · Next: ${milestone.badgeTitle} (${milestone.target - milestone.current} left)`}
-            </p>
-          </div>
+    <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+      {/* HADITH */}
+      <Card className="space-y-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <PanelHeader
+            icon={ScrollText}
+            tint="orange"
+            title="Hadith"
+            summary={`${memorizedHadiths.length} of 50 memorized`}
+          />
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
             {activeHadithItems.length === 0 && nextHadith ? (
@@ -349,6 +358,13 @@ export function StudentHadithQuizCard({
             )}
           </div>
         </div>
+        {!milestone.isComplete && (
+          <p className="-mt-1 text-xs text-text-tertiary">
+            Next badge:{" "}
+            <span className="font-medium text-text-secondary">{milestone.badgeTitle}</span> ·{" "}
+            {milestone.target - milestone.current} to go
+          </p>
+        )}
 
         {/* Inline Hadith Picker */}
         {assignHadithOpen && (
@@ -490,18 +506,17 @@ export function StudentHadithQuizCard({
             )}
           </div>
         )}
-      </div>
+      </Card>
 
-      {/* SECTION 3: QUIZZES */}
-      <div className="pt-4 space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-text-primary">Quizzes</p>
-            <p className="text-xs text-text-tertiary">
-              {pendingQuizzes.length} pending
-              {completedQuizzes.length > 0 && ` · ${completedQuizzes.length} completed`}
-            </p>
-          </div>
+      {/* QUIZZES */}
+      <Card className="space-y-4 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <PanelHeader
+            icon={Sparkles}
+            tint="purple"
+            title="Quizzes"
+            summary={`${pendingQuizzes.length} pending${completedQuizzes.length > 0 ? ` · ${completedQuizzes.length} completed` : ""}`}
+          />
           <Button
             variant="outline"
             size="sm"
@@ -597,8 +612,8 @@ export function StudentHadithQuizCard({
             onRemove={(id) => void handleUnassignQuiz(id)}
           />
         )}
-      </div>
-    </>
+      </Card>
+    </div>
   )
 }
 
