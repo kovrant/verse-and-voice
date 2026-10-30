@@ -1049,18 +1049,6 @@ export default function StudentDetailPage() {
                   />
                 </div>
               </div>
-
-              <div>
-                <div>
-                  <h2 className="font-semibold leading-6 tracking-[-0.2px] text-text-primary mb-1">
-                    Portal Access & Security
-                  </h2>
-                  <p className="text-sm text-text-tertiary mb-4">
-                    Student login credentials, sign-in permissions, and active sessions
-                  </p>
-                  <StudentAccessCard studentId={student.id} />
-                </div>
-              </div>
             </div>
           )}
         </div>

@@ -218,7 +218,7 @@ export function StudentSnapshot({
           hint={
             currentFee?.is_paid && currentFee.paid_at
               ? `Paid ${safeFormatDate(currentFee.paid_at, "d MMM")}`
-              : "Open Fees & access to mark it"
+              : "Open Fees to mark it"
           }
           valueClassName={
             currentFee ? (currentFee.is_paid ? "text-green-600" : "text-amber-600") : undefined

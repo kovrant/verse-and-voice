@@ -132,8 +132,8 @@ export function studentNavItems(signals: {
     },
     {
       id: "account",
-      label: "Fees & access",
-      description: "Fee ledger & sign-in settings",
+      label: "Fees",
+      description: "Monthly fees & payment history",
       icon: CreditCard,
       alert: signals.unpaidThisMonth,
     },
