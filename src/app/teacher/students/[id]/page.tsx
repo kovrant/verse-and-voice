@@ -4,12 +4,15 @@
 
 import {
   Activity,
+  AlertCircle,
   ArrowLeft,
   BookOpen,
   CalendarCheck,
   Check,
   ChevronRight,
   Clock,
+  CreditCard,
+  type LucideIcon,
   Pencil,
   Play,
   Plus,
@@ -19,7 +22,6 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 
-import { FeeDisplay } from "@/components/fee-display"
 import {
   loadChunksFor,
   loadMemorizedChunkIds,
@@ -67,13 +69,14 @@ import {
   syncMemChunkAchievements,
   syncQuranRoundAchievements,
 } from "@/lib/achievements"
-import { useExchangeRates } from "@/lib/exchange-rates"
+import { convertToPKR, useExchangeRates } from "@/lib/exchange-rates"
 import { type CatalogItem, STUDENT_MEM_SELECT, type StudentMemItem } from "@/lib/memorization"
 import { fetchAllRows, supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { useOnlineStudents } from "@/lib/use-online-students"
 import {
   cn,
+  CURRENCY_SYMBOLS,
   type FeePayment,
   formatLocalDate,
   parseLocalDate,
@@ -665,6 +668,7 @@ export default function StudentDetailPage() {
   const paidCount = fees.filter((f) => f.is_paid).length
   const unpaidCount = fees.filter((f) => !f.is_paid).length
   const now = new Date()
+  const pkrFee = student ? convertToPKR(student.fee ?? 0, student.fee_currency, rates) : null
   const currentFee = fees.find(
     (f) => f.month === now.getMonth() + 1 && f.year === now.getFullYear(),
   )
@@ -977,25 +981,46 @@ export default function StudentDetailPage() {
                   <p className="text-sm text-text-tertiary mb-4">
                     Monthly fees and payment history
                   </p>
-                  <div className="flex flex-wrap items-center gap-4 mb-4 text-sm">
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-green-500" />
-                      <span className="text-text-tertiary">Paid</span>
-                      <span className="font-semibold text-text-primary">{paidCount}</span>
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                      <span className="h-2 w-2 rounded-full bg-amber-400" />
-                      <span className="text-text-tertiary">Unpaid</span>
-                      <span className="font-semibold text-text-primary">{unpaidCount}</span>
-                    </span>
-                    <span className="text-text-tertiary">|</span>
-                    <FeeDisplay
-                      amount={student.fee}
-                      currency={student.fee_currency}
-                      rates={rates}
-                      size="sm"
+                  <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                    <FeeStatCard
+                      icon={CreditCard}
+                      tint="bg-[rgba(87,80,241,0.10)] text-[#5750F1]"
+                      value={
+                        <>
+                          {CURRENCY_SYMBOLS[student.fee_currency] || student.fee_currency}
+                          {(student.fee ?? 0).toLocaleString()}
+                          <span className="ml-1 text-sm font-normal text-text-tertiary">
+                            / month
+                          </span>
+                        </>
+                      }
+                      label={
+                        student.fee_currency === "PKR" || pkrFee == null
+                          ? "Monthly fee"
+                          : `Monthly fee · ≈ Rs${pkrFee.toLocaleString()}`
+                      }
                     />
-                    <span className="text-text-tertiary text-xs">/ month</span>
+                    <FeeStatCard
+                      icon={Check}
+                      tint="bg-[rgba(34,197,94,0.10)] text-[#22C55E]"
+                      value={paidCount}
+                      label={`Month${paidCount === 1 ? "" : "s"} paid`}
+                    />
+                    <FeeStatCard
+                      icon={AlertCircle}
+                      tint={
+                        unpaidCount > 0
+                          ? "bg-[rgba(249,115,22,0.10)] text-[#F97316]"
+                          : "bg-background-gray-secondary text-icon-secondary"
+                      }
+                      value={unpaidCount}
+                      label={
+                        unpaidCount > 0
+                          ? `Month${unpaidCount === 1 ? "" : "s"} unpaid`
+                          : "Unpaid · all clear"
+                      }
+                      valueClassName={unpaidCount > 0 ? "text-amber-600" : undefined}
+                    />
                   </div>
                   <FeeHistoryTable
                     fees={fees}
@@ -1066,6 +1091,42 @@ function StudentAccessCard({ studentId }: { studentId: string }) {
       <StudentPortalAccess studentId={studentId} />
       <StudentSignInAccess studentId={studentId} />
       <StudentForceSignOut studentId={studentId} />
+    </div>
+  )
+}
+
+/** Small horizontal stat card (icon chip, value, label) for the fee ledger header. */
+function FeeStatCard({
+  icon: Icon,
+  tint,
+  value,
+  label,
+  valueClassName,
+}: {
+  icon: LucideIcon
+  tint: string
+  value: React.ReactNode
+  label: string
+  valueClassName?: string
+}) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-card-border bg-card px-4 py-3">
+      <span
+        className={cn("flex size-9 flex-shrink-0 items-center justify-center rounded-lg", tint)}
+      >
+        <Icon className="h-[18px] w-[18px]" />
+      </span>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "truncate text-lg font-semibold leading-6 tabular-nums text-text-primary",
+            valueClassName,
+          )}
+        >
+          {value}
+        </p>
+        <p className="truncate text-xs text-text-tertiary">{label}</p>
+      </div>
     </div>
   )
 }
