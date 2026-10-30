@@ -49,17 +49,17 @@ export function AccessTile({
     <button
       type="button"
       onClick={onClick}
-      className="group flex w-full flex-col items-start gap-4 rounded-xl border border-card-border bg-card p-4 text-left transition-colors hover:bg-background-gray-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+      className="group flex w-full items-center gap-3 rounded-xl border border-card-border bg-card px-3 py-2.5 text-left transition-colors hover:bg-background-gray-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
     >
       <span
         className={cn(
-          "flex size-10 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105",
+          "flex size-9 flex-shrink-0 items-center justify-center rounded-lg transition-transform duration-200 group-hover:scale-105",
           ACCESS_TINTS[tint],
         )}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-[18px] w-[18px]" />
       </span>
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+      <span className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
         <span className="text-sm font-semibold text-text-primary">{title}</span>
         {loading ? (
           <span className="h-5 w-14 shimmer rounded-full" />
