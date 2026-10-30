@@ -12,9 +12,12 @@ import {
   ChevronRight,
   Clock,
   CreditCard,
+  Laptop,
   type LucideIcon,
+  Monitor,
   Pencil,
   Plus,
+  Smartphone,
   Tablet,
 } from "lucide-react"
 import Link from "next/link"
@@ -80,6 +83,7 @@ import {
   formatLocalDate,
   parseLocalDate,
   safeFormatDate,
+  safeFormatDistanceToNow,
   STATUS_CONFIG,
   type Student,
 } from "@/lib/utils"
@@ -704,17 +708,7 @@ export default function StudentDetailPage() {
               </span>
             )}
             {student.last_device && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-background-gray-secondary px-2.5 py-0.5 text-xs font-medium text-text-secondary"
-                title={
-                  student.last_device_at
-                    ? `Last active on this device: ${safeFormatDate(student.last_device_at, "PPp")}`
-                    : undefined
-                }
-              >
-                <Tablet className="h-3 w-3 text-primary" />
-                {student.last_device}
-              </span>
+              <DeviceBadge device={student.last_device} lastActiveAt={student.last_device_at} />
             )}
           </div>
         </div>
@@ -1126,5 +1120,49 @@ function FeeStatCard({
         <p className="truncate text-xs text-text-tertiary">{label}</p>
       </div>
     </div>
+  )
+}
+
+/** Laptop / tablet / phone / monitor for a detected device name ("MacBook (Retina)", "iPad"…). */
+function deviceIcon(device: string): LucideIcon {
+  const d = device.toLowerCase()
+  if (d.includes("ipad") || d.includes("tablet")) return Tablet
+  if (d.includes("iphone") || d.includes("phone")) return Smartphone
+  if (
+    d.includes("mac") ||
+    d.includes("windows") ||
+    d.includes("laptop") ||
+    d.includes("chromebook")
+  )
+    return Laptop
+  return Monitor
+}
+
+/** The student's last device: icon in an indigo circle, name, and when it was last active. */
+function DeviceBadge({
+  device,
+  lastActiveAt,
+}: {
+  device: string
+  lastActiveAt: string | null | undefined
+}) {
+  const Icon = deviceIcon(device)
+  return (
+    <span
+      className="inline-flex items-center gap-2 rounded-full border border-card-border bg-card-background py-1 pl-1 pr-3 shadow-xs"
+      title={
+        lastActiveAt ? `Last active on this device: ${safeFormatDate(lastActiveAt, "PPp")}` : device
+      }
+    >
+      <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      <span className="text-xs font-medium text-text-primary">{device}</span>
+      {lastActiveAt && (
+        <span className="text-xs text-text-tertiary">
+          · {safeFormatDistanceToNow(lastActiveAt, { addSuffix: true })}
+        </span>
+      )}
+    </span>
   )
 }
