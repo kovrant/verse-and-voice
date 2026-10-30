@@ -3,6 +3,7 @@
 import {
   CreditCard,
   FileText,
+  GraduationCap,
   LayoutDashboard,
   type LucideIcon,
   Trophy,
@@ -12,7 +13,8 @@ import {
 
 import { cn } from "@/lib/utils"
 
-export type StudentView = "profile" | "overview" | "sessions" | "trophies" | "report" | "account"
+export type StudentView =
+  "overview" | "learning" | "profile" | "sessions" | "trophies" | "report" | "account"
 
 export interface StudentNavItem {
   id: StudentView
@@ -93,8 +95,14 @@ export function studentNavItems(signals: {
     {
       id: "overview",
       label: "Overview",
-      description: "Rounds, memorization & revision",
+      description: "Snapshot: progress, classes & homework",
       icon: LayoutDashboard,
+    },
+    {
+      id: "learning",
+      label: "Learning",
+      description: "Reading, memorization, hadith & quizzes",
+      icon: GraduationCap,
     },
     {
       id: "profile",

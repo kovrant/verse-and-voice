@@ -56,6 +56,7 @@ import {
 import { type ClassSession } from "@/components/student-session-bits"
 import { StudentSessionsList } from "@/components/student-sessions-list"
 import { StudentSignInAccess } from "@/components/student-signin-access"
+import { StudentSnapshot } from "@/components/student-snapshot"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -763,6 +764,21 @@ export default function StudentDetailPage() {
             <div className="animate-fade-in-up space-y-6">
               {/* Portal login, sign-in and session controls, first thing on the page */}
               <StudentAccessCard studentId={student.id} />
+              <StudentSnapshot
+                student={student}
+                rounds={rounds}
+                sessions={sessions}
+                memItems={memItems}
+                chunksByItem={chunksByItem}
+                memorizedChunkIds={memorizedChunkIds}
+                currentFee={currentFee}
+                onNavigate={(view) => setActiveTab(view)}
+              />
+            </div>
+          )}
+
+          {activeTab === "learning" && (
+            <div className="animate-fade-in-up">
               <StudentOverview
                 student={student}
                 rounds={rounds}
