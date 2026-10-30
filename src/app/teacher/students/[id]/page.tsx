@@ -14,7 +14,6 @@ import {
   CreditCard,
   type LucideIcon,
   Pencil,
-  Play,
   Plus,
   Tablet,
 } from "lucide-react"
@@ -744,7 +743,7 @@ export default function StudentDetailPage() {
             className="group inline-flex h-11 items-center gap-2.5 rounded-xl bg-gradient-to-r from-[#5750F1] to-[#7B6CF9] pl-1.5 pr-5 text-sm font-semibold text-white shadow-[0_10px_24px_-8px_rgba(87,80,241,0.7)] transition-all duration-200 hover:-translate-y-px hover:shadow-[0_14px_28px_-8px_rgba(87,80,241,0.8)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 active:translate-y-0"
           >
             <span className="relative flex size-8 items-center justify-center rounded-lg bg-white/20">
-              <Play className="h-4 w-4 fill-current transition-transform duration-200 group-hover:translate-x-0.5" />
+              <BookOpen className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
               {isOnline && (
                 <span className="absolute -right-1 -top-1 flex size-3">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
