@@ -282,8 +282,9 @@ function MemPartPath({
                 selected && state !== "current" && "ring-2 ring-foreground/15",
               ],
               !kid && [
-                // green-*, not emerald-*: the teacher palette makes emerald the indigo accent
-                state === "done" && "bg-green-500 text-white hover:bg-green-600",
+                // Fixed memorization green (#477253), not emerald-*: the teacher
+                // palette makes emerald the indigo accent.
+                state === "done" && "bg-[#477253] text-white hover:bg-[#3c6146]",
                 state === "current" && "bg-amber-500 text-white ring-2 ring-amber-300/60",
                 state === "upcoming" &&
                   "bg-background-gray-secondary text-text-secondary ring-1 ring-border-secondary-alt hover:bg-background-gray-tertiary",
@@ -432,7 +433,7 @@ export function MemPartWorkspace({
         <div className="flex items-center gap-3">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-background-gray-tertiary">
             <div
-              className="h-full rounded-full bg-green-500 transition-all duration-300"
+              className="h-full rounded-full bg-[#477253] transition-all duration-300"
               style={{ width: `${pct}%` }}
             />
           </div>
@@ -455,7 +456,7 @@ export function MemPartWorkspace({
             "flex h-10 w-full items-center justify-center gap-2 rounded-lg text-sm font-medium transition-colors",
             isMemorized || activeDone
               ? "border border-card-border bg-card-background text-text-secondary hover:bg-background-gray-primary"
-              : "bg-green-600 text-white hover:bg-green-700",
+              : "bg-[#477253] text-white hover:bg-[#3c6146]",
           )}
         >
           {isMemorized || activeDone ? (
@@ -471,11 +472,11 @@ export function MemPartWorkspace({
 
       {/* The selected part */}
       {isMemorized ? (
-        <div className="rounded-xl border border-green-500/30 bg-green-500/5 px-4 py-6 text-center">
-          <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-green-500 text-white">
+        <div className="rounded-xl border border-[#477253]/30 bg-[#477253]/5 px-4 py-6 text-center">
+          <div className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-[#477253] text-white">
             <Check className="h-5 w-5" />
           </div>
-          <p className="text-sm font-semibold text-green-700 dark:text-green-400">
+          <p className="text-sm font-semibold text-[#477253] dark:text-[#8fb596]">
             All parts memorized
           </p>
           <p className="mt-0.5 text-xs text-text-tertiary">
