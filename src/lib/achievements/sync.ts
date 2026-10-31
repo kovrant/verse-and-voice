@@ -49,16 +49,7 @@ export async function syncQuranRound(
     }
 
     if (khatmJustCompleted(before, after)) {
-      const slug = khatmSlug(round.round_number)
-      const title = round.round_number <= 1 ? "Khatm" : `Khatm ${round.round_number}`
-      await awardAchievement(db, studentId, slug, `round:${round.id}`, {
-        slug,
-        title,
-        description: "Completed a full reading of the Quran",
-        domain: "quran",
-        kind: "certificate",
-        issuesCertificate: true,
-      })
+      await awardKhatm(db, studentId, round.id, after.completed_at!)
     }
   } catch {
     // ponytail: progress save is source of truth; awards are best-effort
@@ -96,20 +87,46 @@ export async function ensureQuranRoundAchievements(
     }
 
     if (qualifiesForKhatm(progress)) {
-      const slug = khatmSlug(round.round_number)
-      const title = round.round_number <= 1 ? "Khatm" : `Khatm ${round.round_number}`
-      await awardAchievement(db, studentId, slug, `round:${round.id}`, {
-        slug,
-        title,
-        description: "Completed a full reading of the Quran",
-        domain: "quran",
-        kind: "certificate",
-        issuesCertificate: true,
-      })
+      await awardKhatm(db, studentId, round.id, progress.completed_at!)
     }
   } catch {
     // ponytail: best-effort backfill
   }
+}
+
+/**
+ * Khatm N = this round's place among the student's finished Quran rounds by
+ * completion date. Not the stored round_number: rounds entered after the fact
+ * (past khatms added below an active round) don't number chronologically.
+ */
+async function awardKhatm(
+  db: SupabaseClient,
+  studentId: string,
+  roundId: string,
+  completedAt: string,
+): Promise<void> {
+  const { data } = await db
+    .from("quran_rounds")
+    .select("id, completed_at")
+    .eq("student_id", studentId)
+    .eq("type", "quran")
+    .not("completed_at", "is", null)
+  const day = completedAt.slice(0, 10)
+  const earlier = ((data as { id: string; completed_at: string }[]) ?? []).filter((r) => {
+    if (r.id === roundId) return false
+    const d = r.completed_at.slice(0, 10)
+    return d < day || (d === day && r.id < roundId)
+  }).length
+  const n = earlier + 1
+  const slug = khatmSlug(n)
+  await awardAchievement(db, studentId, slug, `round:${roundId}`, {
+    slug,
+    title: n <= 1 ? "Khatm" : `Khatm ${n}`,
+    description: "Completed a full reading of the Quran",
+    domain: "quran",
+    kind: "certificate",
+    issuesCertificate: true,
+  })
 }
 
 /** Sync memorization chunk marked → part badge; full lesson → lesson badge. */
