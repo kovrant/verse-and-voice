@@ -1,17 +1,22 @@
 "use client"
 
 import { differenceInDays } from "date-fns"
-import { BookMarked, BookOpen, CalendarDays, Check, Clock, Play, User } from "lucide-react"
+import { BookMarked, BookOpen, Check, Clock, Route, User } from "lucide-react"
 import Link from "next/link"
 
+import { ClassPrepPanel } from "@/components/class-prep-panel"
+import { PanelHeader } from "@/components/panel-header"
 import {
   getActiveRound,
   getChronologicalRoundNumber,
   getCompletedRounds,
   type QuranRound,
 } from "@/components/quran-progress"
+import { StudentAvatar } from "@/components/student-avatar"
+import { Card } from "@/components/ui/card"
+import type { MemItem } from "@/lib/memorization"
 import { paraLabel, QAIDA_PARA } from "@/lib/qaida"
-import { parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
+import { cn, COUNTRY_FLAGS, parseLocalDate, safeFormatDate, type Student } from "@/lib/utils"
 
 export type ClassStudent = Pick<
   Student,
@@ -23,6 +28,7 @@ export type ClassStudent = Pick<
   | "class_days"
   | "qaida_media_id"
   | "gender"
+  | "country"
 >
 
 export interface ClassSession {
@@ -71,11 +77,17 @@ export function classPosition(rounds: QuranRound[], sessions: ClassSession[]) {
   }
 }
 
-/** The selected student's class card: schedule, position, progress, round history, Start Class. */
+/**
+ * Class prep screen for the selected student: who, where they are, their
+ * journey and Start class on the left; last class, homework and this month on
+ * the right (stacks on small screens).
+ */
 export function ClassStudentCard({
   student,
   rounds,
   sessions,
+  memItems,
+  online = false,
   starting,
   onStart,
   qaidaMissing = false,
@@ -83,337 +95,353 @@ export function ClassStudentCard({
   student: ClassStudent
   rounds: QuranRound[]
   sessions: ClassSession[]
+  memItems: MemItem[]
+  online?: boolean
   starting: boolean
   onStart: () => void
   /** On a Qaida round with no Qaida book assigned: block Start Class. */
   qaidaMissing?: boolean
 }) {
-  const {
-    activeRound,
-    para: latestPara,
-    page: latestPage,
-    line: latestLine,
-  } = classPosition(rounds, sessions)
-  const currentPara = latestPara
+  const { activeRound, para, page, line } = classPosition(rounds, sessions)
+  const isQaida = para === QAIDA_PARA
+  const desc = activeRound?.desc_completed || 0
+  const asc = activeRound?.asc_completed || 0
+  const total = desc + (asc > 0 ? asc - 1 : 0)
+  const percent = Math.min(100, Math.round((total / 30) * 100))
+  const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 0
+  const khatms = getCompletedRounds(rounds).filter((r) => r.type === "quran").length
+  const enrolledDays = differenceInDays(
+    new Date(),
+    parseLocalDate(student.started_at) ?? new Date(),
+  )
 
   return (
-    <div className="max-w-[640px] mx-auto animate-fade-in-up">
-      {/* Main Class Card — single clean white surface */}
-      <div className="bg-card-background rounded-xl border border-card-border p-6 sm:p-8">
-        {/* SECTION 1 — HEADER */}
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary text-[28px] font-semibold flex-shrink-0">
-            {(student.name || "?").charAt(0)}
+    <div className="grid animate-fade-in-up gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <div className="min-w-0 space-y-6">
+        {/* Who */}
+        <Card className="flex flex-wrap items-center gap-4 p-5 sm:p-6">
+          <div className="relative size-16 flex-shrink-0 overflow-hidden rounded-full ring-4 ring-background-gray-primary">
+            <StudentAvatar
+              id={student.id}
+              name={student.name}
+              gender={student.gender}
+              sizes="64px"
+              className="object-[50%_20%]"
+              initialClassName="text-2xl"
+            />
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-2xl font-semibold leading-8 text-text-primary">{student.name}</h2>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-[hsl(var(--success)/0.12)] text-[hsl(var(--success))]">
-                <span className="h-1.5 w-1.5 rounded-full bg-[hsl(var(--success))]" />
-                Active
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="truncate text-2xl font-semibold leading-8 text-text-primary">
+                {student.name}
+              </h2>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+                  online
+                    ? "bg-green-500/10 text-green-600"
+                    : "bg-background-gray-secondary text-text-secondary",
+                )}
+              >
+                <span
+                  className={cn(
+                    "h-1.5 w-1.5 rounded-full",
+                    online ? "animate-pulse bg-green-500" : "bg-icon-tertiary",
+                  )}
+                />
+                {online ? "Online now" : "Offline"}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 mt-1 text-sm text-text-tertiary">
-              <User className="h-3.5 w-3.5" />
-              <span>{student.guardian_name}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="my-6 h-px bg-border-primary" />
-
-        {/* SECTION 2 — TODAY'S SESSION */}
-        <div className="flex flex-wrap gap-x-12 gap-y-5">
-          <div className="flex items-start gap-2.5">
-            <Clock className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-medium uppercase text-text-tertiary">Class Time</p>
-              <p className="text-xl font-semibold text-text-primary mt-0.5">
-                {student.class_time || "Not set"}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-start gap-2.5">
-            <BookOpen className="h-[18px] w-[18px] text-primary mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-xs font-medium uppercase text-text-tertiary">Currently On</p>
-              <p className="text-xl font-semibold text-primary mt-0.5">
-                {activeRound
-                  ? `${paraLabel(latestPara)}${latestPage ? ` · Page ${latestPage}` : ""}${latestLine ? ` · Line ${latestLine}` : ""}`
-                  : "Not started"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="h-8" />
-
-        {/* SECTION 3 — PROGRESS */}
-        {(() => {
-          // Qaida has no /30 maths.
-          if (latestPara === QAIDA_PARA) {
-            return (
-              <div className="flex items-center gap-2">
-                <BookMarked className="h-4 w-4 text-icon-secondary" />
-                <span className="text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
-                  Qaida
+            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-text-tertiary">
+              {student.guardian_name && (
+                <span className="inline-flex items-center gap-1.5">
+                  <User className="h-3.5 w-3.5" />
+                  {student.guardian_name}
                 </span>
-                <span className="text-sm text-text-tertiary">
-                  Learning Norani Qaida before the Quran paras
-                </span>
-              </div>
-            )
-          }
-          const desc = activeRound?.desc_completed || 0
-          const asc = activeRound?.asc_completed || 0
-          const total = desc + (asc > 0 ? asc - 1 : 0)
-          const percent = Math.min(100, Math.round((total / 30) * 100))
-          const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 0
-
-          return (
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-3">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-icon-secondary" />
-                  <span className="text-base font-semibold leading-6 tracking-[-0.2px] text-text-primary">
-                    Quran Progress
+              )}
+              <span className="inline-flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5" />
+                {student.class_time || "No class time"}
+              </span>
+              {student.country && (
+                <span className="inline-flex items-center gap-1.5">
+                  <span role="img" aria-label={student.country} className="text-base leading-none">
+                    {COUNTRY_FLAGS[student.country] ?? ""}
                   </span>
-                  {activeRound && roundNum > 0 && (
-                    <span className="text-sm text-text-tertiary">(Round {roundNum})</span>
+                  {student.country}
+                </span>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Today's lesson + Start class */}
+        <Card className="p-5 sm:p-6">
+          <div className="flex flex-wrap items-center gap-6">
+            {!isQaida && activeRound ? (
+              <ProgressRing percent={percent} label={`${total}/30`} />
+            ) : (
+              <span className="flex size-[88px] flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <BookMarked className="h-8 w-8" />
+              </span>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-medium uppercase tracking-wide text-text-tertiary">
+                Today&apos;s lesson starts at
+              </p>
+              <p className="mt-1 text-2xl font-semibold leading-8 tracking-[-0.3px] text-text-primary sm:text-[28px] sm:leading-9">
+                {activeRound ? (
+                  <>
+                    {paraLabel(para)}
+                    {page ? <span className="text-text-tertiary"> · </span> : null}
+                    {page ? `Page ${page}` : null}
+                    {line ? <span className="text-text-tertiary"> · </span> : null}
+                    {line ? `Line ${line}` : null}
+                  </>
+                ) : (
+                  "Not started"
+                )}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {isQaida ? (
+                  <Chip>Norani Qaida · before the Quran</Chip>
+                ) : (
+                  activeRound && (
+                    <>
+                      <Chip tone="primary">Round {roundNum}</Chip>
+                      <Chip>{percent}% of the Quran</Chip>
+                    </>
+                  )
+                )}
+                {khatms > 0 && (
+                  <Chip>
+                    {khatms} khatm{khatms === 1 ? "" : "s"}
+                  </Chip>
+                )}
+                <Chip>{enrolledDays.toLocaleString()} days with us</Chip>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 flex flex-col-reverse items-stretch gap-3 border-t border-border-primary pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <Link
+              href={`/teacher/students/${student.id}`}
+              className="text-center text-sm font-medium text-text-tertiary transition-colors hover:text-primary"
+            >
+              View full profile →
+            </Link>
+            <button
+              type="button"
+              onClick={onStart}
+              disabled={starting || qaidaMissing}
+              aria-live="polite"
+              className={cn(
+                "group relative inline-flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-[#5750F1] to-[#7B6CF9] pl-2 pr-6 text-base font-semibold text-white shadow-[0_10px_24px_-8px_rgba(87,80,241,0.7)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 sm:min-w-[220px]",
+                starting
+                  ? "cursor-default"
+                  : qaidaMissing
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:-translate-y-px hover:shadow-[0_14px_28px_-8px_rgba(87,80,241,0.8)] active:translate-y-0",
+              )}
+            >
+              <span
+                className={cn(
+                  "flex items-center gap-2.5 transition-all duration-200",
+                  starting ? "scale-75 opacity-0" : "scale-100 opacity-100",
+                )}
+              >
+                <span className="relative flex size-8 items-center justify-center rounded-lg bg-white/20">
+                  <BookOpen className="h-[18px] w-[18px] transition-transform duration-200 group-hover:scale-110" />
+                  {online && (
+                    <span className="absolute -right-1 -top-1 flex size-3">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 motion-reduce:animate-none" />
+                      <span className="relative inline-flex size-3 rounded-full border-2 border-[#6A5DF5] bg-green-400" />
+                    </span>
                   )}
-                </div>
-                <div className="text-base font-semibold tabular-nums">
-                  <span className="text-primary">{currentPara || total}</span>
-                  <span className="text-text-tertiary"> / 30</span>
-                </div>
-              </div>
-              <div className="h-2 rounded-full overflow-hidden bg-background-gray-secondary">
-                <div
-                  className="h-full rounded-full bg-primary transition-all"
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-              <div className="flex items-center justify-between mt-2 text-xs text-text-tertiary">
-                <span>From start: {asc > 0 ? asc : total} paras</span>
-                <span className="text-primary font-medium">{percent}% complete</span>
-              </div>
-            </div>
-          )
-        })()}
+                </span>
+                Start class
+              </span>
+              {/* Book overlay while the class opens */}
+              {starting && (
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-0 flex items-center justify-center"
+                >
+                  <BookOpen className="book-open-anim h-7 w-7 text-white" strokeWidth={2.25} />
+                </span>
+              )}
+            </button>
+          </div>
 
-        <div className="h-7" />
-
-        {/* SECTION 4 — HISTORY (timeline) */}
-        {(() => {
-          const completed = getCompletedRounds(rounds)
-          const active = getActiveRound(rounds)
-          if (completed.length === 0 && !active) return null
-
-          // Build timeline entries: completed rounds first (chronological), then active at the bottom
-          type Entry = {
-            key: string
-            stage: string
-            type: "qaida" | "quran"
-            startedAt: Date
-            endedAt: Date | null
-            isCurrent: boolean
-          }
-          const entries: Entry[] = completed.map((r) => ({
-            key: r.id,
-            stage:
-              r.type === "qaida" ? "Qaida" : `Quran R${getChronologicalRoundNumber(rounds, r)}`,
-            type: r.type,
-            startedAt: parseLocalDate(r.started_at) ?? new Date(),
-            endedAt: r.completed_at ? parseLocalDate(r.completed_at) : null,
-            isCurrent: false,
-          }))
-          if (active) {
-            entries.push({
-              key: active.id,
-              stage:
-                active.type === "qaida"
-                  ? "Qaida"
-                  : `Quran R${getChronologicalRoundNumber(rounds, active)}`,
-              type: active.type,
-              startedAt: parseLocalDate(active.started_at) ?? new Date(),
-              endedAt: null,
-              isCurrent: true,
-            })
-          }
-
-          // Format a duration as "Xyr Ymo" / "Ymo" / "Xd"
-          const fmtDuration = (start: Date, end: Date) => {
-            const days = Math.max(0, differenceInDays(end, start))
-            if (days < 31) return `${days}d`
-            const months = Math.round(days / 30.44)
-            if (months < 12) return `${months}mo`
-            const years = Math.floor(months / 12)
-            const remMonths = months % 12
-            return remMonths === 0 ? `${years}yr` : `${years}yr ${remMonths}mo`
-          }
-
-          // Total journey: earliest start → now
-          const earliest = entries.reduce(
-            (min, e) => (e.startedAt < min ? e.startedAt : min),
-            entries[0].startedAt,
-          )
-          const journey = fmtDuration(earliest, new Date())
-
-          return (
-            <div>
-              <div className="flex items-end justify-between mb-4">
-                <p className="text-xs font-medium uppercase text-text-tertiary">History</p>
-                <p className="text-xs font-medium text-text-tertiary">
-                  <span className="font-semibold text-primary">{journey}</span> of journey
-                </p>
-              </div>
-              <div className="relative pl-1">
-                {/* Connecting line */}
-                <div className="absolute left-[15px] top-3 bottom-3 w-[2px] rounded-full bg-border-primary" />
-                <div className="space-y-2">
-                  {entries.map((e) => {
-                    const Icon = e.type === "qaida" ? BookMarked : BookOpen
-                    const range = `${safeFormatDate(e.startedAt, "MMM yyyy")} → ${
-                      e.isCurrent ? "Now" : e.endedAt ? safeFormatDate(e.endedAt, "MMM yyyy") : "…"
-                    }`
-                    const duration = fmtDuration(e.startedAt, e.endedAt ?? new Date())
-                    return (
-                      <div
-                        key={e.key}
-                        className={`relative flex items-center gap-3 rounded-lg py-2 pl-10 pr-3 ${
-                          e.isCurrent ? "bg-primary/10" : "bg-background-gray-primary"
-                        }`}
-                      >
-                        {/* Dot with icon — pulses on the active round */}
-                        <span
-                          className={`absolute left-[7px] top-1/2 -translate-y-1/2 h-[18px] w-[18px] rounded-full flex items-center justify-center ring-4 ring-card-background ${
-                            e.isCurrent ? "bg-primary" : "bg-card border border-primary/40"
-                          }`}
-                        >
-                          {e.isCurrent ? (
-                            <span className="absolute inset-0 rounded-full bg-primary/60 animate-ping" />
-                          ) : null}
-                          <Icon
-                            className={`h-[10px] w-[10px] relative ${
-                              e.isCurrent ? "text-primary-foreground" : "text-primary"
-                            }`}
-                          />
-                        </span>
-
-                        <span
-                          className="inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-background-gray-secondary text-text-secondary shrink-0"
-                          style={{ width: 78 }}
-                        >
-                          {e.stage}
-                        </span>
-
-                        <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
-                          <span className="text-[13px] font-medium truncate text-text-primary">
-                            {range}
-                          </span>
-                          <span className="text-xs font-medium tabular-nums shrink-0 text-text-tertiary">
-                            {duration}
-                          </span>
-                        </div>
-
-                        {!e.isCurrent && (
-                          <span
-                            className="shrink-0 h-4 w-4 rounded-full bg-[hsl(var(--success)/0.12)] flex items-center justify-center"
-                            title="Completed"
-                          >
-                            <Check
-                              className="h-2.5 w-2.5 text-[hsl(var(--success))]"
-                              strokeWidth={3}
-                            />
-                          </span>
-                        )}
-                        {e.isCurrent && (
-                          <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium uppercase text-primary">
-                            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                            Now
-                          </span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </div>
-          )
-        })()}
-
-        <div className="h-8" />
-
-        {/* SECTION 5 — START CLASS BUTTON */}
-        <button
-          type="button"
-          onClick={onStart}
-          disabled={starting || qaidaMissing}
-          aria-live="polite"
-          className={`relative w-full h-12 flex items-center justify-center gap-3 rounded-lg bg-primary text-primary-foreground text-base font-medium overflow-hidden transition-colors ${
-            starting
-              ? "cursor-default"
-              : qaidaMissing
-                ? "opacity-50 cursor-not-allowed"
-                : "hover:bg-[hsl(var(--primary-hover))]"
-          }`}
-        >
-          {/* Default content — fades out when starting */}
-          <span
-            className={`flex items-center gap-3 transition-all duration-200 ${
-              starting ? "opacity-0 scale-75" : "opacity-100 scale-100"
-            }`}
-          >
-            <Play className="h-5 w-5 fill-current" />
-            Start Class
-          </span>
-
-          {/* Book overlay — appears when starting */}
-          {starting && (
-            <span aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
-              {/* The book — pops in with a slight bounce */}
-              <BookOpen
-                className="h-7 w-7 book-open-anim text-primary-foreground"
-                strokeWidth={2.25}
-              />
-            </span>
+          {qaidaMissing && (
+            <p className="mt-3 text-[13px] font-medium text-text-tertiary sm:text-right">
+              No Qaida book assigned.{" "}
+              <Link
+                href={`/teacher/students/${student.id}`}
+                className="text-primary hover:underline"
+              >
+                Assign one on the student page
+              </Link>{" "}
+              to start a Qaida class.
+            </p>
           )}
-        </button>
+        </Card>
 
-        {qaidaMissing && (
-          <p className="mt-3 text-center text-[13px] font-medium text-text-tertiary">
-            No Qaida book assigned.{" "}
-            <Link href={`/teacher/students/${student.id}`} className="text-primary hover:underline">
-              Assign one on the student page
-            </Link>{" "}
-            to start a Qaida class.
-          </p>
-        )}
-
-        {/* View full profile link */}
-        <div className="mt-4 mb-2 flex justify-center">
-          <Link
-            href={`/teacher/students/${student.id}`}
-            className="text-[13px] font-medium transition-colors text-text-tertiary hover:text-primary"
-          >
-            View full student profile →
-          </Link>
-        </div>
-
-        {/* SECTION 6 — FOOTER META */}
-        <div className="pt-4 border-t border-border-primary flex items-center justify-center gap-2">
-          <CalendarDays className="h-3.5 w-3.5 text-icon-tertiary" />
-          <p className="text-[13px] font-medium text-text-tertiary">
-            <span className="font-semibold text-text-primary">
-              {differenceInDays(
-                new Date(),
-                parseLocalDate(student.started_at) ?? new Date(),
-              ).toLocaleString()}
-            </span>{" "}
-            days since enrollment
-          </p>
-        </div>
+        <JourneyCard rounds={rounds} />
       </div>
+
+      <ClassPrepPanel student={student} sessions={sessions} memItems={memItems} />
     </div>
+  )
+}
+
+function Chip({ children, tone }: { children: React.ReactNode; tone?: "primary" }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium",
+        tone === "primary"
+          ? "bg-primary/10 text-primary"
+          : "bg-background-gray-secondary text-text-secondary",
+      )}
+    >
+      {children}
+    </span>
+  )
+}
+
+/** Circular progress: percent of the ring filled, label in the middle. */
+function ProgressRing({ percent, label }: { percent: number; label: string }) {
+  const r = 38
+  const c = 2 * Math.PI * r
+  return (
+    <div className="relative size-[88px] flex-shrink-0">
+      <svg viewBox="0 0 88 88" className="size-full -rotate-90">
+        <circle
+          cx="44"
+          cy="44"
+          r={r}
+          fill="none"
+          strokeWidth="8"
+          className="stroke-background-gray-secondary"
+        />
+        <circle
+          cx="44"
+          cy="44"
+          r={r}
+          fill="none"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c * (1 - percent / 100)}
+          className="stroke-primary transition-[stroke-dashoffset] duration-700"
+        />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-base font-semibold tabular-nums text-text-primary">{label}</span>
+        <span className="text-[10px] font-medium uppercase text-text-tertiary">done</span>
+      </span>
+    </div>
+  )
+}
+
+/** Format a span as "Xyr Ymo" / "Ymo" / "Xd". */
+function fmtDuration(start: Date, end: Date) {
+  const days = Math.max(0, differenceInDays(end, start))
+  if (days < 31) return `${days}d`
+  const months = Math.round(days / 30.44)
+  if (months < 12) return `${months}mo`
+  const years = Math.floor(months / 12)
+  const rem = months % 12
+  return rem === 0 ? `${years}yr` : `${years}yr ${rem}mo`
+}
+
+/** Qaida → Quran rounds as a timeline, finished rounds first, the active one last. */
+function JourneyCard({ rounds }: { rounds: QuranRound[] }) {
+  const completed = getCompletedRounds(rounds)
+  const active = getActiveRound(rounds)
+  if (completed.length === 0 && !active) return null
+
+  const entries = [...completed, ...(active ? [active] : [])].map((r) => ({
+    key: r.id,
+    stage: r.type === "qaida" ? "Qaida" : `Round ${getChronologicalRoundNumber(rounds, r)}`,
+    type: r.type,
+    startedAt: parseLocalDate(r.started_at) ?? new Date(),
+    endedAt: r.completed_at ? parseLocalDate(r.completed_at) : null,
+    isCurrent: r === active,
+  }))
+  const earliest = entries.reduce(
+    (min, e) => (e.startedAt < min ? e.startedAt : min),
+    entries[0].startedAt,
+  )
+  const khatms = completed.filter((r) => r.type === "quran").length
+
+  return (
+    <Card className="p-5 sm:p-6">
+      <PanelHeader
+        icon={Route}
+        tint="purple"
+        title="Reading journey"
+        summary={`${fmtDuration(earliest, new Date())} so far${khatms ? ` · ${khatms} khatm${khatms === 1 ? "" : "s"}` : ""}`}
+      />
+      <ol className="relative mt-5 space-y-2 pl-1">
+        <span
+          aria-hidden
+          className="absolute bottom-4 left-[15px] top-4 w-0.5 rounded-full bg-border-primary"
+        />
+        {entries.map((e) => {
+          const Icon = e.type === "qaida" ? BookMarked : BookOpen
+          const range = `${safeFormatDate(e.startedAt, "MMM yyyy")} → ${
+            e.isCurrent ? "Now" : e.endedAt ? safeFormatDate(e.endedAt, "MMM yyyy") : "…"
+          }`
+          return (
+            <li
+              key={e.key}
+              className={cn(
+                "relative flex items-center gap-3 rounded-lg py-2.5 pl-10 pr-3",
+                e.isCurrent ? "bg-primary/10" : "bg-background-gray-primary",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute left-[6px] top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded-full ring-4 ring-card-background",
+                  e.isCurrent ? "bg-primary" : "border border-primary/40 bg-card",
+                )}
+              >
+                {e.isCurrent && (
+                  <span className="absolute inset-0 animate-ping rounded-full bg-primary/50 motion-reduce:animate-none" />
+                )}
+                <Icon
+                  className={cn(
+                    "relative h-[11px] w-[11px]",
+                    e.isCurrent ? "text-primary-foreground" : "text-primary",
+                  )}
+                />
+              </span>
+              <span className="w-[72px] flex-shrink-0 text-sm font-semibold text-text-primary">
+                {e.stage}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-sm text-text-secondary">{range}</span>
+              <span className="flex-shrink-0 text-xs font-medium tabular-nums text-text-tertiary">
+                {fmtDuration(e.startedAt, e.endedAt ?? new Date())}
+              </span>
+              {e.isCurrent ? (
+                <span className="inline-flex flex-shrink-0 items-center gap-1 text-[11px] font-semibold uppercase text-primary">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                  Now
+                </span>
+              ) : (
+                <span
+                  className="flex size-4 flex-shrink-0 items-center justify-center rounded-full bg-green-500/10"
+                  title="Completed"
+                >
+                  <Check className="h-2.5 w-2.5 text-green-600" strokeWidth={3} />
+                </span>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </Card>
   )
 }

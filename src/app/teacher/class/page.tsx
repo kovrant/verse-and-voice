@@ -124,7 +124,9 @@ function ClassPageContent() {
   async function loadStudents() {
     const { data } = await supabase
       .from("students")
-      .select("id, name, guardian_name, started_at, class_time, class_days, qaida_media_id, gender")
+      .select(
+        "id, name, guardian_name, started_at, class_time, class_days, qaida_media_id, gender, country",
+      )
       .eq("status", "Reading")
       .order("name")
     setStudents(data || [])
@@ -352,6 +354,8 @@ function ClassPageContent() {
               student={selected}
               rounds={rounds}
               sessions={sessions}
+              memItems={memItems}
+              online={onlineStudents.has(selected.id)}
               starting={starting}
               onStart={handleStartClass}
               qaidaMissing={qaidaMissing}
