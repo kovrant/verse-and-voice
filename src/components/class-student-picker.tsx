@@ -1,14 +1,16 @@
 "use client"
 
 import * as Popover from "@radix-ui/react-popover"
-import { ChevronDown, Search } from "lucide-react"
+import { ArrowUpRight, ChevronDown, Clock, Search, Users } from "lucide-react"
 import { useState } from "react"
 
 import type { ClassStudent } from "@/components/class-student-card"
-import { OnlineDot } from "@/components/online-dot"
+import { PanelHeader } from "@/components/panel-header"
+import { StudentAvatar } from "@/components/student-avatar"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { compareByClassTime } from "@/lib/class-time"
+import { cn, COUNTRY_FLAGS } from "@/lib/utils"
 
 /** Roster for the class page: quick-select (large rosters), search, and the card grid, ordered by class time. */
 export function ClassStudentPicker({
@@ -29,6 +31,7 @@ export function ClassStudentPicker({
     (s.name || "").toLowerCase().includes(search.toLowerCase()),
   )
   const showQuickPick = students.length > 20
+  const onlineCount = students.filter((s) => onlineIds.has(s.id)).length
 
   return (
     <div className="space-y-5">
@@ -77,8 +80,15 @@ export function ClassStudentPicker({
                       }}
                       className="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-background-gray-primary transition-colors group"
                     >
-                      <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-sm font-medium">
-                        {(s.name || "?").charAt(0)}
+                      <span className="relative size-8 flex-shrink-0 overflow-hidden rounded-full">
+                        <StudentAvatar
+                          id={s.id}
+                          name={s.name}
+                          gender={s.gender}
+                          sizes="32px"
+                          className="object-[50%_20%]"
+                          initialClassName="text-sm"
+                        />
                       </span>
                       <span className="flex-1 min-w-0">
                         <span className="block text-sm font-medium truncate text-text-primary">
@@ -97,59 +107,97 @@ export function ClassStudentPicker({
         </Popover.Root>
       )}
 
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary pointer-events-none" />
-        <Input
-          placeholder="Search students by name..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-11 h-11"
-        />
-      </div>
+      <Card className="p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <PanelHeader
+            icon={Users}
+            tint="indigo"
+            title="All students"
+            summary={`${students.length} reading · ordered by class time${onlineCount ? ` · ${onlineCount} online` : ""}`}
+          />
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-icon-tertiary" />
+            <Input
+              placeholder="Search by name…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="h-10 pl-10"
+            />
+          </div>
+        </div>
 
-      {/* Student card grid */}
-      {filteredStudents.length === 0 ? (
-        <Card className="border-dashed">
+        {filteredStudents.length === 0 ? (
           <CardContent className="py-12 text-center">
             <p className="text-sm text-text-tertiary">No students match &ldquo;{search}&rdquo;</p>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-          {filteredStudents.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => onSelect(s.id)}
-              className="group relative flex flex-col items-center gap-3 rounded-xl border border-card-border bg-card-background p-5 text-center transition-colors hover:border-primary/40 hover:bg-background-gray-primary focus-visible:border-primary"
-            >
-              <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary text-xl font-semibold">
-                {(s.name || "?").charAt(0).toUpperCase()}
-              </span>
-              {onlineIds.has(s.id) ? (
-                <OnlineDot className="absolute top-3 right-3" />
-              ) : (
-                s.class_time && (
-                  <span
-                    aria-hidden
-                    className="absolute top-3 right-3 h-2 w-2 rounded-full bg-amber-500"
-                    title={`Class at ${s.class_time}`}
-                  />
-                )
-              )}
-              <span className="w-full">
-                <span className="block text-sm font-medium truncate text-text-primary">
-                  {s.name}
-                </span>
-                <span className="block text-xs text-text-tertiary mt-0.5 truncate">
-                  {s.class_time ? s.class_time : "No class time set"}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="mt-5 grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            {filteredStudents.map((s) => {
+              const online = onlineIds.has(s.id)
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => onSelect(s.id)}
+                  className="group flex items-center gap-3 rounded-xl border border-card-border bg-card-background p-3 text-left transition-all duration-200 hover:-translate-y-px hover:border-primary/40 hover:shadow-[0_8px_20px_-10px_rgba(87,80,241,0.45)] focus-visible:border-primary focus-visible:outline-none"
+                >
+                  <span className="relative size-12 flex-shrink-0">
+                    <span className="absolute inset-0 overflow-hidden rounded-full ring-2 ring-background-gray-primary">
+                      <StudentAvatar
+                        id={s.id}
+                        name={s.name}
+                        gender={s.gender}
+                        sizes="48px"
+                        className="object-[50%_20%]"
+                        initialClassName="text-lg"
+                      />
+                    </span>
+                    {online && (
+                      <span
+                        className="absolute bottom-0 right-0 size-3 rounded-full border-2 border-card-background bg-green-500"
+                        title="Online now"
+                      />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-1.5">
+                      <span className="truncate text-sm font-semibold text-text-primary">
+                        {s.name}
+                      </span>
+                      {s.country && COUNTRY_FLAGS[s.country] && (
+                        <span
+                          role="img"
+                          aria-label={s.country}
+                          title={s.country}
+                          className="flex-shrink-0 text-sm leading-none"
+                        >
+                          {COUNTRY_FLAGS[s.country]}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-0.5 flex items-center gap-1 text-xs",
+                        online ? "font-medium text-green-600" : "text-text-tertiary",
+                      )}
+                    >
+                      {online ? (
+                        "Online now"
+                      ) : (
+                        <>
+                          <Clock className="h-3 w-3" />
+                          {s.class_time || "No class time"}
+                        </>
+                      )}
+                    </span>
+                  </span>
+                  <ArrowUpRight className="h-4 w-4 flex-shrink-0 text-icon-tertiary transition-all duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" />
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </Card>
     </div>
   )
 }

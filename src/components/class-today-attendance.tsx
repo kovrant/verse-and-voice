@@ -16,6 +16,7 @@ import { useEffect, useState } from "react"
 import type { ClassStudent } from "@/components/class-student-card"
 import { StudentAvatar } from "@/components/student-avatar"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import {
   ATTENDANCE_LABELS,
   ATTENDANCE_STATUSES,
@@ -191,9 +192,17 @@ export function ClassTodayAttendance({
 
   if (scheduled.length === 0) {
     return (
-      <p className="rounded-xl border border-card-border bg-card px-5 py-4 text-sm text-text-tertiary">
-        No classes scheduled today.
-      </p>
+      <Card className="flex items-center gap-4 p-5">
+        <span className="flex size-11 flex-shrink-0 items-center justify-center rounded-xl bg-[rgba(14,165,233,0.10)] text-[#0EA5E9]">
+          <CalendarOff className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="font-semibold leading-6 text-text-primary">No classes scheduled today</p>
+          <p className="text-sm text-text-tertiary">
+            You can still pick anyone below to start an extra class.
+          </p>
+        </div>
+      </Card>
     )
   }
 

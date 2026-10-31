@@ -7,16 +7,23 @@ const config = {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    /* Full list, not extend: an extended `xs` would be emitted after `2xl` and
+       override every larger breakpoint (xs:grid-cols-2 beating lg:grid-cols-3). */
+    screens: {
+      /* Named because the raw `tall` screen switches off Tailwind's
+         arbitrary min-[…] breakpoints. */
+      xs: "400px",
+      sm: "640px",
+      md: "768px",
+      lg: "1024px",
+      xl: "1280px",
+      "2xl": "1536px",
+      /* Viewports with vertical room to spare — tablets in portrait. Layouts
+         that spread out to fill the height key off this, so laptops and
+         phones (which are never this tall) keep their compact arrangement. */
+      tall: { raw: "(min-height: 1100px)" },
+    },
     extend: {
-      screens: {
-        /* Viewports with vertical room to spare — tablets in portrait. Layouts
-           that spread out to fill the height key off this, so laptops and
-           phones (which are never this tall) keep their compact arrangement. */
-        tall: { raw: "(min-height: 1100px)" },
-        /* Named because the raw `tall` screen switches off Tailwind's
-           arbitrary min-[…] breakpoints. */
-        xs: "400px",
-      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
