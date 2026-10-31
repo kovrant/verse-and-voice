@@ -371,10 +371,6 @@ export default function TeacherHadithsPage() {
             <Plus className="h-4 w-4" />
             <span>Add Custom Hadith</span>
           </Button>
-          <Button onClick={() => openAssignModal()} className="gap-2">
-            <Send className="h-4 w-4" />
-            <span>Assign Hadith</span>
-          </Button>
         </div>
       </div>
 
