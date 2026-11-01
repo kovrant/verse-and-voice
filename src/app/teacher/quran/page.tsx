@@ -2,14 +2,24 @@
 
 /* eslint-disable @next/next/no-img-element -- images are remote Supabase URLs; next/image's remotePatterns + layout constraints aren't worth it for this internal admin tool */
 
-import { BookOpen, ChevronLeft, ChevronRight, FileText, Search, X } from "lucide-react"
+import { BookOpen, ChevronLeft, ChevronRight, FileText, MapPin, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { PageLoading } from "@/components/page-loading"
+import { PanelHeader } from "@/components/panel-header"
+import {
+  AvatarStack,
+  ParaTile,
+  positionLabel,
+  QuranRail,
+  useStudentPositions,
+} from "@/components/quran-map"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { PARA_NAMES } from "@/lib/para-names"
+import { QAIDA_PARA } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
+import { cn } from "@/lib/utils"
 
 interface QuranPara {
   id: string
@@ -24,8 +34,10 @@ interface QuranPara {
 export default function QuranPage() {
   const [paras, setParas] = useState<QuranPara[]>([])
   const [loading, setLoading] = useState(true)
-  const [search, setSearch] = useState("")
   const [viewingPara, setViewingPara] = useState<QuranPara | null>(null)
+  const [jumpPage, setJumpPage] = useState<number | null>(null)
+  const [followId, setFollowId] = useState<string | null>(null)
+  const positions = useStudentPositions()
 
   useEffect(() => {
     loadParas()
@@ -49,18 +61,24 @@ export default function QuranPage() {
     setLoading(false)
   }
 
-  const filtered = paras.filter(
-    (p) =>
-      p.title.toLowerCase().includes(search.toLowerCase()) ||
-      (p.meta?.para_number && `para ${p.meta.para_number}`.includes(search.toLowerCase())),
-  )
+  const paraFile = (n: number) => paras.find((p) => Number(p.meta?.para_number) === n)
+  const extraFiles = paras.filter((p) => !p.meta?.para_number)
+  const onQuran = (positions ?? []).filter((p) => p.para !== QAIDA_PARA)
+  const follow = followId
+    ? ((positions ?? []).find((p) => p.student.id === followId) ?? null)
+    : null
+
+  function open(para: QuranPara, page: number | null = null) {
+    setJumpPage(page)
+    setViewingPara(para)
+  }
 
   // Navigate between paras in viewer
   function navigatePara(direction: "prev" | "next") {
     if (!viewingPara) return
     const idx = paras.findIndex((p) => p.id === viewingPara.id)
-    if (direction === "prev" && idx > 0) setViewingPara(paras[idx - 1])
-    if (direction === "next" && idx < paras.length - 1) setViewingPara(paras[idx + 1])
+    if (direction === "prev" && idx > 0) open(paras[idx - 1])
+    if (direction === "next" && idx < paras.length - 1) open(paras[idx + 1])
   }
 
   const currentIdx = viewingPara ? paras.findIndex((p) => p.id === viewingPara.id) : -1
@@ -69,25 +87,56 @@ export default function QuranPage() {
 
   // Full-screen PDF viewer
   if (viewingPara) {
+    const n = Number(viewingPara.meta?.para_number) || 0
+    const name = n ? PARA_NAMES[n - 1] : null
+    const readers = onQuran.filter((p) => p.para === n)
     return (
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        {/* Header bar */}
-        <div className="flex items-center justify-between border-b border-border-primary bg-card-background px-4 py-3">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border-primary bg-card-background px-4 py-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => setViewingPara(null)}>
-              <X className="h-4 w-4 mr-1" />
+              <X className="mr-1 h-4 w-4" />
               Close
             </Button>
-            <div className="h-5 w-px bg-border-primary" />
-            <div>
-              <p className="text-sm font-semibold text-text-primary">{viewingPara.title}</p>
-              {viewingPara.meta?.para_number && (
-                <p className="text-xs text-text-tertiary">
-                  Para {viewingPara.meta.para_number} of 30
+            <div className="h-6 w-px bg-border-primary" />
+            {n ? (
+              <span className="flex size-9 flex-shrink-0 items-center justify-center rounded-lg bg-primary/10 text-sm font-semibold text-primary">
+                {n}
+              </span>
+            ) : null}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-text-primary">
+                {name ? `Para ${n} · ${name.name}` : viewingPara.title}
+              </p>
+              {name && (
+                <p
+                  dir="rtl"
+                  className="text-left font-arabic text-base leading-6 text-text-secondary"
+                >
+                  {name.arabic}
                 </p>
               )}
             </div>
           </div>
+
+          {readers.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {readers.map((p) => (
+                <button
+                  key={p.student.id}
+                  type="button"
+                  onClick={() => p.page && setJumpPage(p.page)}
+                  title={p.page ? `Jump to page ${p.page}` : positionLabel(p)}
+                  className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/[0.06] py-1 pl-1 pr-3 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                >
+                  <AvatarStack list={[p]} size={22} />
+                  {p.student.name}
+                  {p.page ? ` · page ${p.page}` : ""}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
@@ -95,12 +144,9 @@ export default function QuranPage() {
               onClick={() => navigatePara("prev")}
               disabled={currentIdx <= 0}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Previous
             </Button>
-            <span className="px-2 text-xs text-text-tertiary">
-              {currentIdx + 1} / {paras.length}
-            </span>
             <Button
               variant="outline"
               size="sm"
@@ -108,7 +154,7 @@ export default function QuranPage() {
               disabled={currentIdx >= paras.length - 1}
             >
               Next
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -117,16 +163,18 @@ export default function QuranPage() {
         <div className="flex-1 overflow-auto">
           {viewingPara.file_type === "pdf" ? (
             <iframe
-              src={viewingPara.file_url}
-              className="w-full h-full"
+              // Re-mount on a page jump: browsers only read #page on load
+              key={`${viewingPara.id}-${jumpPage ?? 0}`}
+              src={jumpPage ? `${viewingPara.file_url}#page=${jumpPage}` : viewingPara.file_url}
+              className="h-full w-full"
               title={viewingPara.title}
             />
           ) : (
-            <div className="flex items-center justify-center p-4 h-full">
+            <div className="flex h-full items-center justify-center p-4">
               <img
                 src={viewingPara.file_url}
                 alt={viewingPara.title}
-                className="max-w-full max-h-full object-contain rounded-xl"
+                className="max-h-full max-w-full rounded-xl object-contain"
               />
             </div>
           )}
@@ -136,107 +184,141 @@ export default function QuranPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up">
+    <div className="animate-fade-in-up space-y-6">
       <div>
-        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Quran Paras</h1>
+        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Quran Map</h1>
         <p className="text-sm leading-5 text-text-tertiary">
-          {paras.length > 0
-            ? `${paras.length} of 30 paras uploaded`
-            : "Upload Quran paras from the Media Library"}
+          {positions
+            ? `${onQuran.length} reading the Quran · ${positions.length - onQuran.length} on Qaida`
+            : "Finding where everyone is…"}
+          {paras.length < 30 && ` · ${paras.length} of 30 paras uploaded`}
         </p>
       </div>
 
-      {/* Search */}
-      {paras.length > 0 && (
-        <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-icon-tertiary" />
-          <Input
-            placeholder="Search paras..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-11"
-          />
+      {/* Where everyone is */}
+      <Card className="p-5">
+        <PanelHeader
+          icon={MapPin}
+          tint="indigo"
+          title="Where everyone is"
+          summary="Hover a student for page and line · click to open their class"
+        />
+        <div className="mt-5">
+          {positions === null ? (
+            <div className="h-24 shimmer rounded-xl" />
+          ) : positions.length === 0 ? (
+            <p className="py-6 text-center text-sm text-text-tertiary">No reading students yet.</p>
+          ) : (
+            <QuranRail positions={positions} />
+          )}
+        </div>
+      </Card>
+
+      {/* Follow one student */}
+      {positions && onQuran.length > 0 && (
+        <div className="space-y-3">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto">
+            <FollowChip active={!followId} onClick={() => setFollowId(null)}>
+              All students
+            </FollowChip>
+            {onQuran.map((p) => (
+              <FollowChip
+                key={p.student.id}
+                active={followId === p.student.id}
+                onClick={() => setFollowId(p.student.id)}
+              >
+                <AvatarStack list={[p]} size={20} />
+                {p.student.name}
+              </FollowChip>
+            ))}
+          </div>
+          {follow && (
+            <p className="text-sm text-text-secondary">
+              <span className="font-semibold text-text-primary">{follow.student.name}</span>
+              {follow.roundNum ? ` · Round ${follow.roundNum}` : ""} · {follow.done.length} of 30
+              done · {30 - follow.done.length} to go
+            </p>
+          )}
         </div>
       )}
 
-      {/* Para grid */}
-      {filtered.length === 0 ? (
+      {/* The 30 paras */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 2xl:grid-cols-6">
+        {Array.from({ length: 30 }, (_, i) => i + 1).map((n) => {
+          const file = paraFile(n)
+          return (
+            <ParaTile
+              key={n}
+              n={n}
+              uploaded={!!file}
+              here={onQuran.filter((p) => p.para === n)}
+              follow={follow}
+              onOpen={() => file && open(file, follow?.para === n ? follow.page : null)}
+            />
+          )
+        })}
+      </div>
+
+      {/* Uploaded files without a para number */}
+      {extraFiles.length > 0 && (
+        <Card className="p-5">
+          <PanelHeader icon={FileText} tint="sky" title="Other Quran files" />
+          <div className="mt-4 flex flex-wrap gap-2">
+            {extraFiles.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => open(f)}
+                className="rounded-lg border border-card-border px-3 py-2 text-sm text-text-secondary transition-colors hover:border-primary/40 hover:text-primary"
+              >
+                {f.title}
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      {paras.length === 0 && (
         <Card>
-          <CardContent className="py-16 text-center">
+          <CardContent className="py-10 text-center">
             <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-xl bg-background-gray-secondary">
               <BookOpen className="h-6 w-6 text-icon-secondary" />
             </div>
-            {paras.length === 0 ? (
-              <>
-                <p className="mb-1 font-medium text-text-primary">No Quran paras uploaded yet</p>
-                <p className="mb-5 text-sm text-text-tertiary">
-                  Go to Media Library to upload Quran PDFs
-                </p>
-                <Button variant="outline" onClick={() => (window.location.href = "/teacher/media")}>
-                  Go to Media Library
-                </Button>
-              </>
-            ) : (
-              <p className="text-sm text-text-tertiary">No paras match your search</p>
-            )}
+            <p className="mb-1 font-medium text-text-primary">No Quran paras uploaded yet</p>
+            <p className="mb-5 text-sm text-text-tertiary">
+              Upload the para PDFs in the Media Library
+            </p>
+            <Button variant="outline" onClick={() => (window.location.href = "/teacher/media")}>
+              Go to Media Library
+            </Button>
           </CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-3 grid-cols-3 sm:grid-cols-5 lg:grid-cols-6 xl:grid-cols-10">
-          {filtered.map((para) => (
-            <button
-              key={para.id}
-              type="button"
-              onClick={() => setViewingPara(para)}
-              className="group relative flex flex-col items-center overflow-hidden rounded-xl border border-card-border bg-card-background transition-colors hover:bg-background-gray-primary"
-            >
-              {/* Para number display */}
-              <div className="w-full aspect-square flex flex-col items-center justify-center gap-1 p-2">
-                {para.meta?.para_number ? (
-                  <>
-                    <span className="text-2xl font-semibold text-text-primary">
-                      {para.meta.para_number}
-                    </span>
-                    <span className="text-[11px] text-text-tertiary">Para</span>
-                  </>
-                ) : (
-                  <>
-                    <FileText className="h-6 w-6 text-icon-tertiary" />
-                    <span className="w-full truncate px-1 text-center text-[11px] text-text-tertiary">
-                      {para.title}
-                    </span>
-                  </>
-                )}
-              </div>
-
-              {/* Title bar */}
-              <div className="w-full px-2 pb-2">
-                <p className="truncate text-center text-[11px] text-text-tertiary">{para.title}</p>
-              </div>
-
-              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <span className="text-[11px] font-medium uppercase text-primary">Open</span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Progress indicator */}
-      {paras.length > 0 && paras.length < 30 && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-text-tertiary">Upload progress</span>
-            <span className="font-medium text-text-primary">{paras.length}/30 paras</span>
-          </div>
-          <div className="h-2 overflow-hidden rounded-full bg-background-gray-secondary">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${(paras.length / 30) * 100}%` }}
-            />
-          </div>
-        </div>
       )}
     </div>
+  )
+}
+
+function FollowChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean
+  onClick: () => void
+  children: React.ReactNode
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex flex-shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-1.5 text-sm font-medium transition-colors",
+        active
+          ? "border-primary bg-primary text-primary-foreground"
+          : "border-card-border bg-card-background text-text-secondary hover:text-text-primary",
+      )}
+    >
+      {children}
+    </button>
   )
 }
