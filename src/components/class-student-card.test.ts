@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+
+// The card module now loads the prep panel, which imports the browser client
+vi.mock("@/lib/supabase", () => ({ supabase: {} }))
 
 import { classPosition, type ClassSession } from "./class-student-card"
 import type { QuranRound } from "./quran-progress"
