@@ -91,6 +91,7 @@ export function ClassStudentCard({
   starting,
   onStart,
   qaidaMissing = false,
+  loadingPosition = false,
 }: {
   student: ClassStudent
   rounds: QuranRound[]
@@ -101,6 +102,8 @@ export function ClassStudentCard({
   onStart: () => void
   /** On a Qaida round with no Qaida book assigned: block Start Class. */
   qaidaMissing?: boolean
+  /** Rounds/sessions still loading: the position isn't known yet, so no Start. */
+  loadingPosition?: boolean
 }) {
   const { activeRound, para, page, line } = classPosition(rounds, sessions)
   const isQaida = para === QAIDA_PARA
@@ -233,13 +236,13 @@ export function ClassStudentCard({
             <button
               type="button"
               onClick={onStart}
-              disabled={starting || qaidaMissing}
+              disabled={starting || qaidaMissing || loadingPosition}
               aria-live="polite"
               className={cn(
                 "group relative inline-flex h-12 items-center justify-center gap-2.5 overflow-hidden rounded-xl bg-gradient-to-r from-[#5750F1] to-[#7B6CF9] pl-2 pr-6 text-base font-semibold text-white shadow-[0_10px_24px_-8px_rgba(87,80,241,0.7)] transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/30 sm:min-w-[220px]",
                 starting
                   ? "cursor-default"
-                  : qaidaMissing
+                  : qaidaMissing || loadingPosition
                     ? "cursor-not-allowed opacity-50"
                     : "hover:-translate-y-px hover:shadow-[0_14px_28px_-8px_rgba(87,80,241,0.8)] active:translate-y-0",
               )}
@@ -259,7 +262,7 @@ export function ClassStudentCard({
                     </span>
                   )}
                 </span>
-                Start class
+                {loadingPosition ? "Loading…" : "Start class"}
               </span>
               {/* Book overlay while the class opens */}
               {starting && (

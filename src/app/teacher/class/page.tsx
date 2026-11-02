@@ -59,6 +59,9 @@ function ClassPageContent() {
   const [loading, setLoading] = useState(true)
   const [mode, setMode] = useState<SessionMode>("landing")
   const [starting, setStarting] = useState(false)
+  // Which student's rounds/sessions are in state. Until it matches the
+  // selection, the position would fall back to Para 1, so Start stays locked.
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
   const onlineStudents = useOnlineStudents()
   // Monotonic token so a slow load for an earlier selection can't overwrite a
   // newer one (clicking A then B quickly).
@@ -74,6 +77,9 @@ function ClassPageContent() {
       const seq = ++selectSeq.current
       const student = students.find((s) => s.id === studentId) || null
       setSelected(student)
+      setLoadedFor(null)
+      setRounds([])
+      setSessions([])
       if (student) {
         const [memResult, roundsResult, sessionsResult, qaidaResult] = await Promise.all([
           supabase
@@ -102,6 +108,7 @@ function ClassPageContent() {
         setRounds(roundsResult.data || [])
         setSessions(sessionsResult.data || [])
         setQaidaBook(resolveAssignedQaida(qaidaResult.data || [], student.qaida_media_id))
+        setLoadedFor(student.id)
       } else {
         setMemItems([])
         setRounds([])
@@ -156,8 +163,10 @@ function ClassPageContent() {
     : paras
 
   // Start class — button morphs to Bismillah, then swaps to live screen
+  const positionReady = !!selected && loadedFor === selected.id
+
   function handleStartClass() {
-    if (starting) return
+    if (starting || !positionReady) return
     setStarting(true)
     // Hold the Bismillah on the button briefly, then transition.
     setTimeout(() => {
@@ -359,6 +368,7 @@ function ClassPageContent() {
               starting={starting}
               onStart={handleStartClass}
               qaidaMissing={qaidaMissing}
+              loadingPosition={!positionReady}
             />
           )}
         </>
