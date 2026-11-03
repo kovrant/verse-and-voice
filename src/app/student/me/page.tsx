@@ -11,7 +11,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-import { DayNightSwitch } from "@/components/student-topbar"
+import { DayNightSwitch, KidAvatarFace } from "@/components/student-topbar"
 import { useStudent } from "@/lib/use-student"
 
 const LINKS = [
@@ -45,11 +45,11 @@ export default function StudentMePage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl animate-fade-in-up">
-      <div className="mb-6 flex items-center gap-4">
-        <div className="flex h-[72px] w-[72px] flex-shrink-0 items-center justify-center rounded-3xl bg-primary font-heading text-[32px] font-bold text-primary-foreground">
-          {initial}
+      <div className="mb-6 flex flex-col items-center gap-3 text-center">
+        <div className="relative flex h-28 w-28 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-card bg-primary font-heading text-[44px] font-bold text-primary-foreground shadow-soft">
+          <KidAvatarFace student={student} initial={initial} sizes="112px" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 max-w-full">
           <h1 className="truncate font-heading text-[28px] font-bold leading-tight text-foreground">
             {name}
           </h1>

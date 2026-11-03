@@ -7,11 +7,39 @@ import type { CSSProperties } from "react"
 
 import { NotificationBell } from "@/components/notification-bell"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { StudentAvatar } from "@/components/student-avatar"
 import type { KidColor } from "@/components/student-nav"
 import { StudentStreakPill } from "@/components/student-streak-card"
 import { useTheme } from "@/components/theme-provider"
+import { studentAvatarSrc } from "@/lib/student-avatar"
 import { useStudent } from "@/lib/use-student"
-import { cn } from "@/lib/utils"
+import { cn, type Student } from "@/lib/utils"
+
+/**
+ * What goes inside a round "me" circle: the student's boy/girl avatar (same
+ * picture the teacher sees), else their initial. The circle needs
+ * `relative overflow-hidden`.
+ */
+export function KidAvatarFace({
+  student,
+  initial,
+  sizes,
+}: {
+  student: Student | null
+  initial: string
+  sizes: string
+}) {
+  if (!student || !studentAvatarSrc(student.id, student.gender)) return <>{initial}</>
+  return (
+    <StudentAvatar
+      id={student.id}
+      name={student.name}
+      gender={student.gender}
+      sizes={sizes}
+      className="object-[50%_20%]"
+    />
+  )
+}
 
 const MENU_LINKS: { href: string; label: string; art: string; color: KidColor }[] = [
   { href: "/student/me", label: "My page", art: "🎒", color: "sky" },
@@ -117,7 +145,7 @@ export function StudentTopBar() {
               type="button"
               aria-label="My menu"
               title={student?.name || username || "My menu"}
-              className="flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] font-heading text-[19px] font-bold text-foreground transition-transform hover:-translate-y-0.5 hover:rotate-6 active:scale-[0.99] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:rotate-6"
+              className="relative flex h-11 w-11 items-center justify-center overflow-hidden rounded-full border-[1.5px] font-heading text-[19px] font-bold text-foreground transition-transform hover:-translate-y-0.5 hover:rotate-6 active:scale-[0.99] active:shadow-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 data-[state=open]:rotate-6"
               style={
                 {
                   background: `hsl(var(--kid-${color}) / 0.45)`,
@@ -126,7 +154,7 @@ export function StudentTopBar() {
                 } as CSSProperties
               }
             >
-              {initial}
+              <KidAvatarFace student={student} initial={initial} sizes="44px" />
             </button>
           </Popover.Trigger>
           <Popover.Portal>
@@ -141,7 +169,7 @@ export function StudentTopBar() {
                 style={{ background: `hsl(var(--kid-${color}) / 0.18)` }}
               >
                 <span
-                  className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border-[1.5px] font-heading text-[21px] font-bold text-foreground"
+                  className="relative flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-full border-[1.5px] font-heading text-[21px] font-bold text-foreground"
                   style={
                     {
                       background: `hsl(var(--kid-${color}) / 0.45)`,
@@ -150,7 +178,7 @@ export function StudentTopBar() {
                     } as CSSProperties
                   }
                 >
-                  {initial}
+                  <KidAvatarFace student={student} initial={initial} sizes="48px" />
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-heading text-[18px] font-bold leading-tight text-primary">
