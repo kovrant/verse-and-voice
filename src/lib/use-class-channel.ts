@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { supabase } from "@/lib/supabase"
 import type { TajweedRule } from "@/lib/tajweed/rules"
-import { ensureRealtimeAuth } from "@/lib/use-current-user"
+import { ensureRealtimeAuth, renewRealtimeAuth } from "@/lib/use-current-user"
 
 export interface NavState {
   paraNumber: number
@@ -131,6 +131,8 @@ export function useClassChannel({
   // student "not live" until a full reload (Zoyal, 13 Oct 2026).
   const [attempt, setAttempt] = useState(0)
   const failuresRef = useRef(0)
+  // One login renewal per run of "Unauthorized" refusals (reset on SUBSCRIBED).
+  const authRenewedRef = useRef(false)
   // After an explicit end, ignore stale teacher presence until they join again.
   const classEndedRef = useRef(false)
 
@@ -268,8 +270,39 @@ export function useClassChannel({
     let retryTimer: ReturnType<typeof setTimeout> | undefined
     const doSubscribe = () => {
       if (cancelled) return
-      channel.subscribe((status) => {
+      channel.subscribe((status, err) => {
         if (cancelled) return // our own removeChannel reports CLOSED
+        if (
+          PRIVATE_CHANNEL &&
+          status === "CHANNEL_ERROR" &&
+          /unauthori|permission/i.test(err?.message ?? "")
+        ) {
+          // The socket isn't carrying a valid login, so plain retries can't help.
+          subscribedRef.current = false
+          failuresRef.current += 1
+          onConnectionIssueRef.current?.(status, failuresRef.current)
+          clearTimeout(retryTimer)
+          if (authRenewedRef.current) {
+            // Renewed and still refused: not a login problem, keep retrying slowly.
+            retryTimer = setTimeout(() => setAttempt((a) => a + 1), 15_000)
+            return
+          }
+          authRenewedRef.current = true
+          void renewRealtimeAuth().then((ok) => {
+            if (cancelled) return
+            if (ok) {
+              setAttempt((a) => a + 1)
+            } else if (role === "student") {
+              // Login is gone: what fixed it by hand was signing out and back in.
+              void supabase.auth.signOut({ scope: "local" }).finally(() => {
+                window.location.assign("/login")
+              })
+            } else {
+              retryTimer = setTimeout(() => setAttempt((a) => a + 1), 15_000)
+            }
+          })
+          return
+        }
         if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") {
           subscribedRef.current = false
           failuresRef.current += 1
@@ -281,6 +314,7 @@ export function useClassChannel({
           return
         }
         if (status === "SUBSCRIBED") {
+          authRenewedRef.current = false
           if (failuresRef.current > 0) {
             onConnectionIssueRef.current?.("RECOVERED", failuresRef.current)
             failuresRef.current = 0

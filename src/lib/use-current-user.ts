@@ -59,6 +59,21 @@ export function ensureRealtimeAuth(): Promise<void> {
   return setAuthInflight
 }
 
+/**
+ * A private channel said "Unauthorized": the socket is on the anon key, not
+ * the user's login (Mahad, 3 Nov 2026 — retries kept re-sending the same
+ * anon token until he signed out and in). Force a session refresh and put the
+ * fresh token on the socket. False when there's no usable login left.
+ */
+export async function renewRealtimeAuth(): Promise<boolean> {
+  const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 8000))
+  const result = await Promise.race([supabase.auth.refreshSession().catch(() => null), timeout])
+  const token = result?.data.session?.access_token
+  if (!token) return false
+  await supabase.realtime.setAuth(token).catch(() => {})
+  return true
+}
+
 /** Seed the auth cache after sign-in so nothing else needs to touch the lock. */
 export function seedAuthUser(user: User | null) {
   cached = user
