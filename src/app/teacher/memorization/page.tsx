@@ -9,6 +9,7 @@ import {
   ImagePlus,
   Layers,
   Loader2,
+  PenLine,
   Plus,
   Search,
   Trash2,
@@ -38,7 +39,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
 import { safeUploadExtension } from "@/lib/media-upload"
+import { paintMemCard, paletteFor, splitParts } from "@/lib/mem-card"
 import { type CatalogItem } from "@/lib/memorization"
 import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
@@ -54,15 +57,82 @@ interface CatalogRow extends CatalogItem {
   source?: "catalog" | "media"
   created_at: string
   assignment_count?: number
+  arabic_text?: string | null
 }
 
 const CATEGORIES = ["Surah", "Dua", "Namaz", "General"]
 
-const CATEGORY_COLORS: Record<string, { bg: string; text: string }> = {
-  Surah: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
-  Dua: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
-  Namaz: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
-  General: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
+/** Remove a stored picture by its public URL (best-effort). */
+async function removeStored(url: string | null | undefined) {
+  const path = url?.split("/memorization-images/").pop()
+  if (path) await supabase.storage.from("memorization-images").remove([path])
+}
+
+async function uploadCard(blob: Blob, path: string): Promise<string> {
+  const { error } = await supabase.storage
+    .from("memorization-images")
+    .upload(path, blob, { cacheControl: CACHE_FOREVER, upsert: false, contentType: "image/png" })
+  if (error) throw error
+  return supabase.storage.from("memorization-images").getPublicUrl(path).data.publicUrl
+}
+
+/**
+ * Paint the cover (the whole text) and one card per line, and save them.
+ * Existing parts are repainted in place, in order, so students keep their
+ * progress; extra lines become new parts and missing lines delete parts.
+ */
+async function saveItemText(
+  itemId: string,
+  oldCoverUrl: string | null,
+  text: string,
+  onEach?: (done: number, total: number) => void,
+): Promise<number> {
+  const parts = splitParts(text)
+  const palette = paletteFor(itemId)
+  const tag = () => Math.random().toString(36).slice(2)
+  const existing = (await loadChunksFor([itemId]))[itemId] || []
+  const total = parts.length + 1
+
+  const coverUrl = await uploadCard(
+    await paintMemCard(parts.join("\n"), palette),
+    `covers/${itemId}-${tag()}.png`,
+  )
+  const { error } = await supabase
+    .from("memorization_catalog")
+    .update({ image_url: coverUrl, arabic_text: parts.join("\n") })
+    .eq("id", itemId)
+  if (error) throw error
+  if (oldCoverUrl && oldCoverUrl !== coverUrl) await removeStored(oldCoverUrl)
+  onEach?.(1, total)
+
+  let nextIndex = existing.length ? Math.max(...existing.map((c) => c.order_index)) + 1 : 0
+  for (let i = 0; i < parts.length; i++) {
+    const url = await uploadCard(
+      await paintMemCard(parts[i], palette),
+      `chunks/${itemId}/${i}-${tag()}.png`,
+    )
+    const old = existing[i]
+    const { error: partErr } = old
+      ? await supabase
+          .from("memorization_chunks")
+          .update({ image_url: url, arabic_text: parts[i] })
+          .eq("id", old.id)
+      : await supabase.from("memorization_chunks").insert({
+          catalog_id: itemId,
+          order_index: nextIndex++,
+          image_url: url,
+          arabic_text: parts[i],
+        })
+    if (partErr) throw partErr
+    if (old) await removeStored(old.image_url)
+    onEach?.(i + 2, total)
+  }
+
+  for (const extra of existing.slice(parts.length)) {
+    await supabase.from("memorization_chunks").delete().eq("id", extra.id)
+    await removeStored(extra.image_url)
+  }
+  return parts.length
 }
 
 /** Upload ordered part images for a catalog item. Returns how many rows landed. */
@@ -114,43 +184,20 @@ export default function MemorizationPage() {
   const [loading, setLoading] = useState(true)
   const [newTitle, setNewTitle] = useState("")
   const [newCategory, setNewCategory] = useState("General")
-  const [newImage, setNewImage] = useState<File | null>(null)
-  const [newImagePreview, setNewImagePreview] = useState<string | null>(null)
-  const [newParts, setNewParts] = useState<File[]>([])
-  const [newPartPreviews, setNewPartPreviews] = useState<string[]>([])
+  const [newText, setNewText] = useState("")
   const [adding, setAdding] = useState(false)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
-  const [uploadingFor, setUploadingFor] = useState<string | null>(null)
   const [itemToDelete, setItemToDelete] = useState<CatalogRow | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [chunkCounts, setChunkCounts] = useState<Record<string, number>>({})
   const [manageItem, setManageItem] = useState<CatalogRow | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const partsInputRef = useRef<HTMLInputElement>(null)
-  const editFileRef = useRef<HTMLInputElement>(null)
+  const [textItem, setTextItem] = useState<CatalogRow | null>(null)
 
   useEffect(() => {
     loadItems()
   }, [])
-
-  // Manage the new-image preview URL with proper cleanup, instead of calling
-  // URL.createObjectURL() inline in render (which leaks a blob per re-render).
-  useEffect(() => {
-    if (newImage) {
-      const url = URL.createObjectURL(newImage)
-      setNewImagePreview(url)
-      return () => URL.revokeObjectURL(url)
-    }
-    setNewImagePreview(null)
-  }, [newImage])
-
-  useEffect(() => {
-    const urls = newParts.map((f) => URL.createObjectURL(f))
-    setNewPartPreviews(urls)
-    return () => urls.forEach((u) => URL.revokeObjectURL(u))
-  }, [newParts])
 
   async function loadItems() {
     // Four independent reads: run them in one round trip, not four.
@@ -166,7 +213,7 @@ export default function MemorizationPage() {
           .order("title"),
         // Assignment counts
         supabase.from("student_memorization").select("catalog_id"),
-        // Chunk (part) counts so cards can show "N parts"
+        // Chunk (part) counts so rows can show "N parts"
         supabase.from("memorization_chunks").select("catalog_id"),
       ])
 
@@ -210,66 +257,35 @@ export default function MemorizationPage() {
     setLoading(false)
   }
 
-  async function uploadImage(file: File): Promise<string | null> {
-    const ext = safeUploadExtension(file.name, "png")
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
-    const { error } = await supabase.storage
-      .from("memorization-images")
-      .upload(fileName, file, { cacheControl: CACHE_FOREVER, upsert: false })
-
-    if (error) {
-      console.error("Upload error:", error)
-      return null
-    }
-
-    const { data } = supabase.storage.from("memorization-images").getPublicUrl(fileName)
-
-    return data.publicUrl
-  }
-
-  async function deleteImage(imageUrl: string) {
-    const path = imageUrl.split("/memorization-images/").pop()
-    if (path) {
-      await supabase.storage.from("memorization-images").remove([path])
-    }
-  }
-
   async function addItem() {
     if (!newTitle.trim()) return
     setAdding(true)
 
-    let imageUrl: string | null = null
-    if (newImage) {
-      imageUrl = await uploadImage(newImage)
-    }
-
     const { data, error } = await supabase
       .from("memorization_catalog")
-      .insert({
-        title: newTitle.trim(),
-        category: newCategory,
-        image_url: imageUrl,
-      })
+      .insert({ title: newTitle.trim(), category: newCategory })
       .select("id")
       .single()
     if (error) {
-      if (error.code === "23505") {
-        toast.error("This item already exists in the catalog.")
-      } else {
-        toast.error(error.message)
-      }
+      toast.error(
+        error.code === "23505" ? "This item already exists in the catalog." : error.message,
+      )
       setAdding(false)
       return
     }
 
-    const partsCount =
-      newParts.length > 0 && data?.id ? await uploadChunkImages(data.id, newParts, 0) : 0
-
     const addedTitle = newTitle.trim()
+    let partsCount = 0
+    if (splitParts(newText).length > 0) {
+      try {
+        partsCount = await saveItemText(data.id, null, newText)
+      } catch (e) {
+        toast.error(`Added, but the cards couldn't be drawn: ${(e as Error).message}`)
+      }
+    }
+
     setNewTitle("")
-    setNewImage(null)
-    setNewParts([])
+    setNewText("")
     setAdding(false)
     await loadItems()
     toast.success(
@@ -282,9 +298,7 @@ export default function MemorizationPage() {
   async function confirmDeleteItem() {
     if (!itemToDelete) return
     setDeleting(true)
-    if (itemToDelete.image_url) {
-      await deleteImage(itemToDelete.image_url)
-    }
+    await removeStored(itemToDelete.image_url)
     // Remove the item's chunk images folder (rows cascade-delete via FK).
     const { data: chunkFiles } = await supabase.storage
       .from("memorization-images")
@@ -302,40 +316,6 @@ export default function MemorizationPage() {
     toast.success(`"${title}" deleted`)
   }
 
-  async function handleEditImage(itemId: string, file: File) {
-    setUploadingFor(itemId)
-    const item = items.find((i) => i.id === itemId)
-    const oldUrl = item?.image_url
-
-    // Upload the new image FIRST. Only delete the old one after the new upload
-    // and DB update both succeed — otherwise a failed upload would leave the
-    // record pointing at an image that no longer exists.
-    const imageUrl = await uploadImage(file)
-    if (!imageUrl) {
-      toast.error("Image upload failed. The existing image was kept.")
-      setUploadingFor(null)
-      return
-    }
-
-    const { error } = await supabase
-      .from("memorization_catalog")
-      .update({ image_url: imageUrl })
-      .eq("id", itemId)
-
-    if (error) {
-      toast.error(`Couldn't update image: ${error.message}`)
-      setUploadingFor(null)
-      return
-    }
-
-    if (oldUrl) {
-      await deleteImage(oldUrl)
-    }
-
-    setUploadingFor(null)
-    await loadItems()
-  }
-
   async function changeCategory(item: CatalogRow, category: string) {
     if (category === item.category) return
     const table = item.source === "media" ? "media_library" : "memorization_catalog"
@@ -346,15 +326,6 @@ export default function MemorizationPage() {
     }
     await loadItems()
     toast.success(`"${item.title}" moved to ${category}`)
-  }
-
-  async function removeImage(itemId: string) {
-    const item = items.find((i) => i.id === itemId)
-    if (item?.image_url) {
-      await deleteImage(item.image_url)
-      await supabase.from("memorization_catalog").update({ image_url: null }).eq("id", itemId)
-      await loadItems()
-    }
   }
 
   const filtered = items.filter((item) => {
@@ -370,6 +341,8 @@ export default function MemorizationPage() {
   })
 
   if (loading) return <PageLoading variant="stacked" count={3} />
+
+  const newPartCount = splitParts(newText).length
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -387,8 +360,7 @@ export default function MemorizationPage() {
             <Input
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="e.g. Surah Baqarah, Dua for Rain..."
-              onKeyDown={(e) => e.key === "Enter" && addItem()}
+              placeholder="Surah Baqarah, Dua for rain…"
               className="flex-1"
             />
             <Select value={newCategory} onValueChange={setNewCategory}>
@@ -403,98 +375,26 @@ export default function MemorizationPage() {
                 ))}
               </SelectContent>
             </Select>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => {
-                const file = e.target.files?.[0]
-                if (file) setNewImage(file)
-                if (fileInputRef.current) fileInputRef.current.value = ""
-              }}
-            />
-            <input
-              ref={partsInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => {
-                const files = Array.from(e.target.files || []).filter((f) =>
-                  f.type.startsWith("image/"),
-                )
-                if (files.length) setNewParts((prev) => [...prev, ...files])
-                if (partsInputRef.current) partsInputRef.current.value = ""
-              }}
-            />
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              className="gap-1.5"
-            >
-              <ImagePlus className="h-4 w-4" />
-              {newImage ? "Cover ✓" : "Cover"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => partsInputRef.current?.click()}
-              className="gap-1.5"
-            >
-              <Layers className="h-4 w-4" />
-              {newParts.length > 0 ? `${newParts.length} parts` : "Parts"}
-            </Button>
             <Button onClick={addItem} disabled={adding || !newTitle.trim()}>
-              <Plus className="h-4 w-4 mr-1" />
-              Add
+              {adding ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4 mr-1" />
+              )}
+              {newPartCount > 0 ? `Add with ${newPartCount} parts` : "Add"}
             </Button>
           </div>
+          <Textarea
+            value={newText}
+            onChange={(e) => setNewText(e.target.value)}
+            dir="rtl"
+            rows={3}
+            placeholder="Arabic text, one line per part (optional)"
+            className="font-arabic text-xl leading-9"
+          />
           <p className="text-xs text-text-tertiary">
-            Cover is the full dua. Parts are the pieces kids memorize one at a time, in the order
-            you pick them.
+            Each line becomes a part kids memorize one at a time. The app draws the cards for you.
           </p>
-          {(newImage || newParts.length > 0) && (
-            <div className="flex flex-wrap items-end gap-3">
-              {newImage && newImagePreview && (
-                <div className="relative">
-                  <p className="mb-1 text-[11px] font-medium uppercase text-text-tertiary">Cover</p>
-                  <img
-                    src={newImagePreview}
-                    alt="Cover"
-                    className="h-16 w-16 rounded-lg border border-card-border object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setNewImage(null)}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-card-border bg-card-background text-icon-secondary shadow-xs hover:text-text-primary"
-                    aria-label="Remove cover"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              )}
-              {newParts.map((file, i) => (
-                <div key={`${file.name}-${i}`} className="relative">
-                  <p className="mb-1 text-[11px] font-medium uppercase text-text-tertiary">
-                    Part {i + 1}
-                  </p>
-                  <img
-                    src={newPartPreviews[i]}
-                    alt={`Part ${i + 1}`}
-                    className="h-16 w-16 rounded-lg border border-card-border object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setNewParts((prev) => prev.filter((_, j) => j !== i))}
-                    className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-card-border bg-card-background text-icon-secondary shadow-xs hover:text-text-primary"
-                    aria-label={`Remove part ${i + 1}`}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </CardContent>
       </Card>
 
@@ -526,21 +426,6 @@ export default function MemorizationPage() {
           ))}
         </div>
       </div>
-
-      {/* Hidden file input for editing existing items */}
-      <input
-        ref={editFileRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={(e) => {
-          const file = e.target.files?.[0]
-          if (file && uploadingFor) {
-            handleEditImage(uploadingFor, file)
-          }
-          if (editFileRef.current) editFileRef.current.value = ""
-        }}
-      />
 
       {/* Preview modal (images and PDFs) */}
       {previewUrl && (
@@ -588,7 +473,7 @@ export default function MemorizationPage() {
         </div>
       )}
 
-      {/* Catalog grid */}
+      {/* Catalog rows */}
       {Object.keys(grouped).length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -602,232 +487,202 @@ export default function MemorizationPage() {
           </CardContent>
         </Card>
       ) : (
-        Object.entries(grouped).map(([category, catItems]) => {
-          const colors = CATEGORY_COLORS[category] || CATEGORY_COLORS.General
-          return (
-            <div key={category} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge className={`${colors.bg} ${colors.text} border-0`}>{category}</Badge>
-                <span className="text-sm text-text-tertiary">{catItems.length} items</span>
-              </div>
-              <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {catItems.map((item) => {
-                  const isMedia = item.source === "media"
-                  return (
-                    <div
-                      key={item.id}
-                      className="group relative overflow-hidden rounded-xl border border-card-border bg-card-background"
+        Object.entries(grouped).map(([category, catItems]) => (
+          <div key={category} className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Badge className="bg-background-gray-secondary text-text-secondary border-0">
+                {category}
+              </Badge>
+              <span className="text-sm text-text-tertiary">{catItems.length} items</span>
+            </div>
+            <div className="divide-y divide-border-primary overflow-hidden rounded-xl border border-card-border bg-card-background">
+              {catItems.map((item) => {
+                const isMedia = item.source === "media"
+                const palette = paletteFor(item.id)
+                const parts = chunkCounts[item.id] || 0
+                const students = item.assignment_count || 0
+                return (
+                  <div key={item.id} className="flex items-center gap-3 px-3 py-2.5">
+                    {/* Thumbnail */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        item.image_url || item.file_url
+                          ? setPreviewUrl(item.image_url || item.file_url || null)
+                          : !isMedia && setTextItem(item)
+                      }
+                      className="flex h-12 w-[72px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg"
+                      style={{ background: palette.bg, color: palette.ink }}
+                      aria-label={`Open ${item.title}`}
                     >
-                      {/* Image/Preview area */}
                       {item.image_url ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewUrl(item.image_url)}
-                          className="aspect-[3/2] w-full overflow-hidden bg-background-gray-primary"
-                        >
-                          <img
-                            src={item.image_url}
-                            alt={item.title}
-                            className="h-full w-full object-cover"
-                          />
-                        </button>
-                      ) : isMedia && item.file_type === "pdf" ? (
-                        <button
-                          type="button"
-                          onClick={() => setPreviewUrl(item.file_url || null)}
-                          className="relative flex aspect-[3/2] w-full items-center justify-center overflow-hidden bg-background-gray-primary"
-                        >
-                          <div className="relative flex flex-col items-center gap-1">
-                            <BookMarked className={`h-8 w-8 ${colors.text} opacity-40`} />
-                            <span className="text-[11px] font-medium uppercase text-text-tertiary">
-                              PDF
-                            </span>
-                          </div>
-                        </button>
+                        <img src={item.image_url} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <div
-                          className={`w-full aspect-[3/2] flex items-center justify-center ${colors.bg}`}
-                        >
-                          <BookMarked className={`h-10 w-10 ${colors.text} opacity-40`} />
-                        </div>
+                        <BookMarked className="h-5 w-5 opacity-60" />
                       )}
+                    </button>
 
-                      {/* Media library badge */}
-                      {isMedia && (
-                        <div className="absolute top-2 left-2">
-                          <span className="rounded-md bg-background-gray-secondary px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
+                    {/* Title + counts */}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-text-primary">
+                        {item.title}
+                        {isMedia && (
+                          <span className="ml-2 rounded-md bg-background-gray-secondary px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
                             Media Library
                           </span>
-                        </div>
-                      )}
-
-                      {/* Content */}
-                      <div className="p-3.5 space-y-2">
-                        <p className="truncate text-sm font-medium text-text-primary">
-                          {item.title}
-                        </p>
-                        <div className="flex items-center justify-between">
-                          {(item.assignment_count || 0) > 0 ? (
-                            <span className="flex items-center gap-1 text-xs text-text-tertiary">
-                              <Users className="h-3 w-3" />
-                              {item.assignment_count} student
-                              {(item.assignment_count || 0) > 1 ? "s" : ""}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-text-tertiary">No assignments</span>
-                          )}
-                          <Select
-                            value={item.category}
-                            onValueChange={(v) => changeCategory(item, v)}
-                          >
-                            <SelectTrigger
-                              className="h-6 w-auto gap-1 border-0 bg-background-gray-secondary px-2 text-[11px] font-medium text-text-secondary shadow-none"
-                              aria-label={`Category for ${item.title}`}
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {[...new Set([...CATEGORIES, item.category])].map((c) => (
-                                <SelectItem key={c} value={c}>
-                                  {c}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        )}
+                      </p>
+                      <p className="mt-0.5 flex items-center gap-3 text-xs text-text-tertiary">
                         {!isMedia && (
-                          <button
-                            type="button"
-                            onClick={() => setManageItem(item)}
-                            className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-card-border px-2 py-1.5 text-xs font-medium text-text-secondary shadow-xs transition-colors hover:border-primary/30 hover:bg-primary/10 hover:text-primary"
-                          >
-                            <Layers className="h-3.5 w-3.5" />
-                            {chunkCounts[item.id]
-                              ? `${chunkCounts[item.id]} part${chunkCounts[item.id] > 1 ? "s" : ""}`
-                              : "Add parts"}
-                          </button>
+                          <span className="flex items-center gap-1">
+                            <Layers className="h-3 w-3" />
+                            {parts ? `${parts} part${parts > 1 ? "s" : ""}` : "No parts"}
+                          </span>
                         )}
-                      </div>
-
-                      {/* Hover actions overlay */}
-                      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {isMedia ? (
-                          <button
-                            type="button"
-                            onClick={() => setPreviewUrl(item.file_url || item.image_url)}
-                            className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                            title="View"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                          </button>
-                        ) : (
-                          <>
-                            {item.image_url ? (
-                              <>
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewUrl(item.image_url)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                                  title="View image"
-                                >
-                                  <Eye className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setUploadingFor(item.id)
-                                    editFileRef.current?.click()
-                                  }}
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 backdrop-blur-sm"
-                                  title="Change image"
-                                >
-                                  <ImagePlus className="h-3.5 w-3.5" />
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => removeImage(item.id)}
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80 backdrop-blur-sm"
-                                  title="Remove image"
-                                >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setUploadingFor(item.id)
-                                  editFileRef.current?.click()
-                                }}
-                                className="flex h-7 items-center gap-1 px-2 rounded-lg bg-black/60 text-white text-xs hover:bg-black/80 backdrop-blur-sm"
-                                title="Add image"
-                              >
-                                <ImagePlus className="h-3.5 w-3.5" />
-                              </button>
-                            )}
-                            <Popover.Root
-                              open={itemToDelete?.id === item.id}
-                              onOpenChange={(open) => setItemToDelete(open ? item : null)}
-                            >
-                              <Popover.Trigger asChild>
-                                <button
-                                  type="button"
-                                  className="flex h-7 w-7 items-center justify-center rounded-lg bg-black/60 text-destructive hover:bg-black/80 backdrop-blur-sm"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </Popover.Trigger>
-                              <Popover.Portal>
-                                <Popover.Content
-                                  side="top"
-                                  align="end"
-                                  sideOffset={8}
-                                  className="z-50 w-56 rounded-lg border border-card-border bg-card-background p-3 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-                                >
-                                  <p className="mb-1 text-xs font-medium text-text-primary">
-                                    Delete &quot;{item.title}&quot;?
-                                  </p>
-                                  {(item.assignment_count ?? 0) > 0 && (
-                                    <p className="mb-2 text-[11px] text-text-tertiary">
-                                      Assigned to {item.assignment_count} student
-                                      {item.assignment_count !== 1 ? "s" : ""}
-                                    </p>
-                                  )}
-                                  <div className="flex gap-2 mt-2">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      className="h-7 flex-1 text-xs"
-                                      onClick={() => setItemToDelete(null)}
-                                      disabled={deleting}
-                                    >
-                                      No
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      className="h-7 flex-1 text-xs bg-destructive hover:bg-destructive/90 text-white"
-                                      onClick={confirmDeleteItem}
-                                      disabled={deleting}
-                                    >
-                                      {deleting ? "..." : "Yes"}
-                                    </Button>
-                                  </div>
-                                  <Popover.Arrow className="fill-card-background" />
-                                </Popover.Content>
-                              </Popover.Portal>
-                            </Popover.Root>
-                          </>
+                        <span className="flex items-center gap-1">
+                          <Users className="h-3 w-3" />
+                          {students
+                            ? `${students} student${students > 1 ? "s" : ""}`
+                            : "Not assigned"}
+                        </span>
+                        {!isMedia && !item.arabic_text && item.image_url && (
+                          <span className="hidden sm:inline">Old picture card</span>
                         )}
-                      </div>
+                      </p>
                     </div>
-                  )
-                })}
-              </div>
+
+                    <Select value={item.category} onValueChange={(v) => changeCategory(item, v)}>
+                      <SelectTrigger
+                        className="hidden h-7 w-auto gap-1 border-0 bg-background-gray-secondary px-2 text-[11px] font-medium text-text-secondary shadow-none sm:flex"
+                        aria-label={`Category for ${item.title}`}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[...new Set([...CATEGORIES, item.category])].map((c) => (
+                          <SelectItem key={c} value={c}>
+                            {c}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {/* Actions */}
+                    {isMedia ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 gap-1.5"
+                        onClick={() => setPreviewUrl(item.file_url || item.image_url || null)}
+                      >
+                        <Eye className="h-3.5 w-3.5" />
+                        View
+                      </Button>
+                    ) : (
+                      <div className="flex items-center gap-1">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-8 gap-1.5"
+                          onClick={() => setTextItem(item)}
+                        >
+                          <PenLine className="h-3.5 w-3.5" />
+                          {item.arabic_text ? "Text" : "Add text"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          onClick={() => setManageItem(item)}
+                          title="Parts"
+                          aria-label={`Parts of ${item.title}`}
+                        >
+                          <Layers className="h-4 w-4" />
+                        </Button>
+                        <Popover.Root
+                          open={itemToDelete?.id === item.id}
+                          onOpenChange={(open) => setItemToDelete(open ? item : null)}
+                        >
+                          <Popover.Trigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-icon-tertiary hover:text-destructive"
+                              title="Delete"
+                              aria-label={`Delete ${item.title}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </Popover.Trigger>
+                          <Popover.Portal>
+                            <Popover.Content
+                              side="top"
+                              align="end"
+                              sideOffset={8}
+                              className="z-50 w-56 rounded-lg border border-card-border bg-card-background p-3 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+                            >
+                              <p className="mb-1 text-xs font-medium text-text-primary">
+                                Delete &quot;{item.title}&quot;?
+                              </p>
+                              {students > 0 && (
+                                <p className="mb-2 text-[11px] text-text-tertiary">
+                                  Assigned to {students} student{students !== 1 ? "s" : ""}
+                                </p>
+                              )}
+                              <div className="flex gap-2 mt-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 flex-1 text-xs"
+                                  onClick={() => setItemToDelete(null)}
+                                  disabled={deleting}
+                                >
+                                  No
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="h-7 flex-1 text-xs bg-destructive hover:bg-destructive/90 text-white"
+                                  onClick={confirmDeleteItem}
+                                  disabled={deleting}
+                                >
+                                  {deleting ? "..." : "Yes"}
+                                </Button>
+                              </div>
+                              <Popover.Arrow className="fill-card-background" />
+                            </Popover.Content>
+                          </Popover.Portal>
+                        </Popover.Root>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
-          )
-        })
+          </div>
+        ))
       )}
+
+      {/* Write the text (cards are drawn from it) */}
+      <Dialog open={!!textItem} onOpenChange={(open) => !open && setTextItem(null)}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Text — {textItem?.title}</DialogTitle>
+            <DialogDescription>
+              Write the Arabic, one line per part. The cover shows all of it.
+            </DialogDescription>
+          </DialogHeader>
+          {textItem && (
+            <TextEditor
+              item={textItem}
+              partCount={chunkCounts[textItem.id] || 0}
+              onSaved={async () => {
+                setTextItem(null)
+                await loadItems()
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Manage parts (chunks) */}
       <Dialog open={!!manageItem} onOpenChange={(open) => !open && setManageItem(null)}>
@@ -847,6 +702,104 @@ export default function MemorizationPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  )
+}
+
+function TextEditor({
+  item,
+  partCount,
+  onSaved,
+}: {
+  item: CatalogRow
+  partCount: number
+  onSaved: () => void
+}) {
+  const [text, setText] = useState(item.arabic_text || "")
+  const [preview, setPreview] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [progress, setProgress] = useState({ done: 0, total: 0 })
+  const lines = splitParts(text)
+
+  // Live preview of the first part's card, repainted shortly after typing stops.
+  useEffect(() => {
+    const first = lines[0]
+    if (!first) {
+      setPreview(null)
+      return
+    }
+    let url: string | null = null
+    let cancelled = false
+    const t = setTimeout(async () => {
+      const blob = await paintMemCard(first, paletteFor(item.id)).catch(() => null)
+      if (!blob || cancelled) return
+      url = URL.createObjectURL(blob)
+      setPreview(url)
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+      if (url) URL.revokeObjectURL(url)
+    }
+    // lines is derived from text; text is the real dependency.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text, item.id])
+
+  async function save() {
+    setSaving(true)
+    try {
+      const n = await saveItemText(item.id, item.image_url, text, (done, total) =>
+        setProgress({ done, total }),
+      )
+      toast.success(`"${item.title}" saved with ${n} part${n === 1 ? "" : "s"}`)
+      onSaved()
+    } catch (e) {
+      toast.error(`Couldn't save: ${(e as Error).message}`)
+    }
+    setSaving(false)
+  }
+
+  const removing = partCount - lines.length
+
+  return (
+    <div className="space-y-4 pt-1">
+      <Textarea
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        dir="rtl"
+        rows={8}
+        placeholder="بِسْمِ اللَّهِ"
+        className="font-arabic text-2xl leading-[2.6rem]"
+        autoFocus
+      />
+      {preview && (
+        <div>
+          <p className="mb-1.5 text-xs font-medium text-text-tertiary">
+            Part 1 will look like this
+          </p>
+          <img
+            src={preview}
+            alt="Part 1 preview"
+            className="w-56 rounded-lg border border-card-border"
+          />
+        </div>
+      )}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-text-tertiary">
+          {lines.length} part{lines.length === 1 ? "" : "s"}
+          {partCount > 0 && removing <= 0 && " · existing parts are redrawn, progress is kept"}
+          {removing > 0 && (
+            <span className="text-destructive">
+              {" "}
+              · removes the last {removing} part{removing === 1 ? "" : "s"} and their progress
+            </span>
+          )}
+        </p>
+        <Button onClick={save} disabled={saving || lines.length === 0} className="gap-1.5">
+          {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+          {saving ? `Drawing ${progress.done} of ${progress.total}…` : "Save and draw cards"}
+        </Button>
+      </div>
     </div>
   )
 }

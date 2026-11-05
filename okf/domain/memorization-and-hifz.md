@@ -7,6 +7,8 @@ verified: true
 sources:
   - "src/lib/memorization.ts"
   - "src/lib/memorization.test.ts"
+  - "src/lib/mem-card.ts"
+  - "supabase/migration_memorization_text.sql"
   - "supabase/migration_memorization.sql"
   - "supabase/migration_memorization_chunks.sql"
   - "supabase/migration_memorization_revision.sql"
@@ -35,6 +37,14 @@ Quran Academy provides a structured memorization pipeline allowing students to m
    * `last_revised_at`: Timestamp of most recent revision.
    * `revision_assigned_at`: Timestamp when the teacher queued this item into the student's active revision bucket.
 4. **`student_memorization_chunks`:** Records individual chunks marked as completed by the student.
+
+### Cards drawn from text
+
+The teacher page ([`src/app/teacher/memorization/page.tsx`](../../src/app/teacher/memorization/page.tsx)) takes the Arabic as text, **one line per part**, stored in `arabic_text` on the catalog row (all lines) and each chunk (its line). [`src/lib/mem-card.ts`](../../src/lib/mem-card.ts) paints a pastel 1200×800 PNG per line (plus a cover with all lines) in the browser and uploads it as `image_url`, so every reader of `image_url` (student pages, live class, prep panel) is unchanged. The colour comes from the item id, so a cover and its parts match.
+
+* Saving text repaints existing parts **in place, in order**, so `student_memorization_chunks` progress survives. Extra lines insert parts; fewer lines delete the trailing parts (and their progress — the editor warns).
+* Items without text keep their older uploaded pictures. Picture parts can still be uploaded from the Parts dialog.
+* To change the template, edit `PALETTES` / `paintMemCard` and re-save an item's text to repaint it.
 
 ---
 
