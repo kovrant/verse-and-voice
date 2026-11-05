@@ -186,6 +186,7 @@ export default function MemorizationPage() {
   const [newCategory, setNewCategory] = useState("General")
   const [newText, setNewText] = useState("")
   const [adding, setAdding] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
   const [search, setSearch] = useState("")
   const [filterCat, setFilterCat] = useState("All")
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -287,6 +288,7 @@ export default function MemorizationPage() {
     setNewTitle("")
     setNewText("")
     setAdding(false)
+    setAddOpen(false)
     await loadItems()
     toast.success(
       partsCount > 0
@@ -346,57 +348,77 @@ export default function MemorizationPage() {
 
   return (
     <div className="space-y-6 animate-fade-in-up">
-      <div>
-        <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Memorization</h1>
-        <p className="text-sm leading-5 text-text-tertiary">
-          Manage the catalog of items students can memorize. {items.length} items total.
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">Memorization</h1>
+          <p className="text-sm leading-5 text-text-tertiary">
+            Manage the catalog of items students can memorize. {items.length} items total.
+          </p>
+        </div>
+        <Button onClick={() => setAddOpen(true)} className="gap-1.5">
+          <Plus className="h-4 w-4" />
+          Add item
+        </Button>
       </div>
 
       {/* Add new item */}
-      <Card>
-        <CardContent className="pt-6 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Input
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Surah Baqarah, Dua for rain…"
-              className="flex-1"
+      <Dialog open={addOpen} onOpenChange={(open) => !adding && setAddOpen(open)}>
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add item</DialogTitle>
+            <DialogDescription>
+              Each line of Arabic becomes a part kids memorize one at a time. The app draws the
+              cards for you.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-1">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Input
+                value={newTitle}
+                onChange={(e) => setNewTitle(e.target.value)}
+                placeholder="Surah Baqarah, Dua for rain…"
+                className="flex-1"
+                autoFocus
+              />
+              <Select value={newCategory} onValueChange={setNewCategory}>
+                <SelectTrigger className="sm:w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIES.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Textarea
+              value={newText}
+              onChange={(e) => setNewText(e.target.value)}
+              dir="rtl"
+              rows={6}
+              placeholder="بِسْمِ اللَّهِ"
+              className="font-arabic text-2xl leading-[2.6rem]"
             />
-            <Select value={newCategory} onValueChange={setNewCategory}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button onClick={addItem} disabled={adding || !newTitle.trim()}>
-              {adding ? (
-                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4 mr-1" />
-              )}
-              {newPartCount > 0 ? `Add with ${newPartCount} parts` : "Add"}
-            </Button>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs text-text-tertiary">
+                {newPartCount > 0
+                  ? `${newPartCount} part${newPartCount === 1 ? "" : "s"}`
+                  : "Text is optional, you can add it later"}
+              </p>
+              <Button onClick={addItem} disabled={adding || !newTitle.trim()} className="gap-1.5">
+                {adding ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4" />
+                )}
+                {adding ? "Adding…" : "Add"}
+              </Button>
+            </div>
           </div>
-          <Textarea
-            value={newText}
-            onChange={(e) => setNewText(e.target.value)}
-            dir="rtl"
-            rows={3}
-            placeholder="Arabic text, one line per part (optional)"
-            className="font-arabic text-xl leading-9"
-          />
-          <p className="text-xs text-text-tertiary">
-            Each line becomes a part kids memorize one at a time. The app draws the cards for you.
-          </p>
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
