@@ -98,8 +98,8 @@ export default function NewStudentPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in-up">
       <div>
         <nav className="flex items-center gap-1.5 text-sm text-text-tertiary mb-3">
-          <Link href="/" className="hover:text-text-primary transition-colors">
-            Dashboard
+          <Link href="/teacher" className="hover:text-text-primary transition-colors">
+            Today
           </Link>
           <span className="text-text-tertiary">/</span>
           <Link href="/teacher/students" className="hover:text-text-primary transition-colors">

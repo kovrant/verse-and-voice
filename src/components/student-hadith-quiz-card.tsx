@@ -27,6 +27,8 @@ interface StudentHadithQuizCardProps {
   studentId: string
   studentName: string
   onAchievementEarned?: () => void
+  /** Bump to reload after assignments made elsewhere (the Assign pop-up). */
+  refreshKey?: number
 }
 
 interface RawHadithRow {
@@ -50,6 +52,7 @@ export function StudentHadithQuizCard({
   studentId,
   studentName,
   onAchievementEarned,
+  refreshKey,
 }: StudentHadithQuizCardProps) {
   const [hadiths, setHadiths] = useState<Hadith[]>([])
   const [hadithAssignments, setHadithAssignments] = useState<HadithAssignment[]>([])
@@ -113,7 +116,7 @@ export function StudentHadithQuizCard({
 
   useEffect(() => {
     void loadData()
-  }, [loadData])
+  }, [loadData, refreshKey])
 
   const hadithById = useMemo(() => new Map(hadiths.map((h) => [h.id, h])), [hadiths])
   const quizById = useMemo(() => new Map(quizzes.map((q) => [q.id, q])), [quizzes])

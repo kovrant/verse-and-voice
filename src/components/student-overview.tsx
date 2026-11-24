@@ -50,6 +50,8 @@ interface StudentOverviewProps {
   onOpenNewRound: () => void
   onLoadCatalog: () => void
   onAssignMemItem: (catalogId: string) => void
+  /** Bumped after the Assign pop-up gives new hadiths/quizzes. */
+  assignRefreshKey?: number
   onUnassignMemItem: (id: string) => void
   onToggleMemStatus: (item: StudentMemItem) => void
   onToggleChunk: (chunk: MemChunk, memorized: boolean) => void
@@ -73,6 +75,7 @@ export function StudentOverview({
   onOpenNewRound,
   onLoadCatalog,
   onAssignMemItem,
+  assignRefreshKey,
   onUnassignMemItem,
   onToggleMemStatus,
   onToggleChunk,
@@ -484,6 +487,7 @@ export function StudentOverview({
         studentId={student.id}
         studentName={student.name}
         onAchievementEarned={onAchievementEarned}
+        refreshKey={assignRefreshKey}
       />
     </div>
   )

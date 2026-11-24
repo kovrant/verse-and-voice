@@ -37,6 +37,7 @@ import { QuranJourney } from "@/components/quran-journey"
 import { getActiveRound, type QuranRound } from "@/components/quran-progress"
 import { StudentAchievementsPanel } from "@/components/student-achievements-panel"
 import { ActivityFeed, type ActivityLog } from "@/components/student-activity-feed"
+import { StudentAssignDialog } from "@/components/student-assign-dialog"
 import { StudentAttendanceCalendar } from "@/components/student-attendance-calendar"
 import {
   StudentDetailNav,
@@ -122,6 +123,8 @@ export default function StudentDetailPage() {
   const [achievementCount, setAchievementCount] = useState(0)
 
   const [activeTab, setActiveTab] = useState<StudentView>("overview")
+  const [assignOpen, setAssignOpen] = useState(false)
+  const [assignRefreshKey, setAssignRefreshKey] = useState(0)
   const [historySection, setHistorySection] = useState<HistorySection>("sessions")
 
   // Round editing
@@ -719,7 +722,7 @@ export default function StudentDetailPage() {
             aria-label="Breadcrumb"
           >
             <Link href="/teacher" className="transition-colors hover:text-text-primary">
-              Dashboard
+              Today
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
             <Link href="/teacher/students" className="transition-colors hover:text-text-primary">
@@ -786,8 +789,28 @@ export default function StudentDetailPage() {
           )}
 
           {activeTab === "learning" && (
-            <div className="animate-fade-in-up">
+            <div className="animate-fade-in-up space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-card-border bg-card-background px-4 py-3">
+                <p className="text-sm text-text-secondary">
+                  Give {student.name} new duas, hadiths and quizzes in one go.
+                </p>
+                <Button onClick={() => setAssignOpen(true)} className="gap-1.5">
+                  <Plus className="h-4 w-4" />
+                  Assign
+                </Button>
+              </div>
+              <StudentAssignDialog
+                studentId={student.id}
+                studentName={student.name}
+                open={assignOpen}
+                onOpenChange={setAssignOpen}
+                onAssigned={() => {
+                  void loadMemItems()
+                  setAssignRefreshKey((k) => k + 1)
+                }}
+              />
               <StudentOverview
+                assignRefreshKey={assignRefreshKey}
                 student={student}
                 rounds={rounds}
                 sessions={sessions}
