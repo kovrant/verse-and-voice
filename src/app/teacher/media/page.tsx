@@ -67,25 +67,20 @@ interface MediaItem {
   created_at: string
 }
 
+// Duas and surahs live in the Memorization catalog, not here.
 const MEDIA_TYPES = [
   { value: "quran", label: "Quran", icon: "📖" },
-  { value: "memorization", label: "Memorization", icon: "🕌" },
   { value: "qaida", label: "Qaida", icon: "🔤" },
-  { value: "general", label: "General", icon: "📁" },
 ]
 
 const DEFAULT_CATEGORIES: Record<string, string[]> = {
   quran: ["Para"],
-  memorization: ["Surah", "Dua", "Namaz", "General"],
   qaida: ["Noorani", "Baghdadi", "Madani"],
-  general: ["Document", "Resource", "Other"],
 }
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   quran: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
-  memorization: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
   qaida: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
-  general: { bg: "bg-background-gray-secondary", text: "text-text-secondary" },
 }
 
 export default function MediaPage() {
@@ -138,8 +133,8 @@ export default function MediaPage() {
 
   // Bulk upload
   const [bulkOpen, setBulkOpen] = useState(false)
-  const [bulkType, setBulkType] = useState("memorization")
-  const [bulkCategory, setBulkCategory] = useState("General")
+  const [bulkType, setBulkType] = useState("quran")
+  const [bulkCategory, setBulkCategory] = useState("Para")
   const [bulkUploading, setBulkUploading] = useState(false)
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, current: "" })
   const bulkFileRef = useRef<HTMLInputElement>(null)
@@ -374,7 +369,7 @@ export default function MediaPage() {
   // Stats
   const totalFiles = items.length
   const totalQuran = items.filter((i) => i.type === "quran").length
-  const totalMem = items.filter((i) => i.type === "memorization").length
+  const totalQaida = items.filter((i) => i.type === "qaida").length
 
   if (loading) return <PageLoading variant="media" />
 
@@ -383,10 +378,10 @@ export default function MediaPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="mb-1 text-[28px] font-medium leading-8 text-text-primary">
-            Media Library
+            Quran &amp; files
           </h1>
           <p className="text-sm leading-5 text-text-tertiary">
-            Central hub for all uploads — Quran, memorization, and resources
+            The Quran paras and Qaida books used in class
           </p>
         </div>
         <div className="flex gap-2">
@@ -431,8 +426,8 @@ export default function MediaPage() {
               <Sparkles className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-2xl font-semibold text-text-primary">{totalMem}</p>
-              <p className="text-sm font-medium text-text-tertiary">Memorization</p>
+              <p className="text-2xl font-semibold text-text-primary">{totalQaida}</p>
+              <p className="text-sm font-medium text-text-tertiary">Qaida books</p>
             </div>
           </CardContent>
         </Card>
@@ -563,7 +558,7 @@ export default function MediaPage() {
                 value={bulkType}
                 onValueChange={(v) => {
                   setBulkType(v)
-                  setBulkCategory(getCategories(v)[0] || "General")
+                  setBulkCategory(getCategories(v)[0] || "Para")
                 }}
               >
                 <SelectTrigger>
@@ -605,7 +600,7 @@ export default function MediaPage() {
       <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Upload to Media Library</DialogTitle>
+            <DialogTitle>Upload a Quran para or Qaida book</DialogTitle>
             <DialogDescription>Tag your file so it shows up in the right place.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
@@ -614,7 +609,7 @@ export default function MediaPage() {
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="e.g. Para 1, Surah Fatiha image..."
+                placeholder="Para 1, Noorani Qaida…"
               />
             </div>
 
@@ -625,7 +620,7 @@ export default function MediaPage() {
                   value={type}
                   onValueChange={(v) => {
                     setType(v)
-                    setCategory(getCategories(v)[0] || "general")
+                    setCategory(getCategories(v)[0] || "Para")
                     setAddingCategory(false)
                     setNewCategoryInput("")
                   }}
@@ -931,7 +926,7 @@ export default function MediaPage() {
         </Card>
       ) : (
         Object.entries(grouped).map(([groupType, groupItems]) => {
-          const colors = TYPE_COLORS[groupType] || TYPE_COLORS.general
+          const colors = TYPE_COLORS[groupType] || TYPE_COLORS.quran
           const typeLabel = MEDIA_TYPES.find((t) => t.value === groupType)?.label || groupType
           return (
             <div key={groupType} className="space-y-3">

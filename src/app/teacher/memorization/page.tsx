@@ -5,7 +5,6 @@
 import * as Popover from "@radix-ui/react-popover"
 import {
   BookMarked,
-  Eye,
   ImagePlus,
   Layers,
   Loader2,
@@ -47,14 +46,8 @@ import { CACHE_FOREVER } from "@/lib/storage"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 
-/**
- * The catalog admin view: a shared catalog entry plus the fields only this page
- * needs — media-library provenance and the assignment count it tallies itself.
- */
+/** The catalog admin view: a catalog entry plus the assignment count this page tallies. */
 interface CatalogRow extends CatalogItem {
-  file_url?: string | null
-  file_type?: string | null
-  source?: "catalog" | "media"
   created_at: string
   assignment_count?: number
   arabic_text?: string | null
@@ -201,22 +194,14 @@ export default function MemorizationPage() {
   }, [])
 
   async function loadItems() {
-    // Four independent reads: run them in one round trip, not four.
-    const [{ data: catalog }, { data: mediaItems }, { data: counts }, { data: chunkRows }] =
-      await Promise.all([
-        supabase.from("memorization_catalog").select("*").order("category").order("title"),
-        // Memorization items that live in the media library
-        supabase
-          .from("media_library")
-          .select("*")
-          .eq("type", "memorization")
-          .order("category")
-          .order("title"),
-        // Assignment counts
-        supabase.from("student_memorization").select("catalog_id"),
-        // Chunk (part) counts so rows can show "N parts"
-        supabase.from("memorization_chunks").select("catalog_id"),
-      ])
+    // Three independent reads: run them in one round trip, not three.
+    const [{ data: catalog }, { data: counts }, { data: chunkRows }] = await Promise.all([
+      supabase.from("memorization_catalog").select("*").order("category").order("title"),
+      // Assignment counts
+      supabase.from("student_memorization").select("catalog_id"),
+      // Chunk (part) counts so rows can show "N parts"
+      supabase.from("memorization_chunks").select("catalog_id"),
+    ])
 
     const countMap: Record<string, number> = {}
     ;((counts as { catalog_id: string }[]) || []).forEach((c) => {
@@ -229,32 +214,7 @@ export default function MemorizationPage() {
     })
     setChunkCounts(chunkMap)
 
-    // Map catalog items
-    const catalogItems: CatalogRow[] = (catalog || []).map((item) => ({
-      ...item,
-      source: "catalog" as const,
-      assignment_count: countMap[item.id] || 0,
-    }))
-
-    // Map media library items (avoid duplicates by title+category)
-    const existingKeys = new Set(
-      catalogItems.map((i) => `${i.title.toLowerCase()}|${i.category.toLowerCase()}`),
-    )
-    const mediaAsCatalog: CatalogRow[] = (mediaItems || [])
-      .filter((m) => !existingKeys.has(`${m.title.toLowerCase()}|${m.category.toLowerCase()}`))
-      .map((m) => ({
-        id: m.id,
-        title: m.title,
-        category: m.category,
-        image_url: m.file_type === "image" ? m.file_url : null,
-        file_url: m.file_url,
-        file_type: m.file_type,
-        source: "media" as const,
-        created_at: m.created_at,
-        assignment_count: countMap[m.id] || 0,
-      }))
-
-    setItems([...catalogItems, ...mediaAsCatalog])
+    setItems((catalog || []).map((item) => ({ ...item, assignment_count: countMap[item.id] || 0 })))
     setLoading(false)
   }
 
@@ -320,8 +280,10 @@ export default function MemorizationPage() {
 
   async function changeCategory(item: CatalogRow, category: string) {
     if (category === item.category) return
-    const table = item.source === "media" ? "media_library" : "memorization_catalog"
-    const { error } = await supabase.from(table).update({ category }).eq("id", item.id)
+    const { error } = await supabase
+      .from("memorization_catalog")
+      .update({ category })
+      .eq("id", item.id)
     if (error) {
       toast.error(`Couldn't change category: ${error.message}`)
       return
@@ -449,7 +411,7 @@ export default function MemorizationPage() {
         </div>
       </div>
 
-      {/* Preview modal (images and PDFs) */}
+      {/* Picture preview */}
       {previewUrl && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
@@ -459,38 +421,19 @@ export default function MemorizationPage() {
             className="relative max-w-4xl w-full max-h-[85vh] p-2 m-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {previewUrl.toLowerCase().endsWith(".pdf") || previewUrl.includes("/pdf") ? (
-              <div className="overflow-hidden rounded-xl border border-card-border bg-card-background shadow-3xl">
-                <div className="flex items-center justify-between border-b border-border-primary px-5 py-3">
-                  <span className="text-sm font-medium text-text-primary">PDF Preview</span>
-                  <button
-                    onClick={() => setPreviewUrl(null)}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-icon-secondary hover:bg-background-gray-primary"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-                <iframe
-                  src={previewUrl}
-                  className="w-full rounded-b-xl"
-                  style={{ height: "75vh" }}
-                />
-              </div>
-            ) : (
-              <>
-                <img
-                  src={previewUrl}
-                  alt="Preview"
-                  className="max-w-full max-h-[80vh] rounded-xl object-contain mx-auto"
-                />
-                <button
-                  onClick={() => setPreviewUrl(null)}
-                  className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-card-border bg-card-background text-text-primary hover:bg-background-gray-primary"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </>
-            )}
+            <>
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-full max-h-[80vh] rounded-xl object-contain mx-auto"
+              />
+              <button
+                onClick={() => setPreviewUrl(null)}
+                className="absolute right-0 top-0 flex h-8 w-8 items-center justify-center rounded-full border border-card-border bg-card-background text-text-primary hover:bg-background-gray-primary"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </>
           </div>
         </div>
       )}
@@ -519,7 +462,6 @@ export default function MemorizationPage() {
             </div>
             <div className="divide-y divide-border-primary overflow-hidden rounded-xl border border-card-border bg-card-background">
               {catItems.map((item) => {
-                const isMedia = item.source === "media"
                 const palette = paletteFor(item.id)
                 const parts = chunkCounts[item.id] || 0
                 const students = item.assignment_count || 0
@@ -529,9 +471,7 @@ export default function MemorizationPage() {
                     <button
                       type="button"
                       onClick={() =>
-                        item.image_url || item.file_url
-                          ? setPreviewUrl(item.image_url || item.file_url || null)
-                          : !isMedia && setTextItem(item)
+                        item.image_url ? setPreviewUrl(item.image_url) : setTextItem(item)
                       }
                       className="flex h-12 w-[72px] flex-shrink-0 items-center justify-center overflow-hidden rounded-lg"
                       style={{ background: palette.bg, color: palette.ink }}
@@ -546,28 +486,19 @@ export default function MemorizationPage() {
 
                     {/* Title + counts */}
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-text-primary">
-                        {item.title}
-                        {isMedia && (
-                          <span className="ml-2 rounded-md bg-background-gray-secondary px-1.5 py-0.5 text-[11px] font-medium text-text-secondary">
-                            Media Library
-                          </span>
-                        )}
-                      </p>
+                      <p className="truncate text-sm font-medium text-text-primary">{item.title}</p>
                       <p className="mt-0.5 flex items-center gap-3 text-xs text-text-tertiary">
-                        {!isMedia && (
-                          <span className="flex items-center gap-1">
-                            <Layers className="h-3 w-3" />
-                            {parts ? `${parts} part${parts > 1 ? "s" : ""}` : "No parts"}
-                          </span>
-                        )}
+                        <span className="flex items-center gap-1">
+                          <Layers className="h-3 w-3" />
+                          {parts ? `${parts} part${parts > 1 ? "s" : ""}` : "No parts"}
+                        </span>
                         <span className="flex items-center gap-1">
                           <Users className="h-3 w-3" />
                           {students
                             ? `${students} student${students > 1 ? "s" : ""}`
                             : "Not assigned"}
                         </span>
-                        {!isMedia && !item.arabic_text && item.image_url && (
+                        {!item.arabic_text && item.image_url && (
                           <span className="hidden sm:inline">Old picture card</span>
                         )}
                       </p>
@@ -590,92 +521,80 @@ export default function MemorizationPage() {
                     </Select>
 
                     {/* Actions */}
-                    {isMedia ? (
+                    <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         variant="outline"
                         className="h-8 gap-1.5"
-                        onClick={() => setPreviewUrl(item.file_url || item.image_url || null)}
+                        onClick={() => setTextItem(item)}
                       >
-                        <Eye className="h-3.5 w-3.5" />
-                        View
+                        <PenLine className="h-3.5 w-3.5" />
+                        {item.arabic_text ? "Text" : "Add text"}
                       </Button>
-                    ) : (
-                      <div className="flex items-center gap-1">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 gap-1.5"
-                          onClick={() => setTextItem(item)}
-                        >
-                          <PenLine className="h-3.5 w-3.5" />
-                          {item.arabic_text ? "Text" : "Add text"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 w-8 p-0"
-                          onClick={() => setManageItem(item)}
-                          title="Parts"
-                          aria-label={`Parts of ${item.title}`}
-                        >
-                          <Layers className="h-4 w-4" />
-                        </Button>
-                        <Popover.Root
-                          open={itemToDelete?.id === item.id}
-                          onOpenChange={(open) => setItemToDelete(open ? item : null)}
-                        >
-                          <Popover.Trigger asChild>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-icon-tertiary hover:text-destructive"
-                              title="Delete"
-                              aria-label={`Delete ${item.title}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </Popover.Trigger>
-                          <Popover.Portal>
-                            <Popover.Content
-                              side="top"
-                              align="end"
-                              sideOffset={8}
-                              className="z-50 w-56 rounded-lg border border-card-border bg-card-background p-3 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
-                            >
-                              <p className="mb-1 text-xs font-medium text-text-primary">
-                                Delete &quot;{item.title}&quot;?
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 w-8 p-0"
+                        onClick={() => setManageItem(item)}
+                        title="Parts"
+                        aria-label={`Parts of ${item.title}`}
+                      >
+                        <Layers className="h-4 w-4" />
+                      </Button>
+                      <Popover.Root
+                        open={itemToDelete?.id === item.id}
+                        onOpenChange={(open) => setItemToDelete(open ? item : null)}
+                      >
+                        <Popover.Trigger asChild>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-icon-tertiary hover:text-destructive"
+                            title="Delete"
+                            aria-label={`Delete ${item.title}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </Popover.Trigger>
+                        <Popover.Portal>
+                          <Popover.Content
+                            side="top"
+                            align="end"
+                            sideOffset={8}
+                            className="z-50 w-56 rounded-lg border border-card-border bg-card-background p-3 shadow-3xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+                          >
+                            <p className="mb-1 text-xs font-medium text-text-primary">
+                              Delete &quot;{item.title}&quot;?
+                            </p>
+                            {students > 0 && (
+                              <p className="mb-2 text-[11px] text-text-tertiary">
+                                Assigned to {students} student{students !== 1 ? "s" : ""}
                               </p>
-                              {students > 0 && (
-                                <p className="mb-2 text-[11px] text-text-tertiary">
-                                  Assigned to {students} student{students !== 1 ? "s" : ""}
-                                </p>
-                              )}
-                              <div className="flex gap-2 mt-2">
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 flex-1 text-xs"
-                                  onClick={() => setItemToDelete(null)}
-                                  disabled={deleting}
-                                >
-                                  No
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  className="h-7 flex-1 text-xs bg-destructive hover:bg-destructive/90 text-white"
-                                  onClick={confirmDeleteItem}
-                                  disabled={deleting}
-                                >
-                                  {deleting ? "..." : "Yes"}
-                                </Button>
-                              </div>
-                              <Popover.Arrow className="fill-card-background" />
-                            </Popover.Content>
-                          </Popover.Portal>
-                        </Popover.Root>
-                      </div>
-                    )}
+                            )}
+                            <div className="flex gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 flex-1 text-xs"
+                                onClick={() => setItemToDelete(null)}
+                                disabled={deleting}
+                              >
+                                No
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="h-7 flex-1 text-xs bg-destructive hover:bg-destructive/90 text-white"
+                                onClick={confirmDeleteItem}
+                                disabled={deleting}
+                              >
+                                {deleting ? "..." : "Yes"}
+                              </Button>
+                            </div>
+                            <Popover.Arrow className="fill-card-background" />
+                          </Popover.Content>
+                        </Popover.Portal>
+                      </Popover.Root>
+                    </div>
                   </div>
                 )
               })}

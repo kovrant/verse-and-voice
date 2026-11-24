@@ -43,6 +43,7 @@ Quran Academy provides a structured memorization pipeline allowing students to m
 The teacher page ([`src/app/teacher/memorization/page.tsx`](../../src/app/teacher/memorization/page.tsx)) takes the Arabic as text, **one line per part**, stored in `arabic_text` on the catalog row (all lines) and each chunk (its line). [`src/lib/mem-card.ts`](../../src/lib/mem-card.ts) paints a pastel 1200×800 PNG per line (plus a cover with all lines) in the browser and uploads it as `image_url`, so every reader of `image_url` (student pages, live class, prep panel) is unchanged. The colour comes from the item id, so a cover and its parts match.
 
 * Saving text repaints existing parts **in place, in order**, so `student_memorization_chunks` progress survives. Extra lines insert parts; fewer lines delete the trailing parts (and their progress — the editor warns).
+* The catalog is the only home for duas and surahs. The media library (`/teacher/media`, "Quran & files") only offers Quran and Qaida uploads, and the Memorization page no longer merges `media_library` rows of type `memorization` (production had none).
 * Items without text keep their older uploaded pictures. Picture parts can still be uploaded from the Parts dialog.
 * To change the template, edit `PALETTES` / `paintMemCard` and re-save an item's text to repaint it.
 
