@@ -13,6 +13,10 @@ tags:
 
 # Knowledge Catalog Curation Log
 
+### [2026-11-24] - Teacher portal: five-section sidebar and Today page
+* **Scope:** `src/components/teacher-nav.ts` (new), `src/components/section-tabs.tsx` (new), `src/components/sidebar.tsx`, `src/components/app-shell.tsx`, `src/app/teacher/page.tsx` (Dashboard → Today), `src/components/class-today-attendance.tsx` (online dot, last position), `src/app/teacher/class/page.tsx` (`?start=1` auto-start), `src/components/gemini-quota-card.tsx` (deleted).
+* **Entries Updated:** `architecture/dual-portal-routing.md`, `domain/gemini-ai-quota-and-usage.md`, `domain/live-class-session.md`, `log.md`.
+
 ### [2026-10-20] - Shared website header and footer
 * **Scope:** `src/components/welcome/site-chrome.tsx` (new), `src/components/welcome/welcome-story.tsx`, `src/app/(site)/layout.tsx`.
 * **Entries Updated:** `architecture/seo-and-public-pages.md`, `architecture/public-welcome-page.md`, `log.md`.

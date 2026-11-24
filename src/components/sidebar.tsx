@@ -1,25 +1,6 @@
 "use client"
 
-import {
-  Bell,
-  BookAudio,
-  BookMarked,
-  BookOpen,
-  BookOpenCheck,
-  Cpu,
-  CreditCard,
-  LayoutDashboard,
-  Moon,
-  MoreHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
-  ScrollText,
-  Sparkles,
-  SpellCheck,
-  Upload,
-  Users,
-  X,
-} from "lucide-react"
+import { MoreHorizontal, PanelLeftClose, PanelLeftOpen, X } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { memo, useEffect, useState } from "react"
@@ -27,41 +8,12 @@ import { memo, useEffect, useState } from "react"
 import { Brand } from "@/components/brand"
 import { BrandLogo } from "@/components/brand-logo"
 import { useSidebarVisibility } from "@/components/sidebar-visibility"
+import { navItemFor, TEACHER_NAV } from "@/components/teacher-nav"
 import { cn } from "@/lib/utils"
 
 const COLLAPSED_KEY = "quran-academy-sidebar-collapsed"
 
-const navSections = [
-  {
-    label: "Main menu",
-    items: [
-      { href: "/teacher", label: "Dashboard", icon: LayoutDashboard },
-      { href: "/teacher/notifications", label: "Notifications", icon: Bell },
-    ],
-  },
-  {
-    label: "Academics",
-    items: [
-      { href: "/teacher/students", label: "Students", icon: Users },
-      { href: "/teacher/class", label: "Class Session", icon: BookOpen },
-      { href: "/teacher/hadiths", label: "Hadiths", icon: BookAudio },
-      { href: "/teacher/memorization", label: "Memorization", icon: BookMarked },
-      { href: "/teacher/quran", label: "Quran Map", icon: BookOpenCheck },
-      { href: "/teacher/qaida", label: "Qaida", icon: SpellCheck },
-      { href: "/teacher/namaz", label: "Namaz", icon: Moon },
-      { href: "/teacher/history", label: "Islamic History", icon: ScrollText },
-      { href: "/teacher/quizzes", label: "Quizzes", icon: Sparkles },
-    ],
-  },
-  {
-    label: "Management",
-    items: [
-      { href: "/teacher/fees", label: "Fee Management", icon: CreditCard },
-      { href: "/teacher/media", label: "Media Library", icon: Upload },
-      { href: "/teacher/ai-usage", label: "AI Usage", icon: Cpu },
-    ],
-  },
-]
+const navSections = [{ label: "Main menu", items: TEACHER_NAV }]
 
 /**
  * Teacher sidebar, after NextAdmin Pro's: 270px, folds to a 72px icon rail
@@ -83,6 +35,7 @@ export const Sidebar = memo(function Sidebar() {
   if (pathname === "/login" || pathname === "/teacher/login") return null
 
   const close = () => setMobileOpen(false)
+  const activeItem = navItemFor(pathname)
 
   function toggleCollapsed() {
     const next = !collapsed
@@ -195,10 +148,7 @@ export const Sidebar = memo(function Sidebar() {
 
               <div className="space-y-1">
                 {section.items.map((item) => {
-                  const isActive =
-                    item.href === "/teacher"
-                      ? pathname === "/teacher"
-                      : pathname.startsWith(item.href)
+                  const isActive = activeItem === item
                   return (
                     <Link
                       key={item.href}

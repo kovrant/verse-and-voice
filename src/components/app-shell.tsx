@@ -4,6 +4,7 @@ import { usePathname, useSelectedLayoutSegment } from "next/navigation"
 
 import { AchievementCelebrationProvider } from "@/components/achievement-celebration-provider"
 import { LiveClassProvider } from "@/components/live-class-provider"
+import { SectionTabs } from "@/components/section-tabs"
 import { Sidebar } from "@/components/sidebar"
 import { StudentBackdrop } from "@/components/student-backdrop"
 import { StudentTabBar } from "@/components/student-tab-bar"
@@ -76,6 +77,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               : "relative shrink-0 grow p-4 lg:p-8 print:p-0"
           }
         >
+          {!isStudentArea && <SectionTabs />}
           {children}
         </div>
       </main>

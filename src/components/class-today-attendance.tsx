@@ -25,6 +25,7 @@ import {
 } from "@/lib/attendance"
 import { compareByClassTime } from "@/lib/class-time"
 import { pktDateKey } from "@/lib/monthly-report"
+import { QAIDA_PARA } from "@/lib/qaida"
 import { supabase } from "@/lib/supabase"
 import { toast } from "@/lib/toast"
 import { cn } from "@/lib/utils"
@@ -77,9 +78,12 @@ function nextDate(date: string): string {
 export function ClassTodayAttendance({
   students,
   onStart,
+  onlineIds,
 }: {
   students: ClassStudent[]
   onStart: (studentId: string) => void
+  /** Students with the portal open, shown as a green dot on the photo. */
+  onlineIds?: Set<string>
 }) {
   const [today] = useState(() => pktDateKey(new Date()))
   const scheduled = students
@@ -90,6 +94,8 @@ export function ClassTodayAttendance({
 
   const [marks, setMarks] = useState<Marks>({})
   const [taught, setTaught] = useState<Set<string>>(new Set())
+  // Where each student's last class ended, e.g. "Para 23 · p. 14".
+  const [lastPlace, setLastPlace] = useState<Record<string, string>>({})
 
   useEffect(() => {
     if (!idsKey) return
@@ -106,12 +112,25 @@ export function ClassTodayAttendance({
         .in("student_id", studentIds)
         .gte("started_at", `${today}T00:00:00+05:00`)
         .lt("started_at", `${nextDate(today)}T00:00:00+05:00`),
-    ]).then(([marksRes, sessionsRes]) => {
+      supabase
+        .from("class_sessions")
+        .select("student_id, ending_para, ending_page")
+        .in("student_id", studentIds)
+        .order("started_at", { ascending: false })
+        .limit(studentIds.length * 10),
+    ]).then(([marksRes, sessionsRes, lastRes]) => {
       if (marksRes.error) console.error("Failed to load attendance:", marksRes.error)
       const loaded: Marks = {}
       for (const r of marksRes.data ?? []) loaded[r.student_id] = r.status as AttendanceStatus
       setMarks(loaded)
       setTaught(new Set((sessionsRes.data ?? []).map((r) => r.student_id as string)))
+      const places: Record<string, string> = {}
+      for (const r of lastRes.data ?? []) {
+        if (places[r.student_id] || r.ending_para == null) continue
+        const where = r.ending_para === QAIDA_PARA ? "Qaida" : `Para ${r.ending_para}`
+        places[r.student_id] = r.ending_page ? `${where} · p. ${r.ending_page}` : where
+      }
+      setLastPlace(places)
     })
   }, [idsKey, today])
 
@@ -268,21 +287,31 @@ export function ClassTodayAttendance({
               key={s.id}
               className="flex items-center gap-3 rounded-xl border border-card-border bg-card p-3"
             >
-              <div className="relative size-11 flex-shrink-0 overflow-hidden rounded-full border border-card-border">
-                <StudentAvatar
-                  id={s.id}
-                  name={s.name}
-                  gender={s.gender}
-                  sizes="44px"
-                  className="origin-[50%_30%] scale-[1.7] object-[50%_30%]"
-                  initialClassName="text-base"
-                />
+              <div className="relative flex-shrink-0">
+                <div className="relative size-11 overflow-hidden rounded-full border border-card-border">
+                  <StudentAvatar
+                    id={s.id}
+                    name={s.name}
+                    gender={s.gender}
+                    sizes="44px"
+                    className="origin-[50%_30%] scale-[1.7] object-[50%_30%]"
+                    initialClassName="text-base"
+                  />
+                </div>
+                {onlineIds?.has(s.id) && (
+                  <span
+                    className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-card bg-green-500"
+                    title="Online now"
+                  />
+                )}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-text-primary">{s.name}</p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                   <span className="text-xs tabular-nums text-text-tertiary">
-                    {s.class_time || "No time"}
+                    {/* Every class time is PKT, so the suffix is dropped to keep this on one line. */}
+                    {s.class_time?.replace(/\s*PKT$/i, "") || "No time"}
+                    {lastPlace[s.id] && ` · ${lastPlace[s.id]}`}
                   </span>
                   <Popover.Root>
                     <Popover.Trigger asChild>

@@ -4,7 +4,6 @@ import {
   Activity,
   AlertCircle,
   AlertTriangle,
-  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -115,18 +114,7 @@ export default function AiUsagePage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 animate-fade-in-up pb-12">
       {/* Top Breadcrumb & Action Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button
-          asChild
-          variant="ghost"
-          size="sm"
-          className="gap-1.5 text-text-secondary hover:text-text-primary"
-        >
-          <Link href="/teacher">
-            <ArrowLeft className="h-4 w-4" /> Back to Dashboard
-          </Link>
-        </Button>
-
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs font-medium">
             <Link href="/teacher/history">

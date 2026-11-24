@@ -165,6 +165,17 @@ function ClassPageContent() {
   // Start class — button morphs to Bismillah, then swaps to live screen
   const positionReady = !!selected && loadedFor === selected.id
 
+  // Today's Start button links here with ?start=1: begin as soon as the position loads.
+  const autoStarted = useRef(false)
+  useEffect(() => {
+    if (autoStarted.current || searchParams.get("start") !== "1") return
+    if (!positionReady || qaidaMissing || selected?.id !== searchParams.get("student")) return
+    autoStarted.current = true
+    handleStartClass()
+    // handleStartClass only reads state that these dependencies already cover.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [positionReady, qaidaMissing, selected, searchParams])
+
   function handleStartClass() {
     if (starting || !positionReady) return
     setStarting(true)
@@ -374,7 +385,11 @@ function ClassPageContent() {
         </>
       ) : (
         <>
-          <ClassTodayAttendance students={students} onStart={(id) => void handleSelect(id)} />
+          <ClassTodayAttendance
+            students={students}
+            onStart={(id) => void handleSelect(id)}
+            onlineIds={onlineStudents}
+          />
           <ClassStudentPicker
             students={students}
             onlineIds={onlineStudents}

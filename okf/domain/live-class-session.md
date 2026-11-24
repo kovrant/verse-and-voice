@@ -33,6 +33,12 @@ The class page picks the starting position with `classPosition()` (`src/componen
 * **Quran round:** the latest session's `ending_para` (if `1..30`), else the active round's `asc_completed || 1`. Prev/Next para buttons switch between paras `1..30`.
 * **Qaida round:** always para `0`, the student's assigned Qaida book (`students.qaida_media_id`), injected into the para list as `meta.para_number = 0`. Page/line come from the latest session with `ending_para = 0`. Para switching is hidden; only pages turn. With no book assigned, Start Class is disabled. Full details: [Qaida Curriculum](qaida-curriculum.md#-qaida-in-the-live-class).
 
+## 🚪 Starting a Class
+
+* **Today (`/teacher`)** lists today's scheduled students (`class_days` incl. today in PKT, sorted by `compareByClassTime`) via `ClassTodayAttendance`, with attendance, an online dot and the last class's end position. **Start** opens `/teacher/class?student=<id>&start=1`.
+* **`?start=1`** auto-starts once the selected student's position has loaded (`positionReady`) and a Qaida book isn't missing — the same guard as the Start button, so it can never open at Para 1 by mistake. Without it, `?student=` only preselects.
+* **Extra class** (`/teacher/class` without params) keeps the picker for anyone not scheduled today.
+
 ## 🎯 Pointer & 16-Line Mushaf Calibration
 
 All 30 para PDFs the teacher uses are the same **16-line layout** (`DEFAULT_MUSHAF_LINES = 16`). There is no per-book setting.

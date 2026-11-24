@@ -6,7 +6,6 @@ status: stable
 verified: true
 sources:
   - "src/app/api/ai/usage/route.ts"
-  - "src/components/gemini-quota-card.tsx"
   - "src/app/ai-usage/page.tsx"
   - "src/app/page.tsx"
 tags:
@@ -37,14 +36,10 @@ Quran Academy leverages Google Gemini models (defaulting to `gemini-2.0-flash` /
 
 ---
 
-## 🖥️ Teacher Dashboard vs. Dedicated `/ai-usage` Page
+## 🖥️ Where Quota Is Shown
 
-### 1. Teacher Dashboard (`src/app/page.tsx` & `GeminiQuotaCard` variant `"dashboard"`)
-* **Minimalist Visual Footprint:** Takes up half of the desktop row (`lg:col-span-1`), paired with an elevated **Quick Actions Hub**.
-* **Circular Progress Meter:** Compact SVG progress ring (70x70px) calculating percentage of remaining daily quota rather than a wide horizontal line.
-* **Calm Aesthetic:** Removes noisy everyday token counters (`TOKENS TODAY`, `MONTH TOKENS`, `RATE LIMIT`) from the teacher's primary view so the dashboard remains clean.
-* **Smart Alerting:** Only surfaces alert banners when usage is high (>80% used) or quota is critically low (<=50 requests remaining or exhausted).
-* **Direct Navigation:** Includes a quick "Token Details →" link directing the teacher to the full audit page.
+### 1. Teacher home (`/teacher`, "Today")
+* Shows no AI quota. The dashboard card (`GeminiQuotaCard`) was removed with the Today redesign; quota lives only on the AI usage page (Settings → AI usage).
 
 ### 2. Dedicated Analytics Route (`/ai-usage`)
 * **Complete Token Analytics:** Full breakdown of today's tokens, monthly cumulative tokens, daily remaining requests, and rate limits.
