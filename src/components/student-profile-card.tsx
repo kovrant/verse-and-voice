@@ -1,7 +1,7 @@
 "use client"
 
 import { differenceInDays } from "date-fns"
-import { Check, Clock, CreditCard } from "lucide-react"
+import { Check, Clock, CreditCard, Pencil } from "lucide-react"
 import { useEffect, useState } from "react"
 
 import { ClassDaysPicker } from "@/components/class-days-picker"
@@ -24,6 +24,7 @@ import { toast } from "@/lib/toast"
 import {
   COUNTRIES,
   COUNTRY_FLAGS,
+  CURRENCY_SYMBOLS,
   type FeePayment,
   parseLocalDate,
   safeFormatDate,
@@ -46,8 +47,8 @@ function formFromStudent(s: Student) {
 
 /**
  * Teacher's "Profile details" card (NextAdmin's Account Details): avatar +
- * summary, current-month fee pill, and an always-editable form saved with
- * Save changes (enabled once something differs from the saved student).
+ * summary, current-month fee pill, and the details read-only until Edit is
+ * pressed; the form then saves with Save changes or goes back with Cancel.
  */
 export function StudentProfileCard({
   student,
@@ -64,6 +65,7 @@ export function StudentProfileCard({
 }) {
   const [editForm, setEditForm] = useState(() => formFromStudent(student))
   const [saving, setSaving] = useState(false)
+  const [editing, setEditing] = useState(false)
   const dirty = JSON.stringify(editForm) !== JSON.stringify(formFromStudent(student))
 
   // Reload after a save (or elsewhere) hands us a fresh student: show its values.
@@ -99,6 +101,7 @@ export function StudentProfileCard({
     }
 
     toast.success("Profile updated")
+    setEditing(false)
     onSaved()
   }
 
@@ -114,7 +117,15 @@ export function StudentProfileCard({
 
   return (
     <Card className="p-5">
-      <h2 className="mb-6 text-xl font-semibold leading-7 text-text-primary">Profile details</h2>
+      <div className="mb-6 flex min-h-8 items-center justify-between gap-3">
+        <h2 className="text-xl font-semibold leading-7 text-text-primary">Profile details</h2>
+        {!editing && (
+          <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+            Edit
+          </Button>
+        )}
+      </div>
 
       {/* Avatar + summary + this month's fee */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -184,131 +195,181 @@ export function StudentProfileCard({
           ))}
       </div>
 
-      <form
-        className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void saveEdit()
-        }}
-      >
-        <div className="space-y-2.5">
-          <Label>Boy or girl</Label>
-          <GenderPicker
-            value={editForm.gender}
-            onChange={(gender) => setEditForm({ ...editForm, gender })}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label>Country</Label>
-          <Select
-            value={editForm.country}
-            onValueChange={(val) => setEditForm({ ...editForm, country: val })}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select country" />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c} value={c}>
-                  <span className="mr-2">{COUNTRY_FLAGS[c]}</span>
-                  {c}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+      {!editing && (
+        <dl className="mt-6 grid grid-cols-1 overflow-hidden rounded-lg border border-card-border sm:grid-cols-2">
+          {[
+            [
+              "Boy or girl",
+              student.gender === "girl" ? "Girl" : student.gender === "boy" ? "Boy" : null,
+            ],
+            [
+              "Country",
+              student.country
+                ? `${COUNTRY_FLAGS[student.country] ?? ""} ${student.country}`.trim()
+                : null,
+            ],
+            ["Class time", student.class_time || null],
+            ["Class days", scheduleDaysLabel],
+            [
+              "Monthly fee",
+              `${CURRENCY_SYMBOLS[student.fee_currency || "GBP"] ?? ""}${student.fee ?? 0} ${student.fee_currency || "GBP"}`,
+            ],
+            [
+              "Status",
+              student.status && student.status !== "Reading" && student.ended_at
+                ? `${student.status} · ${safeFormatDate(student.ended_at, "d MMM yyyy")}`
+                : student.status || "Reading",
+            ],
+          ].map(([label, value]) => (
+            <div
+              key={label}
+              className="border-b border-border-primary px-4 py-3 last:border-b-0 sm:[&:nth-last-child(2)]:border-b-0 sm:odd:border-r"
+            >
+              <dt className="text-xs text-text-tertiary">{label}</dt>
+              <dd
+                className={
+                  value
+                    ? "mt-0.5 text-sm font-medium text-text-primary"
+                    : "mt-0.5 text-sm text-text-tertiary"
+                }
+              >
+                {value || "Not set"}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
-        <div className="space-y-2.5">
-          <Label htmlFor="edit_class_time">Class time (PKT)</Label>
-          <Input
-            id="edit_class_time"
-            type="time"
-            value={toInputTime(editForm.class_time)}
-            onChange={(e) =>
-              setEditForm({
-                ...editForm,
-                class_time: e.target.value ? toPktClassTime(e.target.value) : "",
-              })
-            }
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label>Class days</Label>
-          <ClassDaysPicker
-            value={editForm.class_days}
-            onChange={(class_days) => setEditForm({ ...editForm, class_days })}
-          />
-          <p className="text-xs text-text-tertiary">Drives the student&apos;s daily streak.</p>
-        </div>
-
-        <div className="space-y-2.5">
-          <Label>Monthly fee</Label>
-          <Input
-            type="number"
-            value={editForm.fee}
-            onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2.5">
-          <Label>Currency</Label>
-          <Select
-            value={editForm.fee_currency}
-            onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="GBP">GBP (£)</SelectItem>
-              <SelectItem value="USD">USD ($)</SelectItem>
-              <SelectItem value="PKR">PKR (Rs)</SelectItem>
-              <SelectItem value="SAR">SAR (﷼)</SelectItem>
-              <SelectItem value="BHD">BHD (BD)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2.5">
-          <Label>Status</Label>
-          <Select
-            value={editForm.status}
-            onValueChange={(val) => setEditForm({ ...editForm, status: val as StudentStatus })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Reading">Reading</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-              <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        {editForm.status !== "Reading" && (
+      {editing && (
+        <form
+          className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void saveEdit()
+          }}
+        >
           <div className="space-y-2.5">
-            <Label>End date</Label>
-            <Input
-              type="date"
-              value={editForm.ended_at}
-              onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
+            <Label>Boy or girl</Label>
+            <GenderPicker
+              value={editForm.gender}
+              onChange={(gender) => setEditForm({ ...editForm, gender })}
             />
           </div>
-        )}
+          <div className="space-y-2.5">
+            <Label>Country</Label>
+            <Select
+              value={editForm.country}
+              onValueChange={(val) => setEditForm({ ...editForm, country: val })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select country" />
+              </SelectTrigger>
+              <SelectContent>
+                {COUNTRIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    <span className="mr-2">{COUNTRY_FLAGS[c]}</span>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex items-center justify-end gap-3 md:col-span-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={!dirty || saving}
-            onClick={() => setEditForm(formFromStudent(student))}
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={!dirty || saving}>
-            {saving ? "Saving…" : "Save changes"}
-          </Button>
-        </div>
-      </form>
+          <div className="space-y-2.5">
+            <Label htmlFor="edit_class_time">Class time (PKT)</Label>
+            <Input
+              id="edit_class_time"
+              type="time"
+              value={toInputTime(editForm.class_time)}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  class_time: e.target.value ? toPktClassTime(e.target.value) : "",
+                })
+              }
+            />
+          </div>
+          <div className="space-y-2.5">
+            <Label>Class days</Label>
+            <ClassDaysPicker
+              value={editForm.class_days}
+              onChange={(class_days) => setEditForm({ ...editForm, class_days })}
+            />
+            <p className="text-xs text-text-tertiary">Drives the student&apos;s daily streak.</p>
+          </div>
+
+          <div className="space-y-2.5">
+            <Label>Monthly fee</Label>
+            <Input
+              type="number"
+              value={editForm.fee}
+              onChange={(e) => setEditForm({ ...editForm, fee: e.target.value })}
+            />
+          </div>
+          <div className="space-y-2.5">
+            <Label>Currency</Label>
+            <Select
+              value={editForm.fee_currency}
+              onValueChange={(val) => setEditForm({ ...editForm, fee_currency: val })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="GBP">GBP (£)</SelectItem>
+                <SelectItem value="USD">USD ($)</SelectItem>
+                <SelectItem value="PKR">PKR (Rs)</SelectItem>
+                <SelectItem value="SAR">SAR (﷼)</SelectItem>
+                <SelectItem value="BHD">BHD (BD)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2.5">
+            <Label>Status</Label>
+            <Select
+              value={editForm.status}
+              onValueChange={(val) => setEditForm({ ...editForm, status: val as StudentStatus })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Reading">Reading</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Left Uncompleted">Left Uncompleted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {editForm.status !== "Reading" && (
+            <div className="space-y-2.5">
+              <Label>End date</Label>
+              <Input
+                type="date"
+                value={editForm.ended_at}
+                onChange={(e) => setEditForm({ ...editForm, ended_at: e.target.value })}
+              />
+            </div>
+          )}
+
+          <div className="flex items-center justify-end gap-3 md:col-span-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={saving}
+              onClick={() => {
+                setEditForm(formFromStudent(student))
+                setEditing(false)
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!dirty || saving}>
+              {saving ? "Saving…" : "Save changes"}
+            </Button>
+          </div>
+        </form>
+      )}
     </Card>
   )
 }
