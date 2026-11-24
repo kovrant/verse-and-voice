@@ -1,12 +1,12 @@
 "use client"
 
 import {
+  ArrowLeft,
   ArrowRight,
   BookMarked,
   BookOpen,
   Check,
   ChevronDown,
-  Minus,
   Pencil,
   Plus,
   RotateCcw,
@@ -83,7 +83,8 @@ export function StudentOverview({
   onMarkMemRevised,
   onAchievementEarned,
 }: StudentOverviewProps) {
-  const [manageRoundOpen, setManageRoundOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false)
+  const [confirmFinish, setConfirmFinish] = useState(false)
   const [assignMemOpen, setAssignMemOpen] = useState(false)
   const [bucketOpen, setBucketOpen] = useState(false)
 
@@ -102,36 +103,13 @@ export function StudentOverview({
   const ascVal = activeRound?.asc_completed || 0
   const descVal = activeRound?.desc_completed || 0
   const roundNum = activeRound ? getChronologicalRoundNumber(rounds, activeRound) : 1
+  const finishedRounds = rounds.filter((r) => r.type === "quran" && r.completed_at).length
+  // One para left (or all done): the forward button becomes "Finish round".
+  const onLastPara = !!paraInfo && ascVal > 0 && paraInfo.total >= 29
   const pct = paraInfo ? Math.min(100, Math.round((paraInfo.total / 30) * 100)) : 0
 
   const lastClass = sessions.find((s) => (s.duration_seconds || 0) >= 60) ?? null
   const lastClassPara = lastClass ? paraSummary(lastClass) : null
-
-  const stepper = activeRound?.type === "quran" && (
-    <div className="inline-flex items-center rounded-lg border border-card-border bg-card-background p-0.5 shadow-xs">
-      <button
-        type="button"
-        disabled={ascVal <= 0}
-        onClick={() => onStepRoundProgress(-1, 0)}
-        title="Previous para"
-        aria-label="Previous para"
-        className="flex h-9 w-10 items-center justify-center rounded-md text-text-primary transition-colors hover:bg-background-gray-primary disabled:opacity-35"
-      >
-        <Minus className="h-4 w-4" />
-      </button>
-      <span className="h-5 w-px bg-border-primary" />
-      <button
-        type="button"
-        disabled={ascVal >= 30}
-        onClick={() => onStepRoundProgress(1, 0)}
-        title="Next para"
-        aria-label="Next para"
-        className="flex h-9 w-10 items-center justify-center rounded-md text-text-primary transition-colors hover:bg-background-gray-primary disabled:opacity-35"
-      >
-        <Plus className="h-4 w-4" />
-      </button>
-    </div>
-  )
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -143,112 +121,166 @@ export function StudentOverview({
           title="Reading"
           summary={
             !activeRound
-              ? "No active round"
+              ? finishedRounds > 0
+                ? `${finishedRounds} round${finishedRounds === 1 ? "" : "s"} of the Quran finished`
+                : "No round yet"
               : activeRound.type === "qaida"
                 ? "Norani Qaida, before the Quran"
-                : `Round ${roundNum}${rounds.length > 1 ? ` of ${rounds.length}` : ""}`
+                : `Round ${roundNum} of the Quran`
           }
           actions={
             activeRound ? (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                onClick={() => setManageRoundOpen((o) => !o)}
-                aria-expanded={manageRoundOpen}
+                onClick={() => setMoreOpen((o) => !o)}
+                aria-expanded={moreOpen}
+                className="text-text-secondary"
               >
-                Manage
+                More
                 <ChevronDown
-                  className={cn(
-                    "ml-1.5 h-3.5 w-3.5 transition-transform",
-                    manageRoundOpen && "rotate-180",
-                  )}
+                  className={cn("ml-1 h-3.5 w-3.5 transition-transform", moreOpen && "rotate-180")}
                 />
               </Button>
-            ) : (
-              <Button variant="outline" size="sm" onClick={onOpenNewRound}>
-                <Plus className="mr-1 h-3.5 w-3.5" />
-                Start round
-              </Button>
-            )
+            ) : null
           }
         />
 
-        {activeRound?.type === "quran" && paraInfo && (
-          <div className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div className="min-w-0 flex-1">
-              <p className="text-3xl font-semibold leading-9 text-text-primary">
-                {ascVal > 0 ? `Para ${ascVal}` : "Just started"}
-              </p>
-              <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-background-gray-tertiary">
-                <div
-                  className="h-full rounded-full bg-primary transition-all duration-300"
-                  style={{ width: `${Math.max(pct, paraInfo.total > 0 ? 4 : 0)}%` }}
-                />
-              </div>
-              <p className="mt-2 text-sm tabular-nums text-text-tertiary">
-                {paraInfo.total} of 30 paras
-                {descVal > 0 ? ` · ${descVal} from the end` : ""}
-              </p>
-            </div>
-            <div className="flex flex-col items-start gap-1 sm:items-end">
-              <span className="text-xs text-text-tertiary">Move para</span>
-              {stepper}
-            </div>
-          </div>
-        )}
-
-        {(activeRound?.type === "qaida" || !activeRound) && (
-          <div className="mt-5">
-            <StudentQaidaAssign
-              studentId={student.id}
-              qaidaMediaId={student.qaida_media_id}
-              embedded
-            />
-          </div>
-        )}
-
-        {activeRound && manageRoundOpen && (
-          <div className="mt-5 space-y-3 rounded-lg bg-background-gray-primary p-4 animate-fade-in-up">
-            <div className="flex flex-wrap items-center gap-2">
-              {activeRound.type === "quran" && (
-                <Button variant="outline" size="sm" onClick={onUpdateProgress}>
-                  <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                  Set exact para
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-green-600 hover:border-green-500/40 hover:bg-green-500/10 hover:text-green-600"
-                onClick={onCompleteRound}
-              >
-                <Check className="mr-1.5 h-3.5 w-3.5" />
-                Complete round
+        {activeRound && moreOpen && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg bg-background-gray-primary p-3 animate-fade-in-up">
+            {activeRound.type === "quran" && (
+              <Button variant="outline" size="sm" onClick={onUpdateProgress}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Set para by number
               </Button>
+            )}
+            {activeRound.type === "qaida" && (
+              <Button variant="outline" size="sm" onClick={onOpenNewRound}>
+                <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+                Move to the Quran
+              </Button>
+            )}
+            {activeRound.type === "quran" && (
               <Button variant="outline" size="sm" onClick={onOpenNewRound}>
                 <Plus className="mr-1.5 h-3.5 w-3.5" />
-                New round
+                Start a new round
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="ml-auto"
-                onClick={() => onNavigate("sessions", "timeline")}
-              >
-                Round timeline <ArrowRight className="ml-1 h-3.5 w-3.5" />
-              </Button>
-            </div>
-            {activeRound.type !== "qaida" && (
-              <div className="border-t border-border-secondary-alt pt-3">
-                <StudentQaidaAssign
-                  studentId={student.id}
-                  qaidaMediaId={student.qaida_media_id}
-                  embedded
-                />
-              </div>
             )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto"
+              onClick={() => onNavigate("sessions", "timeline")}
+            >
+              Round history <ArrowRight className="ml-1 h-3.5 w-3.5" />
+            </Button>
           </div>
         )}
+
+        {activeRound?.type === "quran" && paraInfo && (
+          <div className="mt-5">
+            <p className="text-xs font-medium uppercase tracking-wide text-text-tertiary">
+              Now reading
+            </p>
+            <p className="mt-0.5 text-3xl font-semibold leading-9 text-text-primary">
+              {ascVal > 0 ? `Para ${ascVal}` : "Not started"}
+            </p>
+            <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background-gray-tertiary">
+              <div
+                className="h-full rounded-full bg-primary transition-all duration-300"
+                style={{ width: `${Math.max(pct, paraInfo.total > 0 ? 4 : 0)}%` }}
+              />
+            </div>
+            <p className="mt-2 text-sm tabular-nums text-text-tertiary">
+              {paraInfo.total} of 30 paras done
+              {descVal > 0 ? ` · ${descVal} read from the end` : ""}
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {confirmFinish ? (
+                <>
+                  <span className="mr-1 text-sm text-text-secondary">
+                    Finish round {roundNum}? All 30 paras will count as done.
+                  </span>
+                  <Button
+                    size="sm"
+                    className="bg-green-600 text-white hover:bg-green-700"
+                    onClick={() => {
+                      setConfirmFinish(false)
+                      setMoreOpen(false)
+                      onCompleteRound()
+                    }}
+                  >
+                    <Check className="mr-1.5 h-3.5 w-3.5" />
+                    Yes, finish
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmFinish(false)}>
+                    Cancel
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={ascVal <= 0}
+                    onClick={() => onStepRoundProgress(-1, 0)}
+                    title="Go back one para (to fix a mistake)"
+                  >
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+                    Back
+                  </Button>
+                  {onLastPara ? (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 text-white hover:bg-green-700"
+                      onClick={() => setConfirmFinish(true)}
+                    >
+                      <Check className="mr-1.5 h-3.5 w-3.5" />
+                      Finish this round
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => onStepRoundProgress(1, 0)}>
+                      {ascVal > 0 ? `Para ${ascVal} done` : "Start Para 1"}
+                      <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!activeRound && finishedRounds > 0 && (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-green-500/10 p-4">
+            <p className="text-sm text-text-primary">
+              Round {finishedRounds} is finished. Ready for the next one?
+            </p>
+            <Button size="sm" onClick={onOpenNewRound}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Start round {finishedRounds + 1}
+            </Button>
+          </div>
+        )}
+
+        {!activeRound && finishedRounds === 0 && (
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-background-gray-primary p-4">
+            <p className="text-sm text-text-tertiary">Not reading the Quran or Qaida yet.</p>
+            <Button size="sm" onClick={onOpenNewRound}>
+              <Plus className="mr-1.5 h-3.5 w-3.5" />
+              Start reading
+            </Button>
+          </div>
+        )}
+
+        {/* The Qaida book shown in their portal, kept out of the round controls. */}
+        <div className="mt-5 border-t border-border-primary pt-4">
+          <StudentQaidaAssign
+            studentId={student.id}
+            qaidaMediaId={student.qaida_media_id}
+            embedded
+          />
+        </div>
 
         <button
           type="button"

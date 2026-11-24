@@ -54,6 +54,9 @@ export function computeProgress(desc: number, asc: number) {
 > When a round is finished, `desc_completed` must be set to `30` and `asc_completed` set to `0`.  
 > Setting `desc = 30` and `asc = 30` causes the formula to evaluate to `30 + 29 = 59` completed paras.
 
+### Teacher Reading card (student page → Learning)
+The card shows "Now reading Para N" plus "X of 30 paras done", with two buttons: **Back** (asc − 1) and **Para N done** (asc + 1). When one para is left (`total >= 29`), the forward button becomes **Finish this round**; after an inline confirm it calls `completeActiveRound`, which always saves a Quran round as `desc = 30, asc = 0`. Setting a para by number, starting a round by hand and round history sit under **More**; the Qaida book picker is its own row.
+
 ---
 
 ## 🎯 Active Round Resolution (`getActiveRound`)

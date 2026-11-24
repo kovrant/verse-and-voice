@@ -414,20 +414,25 @@ export default function StudentDetailPage() {
     if (!active) return
     const before = roundProgress(active)
     const completedAt = formatLocalDate()
-    const total = before.desc + (before.asc > 0 ? before.asc - 1 : 0)
-    const desc = total >= 30 ? 30 : before.desc
-    const asc = total >= 30 ? 0 : before.asc
-    await supabase
+    // Finishing a round means all 30 paras are done (desc=30, asc=0, see startNewRound),
+    // even when the last para was still open when the teacher pressed Finish.
+    const desc = active.type === "quran" ? 30 : before.desc
+    const asc = active.type === "quran" ? 0 : before.asc
+    const { error } = await supabase
       .from("quran_rounds")
       .update({ completed_at: completedAt, desc_completed: desc, asc_completed: asc })
       .eq("id", active.id)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
     void syncQuranRoundAchievements(params.id as string, active, before, {
       desc,
       asc,
       completed_at: completedAt,
     })
     await loadRounds()
-    toast.success("Round marked as completed")
+    toast.success("Round finished. Well done!")
   }
 
   async function saveRoundProgress() {
