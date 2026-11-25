@@ -23,6 +23,10 @@ const FAQS: { q: string; a: string }[] = [
     a: "Live one-to-one online Quran classes for children and teenagers: Noorani Qaida for beginners, Quran reading with tajweed, Quran memorisation (hifz), how to pray (namaz), and stories of the Prophets with short quizzes.",
   },
   {
+    q: "Who teaches the classes?",
+    a: "Every class is taught by Hafiz Yasir Amjad, who has taught the Quran since 2016. Nearly 25 students have finished the whole Quran in these classes, each at least twice. Your child keeps the same teacher from the first letter to the last para.",
+  },
+  {
     q: "What ages are the classes for?",
     a: "Children from about 4 years old up to teenagers. Little Readers (4 to 8) start with the Arabic letters, Young Reciters (9 to 13) read and memorise surahs, and Teens (14+) work at their own pace on reading, tajweed and hifz.",
   },

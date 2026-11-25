@@ -24,6 +24,7 @@ import {
   SiteHeader,
   SunrisePill,
 } from "@/components/welcome/site-chrome"
+import { TeacherArt } from "@/components/welcome/teacher-art"
 import {
   type AgeBand,
   AGES,
@@ -1323,7 +1324,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             >
               {[
                 ["🎙", "Voice-only, no cameras"],
-                ["🎓", "A qualified teacher"],
+                ["🎓", "Taught by a Hafiz"],
                 ["🕰", "Your timezone"],
                 ["📈", "Progress parents can see"],
               ].map(([e, t]) => (
@@ -1661,6 +1662,84 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
           </div>
           <div data-reveal="" data-delay="150">
             <PageTurnDemo />
+          </div>
+        </section>
+
+        {/* ── Meet your teacher (between chapters; no data-chapter so the dots stay 1–10) ── */}
+        <section
+          id="teacher"
+          aria-labelledby="h-teacher"
+          style={section({
+            background: "#FFFFFF",
+            border: "1.5px solid #D9C9B2",
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,300px),1fr))",
+            gap: "clamp(28px,5vw,56px)",
+            alignItems: "center",
+          })}
+        >
+          <div
+            data-reveal=""
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}
+          >
+            <div
+              aria-hidden="true"
+              style={{
+                width: "clamp(190px,26vw,240px)",
+                aspectRatio: "1",
+                borderRadius: "50%",
+                overflow: "hidden",
+                border: "6px solid #F8F6EE",
+                boxShadow: SHADOW,
+              }}
+            >
+              <TeacherArt />
+            </div>
+            <span
+              style={{
+                padding: "7px 14px",
+                borderRadius: 999,
+                background: mix("#6B7F5B", 16),
+                color: "#3F4F35",
+                ...f(700, "14px", "1", BODY),
+              }}
+            >
+              Hafiz of the Quran
+            </span>
+          </div>
+          <div data-reveal="" data-delay="150" style={col()}>
+            <span style={eyebrow("#6B7F5B")}>Your teacher</span>
+            <h2 id="h-teacher" style={h2()}>
+              Meet Hafiz Yasir Amjad
+            </h2>
+            <p style={para()}>
+              Assalamu alaikum. I have been teaching the Quran since 2016, and I teach every class
+              at Verse &amp; Voice myself, so your child learns with the same teacher from the first
+              letter to the last para.
+            </p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
+              {[
+                ["🕰", "Teaching since 2016"],
+                ["📖", "Nearly 25 students have finished the Quran with me, each at least twice"],
+              ].map(([icon, label]) => (
+                <span
+                  key={label}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 16px",
+                    background: "#F8F6EE",
+                    border: "1.5px solid #D9C9B2",
+                    borderRadius: 18,
+                    ...f(600, "15px", "1.35", BODY),
+                  }}
+                >
+                  <span aria-hidden="true">{icon}</span>
+                  {label}
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
