@@ -1704,7 +1704,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 ...f(700, "14px", "1", BODY),
               }}
             >
-              Hafiz of the Quran
+              Teacher of the Quran
             </span>
           </div>
           <div data-reveal="" data-delay="150" style={col()}>
