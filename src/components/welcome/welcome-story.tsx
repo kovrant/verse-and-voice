@@ -37,7 +37,7 @@ import {
   JUZ_NAMES,
   MUSHAF_PAGES,
   NAV,
-  QUOTES,
+  PARENT_POINTS,
   SCENES,
   SKY,
   STARS,
@@ -1323,7 +1323,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             >
               {[
                 ["🎙", "Voice-only, no cameras"],
-                ["🎓", "Qualified teachers"],
+                ["🎓", "A qualified teacher"],
                 ["🕰", "Your timezone"],
                 ["📈", "Progress parents can see"],
               ].map(([e, t]) => (
@@ -2354,7 +2354,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                   </span>
                   <span style={f(700, "20px", "1.15", HEAD)}>Norani Qaida, completed</span>
                   <span style={f(400, "14px", "1.3", BODY)}>
-                    Awarded to Yusuf · Verse &amp; Voice
+                    Awarded to your child · Verse &amp; Voice
                   </span>
                 </div>
                 <Star size={46} inner />
@@ -2676,9 +2676,9 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               </p>
             </div>
             <div style={col(12)}>
-              {QUOTES.map((q, i) => (
-                <figure
-                  key={q.who}
+              {PARENT_POINTS.map((q, i) => (
+                <div
+                  key={q.text}
                   data-reveal=""
                   data-delay={100 * (i + 1)}
                   style={{
@@ -2688,17 +2688,15 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                     background: "#FFFFFF",
                     border: "1.5px solid #D9C9B2",
                     display: "flex",
-                    flexDirection: "column",
-                    gap: 8,
+                    alignItems: "flex-start",
+                    gap: 12,
                   }}
                 >
-                  <blockquote style={{ margin: 0, ...f(600, "17px", "1.5", BODY) }}>
-                    “{q.q}”
-                  </blockquote>
-                  <figcaption style={{ ...f(700, "15px", "1", HEAD), color: "#6A5638" }}>
-                    {q.who}
-                  </figcaption>
-                </figure>
+                  <span aria-hidden="true" style={{ fontSize: 22, lineHeight: "1.4" }}>
+                    {q.icon}
+                  </span>
+                  <p style={{ margin: 0, ...f(600, "17px", "1.5", BODY) }}>{q.text}</p>
+                </div>
               ))}
             </div>
           </div>
@@ -2725,7 +2723,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               <div
                 style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
               >
-                <span style={f(700, "18px", "1", HEAD)}>Yusuf&apos;s month</span>
+                <span style={f(700, "18px", "1", HEAD)}>Sample month</span>
                 <span style={{ ...f(600, "12px", "1", BODY), color: "#6B7F5B" }}>September</span>
               </div>
               <div style={{ borderRadius: 18, background: "#F8F6EE", padding: 12 }}>

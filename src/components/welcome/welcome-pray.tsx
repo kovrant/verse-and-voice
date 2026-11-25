@@ -59,7 +59,7 @@ const MOVES: { title: string; text: string; icon: ReactNode; tint: string }[] = 
   },
   {
     title: "Repeat",
-    text: "Your teacher says it in her own voice, your child says it back, until it sits right.",
+    text: "Your teacher says it aloud, your child says it back, until it sits right.",
     icon: VoiceIcon,
     tint: ROSE,
   },

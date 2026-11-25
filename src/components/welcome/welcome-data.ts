@@ -225,18 +225,15 @@ export const IKHLAS = [
 
 export const HADITH_AR = "تَبَسُّمُكَ فِي وَجْهِ أَخِيكَ لَكَ صَدَقَةٌ"
 
-/* ponytail: the design's placeholder quotes; swap for real parent words before launch. */
-export const QUOTES = [
+/* What parents see, in place of testimonials until real parent quotes are collected. */
+export const PARENT_POINTS = [
   {
-    q: "My daughter reminds me when it's class time now, and I love that there is no camera.",
-    who: "Sana, Manchester 🇬🇧",
+    icon: "📅",
+    text: "Every class is logged: the date, how long it ran and the para your child read.",
   },
   {
-    q: "The monthly report tells me exactly where my son is, para by para.",
-    who: "Omar, Toronto 🇨🇦",
+    icon: "📄",
+    text: "A one-page report each month with attendance, the current para and quiz scores.",
   },
-  {
-    q: "Lessons show in our own time, so we haven't missed one since we started.",
-    who: "Mariam, Sydney 🇦🇺",
-  },
+  { icon: "💬", text: "Questions go straight to the teacher on WhatsApp, not a call centre." },
 ]
