@@ -1159,7 +1159,44 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
         >
           {ch === 0 ? BUBBLES[0] : BUBBLES[ch]}
         </div>
-        <div style={{ width: "100%", height: "100%", animation: "vvBob 4s ease-in-out infinite" }}>
+        {/* Tapping Hilal opens WhatsApp with the trial greeting typed (wa.me link, no widget). */}
+        <a
+          href={CONTACT.whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Book a free trial on WhatsApp"
+          title="Book a free trial on WhatsApp"
+          style={{
+            display: "block",
+            position: "relative",
+            width: "100%",
+            height: "100%",
+            pointerEvents: "auto",
+            cursor: "pointer",
+            animation: "vvBob 4s ease-in-out infinite",
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              right: "-2%",
+              bottom: "-2%",
+              width: "52%",
+              height: "52%",
+              borderRadius: "50%",
+              background: "#25D366",
+              border: "2.5px solid #FFFFFF",
+              boxShadow: SHADOW,
+              display: "grid",
+              placeItems: "center",
+              zIndex: 1,
+            }}
+          >
+            <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#FFFFFF">
+              {CONTACTS[0].icon}
+            </svg>
+          </span>
           <div
             data-hilal=""
             style={{ width: "100%", height: "100%", transition: "transform .3s ease-out" }}
@@ -1230,7 +1267,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               </g>
             </svg>
           </div>
-        </div>
+        </a>
       </div>
 
       <main
