@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server"
 
 import { isLoginDisabled } from "@/lib/student-auth"
 
-const PUBLIC_PATHS = ["/login", "/teacher/login", "/auth", "/welcome", "/faq", "/privacy", "/terms"]
+const PUBLIC_PATHS = ["/login", "/teacher/login", "/auth", "/welcome", "/faq", "/privacy", "/terms", "/noorani-qaida", "/tajweed-for-kids"]
 const TEACHER_HOME = "/teacher"
 /** Pre-/teacher addresses of the dashboard pages, still in bookmarks and old notifications. */
 const LEGACY_TEACHER_PATH =

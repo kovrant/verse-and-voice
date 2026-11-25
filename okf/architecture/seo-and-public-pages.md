@@ -30,7 +30,7 @@ tags:
 
 # SEO, GEO and the Public Text Pages
 
-The public website is `/` (the [welcome page](public-welcome-page.md)) plus three text pages in the `src/app/(site)` route group: `/faq`, `/privacy`, `/terms`. Everything else is a private portal and is kept out of search.
+The public website is `/` (the [welcome page](public-welcome-page.md)) plus the text pages in the `src/app/(site)` route group: `/faq`, `/privacy`, `/terms` and the course pages `/noorani-qaida` and `/tajweed-for-kids`. Everything else is a private portal and is kept out of search.
 
 ## Single source of facts
 
@@ -45,6 +45,7 @@ The public website is `/` (the [welcome page](public-welcome-page.md)) plus thre
 | `/llms.txt` | `public/llms.txt` | Plain-language summary for LLM crawlers. |
 | `/opengraph-image` | `app/opengraph-image.tsx` | 1200×630 link-preview card for WhatsApp/Facebook/search, inherited by every route. |
 | `/` | `welcome/page.tsx` | Canonical `/` (the page is also reachable at `/welcome`), `EducationalOrganization` + `WebSite` + `Course` JSON-LD. |
+| `/noorani-qaida` `/tajweed-for-kids` | `(site)/*/page.tsx` + `(site)/course-page.tsx` | Course landing pages aimed at one search phrase each. Content is a `Course` object (sections + FAQs); `CoursePage` emits `Course` + `FAQPage` JSON-LD and a WhatsApp link whose greeting names the course. Facts come from the owner: Qaida from about age 5 (some 4.5); tajweed rules get easy kid names first, real names once reading the Quran. No hifz page: hifz is not offered. A new public page must be added to `PUBLIC_PATHS` (middleware), `SITE_PAGES` (theme-provider), the layout first-paint script, `PUBLIC_PAGES` and the footer. |
 | `/faq` `/privacy` `/terms` | `(site)/*` | `(site)/layout.tsx` wraps them in the landing page's own `SiteHeader` / `SiteFooter` (see below); prose wrapper `SitePage` in `(site)/prose.tsx`. |
 
 Root `metadata` in `app/layout.tsx` sets `metadataBase`, the `%s | Verse & Voice` title template, Open Graph/Twitter defaults, and Search Console / Bing verification from `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` / `NEXT_PUBLIC_BING_SITE_VERIFICATION`.

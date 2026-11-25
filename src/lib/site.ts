@@ -9,7 +9,7 @@ export const SITE = {
   name: "Verse & Voice",
   title: "Online Quran Classes for Kids & Teens",
   description:
-    "Live one-to-one online Quran classes for kids and teens in the USA, Canada, the Gulf and worldwide. Noorani Qaida, tajweed, hifz and namaz, by voice, with progress parents can see. Free trial.",
+    "Live one-to-one online Quran classes for kids and teens in the USA, Canada, the Gulf and worldwide. Noorani Qaida, tajweed, short surahs and namaz, by voice, with progress parents can see. Free trial.",
   /** E.164, the WhatsApp number in CONTACT.whatsapp. */
   phone: "+923310438768",
   // ponytail: no public mailbox yet; policy pages point to WhatsApp until one exists.
@@ -24,6 +24,8 @@ export const SITE = {
 export const PUBLIC_PAGES = [
   { path: "/", priority: 1 },
   { path: "/faq", priority: 0.8 },
+  { path: "/noorani-qaida", priority: 0.8 },
+  { path: "/tajweed-for-kids", priority: 0.8 },
   { path: "/privacy", priority: 0.3 },
   { path: "/terms", priority: 0.3 },
 ] as const
@@ -40,9 +42,9 @@ export const COURSES = [
       "One-to-one reading from the mushaf, para by para, with the teacher correcting pronunciation and tajweed live.",
   },
   {
-    name: "Quran Memorisation (Hifz)",
+    name: "Short Surahs and Duas",
     description:
-      "Short surahs for beginners through to structured hifz, with new lessons and revision tracked every class.",
+      "Memorising short surahs and everyday duas, with the teacher tracking each one until it is learned.",
   },
   {
     name: "Namaz (Salah) for Kids",

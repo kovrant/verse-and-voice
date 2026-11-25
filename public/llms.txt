@@ -1,6 +1,6 @@
 # Verse & Voice
 
-> Live one-to-one online Quran classes for kids and teens (about age 4 and up), taught by voice with a teacher who listens. Families in the USA, Canada, the Gulf (Bahrain, Kuwait, Qatar, UAE, Oman, Saudi Arabia), the UK and worldwide. Courses: Noorani Qaida, Quran reading with tajweed, Quran memorisation (hifz), namaz (how to pray), and stories of the Prophets. The first class is a free trial.
+> Live one-to-one online Quran classes for kids and teens (about age 4 and up), taught by voice with a teacher who listens. Families in the USA, Canada, the Gulf (Bahrain, Kuwait, Qatar, UAE, Oman, Saudi Arabia), the UK and worldwide. Courses: Noorani Qaida, Quran reading with tajweed, short surahs and duas to memorise, namaz (how to pray), and stories of the Prophets. Full hifz is not offered. The first class is a free trial.
 
 Key facts:
 - Format: one teacher, one child, live, by voice. No camera needed.
@@ -15,6 +15,8 @@ Key facts:
 ## Pages
 
 - [Home: how a class works](https://versenvoice.com/): the full tour of the classes, from the first letter to completing the Quran.
-- [Parent FAQ](https://versenvoice.com/faq): ages, class format, time zones, tajweed, hifz, namaz, progress reports, fees and the free trial.
+- [Noorani Qaida online](https://versenvoice.com/noorani-qaida): the beginner course from age 5 (some at 4.5), letters to reading the Quran.
+- [Tajweed for kids](https://versenvoice.com/tajweed-for-kids): tajweed taught with easy names first, real rule names once the child reads the Quran.
+- [Parent FAQ](https://versenvoice.com/faq): ages, class format, time zones, tajweed, short surahs, namaz, progress reports, fees and the free trial.
 - [Privacy Policy](https://versenvoice.com/privacy): what we collect about children and parents, and why.
 - [Terms of Service](https://versenvoice.com/terms): trial class, scheduling, missed classes and fees.

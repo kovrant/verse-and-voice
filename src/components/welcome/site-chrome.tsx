@@ -350,6 +350,12 @@ export function SiteFooter({ contact }: { contact: string }) {
         aria-label="Footer"
         style={{ display: "flex", gap: 22, flexWrap: "wrap", marginLeft: "auto" }}
       >
+        <a href="/noorani-qaida" className="gold" style={footLink}>
+          Noorani Qaida
+        </a>
+        <a href="/tajweed-for-kids" className="gold" style={footLink}>
+          Tajweed
+        </a>
         <a href="/faq" className="gold" style={footLink}>
           FAQ
         </a>

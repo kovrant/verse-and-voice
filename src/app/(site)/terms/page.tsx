@@ -23,7 +23,7 @@ export default function TermsPage() {
       <h2>The classes</h2>
       <p>
         Verse &amp; Voice provides live one-to-one online Quran classes for children and teenagers:
-        Noorani Qaida, Quran reading with tajweed, memorisation (hifz), namaz and Islamic stories.
+        Noorani Qaida, Quran reading with tajweed, short surahs and duas, namaz and Islamic stories.
         Classes are taught by voice, and the child follows the lesson in the kids&apos; portal.
       </p>
 

@@ -8,7 +8,7 @@ import { createContext, useCallback, useContext, useEffect, useState } from "rea
 // light/dark toggle, sharing a single preference.
 
 /** Public website pages beside /welcome (src/app/(site)); keep in sync with the layout's first-paint script. */
-export const SITE_PAGES = ["/faq", "/privacy", "/terms"]
+export const SITE_PAGES = ["/faq", "/privacy", "/terms", "/noorani-qaida", "/tajweed-for-kids"]
 
 export type Portal = "admin" | "student"
 

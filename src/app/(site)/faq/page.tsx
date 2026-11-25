@@ -9,7 +9,7 @@ import { SitePage } from "../prose"
 export const metadata: Metadata = {
   title: "Online Quran Classes for Kids: Parent FAQ",
   description:
-    "Answers for parents in the USA, Canada, the Gulf and worldwide: how our one-to-one online Quran classes work, ages, Noorani Qaida, tajweed, hifz, class times, progress reports and the free trial.",
+    "Answers for parents in the USA, Canada, the Gulf and worldwide: how our one-to-one online Quran classes work, ages, Noorani Qaida, tajweed, short surahs, class times, progress reports and the free trial.",
   alternates: { canonical: "/faq" },
 }
 
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 const FAQS: { q: string; a: string }[] = [
   {
     q: "What does Verse & Voice teach?",
-    a: "Live one-to-one online Quran classes for children and teenagers: Noorani Qaida for beginners, Quran reading with tajweed, Quran memorisation (hifz), how to pray (namaz), and stories of the Prophets with short quizzes.",
+    a: "Live one-to-one online Quran classes for children and teenagers: Noorani Qaida for beginners, Quran reading with tajweed, short surahs and duas to memorise, how to pray (namaz), and stories of the Prophets with short quizzes.",
   },
   {
     q: "Who teaches the classes?",
@@ -28,7 +28,7 @@ const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What ages are the classes for?",
-    a: "Children from about 4 years old up to teenagers. Little Readers (4 to 8) start with the Arabic letters, Young Reciters (9 to 13) read and memorise surahs, and Teens (14+) work at their own pace on reading, tajweed and hifz.",
+    a: "Children from about 4 years old up to teenagers. Little Readers (4 to 8) start with the Arabic letters, Young Reciters (9 to 13) read and memorise surahs, and Teens (14+) work at their own pace on reading and tajweed.",
   },
   {
     q: "How do online Quran classes work?",
@@ -55,8 +55,8 @@ const FAQS: { q: string; a: string }[] = [
     a: "Yes. Tajweed is taught as your child reads: the teacher listens to every line and corrects pronunciation and the rules of recitation in the moment, which is the main advantage of one-to-one classes.",
   },
   {
-    q: "Can my child memorise the Quran (hifz) online?",
-    a: "Yes. Children start with short surahs and can move on to structured hifz. Each class records the new lesson and the revision, so nothing that has been memorised is forgotten.",
+    q: "Do you teach hifz (memorising the whole Quran)?",
+    a: "No, we do not offer full hifz. Children memorise short surahs and everyday duas as part of their classes, and the teacher tracks each one until it is learned.",
   },
   {
     q: "Do you teach children how to pray?",
@@ -131,7 +131,15 @@ export default function FaqPage() {
           Book a free trial on WhatsApp
         </a>
         <p className="mt-4 text-sm text-[#D8D3C2]">
-          Or see{" "}
+          Read about our{" "}
+          <Link href="/noorani-qaida" className="!text-[#E3B04B]">
+            Noorani Qaida
+          </Link>{" "}
+          and{" "}
+          <Link href="/tajweed-for-kids" className="!text-[#E3B04B]">
+            tajweed
+          </Link>{" "}
+          classes, or see{" "}
           <Link href="/" className="!text-[#E3B04B]">
             how a class works
           </Link>

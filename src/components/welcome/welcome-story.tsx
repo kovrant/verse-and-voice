@@ -1372,7 +1372,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             >
               {[
                 ["🎙", "Voice-only, no cameras"],
-                ["🎓", "Taught by a Hafiz"],
+                ["🎓", "Teacher of the Quran"],
                 ["🕰", "Your timezone"],
                 ["📈", "Progress parents can see"],
               ].map(([e, t]) => (
@@ -1604,18 +1604,20 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                gap: 10,
-                background: "#25D366",
-                color: "#073B1C",
-                padding: "14px 24px",
+                gap: 12,
+                height: 56,
+                background: "#1EBE5D",
+                color: "#FFFFFF",
+                padding: "0 28px 0 22px",
                 borderRadius: 999,
                 textDecoration: "none",
-                ...f(700, "17px", "1", HEAD),
+                boxShadow: "0 8px 20px rgba(37,211,102,0.35)",
+                ...f(700, "17px", "1", BODY),
               }}
             >
               <svg
-                width="22"
-                height="22"
+                width="26"
+                height="26"
                 viewBox="0 0 24 24"
                 fill="currentColor"
                 aria-hidden="true"
