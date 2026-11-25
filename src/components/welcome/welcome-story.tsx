@@ -1302,11 +1302,21 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
           <div data-reveal="" style={col(22)}>
             <span style={eyebrow("#6B7F5B")}>Chapter 1 · Dawn</span>
             <div className="only-phone">{ageToggle}</div>
+            {/* The h1 carries the search words; the story line below is the visual headline. */}
             <h1
               id="h-ch1"
+              style={{
+                margin: 0,
+                ...f(700, "clamp(20px,2.2vw,26px)", "1.25", HEAD),
+                color: "#6B7F5B",
+              }}
+            >
+              Online Quran classes for kids and teens
+            </h1>
+            <p
               style={
                 {
-                  margin: 0,
+                  margin: "-8px 0 0",
                   ...f(700, "clamp(42px,6.4vw,78px)", "1.02", HEAD),
                   color: "#2E3A2F",
                   textWrap: "balance",
@@ -1314,7 +1324,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
               }
             >
               {headline}
-            </h1>
+            </p>
             <p
               style={
                 {
@@ -1326,8 +1336,8 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 } as CSSProperties
               }
             >
-              Live one-to-one online Quran classes for kids and teens, by voice, with a teacher who
-              listens.
+              Live one-to-one classes by voice, from the first Arabic letter to the last para, with
+              a teacher who listens.
             </p>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
               <SunrisePill href="#ch10" label="Book a free trial" delay=".8s" />
@@ -1531,7 +1541,7 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
           <div data-reveal="" style={{ ...col(10), alignItems: "center", textAlign: "center" }}>
             <span style={eyebrow("#6B7F5B")}>How it works</span>
             <h2 id="h-how" style={{ ...h2(), color: "#2E3A2F" }}>
-              From hello to the first class
+              From salaam to the first class
             </h2>
           </div>
           <ol
@@ -1574,7 +1584,9 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 >
                   {i + 1}
                 </span>
-                <h3 style={{ margin: "6px 0 0", ...f(700, "20px", "1.25", HEAD), color: "#2E3A2F" }}>
+                <h3
+                  style={{ margin: "6px 0 0", ...f(700, "20px", "1.25", HEAD), color: "#2E3A2F" }}
+                >
                   {s.title}
                 </h3>
                 <p style={{ margin: 0, ...f(600, "15px", "1.5", BODY), color: "#4A5A4B" }}>
@@ -1601,7 +1613,13 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 ...f(700, "17px", "1", HEAD),
               }}
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
                 {CONTACTS[0].icon}
               </svg>
               Message us on WhatsApp
