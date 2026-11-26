@@ -34,7 +34,8 @@ There are two primary channel categories:
   * `nav`: Carries `{ para: number, page: number }`. (Note: Qaida uses `para = 0`).
   * `scroll`: Carries normalized scroll position `{ ratio: number }` (0.0 to 1.0).
   * `pointer`: Transmits `{ x: number, y: number, active: boolean }` coordinates for live Mushaf pointer/highlighter.
-  * `end`: Signal from teacher ending the live session.
+  * `end`: Signal from teacher ending the live session. Closes the student's viewer at once.
+* **Teacher presence drop ≠ end.** When the teacher's presence disappears without an `end` broadcast, `LiveClassProvider` waits `PRESENCE_GRACE_MS` (15s) before closing the student's viewer; the header pill shows "Reconnecting…" meanwhile. The teacher's own reconnects (Wi-Fi blip, sleep, retry backoff) remove their channel before rebuilding it, so an immediate close kicked students out mid-class.
 
 ### 2. Global Student Online Channel: `students:online`
 * Owned by `src/lib/use-online-students.ts`.

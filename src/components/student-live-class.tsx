@@ -32,6 +32,7 @@ const SyncedPdfViewer = dynamic(
  */
 export function StudentLiveClass() {
   const {
+    live,
     peerNav,
     peerPointer,
     sendNav,
@@ -164,10 +165,19 @@ export function StudentLiveClass() {
       {/* Header — floating pills, like the rest of the student portal */}
       <div className="flex items-center justify-between gap-3 px-3 pb-2 pt-3 sm:px-4">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-soft">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
-            Live
-          </span>
+          {/* Only rendered while joined, so !live = the teacher's connection blinked out
+              (the provider waits PRESENCE_GRACE_MS before closing the class). */}
+          {live ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-accent-foreground shadow-soft">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+              Live
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 rounded-full border-[1.5px] border-border bg-card/90 px-3 py-1.5 text-[12px] font-extrabold uppercase tracking-wider text-muted-foreground shadow-soft">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-muted-foreground" />
+              Reconnecting…
+            </span>
+          )}
           <span className="inline-flex items-center gap-2 rounded-full border-[1.5px] border-border bg-card/90 px-3.5 py-1.5 shadow-soft backdrop-blur-sm">
             <QuranBookIcon className="h-5 w-5" />
             {ready ? (

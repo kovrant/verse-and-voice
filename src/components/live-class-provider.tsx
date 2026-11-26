@@ -13,6 +13,9 @@ import { type NavState, type PointerState, useClassChannel } from "@/lib/use-cla
 import { useTrackStudentOnline } from "@/lib/use-online-students"
 import { useStudent } from "@/lib/use-student"
 
+/** How long the teacher may be gone (no presence) before the student's class closes. */
+const PRESENCE_GRACE_MS = 15_000
+
 type NavListener = (nav: NavState) => void
 type ScrollListener = (ratio: number) => void
 type PointerListener = (pointer: PointerState | null) => void
@@ -97,7 +100,6 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
 
   // Close the live viewer once per join (dedupes explicit-end vs presence-drop).
   const closingRef = useRef(false)
-  const sawLive = useRef(false)
   const endNow = useCallback(() => {
     if (closingRef.current) return
     closingRef.current = true
@@ -169,22 +171,19 @@ export function LiveClassProvider({ children }: { children: React.ReactNode }) {
     setActiveTajweedRule(null)
   }, [])
 
-  // Reset the close guards on each fresh join.
+  // Reset the close guard on each fresh join.
   useEffect(() => {
-    if (joined) {
-      closingRef.current = false
-      sawLive.current = false
-    }
+    if (joined) closingRef.current = false
   }, [joined])
 
-  // Fallback: teacher's presence drops while joined (crash / closed tab / ended).
+  // Fallback: teacher's presence drops while joined (crash / closed tab). Wait
+  // before ending: the teacher's own reconnects (Wi-Fi blip, sleep, retry
+  // backoff) tear their channel down first, which used to kick the student out
+  // mid-class. An explicit End still closes at once via onEnd.
   useEffect(() => {
-    if (!joined) return
-    if (live) {
-      sawLive.current = true
-    } else {
-      endNow()
-    }
+    if (!joined || live) return
+    const t = setTimeout(endNow, PRESENCE_GRACE_MS)
+    return () => clearTimeout(t)
   }, [joined, live, endNow])
 
   // Prominent "class is live" alert (replaces the old bottom-right toast). Opens
