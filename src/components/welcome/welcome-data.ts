@@ -237,19 +237,3 @@ export const PARENT_POINTS = [
   },
   { icon: "💬", text: "Questions go straight to the teacher on WhatsApp, not a call centre." },
 ]
-
-/** "How it works" strip under the hero: the three steps to a first class. */
-export const HOW_STEPS = [
-  {
-    title: "Message us on WhatsApp",
-    text: "Tap the moon or the green button. Tell us your child's age and the times that suit you.",
-  },
-  {
-    title: "A free 30-minute class",
-    text: "Online, in your own time zone. No payment details needed.",
-  },
-  {
-    title: "Pick your days and start",
-    text: "3 to 5 classes a week, with the same teacher every time.",
-  },
-]

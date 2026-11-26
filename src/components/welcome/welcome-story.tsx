@@ -34,7 +34,6 @@ import {
   DOODLES,
   HADITH_AR,
   HEADLINES,
-  HOW_STEPS,
   IKHLAS,
   JUZ_NAMES,
   MUSHAF_PAGES,
@@ -1529,103 +1528,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
                 />
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ── How it works (between chapters; no data-chapter so the dots stay 1–10) ── */}
-        <section
-          id="how"
-          aria-labelledby="h-how"
-          style={section({ background: "#FFFFFF", border: "1.5px solid #D9C9B2" })}
-        >
-          <div data-reveal="" style={{ ...col(10), alignItems: "center", textAlign: "center" }}>
-            <span style={eyebrow("#6B7F5B")}>How it works</span>
-            <h2 id="h-how" style={{ ...h2(), color: "#2E3A2F" }}>
-              From salaam to the first class
-            </h2>
-          </div>
-          <ol
-            style={{
-              listStyle: "none",
-              margin: "clamp(24px,4vw,36px) 0 0",
-              padding: 0,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(min(100%,240px),1fr))",
-              gap: 16,
-            }}
-          >
-            {HOW_STEPS.map((s, i) => (
-              <li
-                key={s.title}
-                data-reveal=""
-                data-delay={String(i * 120)}
-                style={{
-                  background: mix("#8FA97A", 12),
-                  border: `1.5px solid ${mix("#8FA97A", 35)}`,
-                  borderRadius: 24,
-                  padding: "22px 20px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 8,
-                }}
-              >
-                <span
-                  aria-hidden="true"
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    background: "#6B7F5B",
-                    color: "#FFFFFF",
-                    display: "grid",
-                    placeItems: "center",
-                    ...f(700, "18px", "1", HEAD),
-                  }}
-                >
-                  {i + 1}
-                </span>
-                <h3
-                  style={{ margin: "6px 0 0", ...f(700, "20px", "1.25", HEAD), color: "#2E3A2F" }}
-                >
-                  {s.title}
-                </h3>
-                <p style={{ margin: 0, ...f(600, "15px", "1.5", BODY), color: "#4A5A4B" }}>
-                  {s.text}
-                </p>
-              </li>
-            ))}
-          </ol>
-          <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
-            <a
-              href={CONTACT.whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lift"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 12,
-                height: 56,
-                background: "#1EBE5D",
-                color: "#FFFFFF",
-                padding: "0 28px 0 22px",
-                borderRadius: 999,
-                textDecoration: "none",
-                boxShadow: "0 8px 20px rgba(37,211,102,0.35)",
-                ...f(700, "17px", "1", BODY),
-              }}
-            >
-              <svg
-                width="26"
-                height="26"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                {CONTACTS[0].icon}
-              </svg>
-              Message us on WhatsApp
-            </a>
           </div>
         </section>
 
