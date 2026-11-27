@@ -69,10 +69,10 @@ body{background:transparent!important;color:#2E3A2F}
 .vvw .film{scrollbar-width:thin}
 /* breakpoints live here, not in JS: the layout must not depend on innerWidth */
 .vvw .only-phone{display:none}
-.vvw .hilal{width:92px;height:92px}
+.vvw .hilal{width:92px;height:92px}.vvw .wa-float{width:60px;height:60px}
 .vvw .juz{min-width:88px;min-height:64px;padding:10px 16px 8px}
 @media (min-width:761px){.vvw .progress{display:none}}
-@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .topbar .cta{display:none!important}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}}
+@media (max-width:760px){.vvw .only-wide{display:none}.vvw .only-phone{display:block;margin:2px 0 6px}.vvw .topbar .cta{display:none!important}.vvw .sidenav{display:none!important}.vvw .hilal{width:64px;height:64px}.vvw .wa-float{width:52px;height:52px}}
 @media (max-width:480px){.vvw .phones{flex-direction:column;align-items:center;gap:16px!important}.vvw .phone{width:min(100%,270px);max-width:270px!important;flex:0 0 auto!important;transform-origin:center bottom!important}.vvw .mushaf-line{font-size:15px!important}.vvw .juz{min-width:66px;min-height:56px;padding:8px 10px 6px}.vvw .juz .nm{font-size:16px!important}}
 @keyframes vvWrite{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
 .vvw .alif-write{animation:vvWrite 1.6s cubic-bezier(.6,.1,.3,1) .4s both}
@@ -1125,6 +1125,32 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
         ))}
       </nav>
 
+      {/* WhatsApp button, bottom-left (the moon sits bottom-right; tapping it also opens WhatsApp). */}
+      <a
+        className="wa-float"
+        href={CONTACT.whatsapp}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Book a free trial on WhatsApp"
+        title="Book a free trial on WhatsApp"
+        style={{
+          position: "fixed",
+          left: "clamp(10px,2vw,26px)",
+          bottom: "clamp(14px,2.4vw,28px)",
+          zIndex: 25,
+          borderRadius: "50%",
+          background: "#1EBE5D",
+          boxShadow: "0 8px 20px rgba(37,211,102,0.35)",
+          display: "grid",
+          placeItems: "center",
+          animation: "vvPop .8s cubic-bezier(.34,1.56,.64,1) .7s both",
+        }}
+      >
+        <svg width="58%" height="58%" viewBox="0 0 24 24" fill="#FFFFFF" aria-hidden="true">
+          {CONTACTS[0].icon}
+        </svg>
+      </a>
+
       {/* Hilal, the crescent moon mascot */}
       <div
         className="hilal"
@@ -1176,27 +1202,6 @@ export function WelcomeStory({ defaultAge = "little" }: { defaultAge?: AgeBand }
             animation: "vvBob 4s ease-in-out infinite",
           }}
         >
-          <span
-            aria-hidden="true"
-            style={{
-              position: "absolute",
-              right: "-2%",
-              bottom: "-2%",
-              width: "52%",
-              height: "52%",
-              borderRadius: "50%",
-              background: "#25D366",
-              border: "2.5px solid #FFFFFF",
-              boxShadow: SHADOW,
-              display: "grid",
-              placeItems: "center",
-              zIndex: 1,
-            }}
-          >
-            <svg width="62%" height="62%" viewBox="0 0 24 24" fill="#FFFFFF">
-              {CONTACTS[0].icon}
-            </svg>
-          </span>
           <div
             data-hilal=""
             style={{ width: "100%", height: "100%", transition: "transform .3s ease-out" }}
